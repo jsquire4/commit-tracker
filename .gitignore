@@ -40,5 +40,5 @@ coverage/
 htmlcov/
 .pytest_cache/
 
-# Project docs (originals kept in docs/)
-docs/
+# Project docs — original source doc excluded, all else tracked
+docs/ST6 Project.docx
