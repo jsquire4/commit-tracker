@@ -49,7 +49,7 @@ backend/build/
 backend/.gradle/
 *.class
 *.jar
-!gradle/wrapper/gradle-wrapper.jar
+!**/gradle/wrapper/gradle-wrapper.jar
 
 # Frontend
 frontend/node_modules/
