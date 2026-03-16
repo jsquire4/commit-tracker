@@ -1,13 +1,12 @@
 package com.st6.committracker.domain.cycle;
 
 import com.st6.committracker.audit.AuditService;
-import com.st6.committracker.domain.CompletionHorizon;
 import com.st6.committracker.domain.CycleState;
 import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.commit.Commitment;
 import com.st6.committracker.domain.commit.CommitmentRepository;
-import com.st6.committracker.domain.commit.TaskBullet;
+import com.st6.committracker.domain.commit.CommitmentService;
 import com.st6.committracker.domain.cycle.CycleStateMachine.TransitionContext;
 import com.st6.committracker.domain.cycle.CycleStateMachine.TransitionResult;
 import com.st6.committracker.domain.cycle.dto.CycleFilters;
@@ -48,6 +47,7 @@ public class CycleService {
 
     private final CycleRepository cycleRepository;
     private final CommitmentRepository commitmentRepository;
+    private final CommitmentService commitmentService;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final VisibilityEnforcer visibilityEnforcer;
     private final AuditService auditService;
@@ -55,11 +55,13 @@ public class CycleService {
 
     public CycleService(CycleRepository cycleRepository,
                         CommitmentRepository commitmentRepository,
+                        CommitmentService commitmentService,
                         ReconciliationRecordRepository reconciliationRecordRepository,
                         VisibilityEnforcer visibilityEnforcer,
                         AuditService auditService) {
         this.cycleRepository = cycleRepository;
         this.commitmentRepository = commitmentRepository;
+        this.commitmentService = commitmentService;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.visibilityEnforcer = visibilityEnforcer;
         this.auditService = auditService;
@@ -119,19 +121,19 @@ public class CycleService {
 
         int commitmentCount = commitmentRepository
                 .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId).size();
-        long reconciledCount = reconciliationRecordRepository
-                .countByOrgIdAndCycleIdAndStatus(actor.getOrg().getId(), cycleId, ReconciliationStatus.COMPLETED)
-                + reconciliationRecordRepository
-                .countByOrgIdAndCycleIdAndStatus(actor.getOrg().getId(), cycleId, ReconciliationStatus.PARTIALLY_COMPLETED)
-                + reconciliationRecordRepository
-                .countByOrgIdAndCycleIdAndStatus(actor.getOrg().getId(), cycleId, ReconciliationStatus.NOT_STARTED)
-                + reconciliationRecordRepository
-                .countByOrgIdAndCycleIdAndStatus(actor.getOrg().getId(), cycleId, ReconciliationStatus.CARRIED_FORWARD);
+
+        List<Object[]> statusCounts = reconciliationRecordRepository
+                .countByOrgIdAndCycleIdGroupByStatus(actor.getOrg().getId(), cycleId);
+        Map<ReconciliationStatus, Long> countByStatus = statusCounts.stream()
+                .collect(Collectors.toMap(
+                        row -> (ReconciliationStatus) row[0],
+                        row -> (Long) row[1]
+                ));
+        int completedCount = countByStatus.getOrDefault(ReconciliationStatus.COMPLETED, 0L).intValue();
 
         TransitionContext context = new TransitionContext(
                 commitmentCount,
-                (int) reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(
-                        actor.getOrg().getId(), cycleId, ReconciliationStatus.COMPLETED),
+                completedCount,
                 commitmentCount,
                 Instant.now()
         );
@@ -201,36 +203,7 @@ public class CycleService {
                 .orElseGet(() -> createDraftCycle(actor.getOrg(), nextWeekAlignedStart, nextWeekEnd, nextLabel));
 
         for (Commitment original : carriedForwardCommitments) {
-            Commitment clone = Commitment.builder()
-                    .org(original.getOrg())
-                    .user(original.getUser())
-                    .cycle(nextCycle)
-                    .title(original.getTitle())
-                    .description(original.getDescription())
-                    .rallyCry(original.getRallyCry())
-                    .definingObjective(original.getDefiningObjective())
-                    .outcome(original.getOutcome())
-                    .chessCategory(original.getChessCategory())
-                    .assignedBy(original.getAssignedBy())
-                    .carriedFrom(original)
-                    .priorityRank(0)
-                    .completionHorizon(CompletionHorizon.EOW)
-                    .isUnplanned(false)
-                    .build();
-
-            Commitment savedClone = commitmentRepository.save(clone);
-
-            for (TaskBullet bullet : original.getTaskBullets()) {
-                TaskBullet clonedBullet = TaskBullet.builder()
-                        .commitment(savedClone)
-                        .org(original.getOrg())
-                        .body(bullet.getBody())
-                        .sortOrder(bullet.getSortOrder())
-                        .isCompleted(false)
-                        .build();
-                savedClone.getTaskBullets().add(clonedBullet);
-            }
-
+            Commitment savedClone = commitmentService.cloneForCarryForward(original, nextCycle);
             log.info("completeCycle: carried forward commitment originalId={} cloneId={} userId={} cycleId={}",
                     original.getId(), savedClone.getId(), original.getUser().getId(), nextCycle.getId());
         }

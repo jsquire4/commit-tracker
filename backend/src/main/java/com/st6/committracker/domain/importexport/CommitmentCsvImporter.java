@@ -140,9 +140,6 @@ public class CommitmentCsvImporter {
             String bulletsRaw = trim(row, COL_BULLETS);
             String horizonStr = trim(row, COL_COMPLETION_HORIZON);
             String categoryName = trim(row, COL_CHESS_CATEGORY);
-            String rcTitle = trim(row, COL_RALLY_CRY);
-            String doTitle = trim(row, COL_DEFINING_OBJECTIVE);
-            String outcomeTitle = trim(row, COL_OUTCOME);
             String assignedByEmail = trim(row, COL_ASSIGNED_BY_EMAIL);
 
             // Validate user
@@ -182,40 +179,13 @@ public class CommitmentCsvImporter {
             }
 
             // Resolve RCDO (optional, hierarchical)
-            RallyCry rallyCry = null;
-            DefiningObjective definingObjective = null;
-            Outcome outcome = null;
-
-            if (!rcTitle.isEmpty()) {
-                List<RallyCry> rcs = rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-                rallyCry = rcs.stream().filter(rc -> rc.getTitle().equals(rcTitle)).findFirst().orElse(null);
-                if (rallyCry == null) {
-                    errors.add(new ImportError(rowNum, "rally_cry", "RallyCry not found: " + rcTitle));
-                    continue;
-                }
-
-                if (!doTitle.isEmpty()) {
-                    RallyCry finalRc = rallyCry;
-                    List<DefiningObjective> dos = definingObjectiveRepository
-                            .findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rallyCry.getId());
-                    definingObjective = dos.stream().filter(d -> d.getTitle().equals(doTitle)).findFirst().orElse(null);
-                    if (definingObjective == null) {
-                        errors.add(new ImportError(rowNum, "defining_objective", "DefiningObjective not found: " + doTitle));
-                        continue;
-                    }
-
-                    if (!outcomeTitle.isEmpty()) {
-                        DefiningObjective finalDo = definingObjective;
-                        List<Outcome> outcomes = outcomeRepository
-                                .findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(definingObjective.getId());
-                        outcome = outcomes.stream().filter(o -> o.getTitle().equals(outcomeTitle)).findFirst().orElse(null);
-                        if (outcome == null) {
-                            errors.add(new ImportError(rowNum, "outcome", "Outcome not found: " + outcomeTitle));
-                            continue;
-                        }
-                    }
-                }
+            RcdoRefs rcdo = resolveRcdoReferences(row, orgId, rowNum, errors);
+            if (rcdo == null) {
+                continue; // error already added
             }
+            RallyCry rallyCry = rcdo.rallyCry();
+            DefiningObjective definingObjective = rcdo.definingObjective();
+            Outcome outcome = rcdo.outcome();
 
             // Resolve assigned_by (optional)
             AppUser assignedBy = null;
@@ -266,6 +236,62 @@ public class CommitmentCsvImporter {
                 Map.of("importedRows", importedRows, "errorRows", errorRows, "totalRows", totalRows));
 
         return new ImportResult(totalRows, importedRows, skippedRows < 0 ? 0 : skippedRows, errorRows, errors);
+    }
+
+    /**
+     * Holds resolved RCDO references for a single CSV row.
+     * Any field may be null if not provided or not applicable.
+     */
+    private record RcdoRefs(RallyCry rallyCry, DefiningObjective definingObjective, Outcome outcome) {}
+
+    /**
+     * Resolves the rally_cry, defining_objective, and outcome columns for one CSV row.
+     * Returns a {@link RcdoRefs} with the resolved entities (null if not supplied),
+     * or {@code null} if a validation error was found (error is added to {@code errors}).
+     */
+    private RcdoRefs resolveRcdoReferences(String[] row, UUID orgId, int rowNum, List<ImportError> errors) {
+        String rcTitle = trim(row, COL_RALLY_CRY);
+        String doTitle = trim(row, COL_DEFINING_OBJECTIVE);
+        String outcomeTitle = trim(row, COL_OUTCOME);
+
+        if (rcTitle.isEmpty()) {
+            return new RcdoRefs(null, null, null);
+        }
+
+        List<RallyCry> rcs = rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        RallyCry rallyCry = rcs.stream().filter(rc -> rc.getTitle().equals(rcTitle)).findFirst().orElse(null);
+        if (rallyCry == null) {
+            errors.add(new ImportError(rowNum, "rally_cry", "RallyCry not found: " + rcTitle));
+            return null;
+        }
+
+        if (doTitle.isEmpty()) {
+            return new RcdoRefs(rallyCry, null, null);
+        }
+
+        List<DefiningObjective> dos = definingObjectiveRepository
+                .findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rallyCry.getId());
+        DefiningObjective definingObjective = dos.stream()
+                .filter(d -> d.getTitle().equals(doTitle)).findFirst().orElse(null);
+        if (definingObjective == null) {
+            errors.add(new ImportError(rowNum, "defining_objective", "DefiningObjective not found: " + doTitle));
+            return null;
+        }
+
+        if (outcomeTitle.isEmpty()) {
+            return new RcdoRefs(rallyCry, definingObjective, null);
+        }
+
+        List<Outcome> outcomes = outcomeRepository
+                .findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(definingObjective.getId());
+        Outcome outcome = outcomes.stream()
+                .filter(o -> o.getTitle().equals(outcomeTitle)).findFirst().orElse(null);
+        if (outcome == null) {
+            errors.add(new ImportError(rowNum, "outcome", "Outcome not found: " + outcomeTitle));
+            return null;
+        }
+
+        return new RcdoRefs(rallyCry, definingObjective, outcome);
     }
 
     private List<String[]> parseRows(MultipartFile file, List<ImportError> errors) {

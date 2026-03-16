@@ -7,6 +7,7 @@ import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.commit.Commitment;
 import com.st6.committracker.domain.commit.CommitmentRepository;
+import com.st6.committracker.domain.commit.CommitmentService;
 import com.st6.committracker.domain.commit.TaskBullet;
 import com.st6.committracker.domain.cycle.dto.CycleFilters;
 import com.st6.committracker.domain.cycle.dto.TransitionRequest;
@@ -52,6 +53,7 @@ class CycleServiceTest {
 
     @Mock private CycleRepository cycleRepository;
     @Mock private CommitmentRepository commitmentRepository;
+    @Mock private CommitmentService commitmentService;
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
     @Mock private VisibilityEnforcer visibilityEnforcer;
     @Mock private AuditService auditService;
@@ -258,7 +260,8 @@ class CycleServiceTest {
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
                 .thenReturn(List.of(buildCommitment(cycle)));
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(any(), any(), any())).thenReturn(0L);
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.of());
 
         TransitionRequest request = new TransitionRequest(CycleState.LOCKED, "Locking for the week");
 
@@ -287,7 +290,8 @@ class CycleServiceTest {
         // Return an empty list so commitmentCount < 1 also fails (rejected due to no commitments)
         when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
                 .thenReturn(List.of());
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(any(), any(), any())).thenReturn(0L);
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.of());
 
         TransitionRequest request = new TransitionRequest(CycleState.LOCKED, null);
 
@@ -306,7 +310,8 @@ class CycleServiceTest {
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
                 .thenReturn(List.of(buildCommitment(cycle)));
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(any(), any(), any())).thenReturn(0L);
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.of());
 
         TransitionRequest request = new TransitionRequest(CycleState.LOCKED, "audit test");
 
@@ -337,15 +342,9 @@ class CycleServiceTest {
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
                 .thenReturn(List.of(buildCommitment(cycle)));
-        // All reconciled
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(
-                eq(org.getId()), eq(cycleId), eq(ReconciliationStatus.COMPLETED))).thenReturn(1L);
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(
-                eq(org.getId()), eq(cycleId), eq(ReconciliationStatus.PARTIALLY_COMPLETED))).thenReturn(0L);
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(
-                eq(org.getId()), eq(cycleId), eq(ReconciliationStatus.NOT_STARTED))).thenReturn(0L);
-        when(reconciliationRecordRepository.countByOrgIdAndCycleIdAndStatus(
-                eq(org.getId()), eq(cycleId), eq(ReconciliationStatus.CARRIED_FORWARD))).thenReturn(0L);
+        // Return COMPLETED=1 via grouped query
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.<Object[]>of(new Object[]{ReconciliationStatus.COMPLETED, 1L}));
 
         // completeCycle will query for carry-forward records (none — so no cycle lookup needed)
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
@@ -356,8 +355,8 @@ class CycleServiceTest {
         Cycle result = cycleService.transition(cycleId, request, manager);
 
         assertThat(result.getState()).isEqualTo(CycleState.RECONCILED);
-        // completeCycle was triggered; since no carry-forward items, no new commitments saved
-        verify(commitmentRepository, never()).save(any());
+        // completeCycle was triggered; since no carry-forward items, cloneForCarryForward never called
+        verify(commitmentService, never()).cloneForCarryForward(any(), any());
     }
 
     // -------------------------------------------------------------------------
@@ -383,15 +382,12 @@ class CycleServiceTest {
             c.setId(UUID.randomUUID());
             return c;
         });
-        when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
-            Commitment c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        Commitment cloned = buildCommitment(cycle);
+        when(commitmentService.cloneForCarryForward(eq(original), any(Cycle.class))).thenReturn(cloned);
 
         cycleService.completeCycle(cycle, manager);
 
-        verify(commitmentRepository).save(any(Commitment.class));
+        verify(commitmentService).cloneForCarryForward(eq(original), any(Cycle.class));
     }
 
     @Test
@@ -424,20 +420,27 @@ class CycleServiceTest {
             return c;
         });
 
-        ArgumentCaptor<Commitment> captor = ArgumentCaptor.forClass(Commitment.class);
-        when(commitmentRepository.save(captor.capture())).thenAnswer(inv -> {
-            Commitment c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        // Simulate cloneForCarryForward returning a clone that copies the title/description
+        Commitment cloned = buildCommitment(cycle);
+        cloned.setTitle(original.getTitle());
+        cloned.setDescription(original.getDescription());
+        // cloneForCarryForward in CommitmentService creates bullets with isCompleted=false
+        TaskBullet clonedBullet = TaskBullet.builder()
+                .commitment(cloned)
+                .org(org)
+                .body("Bullet 1")
+                .sortOrder(1)
+                .isCompleted(false)
+                .build();
+        cloned.getTaskBullets().add(clonedBullet);
+        when(commitmentService.cloneForCarryForward(eq(original), any(Cycle.class))).thenReturn(cloned);
 
         cycleService.completeCycle(cycle, manager);
 
-        Commitment cloned = captor.getValue();
+        // Verify delegation happened and the returned clone has expected properties
+        verify(commitmentService).cloneForCarryForward(eq(original), any(Cycle.class));
         assertThat(cloned.getTitle()).isEqualTo("My Important Task");
         assertThat(cloned.getDescription()).isEqualTo("Some description");
-        // Bullet is cloned into the taskBullets list after save
-        // The cloned bullet should have isCompleted=false
         assertThat(cloned.getTaskBullets()).hasSize(1);
         assertThat(cloned.getTaskBullets().get(0).getBody()).isEqualTo("Bullet 1");
         assertThat(cloned.getTaskBullets().get(0).isCompleted()).isFalse();
@@ -465,16 +468,14 @@ class CycleServiceTest {
             return c;
         });
 
-        ArgumentCaptor<Commitment> captor = ArgumentCaptor.forClass(Commitment.class);
-        when(commitmentRepository.save(captor.capture())).thenAnswer(inv -> {
-            Commitment c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        // Simulate clone with carriedFrom set to original
+        Commitment cloned = buildCommitment(cycle);
+        cloned.setCarriedFrom(original);
+        when(commitmentService.cloneForCarryForward(eq(original), any(Cycle.class))).thenReturn(cloned);
 
         cycleService.completeCycle(cycle, manager);
 
-        Commitment cloned = captor.getValue();
+        verify(commitmentService).cloneForCarryForward(eq(original), any(Cycle.class));
         assertThat(cloned.getCarriedFrom()).isSameAs(original);
         assertThat(cloned.getCarriedFrom().getId()).isEqualTo(originalId);
     }
@@ -502,16 +503,16 @@ class CycleServiceTest {
             return c;
         });
 
-        ArgumentCaptor<Commitment> captor = ArgumentCaptor.forClass(Commitment.class);
-        when(commitmentRepository.save(captor.capture())).thenAnswer(inv -> {
-            Commitment c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        // Simulate clone with reset rank and horizon (as CommitmentService.cloneForCarryForward does)
+        Commitment cloned = buildCommitment(cycle);
+        cloned.setPriorityRank(0);
+        cloned.setCompletionHorizon(CompletionHorizon.EOW);
+        cloned.setUnplanned(false);
+        when(commitmentService.cloneForCarryForward(eq(original), any(Cycle.class))).thenReturn(cloned);
 
         cycleService.completeCycle(cycle, manager);
 
-        Commitment cloned = captor.getValue();
+        verify(commitmentService).cloneForCarryForward(eq(original), any(Cycle.class));
         assertThat(cloned.getPriorityRank()).isZero();
         assertThat(cloned.getCompletionHorizon()).isEqualTo(CompletionHorizon.EOW);
         assertThat(cloned.isUnplanned()).isFalse();
@@ -533,7 +534,7 @@ class CycleServiceTest {
 
         cycleService.completeCycle(cycle, manager);
 
-        verify(commitmentRepository, never()).save(any());
+        verify(commitmentService, never()).cloneForCarryForward(any(), any());
         verify(cycleRepository, never()).save(any());
     }
 
@@ -558,11 +559,8 @@ class CycleServiceTest {
             c.setId(UUID.randomUUID());
             return c;
         });
-        when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
-            Commitment c = inv.getArgument(0);
-            c.setId(UUID.randomUUID());
-            return c;
-        });
+        Commitment cloned = buildCommitment(cycle);
+        when(commitmentService.cloneForCarryForward(eq(original), any(Cycle.class))).thenReturn(cloned);
 
         cycleService.completeCycle(cycle, manager);
 

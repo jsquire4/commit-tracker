@@ -6,6 +6,7 @@ import com.st6.committracker.domain.rcdo.dto.RcdoTreeResponse;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.AppUserRepository;
 import com.st6.committracker.domain.user.Org;
+import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,14 +51,11 @@ public class RcdoService {
      * Create rally cry. Validates: title not blank. Logs: RCDO_CREATED.
      */
     public RallyCry createRallyCry(UUID orgId, String title, String description, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Rally cry title must not be blank");
-        }
+        validateTitleNotBlank(title, "Rally cry");
         Org org = Org.builder().id(orgId).build();
         RallyCry rallyCry = new RallyCry(org, title, description, 0);
         RallyCry saved = rallyCryRepository.save(rallyCry);
-        auditService.log(orgId, "RallyCry", saved.getId(), "RCDO_CREATED", actor,
-                Map.of("title", title));
+        auditRcdoAction(orgId, "RallyCry", saved.getId(), "RCDO_CREATED", actor, Map.of("title", title));
         log.info("Created RallyCry id={} orgId={}", saved.getId(), orgId);
         return saved;
     }
@@ -66,19 +64,16 @@ public class RcdoService {
      * Update rally cry. Validates: exists, not archived. Logs: RCDO_UPDATED.
      */
     public RallyCry updateRallyCry(UUID id, String title, String description, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Rally cry title must not be blank");
-        }
+        validateTitleNotBlank(title, "Rally cry");
         RallyCry rallyCry = rallyCryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", id));
         if (rallyCry.isArchived()) {
-            throw new IllegalStateException("Cannot update archived RallyCry: " + id);
+            throw new ConflictException("Cannot update archived RallyCry: " + id);
         }
         rallyCry.setTitle(title);
         rallyCry.setDescription(description);
         RallyCry saved = rallyCryRepository.save(rallyCry);
-        auditService.log(rallyCry.getOrg().getId(), "RallyCry", id, "RCDO_UPDATED", actor,
-                Map.of("title", title));
+        auditRcdoAction(rallyCry.getOrg().getId(), "RallyCry", id, "RCDO_UPDATED", actor, Map.of("title", title));
         return saved;
     }
 
@@ -92,7 +87,7 @@ public class RcdoService {
         rallyCry.setArchivedAt(Instant.now());
         rallyCryRepository.save(rallyCry);
         int warningCount = countReferencingCommitments("RallyCry", id);
-        auditService.log(rallyCry.getOrg().getId(), "RallyCry", id, "RCDO_ARCHIVED", actor,
+        auditRcdoAction(rallyCry.getOrg().getId(), "RallyCry", id, "RCDO_ARCHIVED", actor,
                 Map.of("warningCount", warningCount));
         if (warningCount > 0) {
             log.warn("Archived RallyCry id={} still referenced by {} commitments", id, warningCount);
@@ -105,19 +100,17 @@ public class RcdoService {
     public DefiningObjective createDefiningObjective(UUID orgId, UUID rallyCryId,
                                                      String title, String description,
                                                      UUID ownerUserId, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Defining objective title must not be blank");
-        }
+        validateTitleNotBlank(title, "Defining objective");
         RallyCry rallyCry = rallyCryRepository.findById(rallyCryId)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", rallyCryId));
         if (rallyCry.isArchived()) {
-            throw new IllegalStateException("Cannot create DefiningObjective under archived RallyCry: " + rallyCryId);
+            throw new ConflictException("Cannot create DefiningObjective under archived RallyCry: " + rallyCryId);
         }
         Org org = Org.builder().id(orgId).build();
         AppUser owner = ownerUserId != null ? buildUserRef(ownerUserId) : null;
         DefiningObjective definingObjective = new DefiningObjective(org, rallyCry, title, description, owner, 0);
         DefiningObjective saved = definingObjectiveRepository.save(definingObjective);
-        auditService.log(orgId, "DefiningObjective", saved.getId(), "RCDO_CREATED", actor,
+        auditRcdoAction(orgId, "DefiningObjective", saved.getId(), "RCDO_CREATED", actor,
                 Map.of("title", title, "rallyCryId", rallyCryId));
         log.info("Created DefiningObjective id={} orgId={} rallyCryId={}", saved.getId(), orgId, rallyCryId);
         return saved;
@@ -125,19 +118,17 @@ public class RcdoService {
 
     public DefiningObjective updateDefiningObjective(UUID id, String title, String description,
                                                      UUID ownerUserId, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Defining objective title must not be blank");
-        }
+        validateTitleNotBlank(title, "Defining objective");
         DefiningObjective definingObjective = definingObjectiveRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", id));
         if (definingObjective.isArchived()) {
-            throw new IllegalStateException("Cannot update archived DefiningObjective: " + id);
+            throw new ConflictException("Cannot update archived DefiningObjective: " + id);
         }
         definingObjective.setTitle(title);
         definingObjective.setDescription(description);
         definingObjective.setOwner(ownerUserId != null ? buildUserRef(ownerUserId) : null);
         DefiningObjective saved = definingObjectiveRepository.save(definingObjective);
-        auditService.log(definingObjective.getOrg().getId(), "DefiningObjective", id, "RCDO_UPDATED", actor,
+        auditRcdoAction(definingObjective.getOrg().getId(), "DefiningObjective", id, "RCDO_UPDATED", actor,
                 Map.of("title", title));
         return saved;
     }
@@ -148,7 +139,7 @@ public class RcdoService {
         definingObjective.setArchivedAt(Instant.now());
         definingObjectiveRepository.save(definingObjective);
         int warningCount = countReferencingCommitments("DefiningObjective", id);
-        auditService.log(definingObjective.getOrg().getId(), "DefiningObjective", id, "RCDO_ARCHIVED", actor,
+        auditRcdoAction(definingObjective.getOrg().getId(), "DefiningObjective", id, "RCDO_ARCHIVED", actor,
                 Map.of("warningCount", warningCount));
         if (warningCount > 0) {
             log.warn("Archived DefiningObjective id={} still referenced by {} commitments", id, warningCount);
@@ -161,19 +152,17 @@ public class RcdoService {
     public Outcome createOutcome(UUID orgId, UUID definingObjectiveId,
                                  String title, String description,
                                  UUID ownerUserId, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Outcome title must not be blank");
-        }
+        validateTitleNotBlank(title, "Outcome");
         DefiningObjective definingObjective = definingObjectiveRepository.findById(definingObjectiveId)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", definingObjectiveId));
         if (definingObjective.isArchived()) {
-            throw new IllegalStateException("Cannot create Outcome under archived DefiningObjective: " + definingObjectiveId);
+            throw new ConflictException("Cannot create Outcome under archived DefiningObjective: " + definingObjectiveId);
         }
         Org org = Org.builder().id(orgId).build();
         AppUser owner = ownerUserId != null ? buildUserRef(ownerUserId) : null;
         Outcome outcome = new Outcome(org, definingObjective, title, description, owner, 0);
         Outcome saved = outcomeRepository.save(outcome);
-        auditService.log(orgId, "Outcome", saved.getId(), "RCDO_CREATED", actor,
+        auditRcdoAction(orgId, "Outcome", saved.getId(), "RCDO_CREATED", actor,
                 Map.of("title", title, "definingObjectiveId", definingObjectiveId));
         log.info("Created Outcome id={} orgId={} definingObjectiveId={}", saved.getId(), orgId, definingObjectiveId);
         return saved;
@@ -181,20 +170,17 @@ public class RcdoService {
 
     public Outcome updateOutcome(UUID id, String title, String description,
                                  UUID ownerUserId, AppUser actor) {
-        if (title == null || title.isBlank()) {
-            throw new IllegalArgumentException("Outcome title must not be blank");
-        }
+        validateTitleNotBlank(title, "Outcome");
         Outcome outcome = outcomeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Outcome", id));
         if (outcome.isArchived()) {
-            throw new IllegalStateException("Cannot update archived Outcome: " + id);
+            throw new ConflictException("Cannot update archived Outcome: " + id);
         }
         outcome.setTitle(title);
         outcome.setDescription(description);
         outcome.setOwner(ownerUserId != null ? buildUserRef(ownerUserId) : null);
         Outcome saved = outcomeRepository.save(outcome);
-        auditService.log(outcome.getOrg().getId(), "Outcome", id, "RCDO_UPDATED", actor,
-                Map.of("title", title));
+        auditRcdoAction(outcome.getOrg().getId(), "Outcome", id, "RCDO_UPDATED", actor, Map.of("title", title));
         return saved;
     }
 
@@ -204,7 +190,7 @@ public class RcdoService {
         outcome.setArchivedAt(Instant.now());
         outcomeRepository.save(outcome);
         int warningCount = countReferencingCommitments("Outcome", id);
-        auditService.log(outcome.getOrg().getId(), "Outcome", id, "RCDO_ARCHIVED", actor,
+        auditRcdoAction(outcome.getOrg().getId(), "Outcome", id, "RCDO_ARCHIVED", actor,
                 Map.of("warningCount", warningCount));
         if (warningCount > 0) {
             log.warn("Archived Outcome id={} still referenced by {} commitments", id, warningCount);
@@ -216,8 +202,8 @@ public class RcdoService {
 
     /**
      * Returns full RCDO hierarchy for an org, excluding archived.
-     * Structure: List<RallyCry> each with nested List<DefiningObjective>
-     * each with nested List<Outcome>.
+     * Structure: List&lt;RallyCry&gt; each with nested List&lt;DefiningObjective&gt;
+     * each with nested List&lt;Outcome&gt;.
      * Used by frontend dropdowns and import validation.
      */
     @Transactional(readOnly = true)
@@ -272,6 +258,24 @@ public class RcdoService {
     }
 
     // === Internal helpers ===
+
+    /**
+     * Validates that a title field is not null or blank.
+     * Throws {@link IllegalArgumentException} if the check fails.
+     */
+    private void validateTitleNotBlank(String title, String entityLabel) {
+        if (title == null || title.isBlank()) {
+            throw new IllegalArgumentException(entityLabel + " title must not be blank");
+        }
+    }
+
+    /**
+     * Emits an audit log entry for an RCDO entity action.
+     */
+    private void auditRcdoAction(UUID orgId, String entityType, UUID entityId,
+                                  String action, AppUser actor, Map<String, Object> details) {
+        auditService.log(orgId, entityType, entityId, action, actor, details);
+    }
 
     /**
      * Count commitments referencing this RCDO entity. Used for archive warnings.

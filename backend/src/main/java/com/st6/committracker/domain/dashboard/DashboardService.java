@@ -323,16 +323,13 @@ public class DashboardService {
             return empty;
         }
 
-        Set<UUID> userIdSet = Set.copyOf(userIds);
+        List<Commitment> all = commitmentRepository.findByUserIdInAndCycleId(userIds, cycleId);
+        Map<UUID, List<Commitment>> grouped = all.stream()
+                .collect(Collectors.groupingBy(c -> c.getUser().getId()));
 
-        // Fetch all commitments for the org by querying per user; this is simpler and avoids
-        // needing a bulk "findByUserIdInAndCycleId" query that doesn't exist in the repository.
-        Map<UUID, List<Commitment>> result = new HashMap<>();
-        for (UUID uid : userIds) {
-            List<Commitment> commitments = commitmentRepository
-                    .findByUserIdAndCycleIdOrderByPriorityRankAsc(uid, cycleId);
-            result.put(uid, commitments);
-        }
+        // Ensure every requested user has an entry (even if empty)
+        Map<UUID, List<Commitment>> result = new HashMap<>(grouped);
+        userIds.forEach(id -> result.putIfAbsent(id, List.of()));
         return result;
     }
 

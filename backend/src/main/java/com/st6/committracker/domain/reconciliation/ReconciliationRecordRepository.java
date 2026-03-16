@@ -2,6 +2,8 @@ package com.st6.committracker.domain.reconciliation;
 
 import com.st6.committracker.domain.ReconciliationStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -11,4 +13,7 @@ public interface ReconciliationRecordRepository extends JpaRepository<Reconcilia
     Optional<ReconciliationRecord> findByCommitmentIdAndCycleId(UUID commitmentId, UUID cycleId);
     List<ReconciliationRecord> findByOrgIdAndCycleId(UUID orgId, UUID cycleId);
     long countByOrgIdAndCycleIdAndStatus(UUID orgId, UUID cycleId, ReconciliationStatus status);
+
+    @Query("SELECT r.status, COUNT(r) FROM ReconciliationRecord r WHERE r.org.id = :orgId AND r.cycle.id = :cycleId GROUP BY r.status")
+    List<Object[]> countByOrgIdAndCycleIdGroupByStatus(@Param("orgId") UUID orgId, @Param("cycleId") UUID cycleId);
 }

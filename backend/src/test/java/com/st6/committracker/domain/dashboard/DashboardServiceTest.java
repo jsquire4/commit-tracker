@@ -32,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -217,8 +218,11 @@ class DashboardServiceTest {
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
         // 2 Strategy, 1 Operations → 66.7% / 33.3%
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report1, catA), commitment(report1, catA), commitment(report1, catB)));
+        Commitment c1 = commitment(report1, catA);
+        Commitment c2 = commitment(report1, catA);
+        Commitment c3 = commitment(report1, catB);
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
+                .thenReturn(List.of(c1, c2, c3));
 
         AlignmentSignalResponse response = dashboardService.getAlignmentSignal(manager, filters);
 
@@ -238,7 +242,7 @@ class DashboardServiceTest {
                 .thenReturn(List.of(report1));
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of());
 
         AlignmentSignalResponse response = dashboardService.getAlignmentSignal(manager, filters);
@@ -257,10 +261,10 @@ class DashboardServiceTest {
                 .thenReturn(List.of(report1, report2));
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report1, catA)));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report2.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report2, catB)));
+        Commitment r1c = commitment(report1, catA);
+        Commitment r2c = commitment(report2, catB);
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
+                .thenReturn(List.of(r1c, r2c));
 
         AlignmentSignalResponse response = dashboardService.getAlignmentSignal(manager, filters);
 
@@ -281,8 +285,11 @@ class DashboardServiceTest {
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
         // 1 linked, 2 unlinked (null category)
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report1, catA), commitment(report1, null), commitment(report1, null)));
+        Commitment linked = commitment(report1, catA);
+        Commitment unlinked1 = commitment(report1, null);
+        Commitment unlinked2 = commitment(report1, null);
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
+                .thenReturn(List.of(linked, unlinked1, unlinked2));
 
         AlignmentSignalResponse response = dashboardService.getAlignmentSignal(manager, filters);
 
@@ -307,7 +314,7 @@ class DashboardServiceTest {
         Commitment selfC1 = commitment(report1, catA);
         Commitment selfC2 = commitment(report1, catB);
         Commitment assignedC = commitmentAssignedBy(report1, catA, manager);
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(selfC1, selfC2, assignedC));
 
         AssignmentAttributionResponse response = dashboardService.getAssignmentAttribution(manager, filters);
@@ -331,10 +338,8 @@ class DashboardServiceTest {
         // report1 gets all 2 assigned out of 2 total → 100% concentration risk
         Commitment a1 = commitmentAssignedBy(report1, catA, manager);
         Commitment a2 = commitmentAssignedBy(report1, catA, manager);
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(a1, a2));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report2.getId(), activeCycle.getId()))
-                .thenReturn(List.of());
 
         AssignmentAttributionResponse response = dashboardService.getAssignmentAttribution(manager, filters);
 
@@ -351,7 +356,7 @@ class DashboardServiceTest {
                 .thenReturn(List.of(report1));
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(commitment(report1, catA), commitment(report1, catB)));
 
         AssignmentAttributionResponse response = dashboardService.getAssignmentAttribution(manager, filters);
@@ -377,7 +382,7 @@ class DashboardServiceTest {
                 .thenReturn(Optional.of(activeCycle));
         Commitment linked = commitmentWithRallyCry(report1, catA, rc);
         Commitment unlinked = commitment(report1, catA);
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(linked, unlinked));
         when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId()))
                 .thenReturn(List.of());
@@ -399,7 +404,7 @@ class DashboardServiceTest {
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
         // All unlinked (no rally cry)
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(commitment(report1, catA), commitment(report1, catB)));
 
         RcdoCoverageResponse response = dashboardService.getRcdoCoverage(manager, filters);
@@ -425,7 +430,7 @@ class DashboardServiceTest {
 
         // One commitment linked to coveredDo via rally cry
         Commitment linked = commitmentWithRallyCryAndDo(report1, catA, rc, coveredDo);
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(linked));
         when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId()))
                 .thenReturn(List.of(coveredDo, uncoveredDo));

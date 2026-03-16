@@ -4,6 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
@@ -35,4 +36,7 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     long countByDefiningObjectiveId(UUID definingObjectiveId);
 
     long countByOutcomeId(UUID outcomeId);
+
+    @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id = :cycleId ORDER BY c.user.id, c.priorityRank")
+    List<Commitment> findByUserIdInAndCycleId(@Param("userIds") Collection<UUID> userIds, @Param("cycleId") UUID cycleId);
 }

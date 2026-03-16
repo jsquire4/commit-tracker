@@ -1,6 +1,7 @@
 package com.st6.committracker.domain.commit;
 
 import com.st6.committracker.audit.AuditService;
+import com.st6.committracker.domain.CompletionHorizon;
 import com.st6.committracker.domain.CycleState;
 import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.UserRole;
@@ -104,11 +105,6 @@ public class CommitmentService {
             throw new ConflictException("Cycle must be in DRAFT state to create a commitment");
         }
 
-        validateBulletCount(request.bullets());
-        validateRcdoConsistencyAndExistence(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
-
-        ChessCategory chessCategory = resolveChessCategory(request.chessCategoryId());
-
         AppUser assignedBy = null;
         if (request.assignedBy() != null) {
             assignedBy = userRepository.findById(request.assignedBy())
@@ -118,36 +114,18 @@ public class CommitmentService {
             }
         }
 
-        int rank = computeNextRank(actor.getId(), cycle.getId());
+        Commitment saved = buildAndSaveCommitment(request, actor, cycle, assignedBy, false);
 
-        Commitment commitment = Commitment.builder()
-                .org(actor.getOrg())
-                .user(actor)
-                .cycle(cycle)
-                .title(request.title())
-                .description(request.description())
-                .completionHorizon(request.completionHorizon())
-                .chessCategory(chessCategory)
-                .rallyCry(request.rallyCryId() != null ? rallyCryRepository.getReferenceById(request.rallyCryId()) : null)
-                .definingObjective(request.definingObjectiveId() != null ? definingObjectiveRepository.getReferenceById(request.definingObjectiveId()) : null)
-                .outcome(request.outcomeId() != null ? outcomeRepository.getReferenceById(request.outcomeId()) : null)
-                .assignedBy(assignedBy)
-                .priorityRank(rank)
-                .isUnplanned(false)
-                .build();
-
-        Commitment saved = commitmentRepository.save(commitment);
-        saveBullets(saved, request.bullets());
+        String rcdoLink = buildRcdoLinkDescription(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
+        String categoryName = saved.getChessCategory() != null ? saved.getChessCategory().getName() : "none";
 
         auditService.log(actor.getOrg().getId(), "Commitment", saved.getId(), "COMMITMENT_CREATED", actor,
                 Map.of("cycleId", cycle.getId(),
-                       "rcdoLink", buildRcdoLinkDescription(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId()),
-                       "category", chessCategory != null ? chessCategory.getName() : "none"));
+                       "rcdoLink", rcdoLink,
+                       "category", categoryName));
 
         log.info("Created commitment id={} userId={} cycleId={} rcdoLink={} category={}",
-                saved.getId(), actor.getId(), cycle.getId(),
-                buildRcdoLinkDescription(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId()),
-                chessCategory != null ? chessCategory.getName() : "none");
+                saved.getId(), actor.getId(), cycle.getId(), rcdoLink, categoryName);
 
         return saved;
     }
@@ -166,30 +144,7 @@ public class CommitmentService {
             throw new ConflictException("Cycle must be in RECONCILING state to create an unplanned commitment");
         }
 
-        validateBulletCount(request.bullets());
-        validateRcdoConsistencyAndExistence(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
-
-        ChessCategory chessCategory = resolveChessCategory(request.chessCategoryId());
-
-        int rank = computeNextRank(actor.getId(), cycle.getId());
-
-        Commitment commitment = Commitment.builder()
-                .org(actor.getOrg())
-                .user(actor)
-                .cycle(cycle)
-                .title(request.title())
-                .description(request.description())
-                .completionHorizon(request.completionHorizon())
-                .chessCategory(chessCategory)
-                .rallyCry(request.rallyCryId() != null ? rallyCryRepository.getReferenceById(request.rallyCryId()) : null)
-                .definingObjective(request.definingObjectiveId() != null ? definingObjectiveRepository.getReferenceById(request.definingObjectiveId()) : null)
-                .outcome(request.outcomeId() != null ? outcomeRepository.getReferenceById(request.outcomeId()) : null)
-                .priorityRank(rank)
-                .isUnplanned(true)
-                .build();
-
-        Commitment saved = commitmentRepository.save(commitment);
-        saveBullets(saved, request.bullets());
+        Commitment saved = buildAndSaveCommitment(request, actor, cycle, null, true);
 
         // Create reconciliation record automatically
         ReconciliationRecord reconciliationRecord = ReconciliationRecord.builder()
@@ -334,6 +289,8 @@ public class CommitmentService {
 
     /**
      * Get commitments for a cycle with filters and pagination.
+     * Pushes userId and rallyCryId filters to the DB when set; remaining filters
+     * (chessCategoryId, assignedBy) are applied in-memory after visibility enforcement.
      */
     @Transactional(readOnly = true)
     public Page<Commitment> getForCycle(UUID cycleId, CommitmentFilters filters, Pageable pageable, AppUser actor) {
@@ -341,6 +298,8 @@ public class CommitmentService {
 
         if (filters != null && filters.userId() != null) {
             allCommitments = commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(filters.userId(), cycleId);
+        } else if (filters != null && filters.rallyCryId() != null) {
+            allCommitments = commitmentRepository.findByRallyCryIdAndCycleId(filters.rallyCryId(), cycleId);
         } else {
             allCommitments = commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId);
         }
@@ -348,26 +307,8 @@ public class CommitmentService {
         // Apply visibility filter
         List<Commitment> visible = visibilityEnforcer.filterVisible(actor, allCommitments);
 
-        // Apply additional filters
+        // Apply remaining in-memory filters (no dedicated repo method)
         if (filters != null) {
-            if (filters.rallyCryId() != null) {
-                UUID rallyCryId = filters.rallyCryId();
-                visible = visible.stream()
-                        .filter(c -> c.getRallyCry() != null && c.getRallyCry().getId().equals(rallyCryId))
-                        .collect(Collectors.toList());
-            }
-            if (filters.definingObjectiveId() != null) {
-                UUID doId = filters.definingObjectiveId();
-                visible = visible.stream()
-                        .filter(c -> c.getDefiningObjective() != null && c.getDefiningObjective().getId().equals(doId))
-                        .collect(Collectors.toList());
-            }
-            if (filters.outcomeId() != null) {
-                UUID outcomeId = filters.outcomeId();
-                visible = visible.stream()
-                        .filter(c -> c.getOutcome() != null && c.getOutcome().getId().equals(outcomeId))
-                        .collect(Collectors.toList());
-            }
             if (filters.chessCategoryId() != null) {
                 UUID catId = filters.chessCategoryId();
                 visible = visible.stream()
@@ -409,7 +350,7 @@ public class CommitmentService {
      * Internal method: clone a commitment for carry-forward.
      * Called by CycleService.completeCycle.
      */
-    Commitment cloneForCarryForward(Commitment source, Cycle targetCycle) {
+    public Commitment cloneForCarryForward(Commitment source, Cycle targetCycle) {
         Commitment clone = Commitment.builder()
                 .org(source.getOrg())
                 .user(source.getUser())
@@ -445,6 +386,82 @@ public class CommitmentService {
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------
+
+    /**
+     * Shared core logic for create() and createUnplanned().
+     * Handles RCDO validation, chess category resolution, Commitment building, bullet persistence.
+     *
+     * @param assignedBy pre-resolved assignedBy user (may be null); callers are responsible for
+     *                   resolving and validating this before calling
+     * @param isUnplanned true for unplanned commitments (createUnplanned path)
+     */
+    private Commitment buildAndSaveCommitment(
+            CreateCommitmentRequest request,
+            AppUser actor,
+            Cycle cycle,
+            AppUser assignedBy,
+            boolean isUnplanned) {
+        return buildAndSaveCommitmentCore(
+                request.title(), request.description(), request.completionHorizon(),
+                request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
+                request.outcomeId(), request.bullets(),
+                actor, cycle, assignedBy, isUnplanned);
+    }
+
+    private Commitment buildAndSaveCommitment(
+            CreateUnplannedCommitmentRequest request,
+            AppUser actor,
+            Cycle cycle,
+            AppUser assignedBy,
+            boolean isUnplanned) {
+        return buildAndSaveCommitmentCore(
+                request.title(), request.description(), request.completionHorizon(),
+                request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
+                request.outcomeId(), request.bullets(),
+                actor, cycle, assignedBy, isUnplanned);
+    }
+
+    private Commitment buildAndSaveCommitmentCore(
+            String title,
+            String description,
+            CompletionHorizon completionHorizon,
+            UUID chessCategoryId,
+            UUID rallyCryId,
+            UUID definingObjectiveId,
+            UUID outcomeId,
+            List<String> bullets,
+            AppUser actor,
+            Cycle cycle,
+            AppUser assignedBy,
+            boolean isUnplanned) {
+
+        validateBulletCount(bullets);
+        validateRcdoConsistencyAndExistence(rallyCryId, definingObjectiveId, outcomeId);
+
+        ChessCategory chessCategory = resolveChessCategory(chessCategoryId);
+
+        int rank = computeNextRank(actor.getId(), cycle.getId());
+
+        Commitment commitment = Commitment.builder()
+                .org(actor.getOrg())
+                .user(actor)
+                .cycle(cycle)
+                .title(title)
+                .description(description)
+                .completionHorizon(completionHorizon)
+                .chessCategory(chessCategory)
+                .rallyCry(rallyCryId != null ? rallyCryRepository.getReferenceById(rallyCryId) : null)
+                .definingObjective(definingObjectiveId != null ? definingObjectiveRepository.getReferenceById(definingObjectiveId) : null)
+                .outcome(outcomeId != null ? outcomeRepository.getReferenceById(outcomeId) : null)
+                .assignedBy(assignedBy)
+                .priorityRank(rank)
+                .isUnplanned(isUnplanned)
+                .build();
+
+        Commitment saved = commitmentRepository.save(commitment);
+        saveBullets(saved, bullets);
+        return saved;
+    }
 
     private void requireNotAnalyst(AppUser actor) {
         if (actor.getRole() == UserRole.ANALYST) {

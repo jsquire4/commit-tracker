@@ -6,6 +6,7 @@ import com.st6.committracker.domain.rcdo.dto.RcdoTreeResponse;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.AppUserRepository;
 import com.st6.committracker.domain.user.Org;
+import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -82,7 +83,7 @@ class RcdoServiceTest {
     }
 
     @Test
-    void updateRallyCry_archived_throwsIllegalState() {
+    void updateRallyCry_archived_throwsConflict() {
         UUID id = UUID.randomUUID();
         AppUser actor = buildActor();
         RallyCry archived = buildArchivedRallyCry(UUID.randomUUID(), "Archived");
@@ -90,7 +91,7 @@ class RcdoServiceTest {
         when(rallyCryRepository.findById(id)).thenReturn(Optional.of(archived));
 
         assertThatThrownBy(() -> rcdoService.updateRallyCry(id, "New Title", null, actor))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("archived");
     }
 
@@ -150,7 +151,7 @@ class RcdoServiceTest {
     }
 
     @Test
-    void createDefiningObjective_archivedRallyCry_throws() {
+    void createDefiningObjective_archivedRallyCry_throwsConflict() {
         UUID orgId = UUID.randomUUID();
         UUID rallyCryId = UUID.randomUUID();
         AppUser actor = buildActor();
@@ -160,7 +161,7 @@ class RcdoServiceTest {
 
         assertThatThrownBy(() ->
                 rcdoService.createDefiningObjective(orgId, rallyCryId, "DO1", null, null, actor))
-                .isInstanceOf(IllegalStateException.class)
+                .isInstanceOf(ConflictException.class)
                 .hasMessageContaining("archived");
     }
 
