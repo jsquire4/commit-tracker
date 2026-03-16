@@ -1,10 +1,12 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useMemo } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { LoadingSpinner } from './components/LoadingSpinner';
 import { setTokenProvider } from './api/client';
+import { AuthContext as AuthCtx } from './hooks/useAuth';
+import type { AuthContextValue } from './hooks/useAuth';
 
 const CommitEntryPage = lazy(() => import('./features/commit-entry/CommitEntryPage').then(m => ({ default: m.CommitEntryPage })));
 const WeeklyLifecyclePage = lazy(() => import('./features/weekly-lifecycle/WeeklyLifecyclePage').then(m => ({ default: m.WeeklyLifecyclePage })));
@@ -16,6 +18,8 @@ export interface AuthContext {
   token: string;
   userId: string;
   orgId: string;
+  role?: string;
+  displayName?: string;
 }
 
 interface AppProps {
@@ -36,23 +40,33 @@ const queryClient = new QueryClient({
 export default function App({ basename, authContext }: AppProps) {
   setTokenProvider(() => authContext.token);
 
+  const authValue = useMemo<AuthContextValue>(() => ({
+    userId: authContext.userId,
+    orgId: authContext.orgId,
+    token: authContext.token,
+    role: (authContext.role as AuthContextValue['role']) ?? null,
+    ...(authContext.displayName != null ? { displayName: authContext.displayName } : {}),
+  }), [authContext.userId, authContext.orgId, authContext.token, authContext.role, authContext.displayName]);
+
   return (
     <ErrorBoundary>
-      <BrowserRouter basename={basename}>
-        <QueryClientProvider client={queryClient}>
-          <Layout>
-            <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
-              <Routes>
-                <Route path="/" element={<CommitEntryPage />} />
-                <Route path="/cycle" element={<WeeklyLifecyclePage />} />
-                <Route path="/reconciliation" element={<ReconciliationPage />} />
-                <Route path="/dashboard" element={<ManagerDashboardPage />} />
-                <Route path="/chessboard" element={<ChessboardPage />} />
-              </Routes>
-            </Suspense>
-          </Layout>
-        </QueryClientProvider>
-      </BrowserRouter>
+      <AuthCtx.Provider value={authValue}>
+        <BrowserRouter basename={basename}>
+          <QueryClientProvider client={queryClient}>
+            <Layout>
+              <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
+                <Routes>
+                  <Route path="/" element={<CommitEntryPage />} />
+                  <Route path="/cycle" element={<WeeklyLifecyclePage />} />
+                  <Route path="/reconciliation" element={<ReconciliationPage />} />
+                  <Route path="/dashboard" element={<ManagerDashboardPage />} />
+                  <Route path="/chessboard" element={<ChessboardPage />} />
+                </Routes>
+              </Suspense>
+            </Layout>
+          </QueryClientProvider>
+        </BrowserRouter>
+      </AuthCtx.Provider>
     </ErrorBoundary>
   );
 }
