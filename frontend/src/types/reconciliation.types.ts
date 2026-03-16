@@ -1,0 +1,47 @@
+import type { CompletionHorizon, ReconciliationStatus } from './enums';
+
+export interface ReconciliationRecord {
+  id: string;
+  commitmentId: string;
+  cycleId: string;
+  status: ReconciliationStatus;
+  notes: string | null;
+  plannedHorizon: CompletionHorizon | null;
+  reconciledAt: string;
+  reconciledByUserId: string;
+}
+
+export interface ReconcileCommitmentRequest {
+  status: ReconciliationStatus;
+  completionNotes?: string;
+  carryForward: boolean;
+  bulletStatuses: BulletStatus[];
+}
+
+export interface BulletStatus {
+  bulletId: string;
+  done: boolean;
+}
+
+/** Mirrors backend ReconciliationViewResponse */
+export interface ReconciliationViewResponse {
+  cycle: import('./cycle.types').Cycle;
+  commitments: CommitmentReconciliationDetail[];
+  summary: ReconciliationSummary;
+}
+
+export interface CommitmentReconciliationDetail {
+  commitment: import('./commitment.types').Commitment;
+  reconciliation: ReconciliationRecord | null;
+}
+
+export interface ReconciliationSummary {
+  totalCommitments: number;
+  reconciledCount: number;
+  completedCount: number;
+  partiallyCompletedCount: number;
+  notStartedCount: number;
+  carriedForwardCount: number;
+  completionRate: number;
+  bulletCompletionRate: number;
+}
