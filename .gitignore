@@ -42,3 +42,22 @@ htmlcov/
 
 # Project docs — original source doc excluded, all else tracked
 docs/ST6 Project.docx
+
+# Java / Gradle
+.gradle/
+backend/build/
+backend/.gradle/
+*.class
+*.jar
+!gradle/wrapper/gradle-wrapper.jar
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.pnpm-store/
+
+# Docker
+pgdata/
+
+# Test
+backend/bin/

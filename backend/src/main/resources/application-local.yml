@@ -1,0 +1,23 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/st6
+    username: st6
+    password: st6local
+    hikari:
+      maximum-pool-size: 5
+  jpa:
+    show-sql: true
+
+st6:
+  seed:
+    enabled: true
+  cors:
+    allowed-origins: "http://localhost:3000,http://localhost:3001"
+  jwt:
+    # Dev bypass is profile-gated via @Profile("local") on DevTokenValidator,
+    # NOT a boolean flag. No dev-mode property needed.
+
+logging:
+  level:
+    com.st6.committracker: DEBUG
+    org.hibernate.SQL: DEBUG

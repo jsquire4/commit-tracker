@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    hikari:
+      maximum-pool-size: 10
+
+st6:
+  seed:
+    enabled: ${ST6_SEED_ENABLED:false}
+  cors:
+    allowed-origins: ${ST6_CORS_ALLOWED_ORIGINS:}
+  jwt:
+    issuer: ${ST6_JWT_ISSUER:}
+    public-key: ${ST6_JWT_PUBLIC_KEY:}
+
+logging:
+  level:
+    com.st6.committracker: INFO
+    org.hibernate.SQL: WARN

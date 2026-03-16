@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    # Overridden by Testcontainers dynamically
+    url: jdbc:tc:postgresql:16-alpine:///st6_test
+  jpa:
+    show-sql: false
+  flyway:
+    clean-disabled: false
+
+st6:
+  seed:
+    enabled: false
+
+logging:
+  level:
+    com.st6.committracker: WARN
+    org.hibernate.SQL: WARN
