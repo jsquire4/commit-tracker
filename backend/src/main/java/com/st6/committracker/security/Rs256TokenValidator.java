@@ -27,7 +27,7 @@ import java.util.UUID;
  * Validates JWT signature using RS256 (asymmetric) with the configured public key.
  */
 @Component
-@Profile("!local & !test")
+@Profile("!local & !test & !railway")
 public class Rs256TokenValidator implements TokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(Rs256TokenValidator.class);

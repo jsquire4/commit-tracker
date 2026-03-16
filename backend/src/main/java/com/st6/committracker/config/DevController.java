@@ -23,7 +23,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/dev")
-@Profile({"local", "test"})
+@Profile({"local", "test", "railway"})
 public class DevController {
 
     private final AppUserRepository userRepository;
