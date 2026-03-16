@@ -179,8 +179,7 @@ class CommitmentRepositoryTest extends AbstractRepositoryTest {
                 .build();
 
         assertThatThrownBy(() -> {
-            commitmentRepository.save(badCommitment);
-            em.flush();
+            commitmentRepository.saveAndFlush(badCommitment);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -201,8 +200,7 @@ class CommitmentRepositoryTest extends AbstractRepositoryTest {
                 .build();
 
         assertThatThrownBy(() -> {
-            commitmentRepository.save(badCommitment);
-            em.flush();
+            commitmentRepository.saveAndFlush(badCommitment);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

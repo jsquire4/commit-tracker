@@ -76,8 +76,7 @@ class UserRepositoryTest extends AbstractRepositoryTest {
         em.flush();
 
         assertThatThrownBy(() -> {
-            userRepository.save(user2);
-            em.flush();
+            userRepository.saveAndFlush(user2);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

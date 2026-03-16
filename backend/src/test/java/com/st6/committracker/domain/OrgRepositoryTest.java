@@ -66,12 +66,10 @@ class OrgRepositoryTest extends AbstractRepositoryTest {
         Org org1 = Org.builder().name("First Corp").slug("duplicate-slug").build();
         Org org2 = Org.builder().name("Second Corp").slug("duplicate-slug").build();
 
-        orgRepository.save(org1);
-        em.flush();
+        orgRepository.saveAndFlush(org1);
 
         assertThatThrownBy(() -> {
-            orgRepository.save(org2);
-            em.flush();
+            orgRepository.saveAndFlush(org2);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

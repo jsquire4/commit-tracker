@@ -127,8 +127,7 @@ class TaskBulletRepositoryTest extends AbstractRepositoryTest {
         TaskBullet bullet = new TaskBullet(commitment, org, null, 0);
 
         assertThatThrownBy(() -> {
-            taskBulletRepository.save(bullet);
-            em.flush();
+            taskBulletRepository.saveAndFlush(bullet);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 }

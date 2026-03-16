@@ -115,8 +115,7 @@ class ReconciliationRecordRepositoryTest extends AbstractRepositoryTest {
                 .build();
 
         assertThatThrownBy(() -> {
-            reconciliationRecordRepository.save(duplicate);
-            em.flush();
+            reconciliationRecordRepository.saveAndFlush(duplicate);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

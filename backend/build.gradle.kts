@@ -26,7 +26,6 @@ dependencies {
 
     // Database
     implementation("org.flywaydb:flyway-core")
-    implementation("org.flywaydb:flyway-database-postgresql:10.10.0")
     runtimeOnly("org.postgresql:postgresql")
 
     // Logging
@@ -47,9 +46,4 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
-    // Testcontainers tests disabled: Docker Engine 29.2.1 requires API version prefixes
-    // which is incompatible with current Testcontainers/docker-java. Re-enable when fixed.
-    exclude("**/domain/*RepositoryTest*")
-    exclude("**/domain/*ScopeRepositoryTest*")
-    exclude("**/integration/**")
 }

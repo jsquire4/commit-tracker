@@ -106,8 +106,7 @@ class CycleRepositoryTest extends AbstractRepositoryTest {
         em.flush();
 
         assertThatThrownBy(() -> {
-            cycleRepository.save(active2);
-            em.flush();
+            cycleRepository.saveAndFlush(active2);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -143,8 +142,7 @@ class CycleRepositoryTest extends AbstractRepositoryTest {
                 .isActive(false).build();
 
         assertThatThrownBy(() -> {
-            cycleRepository.save(badCycle);
-            em.flush();
+            cycleRepository.saveAndFlush(badCycle);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
@@ -163,8 +161,7 @@ class CycleRepositoryTest extends AbstractRepositoryTest {
         em.flush();
 
         assertThatThrownBy(() -> {
-            cycleRepository.save(c2);
-            em.flush();
+            cycleRepository.saveAndFlush(c2);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

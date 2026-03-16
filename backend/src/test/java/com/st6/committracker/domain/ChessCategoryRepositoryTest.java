@@ -72,8 +72,7 @@ class ChessCategoryRepositoryTest extends AbstractRepositoryTest {
         em.flush();
 
         assertThatThrownBy(() -> {
-            chessCategoryRepository.save(cat2);
-            em.flush();
+            chessCategoryRepository.saveAndFlush(cat2);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 

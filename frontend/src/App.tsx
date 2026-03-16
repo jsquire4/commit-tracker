@@ -1,13 +1,16 @@
+import { lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
+import { LoadingSpinner } from './components/LoadingSpinner';
 import { setTokenProvider } from './api/client';
-import { CommitEntryPage } from './features/commit-entry/CommitEntryPage';
-import { WeeklyLifecyclePage } from './features/weekly-lifecycle/WeeklyLifecyclePage';
-import { ReconciliationPage } from './features/reconciliation/ReconciliationPage';
-import { ManagerDashboardPage } from './features/manager-dashboard/ManagerDashboardPage';
-import { ChessboardPage } from './features/chessboard/ChessboardPage';
+
+const CommitEntryPage = lazy(() => import('./features/commit-entry/CommitEntryPage').then(m => ({ default: m.CommitEntryPage })));
+const WeeklyLifecyclePage = lazy(() => import('./features/weekly-lifecycle/WeeklyLifecyclePage').then(m => ({ default: m.WeeklyLifecyclePage })));
+const ReconciliationPage = lazy(() => import('./features/reconciliation/ReconciliationPage').then(m => ({ default: m.ReconciliationPage })));
+const ManagerDashboardPage = lazy(() => import('./features/manager-dashboard/ManagerDashboardPage').then(m => ({ default: m.ManagerDashboardPage })));
+const ChessboardPage = lazy(() => import('./features/chessboard/ChessboardPage').then(m => ({ default: m.ChessboardPage })));
 
 interface AuthContext {
   token: string;
@@ -38,13 +41,15 @@ export default function App({ basename, authContext }: AppProps) {
       <BrowserRouter basename={basename}>
         <QueryClientProvider client={queryClient}>
           <Layout>
-            <Routes>
-              <Route path="/" element={<CommitEntryPage />} />
-              <Route path="/cycle" element={<WeeklyLifecyclePage />} />
-              <Route path="/reconciliation" element={<ReconciliationPage />} />
-              <Route path="/dashboard" element={<ManagerDashboardPage />} />
-              <Route path="/chessboard" element={<ChessboardPage />} />
-            </Routes>
+            <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
+              <Routes>
+                <Route path="/" element={<CommitEntryPage />} />
+                <Route path="/cycle" element={<WeeklyLifecyclePage />} />
+                <Route path="/reconciliation" element={<ReconciliationPage />} />
+                <Route path="/dashboard" element={<ManagerDashboardPage />} />
+                <Route path="/chessboard" element={<ChessboardPage />} />
+              </Routes>
+            </Suspense>
           </Layout>
         </QueryClientProvider>
       </BrowserRouter>

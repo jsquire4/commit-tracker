@@ -126,8 +126,7 @@ class AnalystScopeRepositoryTest extends AbstractRepositoryTest {
                 .build();
 
         assertThatThrownBy(() -> {
-            analystScopeRepository.save(scope);
-            em.flush();
+            analystScopeRepository.saveAndFlush(scope);
         }).isInstanceOf(DataIntegrityViolationException.class);
     }
 
