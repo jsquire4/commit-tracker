@@ -1,6 +1,7 @@
 package com.st6.committracker.shared;
 
-import jakarta.persistence.EntityNotFoundException;
+import com.st6.committracker.shared.ConflictException;
+import com.st6.committracker.shared.EntityNotFoundException;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,6 +57,14 @@ public class GlobalExceptionHandler {
         log.warn("Entity not found: {}", ex.getMessage());
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
         problem.setType(URI.create("urn:problem:not-found"));
+        return problem;
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    public ProblemDetail handleConflict(ConflictException ex) {
+        log.warn("Conflict: {}", ex.getMessage());
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, ex.getMessage());
+        problem.setType(URI.create("urn:problem:conflict"));
         return problem;
     }
 
