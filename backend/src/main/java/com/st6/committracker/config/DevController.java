@@ -24,6 +24,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/dev")
 @Profile({"local", "test", "railway"})
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class DevController {
 
     private final AppUserRepository userRepository;
