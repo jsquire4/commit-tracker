@@ -6,7 +6,23 @@
     <title>ST6 Commit Module</title>
 </head>
 <body>
-    <div id="root"></div>
+    <div id="root">
+        <p style="padding:2rem;color:#666;font-family:sans-serif">Loading ST6 Commit Module...</p>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+        window.addEventListener('error', function(e) {
+            document.getElementById('root').innerHTML =
+                '<pre style="padding:2rem;color:red;font-family:monospace">' +
+                'JS Error: ' + e.message + '\n' + (e.filename || '') + ':' + (e.lineno || '') +
+                '</pre>';
+        });
+        window.addEventListener('unhandledrejection', function(e) {
+            document.getElementById('root').innerHTML =
+                '<pre style="padding:2rem;color:red;font-family:monospace">' +
+                'Promise Error: ' + (e.reason && e.reason.message ? e.reason.message : String(e.reason)) +
+                '</pre>';
+        });
+    </script>
 </body>
 </html>
