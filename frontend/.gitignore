@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# TypeScript build output (tsc -b emits .js alongside .ts)
+src/**/*.js
+tsconfig.tsbuildinfo
