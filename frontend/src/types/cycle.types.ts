@@ -17,3 +17,12 @@ export interface CycleTransitionRequest {
   targetState: CycleState;
   reason?: string;
 }
+
+/** Alias used in API module signatures */
+export type TransitionRequest = CycleTransitionRequest;
+
+export interface CycleFilters {
+  state?: CycleState;
+  dateFrom?: string;
+  dateTo?: string;
+}

@@ -58,3 +58,11 @@ export interface UpdateCommitmentRequest extends Partial<CreateCommitmentRequest
 export interface ReorderCommitmentsRequest {
   commitmentIds: string[];
 }
+
+export interface CommitmentFilters {
+  userId?: string;
+  rallyCryId?: string;
+  definingObjectiveId?: string;
+  chessCategoryId?: string;
+  assignedBy?: string;
+}

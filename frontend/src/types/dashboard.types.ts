@@ -64,6 +64,13 @@ export interface AssignmentConcentration {
   percentageOfTotal: number;
 }
 
+export interface DashboardFilters {
+  cycleWeekStart?: string;
+  teamMemberId?: string;
+  rcdoId?: string;
+  includeSubtree?: boolean;
+}
+
 /** Mirrors backend RcdoCoverageResponse */
 export interface RcdoCoverageResponse {
   totalCommitments: number;
