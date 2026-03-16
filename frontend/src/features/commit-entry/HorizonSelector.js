@@ -1,0 +1,27 @@
+import { jsx as _jsx } from "react/jsx-runtime";
+const HORIZONS = [
+    { value: 'MORNING', label: 'Morning' },
+    { value: 'MIDDAY', label: 'Midday' },
+    { value: 'AFTERNOON', label: 'Afternoon' },
+    { value: 'EOD', label: 'EOD' },
+    { value: 'EOW', label: 'EOW' },
+];
+export function HorizonSelector({ value, onChange, disabled = false }) {
+    return (_jsx("div", { className: "flex rounded-md shadow-sm", role: "group", "aria-label": "Completion horizon", children: HORIZONS.map((horizon, index) => {
+            const isActive = value === horizon.value;
+            const isFirst = index === 0;
+            const isLast = index === HORIZONS.length - 1;
+            return (_jsx("button", { type: "button", disabled: disabled, onClick: () => onChange(horizon.value), "aria-pressed": isActive, className: [
+                    'flex-1 px-3 py-2 text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',
+                    isFirst ? 'rounded-l-md' : '',
+                    isLast ? 'rounded-r-md' : '',
+                    !isFirst ? '-ml-px' : '',
+                    isActive
+                        ? 'bg-blue-600 text-white border-blue-600 z-10'
+                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                    disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+                ]
+                    .filter(Boolean)
+                    .join(' '), children: horizon.label }, horizon.value));
+        }) }));
+}
