@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.UUID;
 
 public record CreateUnplannedCommitmentRequest(
+    @NotNull UUID cycleId,
     @NotBlank @Size(max = 500) String title,
     @Size(max = 2000) String description,
     @NotNull CompletionHorizon completionHorizon,
