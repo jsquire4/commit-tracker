@@ -8,4 +8,5 @@ public interface DefiningObjectiveRepository extends JpaRepository<DefiningObjec
     List<DefiningObjective> findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(UUID rallyCryId);
     List<DefiningObjective> findByOwnerIdAndArchivedAtIsNull(UUID ownerUserId);
     List<DefiningObjective> findByOrgIdAndArchivedAtIsNull(UUID orgId);
+    List<DefiningObjective> findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(UUID orgId);
 }

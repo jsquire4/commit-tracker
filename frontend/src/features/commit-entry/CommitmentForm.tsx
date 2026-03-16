@@ -1,5 +1,5 @@
 import { Fragment, useEffect } from 'react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Transition } from '@headlessui/react';
 import { z } from 'zod';
@@ -44,6 +44,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     handleSubmit,
     control,
     reset,
+    setValue,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(CreateCommitmentFormSchema),
@@ -127,6 +128,13 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     }
   }
 
+  const rcdoValue = useWatch({ control, name: ['rallyCryId', 'definingObjectiveId', 'outcomeId'] });
+  const rcdoLink = {
+    rallyCryId: rcdoValue[0] ?? null,
+    definingObjectiveId: rcdoValue[1] ?? null,
+    outcomeId: rcdoValue[2] ?? null,
+  };
+
   const apiError =
     createMutation.error instanceof Error
       ? createMutation.error.message
@@ -206,35 +214,13 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Strategic Link
                   </label>
-                  <Controller
-                    name="rallyCryId"
-                    control={control}
-                    render={({ field: rcField }) => (
-                      <Controller
-                        name="definingObjectiveId"
-                        control={control}
-                        render={({ field: doField }) => (
-                          <Controller
-                            name="outcomeId"
-                            control={control}
-                            render={({ field: ocField }) => (
-                              <RcdoAutocomplete
-                                value={{
-                                  rallyCryId: rcField.value ?? null,
-                                  definingObjectiveId: doField.value ?? null,
-                                  outcomeId: ocField.value ?? null,
-                                }}
-                                onChange={(link) => {
-                                  rcField.onChange(link.rallyCryId ?? undefined);
-                                  doField.onChange(link.definingObjectiveId ?? undefined);
-                                  ocField.onChange(link.outcomeId ?? undefined);
-                                }}
-                              />
-                            )}
-                          />
-                        )}
-                      />
-                    )}
+                  <RcdoAutocomplete
+                    value={rcdoLink}
+                    onChange={(link) => {
+                      setValue('rallyCryId', link.rallyCryId ?? undefined);
+                      setValue('definingObjectiveId', link.definingObjectiveId ?? undefined);
+                      setValue('outcomeId', link.outcomeId ?? undefined);
+                    }}
                   />
                 </div>
 

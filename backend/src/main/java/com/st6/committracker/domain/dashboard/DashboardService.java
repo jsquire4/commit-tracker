@@ -40,6 +40,13 @@ import java.util.stream.Collectors;
 @Transactional(readOnly = true)
 public class DashboardService {
 
+    /** Bundles the three data loads shared by all dashboard methods. */
+    private record DashboardData(
+            List<AppUser> members,
+            Optional<Cycle> cycle,
+            Map<UUID, List<Commitment>> commitmentsByUser
+    ) {}
+
     private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
 
     // Roles allowed to view team dashboards
@@ -93,15 +100,14 @@ public class DashboardService {
     public TeamRollupResponse getTeamRollup(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
 
-        List<AppUser> members = getVisibleTeamMembers(manager, filters);
-        Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
+        DashboardData data = loadDashboardData(manager, filters);
 
-        List<TeamRollupResponse.TeamMemberSummary> summaries = members.stream()
-                .map(member -> buildTeamMemberSummary(member, cycleOpt))
+        List<TeamRollupResponse.TeamMemberSummary> summaries = data.members().stream()
+                .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser()))
                 .toList();
 
         log.debug("getTeamRollup managerId={} cycleId={} memberCount={}",
-                manager.getId(), cycleOpt.map(Cycle::getId).orElse(null), summaries.size());
+                manager.getId(), data.cycle().map(Cycle::getId).orElse(null), summaries.size());
 
         return new TeamRollupResponse(summaries);
     }
@@ -114,11 +120,9 @@ public class DashboardService {
     public AlignmentSignalResponse getAlignmentSignal(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
 
-        List<AppUser> members = getVisibleTeamMembers(manager, filters);
-        Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
-
-        List<UUID> userIds = members.stream().map(AppUser::getId).toList();
-        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleOpt.map(Cycle::getId).orElse(null));
+        DashboardData data = loadDashboardData(manager, filters);
+        List<AppUser> members = data.members();
+        Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
         // Team-level aggregate
         List<Commitment> allCommitments = byUser.values().stream()
@@ -174,11 +178,9 @@ public class DashboardService {
     public AssignmentAttributionResponse getAssignmentAttribution(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
 
-        List<AppUser> members = getVisibleTeamMembers(manager, filters);
-        Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
-
-        List<UUID> userIds = members.stream().map(AppUser::getId).toList();
-        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleOpt.map(Cycle::getId).orElse(null));
+        DashboardData data = loadDashboardData(manager, filters);
+        List<AppUser> members = data.members();
+        Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
         List<Commitment> allCommitments = byUser.values().stream()
                 .flatMap(List::stream)
@@ -222,12 +224,8 @@ public class DashboardService {
     public RcdoCoverageResponse getRcdoCoverage(AppUser actor, DashboardFilters filters) {
         assertManagerRole(actor);
 
-        List<AppUser> members = getVisibleTeamMembers(actor, filters);
-        Optional<Cycle> cycleOpt = resolveCycle(actor.getOrg().getId(), filters);
-        UUID cycleId = cycleOpt.map(Cycle::getId).orElse(null);
-
-        List<UUID> userIds = members.stream().map(AppUser::getId).toList();
-        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleId);
+        DashboardData data = loadDashboardData(actor, filters);
+        Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
         List<Commitment> allCommitments = byUser.values().stream()
                 .flatMap(List::stream)
@@ -283,6 +281,18 @@ public class DashboardService {
     }
 
     // === Internal helpers ===
+
+    /**
+     * Loads the three shared data pieces used by every dashboard method:
+     * visible team members, resolved cycle, and commitments grouped by user.
+     */
+    private DashboardData loadDashboardData(AppUser manager, DashboardFilters filters) {
+        List<AppUser> members = getVisibleTeamMembers(manager, filters);
+        Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
+        List<UUID> userIds = members.stream().map(AppUser::getId).toList();
+        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleOpt.map(Cycle::getId).orElse(null));
+        return new DashboardData(members, cycleOpt, byUser);
+    }
 
     /**
      * Returns the visible team members for the given manager, applying filters.
@@ -355,7 +365,8 @@ public class DashboardService {
         return cycleRepository.findByOrgIdAndIsActiveTrue(orgId);
     }
 
-    private TeamRollupResponse.TeamMemberSummary buildTeamMemberSummary(AppUser member, Optional<Cycle> cycleOpt) {
+    private TeamRollupResponse.TeamMemberSummary buildTeamMemberSummary(AppUser member, Optional<Cycle> cycleOpt,
+                                                                         Map<UUID, List<Commitment>> commitmentsByUser) {
         if (cycleOpt.isEmpty()) {
             return new TeamRollupResponse.TeamMemberSummary(
                     member.getId(), member.getDisplayName(), member.getRole().name(),
@@ -363,8 +374,7 @@ public class DashboardService {
         }
 
         Cycle cycle = cycleOpt.get();
-        List<Commitment> commitments = commitmentRepository
-                .findByUserIdAndCycleIdOrderByPriorityRankAsc(member.getId(), cycle.getId());
+        List<Commitment> commitments = commitmentsByUser.getOrDefault(member.getId(), List.of());
 
         int total = commitments.size();
 

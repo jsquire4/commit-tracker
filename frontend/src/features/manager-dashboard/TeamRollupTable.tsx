@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, Fragment } from 'react';
 import type { TeamMemberSummary } from '@/types';
 import { MemberCommitmentDetail } from './MemberCommitmentDetail';
 
@@ -246,9 +246,8 @@ export function TeamRollupTable({
               const stateColor = CYCLE_STATE_COLORS[raw.cycleState] ?? 'bg-gray-100 text-gray-700';
 
               return (
-                <>
+                <Fragment key={raw.userId}>
                   <tr
-                    key={raw.userId}
                     className={`hover:bg-gray-50 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50' : ''}`}
                     onClick={() => handleRowClick(raw.userId)}
                     aria-expanded={isExpanded}
@@ -296,7 +295,7 @@ export function TeamRollupTable({
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{topRcdo}</td>
                   </tr>
                   {isExpanded && (
-                    <tr key={`${raw.userId}-detail`}>
+                    <tr>
                       <td
                         colSpan={7}
                         className="bg-blue-50 border-t border-blue-100"
@@ -305,7 +304,7 @@ export function TeamRollupTable({
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               );
             })}
           </tbody>

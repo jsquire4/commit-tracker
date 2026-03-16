@@ -589,12 +589,12 @@ class CycleServiceTest {
         c2.setStartsAt(Instant.now().minus(7, ChronoUnit.DAYS));
         c2.setEndsAt(Instant.now());
 
-        when(cycleRepository.findAll()).thenReturn(List.of(c1, c2));
+        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId())).thenReturn(List.of(c1, c2));
 
         CycleFilters filters = new CycleFilters(null, null, null);
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Cycle> result = cycleService.listCycles(filters, pageable);
+        Page<Cycle> result = cycleService.listCycles(org.getId(), filters, pageable);
 
         assertThat(result.getTotalElements()).isEqualTo(2);
         assertThat(result.getContent()).hasSize(2);

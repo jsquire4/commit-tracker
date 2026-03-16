@@ -210,19 +210,24 @@ public class CycleService {
     }
 
     /**
-     * List cycle history for the org. Actor must be in the same org.
+     * Returns the number of commitments in the given cycle for the actor's org.
      */
-    public Page<Cycle> listCycles(CycleFilters filters, Pageable pageable) {
-        // For now, fetch all and apply in-memory filtering (can be replaced with Specification later)
-        // We need the org from filters or context; since filters don't include org, return all for now.
-        // The caller is expected to provide filters scoped to the actor's org.
-        List<Cycle> all = cycleRepository.findAll();
+    public int getCommitmentCount(UUID orgId, UUID cycleId) {
+        return commitmentRepository
+                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId).size();
+    }
 
-        List<Cycle> filtered = all.stream()
+    /**
+     * List cycle history for the org. Actor must be in the same org.
+     * Queries only cycles belonging to the given org, then applies in-memory filters.
+     */
+    public Page<Cycle> listCycles(UUID orgId, CycleFilters filters, Pageable pageable) {
+        List<Cycle> orgCycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+
+        List<Cycle> filtered = orgCycles.stream()
                 .filter(c -> filters.state() == null || c.getState() == filters.state())
                 .filter(c -> filters.dateFrom() == null || !c.getStartsAt().isBefore(filters.dateFrom()))
                 .filter(c -> filters.dateTo() == null || !c.getStartsAt().isAfter(filters.dateTo()))
-                .sorted((a, b) -> b.getStartsAt().compareTo(a.getStartsAt()))
                 .collect(Collectors.toList());
 
         int start = (int) pageable.getOffset();

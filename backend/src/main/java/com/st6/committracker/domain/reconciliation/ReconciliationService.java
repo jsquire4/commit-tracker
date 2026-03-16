@@ -198,10 +198,16 @@ public class ReconciliationService {
         Map<UUID, ReconciliationRecord> recordByCommitmentId = records.stream()
                 .collect(Collectors.toMap(r -> r.getCommitment().getId(), r -> r));
 
+        // Load all bullets for visible commitments in one query
+        List<UUID> visibleIds = visibleCommitments.stream().map(Commitment::getId).toList();
+        Map<UUID, List<TaskBullet>> bulletsByCommitmentId = visibleIds.isEmpty()
+                ? Map.of()
+                : taskBulletRepository.findByCommitmentIdIn(visibleIds).stream()
+                        .collect(Collectors.groupingBy(t -> t.getCommitment().getId()));
+
         List<CommitmentReconciliationDetail> details = new ArrayList<>();
         for (Commitment commitment : visibleCommitments) {
-            List<TaskBullet> bullets =
-                    taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitment.getId());
+            List<TaskBullet> bullets = bulletsByCommitmentId.getOrDefault(commitment.getId(), List.of());
             ReconciliationRecord rec = recordByCommitmentId.get(commitment.getId());
             details.add(new CommitmentReconciliationDetail(commitment, bullets, rec));
         }
@@ -270,15 +276,13 @@ public class ReconciliationService {
         double completionRate = totalCommitments == 0 ? 0.0
                 : (double) completedCount / totalCommitments;
 
-        // Compute bullet completion rate across all commitments in cycle
-        int totalBullets = 0;
-        int completedBullets = 0;
-        for (Commitment commitment : commitments) {
-            List<TaskBullet> bullets =
-                    taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitment.getId());
-            totalBullets += bullets.size();
-            completedBullets += (int) bullets.stream().filter(TaskBullet::isCompleted).count();
-        }
+        // Compute bullet completion rate across all commitments in cycle — single bulk query
+        List<UUID> commitmentIds = commitments.stream().map(Commitment::getId).toList();
+        List<TaskBullet> allBullets = commitmentIds.isEmpty()
+                ? List.of()
+                : taskBulletRepository.findByCommitmentIdIn(commitmentIds);
+        int totalBullets = allBullets.size();
+        int completedBullets = (int) allBullets.stream().filter(TaskBullet::isCompleted).count();
 
         double bulletCompletionRate = totalBullets == 0 ? 0.0
                 : (double) completedBullets / totalBullets;

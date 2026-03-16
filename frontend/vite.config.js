@@ -19,6 +19,17 @@ export default defineConfig({
     },
     build: {
         sourcemap: true,
+        rollupOptions: {
+            output: {
+                manualChunks: {
+                    'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+                    'vendor-query': ['@tanstack/react-query'],
+                    'vendor-ui': ['@headlessui/react', '@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
+                    'vendor-charts': ['recharts'],
+                    'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+                },
+            },
+        },
     },
     test: {
         globals: true,

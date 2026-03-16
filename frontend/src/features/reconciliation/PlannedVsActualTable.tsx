@@ -68,27 +68,38 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
 
   const reconcileMutation = useReconcileCommitment(cycleId);
 
-  const handleStatusChange = useCallback(
-    async (status: ReconciliationStatus) => {
-      const next: RowState = { ...row, status, saving: true, saveError: null };
-      setRow(next);
-
+  const buildAndSave = useCallback(
+    async (
+      status: ReconciliationStatus,
+      notes: string,
+      bulletStatuses: Record<string, boolean>,
+      onError?: () => void
+    ) => {
       const bulletStatusArray: BulletStatus[] = commitment.bullets.map((b) => ({
         bulletId: b.id,
-        done: next.bulletStatuses[b.id] ?? b.isCompleted,
+        done: bulletStatuses[b.id] ?? b.isCompleted,
       }));
-
       try {
         await reconcileMutation.mutateAsync({
           id: commitment.id,
-          req: buildReconcileRequest(status, next.notes, bulletStatusArray),
+          req: buildReconcileRequest(status, notes, bulletStatusArray),
         });
         setRow((prev) => ({ ...prev, saving: false }));
       } catch {
         setRow((prev) => ({ ...prev, saving: false, saveError: 'Save failed. Try again.' }));
+        onError?.();
       }
     },
-    [row, commitment, reconcileMutation]
+    [commitment, reconcileMutation]
+  );
+
+  const handleStatusChange = useCallback(
+    async (status: ReconciliationStatus) => {
+      const next: RowState = { ...row, status, saving: true, saveError: null };
+      setRow(next);
+      await buildAndSave(status, next.notes, next.bulletStatuses);
+    },
+    [row, buildAndSave]
   );
 
   const handleNotesChange = useCallback((notes: string) => {
@@ -100,22 +111,8 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
     if (row.notes === (reconciliation?.notes ?? '')) return;
 
     setRow((prev) => ({ ...prev, saving: true, saveError: null }));
-
-    const bulletStatusArray: BulletStatus[] = commitment.bullets.map((b) => ({
-      bulletId: b.id,
-      done: row.bulletStatuses[b.id] ?? b.isCompleted,
-    }));
-
-    try {
-      await reconcileMutation.mutateAsync({
-        id: commitment.id,
-        req: buildReconcileRequest(row.status, row.notes, bulletStatusArray),
-      });
-      setRow((prev) => ({ ...prev, saving: false }));
-    } catch {
-      setRow((prev) => ({ ...prev, saving: false, saveError: 'Save failed. Try again.' }));
-    }
-  }, [row, commitment, reconciliation, reconcileMutation]);
+    await buildAndSave(row.status, row.notes, row.bulletStatuses);
+  }, [row, reconciliation, buildAndSave]);
 
   const handleBulletToggle = useCallback(
     async (bulletId: string, done: boolean) => {
@@ -127,27 +124,14 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
         return;
       }
 
-      const bulletStatusArray: BulletStatus[] = commitment.bullets.map((b) => ({
-        bulletId: b.id,
-        done: nextBulletStatuses[b.id] ?? b.isCompleted,
-      }));
-
-      try {
-        await reconcileMutation.mutateAsync({
-          id: commitment.id,
-          req: buildReconcileRequest(row.status, row.notes, bulletStatusArray),
-        });
-        setRow((prev) => ({ ...prev, saving: false }));
-      } catch {
+      await buildAndSave(row.status, row.notes, nextBulletStatuses, () => {
         setRow((prev) => ({
           ...prev,
           bulletStatuses: { ...nextBulletStatuses, [bulletId]: !done },
-          saving: false,
-          saveError: 'Save failed. Try again.',
         }));
-      }
+      });
     },
-    [row, commitment, reconcileMutation]
+    [row, buildAndSave]
   );
 
   const isReasonRequired = row.status !== null && row.status !== 'COMPLETED';

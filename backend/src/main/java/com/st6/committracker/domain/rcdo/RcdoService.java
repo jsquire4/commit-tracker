@@ -17,6 +17,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -204,22 +205,38 @@ public class RcdoService {
      * Returns full RCDO hierarchy for an org, excluding archived.
      * Structure: List&lt;RallyCry&gt; each with nested List&lt;DefiningObjective&gt;
      * each with nested List&lt;Outcome&gt;.
+     * Uses 3 bulk queries and builds the tree in memory to avoid N+1 queries.
      * Used by frontend dropdowns and import validation.
      */
     @Transactional(readOnly = true)
     public RcdoTreeResponse getTree(UUID orgId) {
+        // Load all 3 levels in bulk — no N+1
         List<RallyCry> rallyCries = rallyCryRepository
                 .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
 
+        List<DefiningObjective> allDos = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+
+        List<Outcome> allOutcomes = outcomeRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+
+        // Group DOs and Outcomes by their parent IDs
+        Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
+                .collect(Collectors.groupingBy(d -> d.getRallyCry().getId()));
+
+        Map<UUID, List<Outcome>> outcomesByDoId = allOutcomes.stream()
+                .collect(Collectors.groupingBy(o -> o.getDefiningObjective().getId()));
+
+        // Build tree in memory
         List<RcdoTreeResponse.RallyCryNode> rallyCryNodes = rallyCries.stream()
                 .map(rc -> {
-                    List<DefiningObjective> definingObjectives = definingObjectiveRepository
-                            .findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId());
+                    List<DefiningObjective> definingObjectives =
+                            dosByRallyCryId.getOrDefault(rc.getId(), List.of());
 
                     List<RcdoTreeResponse.DefiningObjectiveNode> doNodes = definingObjectives.stream()
                             .map(doObj -> {
-                                List<Outcome> outcomes = outcomeRepository
-                                        .findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(doObj.getId());
+                                List<Outcome> outcomes =
+                                        outcomesByDoId.getOrDefault(doObj.getId(), List.of());
 
                                 List<RcdoTreeResponse.OutcomeNode> outcomeNodes = outcomes.stream()
                                         .map(o -> new RcdoTreeResponse.OutcomeNode(

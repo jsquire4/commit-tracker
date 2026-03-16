@@ -201,9 +201,9 @@ class RcdoServiceTest {
 
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of(rc));
-        when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId()))
+        when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of(doObj));
-        when(outcomeRepository.findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(doObj.getId()))
+        when(outcomeRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of(outcome));
 
         RcdoTreeResponse tree = rcdoService.getTree(orgId);
@@ -221,6 +221,10 @@ class RcdoServiceTest {
         UUID orgId = UUID.randomUUID();
 
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
+                .thenReturn(List.of());
+        when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
+                .thenReturn(List.of());
+        when(outcomeRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
 
         RcdoTreeResponse tree = rcdoService.getTree(orgId);

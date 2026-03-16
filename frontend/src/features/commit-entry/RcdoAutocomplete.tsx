@@ -52,6 +52,76 @@ function useDebounce(value: string, delay = 300): string {
   return debounced;
 }
 
+type RcdoNode = RallyCryNode | DefiningObjectiveNode | OutcomeNode;
+
+interface RcdoComboboxProps {
+  label: string;
+  query: string;
+  onQueryChange: (q: string) => void;
+  value: RcdoNode | null;
+  onChange: (item: RcdoNode | typeof NO_LINK_VALUE) => void;
+  items: RcdoNode[];
+  noLinkLabel: string;
+  placeholder: string;
+  disabled: boolean;
+}
+
+function RcdoCombobox({
+  label,
+  query: _query,
+  onQueryChange,
+  value,
+  onChange,
+  items,
+  noLinkLabel,
+  placeholder,
+  disabled,
+}: RcdoComboboxProps) {
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <Combobox value={value} onChange={(item) => { if (item) onChange(item as RcdoNode); }} disabled={disabled}>
+        <div className="relative">
+          <Combobox.Input
+            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+            displayValue={(item: RcdoNode | null) => (item as RcdoNode | null)?.title ?? ''}
+            onChange={(e) => onQueryChange(e.target.value)}
+            placeholder={placeholder}
+          />
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none text-sm">
+              <Combobox.Option
+                value={NO_LINK_VALUE}
+                className={({ active }) =>
+                  `cursor-pointer select-none py-2 px-3 italic ${active ? 'bg-gray-100' : 'text-gray-400'}`
+                }
+              >
+                {noLinkLabel}
+              </Combobox.Option>
+              {items.map((item) => (
+                <Combobox.Option
+                  key={item.id}
+                  value={item}
+                  className={({ active }) =>
+                    `cursor-pointer select-none py-2 px-3 ${active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'}`
+                  }
+                >
+                  {item.title}
+                </Combobox.Option>
+              ))}
+            </Combobox.Options>
+          </Transition>
+        </div>
+      </Combobox>
+    </div>
+  );
+}
+
 interface RcdoAutocompleteProps {
   value: RcdoLink;
   onChange: (link: RcdoLink) => void;
@@ -65,9 +135,6 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
   const [rcQuery, setRcQuery] = useState('');
   const [doQuery, setDoQuery] = useState('');
   const [ocQuery, setOcQuery] = useState('');
-  const [rcDisplay, setRcDisplay] = useState('');
-  const [doDisplay, setDoDisplay] = useState('');
-  const [ocDisplay, setOcDisplay] = useState('');
 
   const debouncedRc = useDebounce(rcQuery);
   const debouncedDo = useDebounce(doQuery);
@@ -85,55 +152,44 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
     debouncedOc || ' '
   );
 
-  // Cast to correct types
   const rcList = rallyCries as RallyCryNode[];
   const doList = definingObjectives as DefiningObjectiveNode[];
   const ocList = outcomes as OutcomeNode[];
 
   const recent = getRecent();
 
-  function handleRallyCrySelect(item: RallyCryNode | typeof NO_LINK_VALUE) {
+  function handleRallyCrySelect(item: RcdoNode | typeof NO_LINK_VALUE) {
     if (item === NO_LINK_VALUE) {
       onChange({ rallyCryId: null, definingObjectiveId: null, outcomeId: null });
-      setRcDisplay('');
-      setDoDisplay('');
-      setOcDisplay('');
       return;
     }
-    setRcDisplay(item.title);
+    const rc = item as RallyCryNode;
     setRcQuery('');
-    setDoDisplay('');
     setDoQuery('');
-    setOcDisplay('');
     setOcQuery('');
-    onChange({ rallyCryId: item.id, definingObjectiveId: null, outcomeId: null });
+    onChange({ rallyCryId: rc.id, definingObjectiveId: null, outcomeId: null });
   }
 
-  function handleDefiningObjectiveSelect(item: DefiningObjectiveNode | typeof NO_LINK_VALUE) {
+  function handleDefiningObjectiveSelect(item: RcdoNode | typeof NO_LINK_VALUE) {
     if (item === NO_LINK_VALUE) {
       onChange({ ...value, definingObjectiveId: null, outcomeId: null });
-      setDoDisplay('');
-      setOcDisplay('');
       return;
     }
-    setDoDisplay(item.title);
+    const doItem = item as DefiningObjectiveNode;
     setDoQuery('');
-    setOcDisplay('');
     setOcQuery('');
-    onChange({ ...value, definingObjectiveId: item.id, outcomeId: null });
+    onChange({ ...value, definingObjectiveId: doItem.id, outcomeId: null });
   }
 
-  function handleOutcomeSelect(item: OutcomeNode | typeof NO_LINK_VALUE) {
+  function handleOutcomeSelect(item: RcdoNode | typeof NO_LINK_VALUE) {
     if (item === NO_LINK_VALUE) {
       onChange({ ...value, outcomeId: null });
-      setOcDisplay('');
       return;
     }
-    setOcDisplay(item.title);
+    const oc = item as OutcomeNode;
     setOcQuery('');
-    const updated: RcdoLink = { ...value, outcomeId: item.id };
+    const updated: RcdoLink = { ...value, outcomeId: oc.id };
     onChange(updated);
-    // Save to recent
     const rc = rcList.find((r) => r.id === value.rallyCryId);
     const doItem = doList.find((d) => d.id === value.definingObjectiveId);
     addRecent({
@@ -141,12 +197,16 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
       rallyCryTitle: rc?.title ?? null,
       definingObjectiveId: value.definingObjectiveId,
       definingObjectiveTitle: doItem?.title ?? null,
-      outcomeId: item.id,
-      outcomeTitle: item.title,
+      outcomeId: oc.id,
+      outcomeTitle: oc.title,
     });
   }
 
   const isLinked = Boolean(value.rallyCryId);
+
+  const selectedRc = value.rallyCryId ? (rcList.find((r) => r.id === value.rallyCryId) ?? null) : null;
+  const selectedDo = value.definingObjectiveId ? (doList.find((d) => d.id === value.definingObjectiveId) ?? null) : null;
+  const selectedOc = value.outcomeId ? (ocList.find((o) => o.id === value.outcomeId) ?? null) : null;
 
   return (
     <div className="space-y-3">
@@ -165,9 +225,6 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
                     definingObjectiveId: r.definingObjectiveId,
                     outcomeId: r.outcomeId,
                   });
-                  setRcDisplay(r.rallyCryTitle ?? '');
-                  setDoDisplay(r.definingObjectiveTitle ?? '');
-                  setOcDisplay(r.outcomeTitle ?? '');
                 }}
                 className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 py-1 rounded-full transition-colors disabled:opacity-50"
               >
@@ -180,161 +237,44 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
         </div>
       )}
 
-      {/* Rally Cry */}
-      <div>
-        <label className="block text-xs font-medium text-gray-600 mb-1">Rally Cry</label>
-        <Combobox
-          value={value.rallyCryId ? (rcList.find((r) => r.id === value.rallyCryId) ?? null) : null}
-          onChange={(item) => {
-            if (item) handleRallyCrySelect(item as RallyCryNode);
-          }}
-          disabled={disabled}
-        >
-          <div className="relative">
-            <Combobox.Input
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-              displayValue={() => rcDisplay || (value.rallyCryId ? '...' : '')}
-              onChange={(e) => setRcQuery(e.target.value)}
-              placeholder="Search rally cries..."
-            />
-            <Transition
-              as={Fragment}
-              leave="transition ease-in duration-100"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none text-sm">
-                <Combobox.Option
-                  value={NO_LINK_VALUE}
-                  className={({ active }) =>
-                    `cursor-pointer select-none py-2 px-3 italic ${active ? 'bg-gray-100' : 'text-gray-400'}`
-                  }
-                >
-                  No strategic link (operational/other)
-                </Combobox.Option>
-                {rcList.map((rc) => (
-                  <Combobox.Option
-                    key={rc.id}
-                    value={rc}
-                    className={({ active }) =>
-                      `cursor-pointer select-none py-2 px-3 ${active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'}`
-                    }
-                  >
-                    {rc.title}
-                  </Combobox.Option>
-                ))}
-              </Combobox.Options>
-            </Transition>
-          </div>
-        </Combobox>
-      </div>
+      <RcdoCombobox
+        label="Rally Cry"
+        query={rcQuery}
+        onQueryChange={setRcQuery}
+        value={selectedRc}
+        onChange={handleRallyCrySelect}
+        items={rcList}
+        noLinkLabel="No strategic link (operational/other)"
+        placeholder="Search rally cries..."
+        disabled={disabled}
+      />
 
-      {/* Defining Objective */}
       {value.rallyCryId && (
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Defining Objective</label>
-          <Combobox
-            value={
-              value.definingObjectiveId
-                ? (doList.find((d) => d.id === value.definingObjectiveId) ?? null)
-                : null
-            }
-            onChange={(item) => {
-              if (item) handleDefiningObjectiveSelect(item as DefiningObjectiveNode);
-            }}
-            disabled={disabled}
-          >
-            <div className="relative">
-              <Combobox.Input
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                displayValue={() => doDisplay || (value.definingObjectiveId ? '...' : '')}
-                onChange={(e) => setDoQuery(e.target.value)}
-                placeholder="Search defining objectives..."
-              />
-              <Transition
-                as={Fragment}
-                leave="transition ease-in duration-100"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none text-sm">
-                  <Combobox.Option
-                    value={NO_LINK_VALUE}
-                    className={({ active }) =>
-                      `cursor-pointer select-none py-2 px-3 italic ${active ? 'bg-gray-100' : 'text-gray-400'}`
-                    }
-                  >
-                    No defining objective
-                  </Combobox.Option>
-                  {doList.map((doItem) => (
-                    <Combobox.Option
-                      key={doItem.id}
-                      value={doItem}
-                      className={({ active }) =>
-                        `cursor-pointer select-none py-2 px-3 ${active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'}`
-                      }
-                    >
-                      {doItem.title}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
-              </Transition>
-            </div>
-          </Combobox>
-        </div>
+        <RcdoCombobox
+          label="Defining Objective"
+          query={doQuery}
+          onQueryChange={setDoQuery}
+          value={selectedDo}
+          onChange={handleDefiningObjectiveSelect}
+          items={doList}
+          noLinkLabel="No defining objective"
+          placeholder="Search defining objectives..."
+          disabled={disabled}
+        />
       )}
 
-      {/* Outcome */}
       {value.definingObjectiveId && (
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Outcome</label>
-          <Combobox
-            value={
-              value.outcomeId ? (ocList.find((o) => o.id === value.outcomeId) ?? null) : null
-            }
-            onChange={(item) => {
-              if (item) handleOutcomeSelect(item as OutcomeNode);
-            }}
-            disabled={disabled}
-          >
-            <div className="relative">
-              <Combobox.Input
-                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-                displayValue={() => ocDisplay || (value.outcomeId ? '...' : '')}
-                onChange={(e) => setOcQuery(e.target.value)}
-                placeholder="Search outcomes..."
-              />
-              <Transition
-                as={Fragment}
-                leave="transition ease-in duration-100"
-                leaveFrom="opacity-100"
-                leaveTo="opacity-0"
-              >
-                <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none text-sm">
-                  <Combobox.Option
-                    value={NO_LINK_VALUE}
-                    className={({ active }) =>
-                      `cursor-pointer select-none py-2 px-3 italic ${active ? 'bg-gray-100' : 'text-gray-400'}`
-                    }
-                  >
-                    No outcome
-                  </Combobox.Option>
-                  {ocList.map((oc) => (
-                    <Combobox.Option
-                      key={oc.id}
-                      value={oc}
-                      className={({ active }) =>
-                        `cursor-pointer select-none py-2 px-3 ${active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'}`
-                      }
-                    >
-                      {oc.title}
-                    </Combobox.Option>
-                  ))}
-                </Combobox.Options>
-              </Transition>
-            </div>
-          </Combobox>
-        </div>
+        <RcdoCombobox
+          label="Outcome"
+          query={ocQuery}
+          onQueryChange={setOcQuery}
+          value={selectedOc}
+          onChange={handleOutcomeSelect}
+          items={ocList}
+          noLinkLabel="No outcome"
+          placeholder="Search outcomes..."
+          disabled={disabled}
+        />
       )}
     </div>
   );

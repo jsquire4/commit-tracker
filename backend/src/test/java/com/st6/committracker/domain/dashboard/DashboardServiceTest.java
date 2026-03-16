@@ -118,14 +118,16 @@ class DashboardServiceTest {
     void getTeamRollup_asManager_returnsDirectReportsSummary() {
         DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
 
+        Commitment r1c1 = commitment(report1, catA);
+        Commitment r1c2 = commitment(report1, catA);
+        Commitment r2c1 = commitment(report2, catB);
+
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1, report2));
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report1, catA), commitment(report1, catA)));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report2.getId(), activeCycle.getId()))
-                .thenReturn(List.of(commitment(report2, catB)));
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
+                .thenReturn(List.of(r1c1, r1c2, r2c1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(any(), eq(activeCycle.getId())))
                 .thenReturn(List.of());
 
@@ -153,7 +155,7 @@ class DashboardServiceTest {
                 .thenReturn(List.of(subtreeUser));
         when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId()))
                 .thenReturn(Optional.of(activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(subtreeUserId, activeCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of());
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(any(), eq(activeCycle.getId())))
                 .thenReturn(List.of());
@@ -194,7 +196,7 @@ class DashboardServiceTest {
                 .thenReturn(List.of(report1));
         when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
                 .thenReturn(List.of(specificCycle, activeCycle));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(report1.getId(), specificCycle.getId()))
+        when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(specificCycle.getId())))
                 .thenReturn(List.of(commitment(report1, catA)));
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(any(), eq(specificCycle.getId())))
                 .thenReturn(List.of());

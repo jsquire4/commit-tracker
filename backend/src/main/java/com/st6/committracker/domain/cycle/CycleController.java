@@ -1,7 +1,6 @@
 package com.st6.committracker.domain.cycle;
 
 import com.st6.committracker.domain.CycleState;
-import com.st6.committracker.domain.commit.CommitmentRepository;
 import com.st6.committracker.domain.cycle.dto.CycleFilters;
 import com.st6.committracker.domain.cycle.dto.CycleResponse;
 import com.st6.committracker.domain.cycle.dto.TransitionRequest;
@@ -32,22 +31,17 @@ public class CycleController {
 
     private final CycleService cycleService;
     private final CycleMapper cycleMapper;
-    private final CommitmentRepository commitmentRepository;
 
-    public CycleController(CycleService cycleService,
-                           CycleMapper cycleMapper,
-                           CommitmentRepository commitmentRepository) {
+    public CycleController(CycleService cycleService, CycleMapper cycleMapper) {
         this.cycleService = cycleService;
         this.cycleMapper = cycleMapper;
-        this.commitmentRepository = commitmentRepository;
     }
 
     @GetMapping("/current")
     public ResponseEntity<ApiResponse<CycleResponse>> getCurrentCycle() {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         Cycle cycle = cycleService.getCurrentCycle(actor);
-        int count = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycle.getId()).size();
+        int count = cycleService.getCommitmentCount(actor.getOrg().getId(), cycle.getId());
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(cycle, count)));
     }
 
@@ -55,8 +49,7 @@ public class CycleController {
     public ResponseEntity<ApiResponse<CycleResponse>> getCycle(@PathVariable UUID id) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         Cycle cycle = cycleService.getCycle(id, actor);
-        int count = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), id).size();
+        int count = cycleService.getCommitmentCount(actor.getOrg().getId(), id);
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(cycle, count)));
     }
 
@@ -70,14 +63,10 @@ public class CycleController {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         CycleFilters filters = new CycleFilters(state, dateFrom, dateTo);
         Page<Cycle> cyclePage = cycleService.listCycles(
-                filters, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startsAt")));
+                actor.getOrg().getId(), filters, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startsAt")));
 
         List<CycleResponse> responses = cyclePage.getContent().stream()
-                .map(c -> {
-                    int count = commitmentRepository
-                            .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), c.getId()).size();
-                    return cycleMapper.toResponse(c, count);
-                })
+                .map(c -> cycleMapper.toResponse(c, cycleService.getCommitmentCount(actor.getOrg().getId(), c.getId())))
                 .toList();
 
         PagedResponse<CycleResponse> pagedResponse = new PagedResponse<>(
@@ -97,8 +86,7 @@ public class CycleController {
             @Valid @RequestBody TransitionRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         Cycle updated = cycleService.transition(id, request, actor);
-        int count = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), id).size();
+        int count = cycleService.getCommitmentCount(actor.getOrg().getId(), id);
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(updated, count)));
     }
 }

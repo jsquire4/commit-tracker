@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useUIStore } from '@/stores/ui.store';
@@ -16,8 +15,8 @@ export function ManagerDashboardPage() {
   const dashboardFilters = useUIStore((s) => s.dashboardFilters);
   const setDashboardFilters = useUIStore((s) => s.setDashboardFilters);
 
-  // Track active cycle ID for the detail expansion — derived from the loaded data
-  const [activeCycleId, setActiveCycleId] = useState<string>('');
+  // Placeholder: will be replaced by a cycleId from API response once available
+  const activeCycleId = '';
 
   const { data, isLoading, isError, error } = useDashboard(dashboardFilters);
 
@@ -87,9 +86,8 @@ export function ManagerDashboardPage() {
     }
   }
 
-  // Use cycleWeekStart as a stand-in for cycleId when fetching member details.
-  // In a real integration the API would return a cycleId; use weekStart or empty string.
-  const derivedCycleId = activeCycleId || dashboardFilters.cycleWeekStart || '';
+  // Use activeCycleId when available; a real integration would surface a cycleId from the API.
+  const derivedCycleId = activeCycleId || '';
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
@@ -125,7 +123,6 @@ export function ManagerDashboardPage() {
         onSelectMember={(id) => {
           // When a member is selected via the table, update the filter as well
           setDashboardFilters({ teamMemberId: id });
-          setActiveCycleId(activeCycleId); // keep existing cycle; noop placeholder
         }}
       />
     </div>

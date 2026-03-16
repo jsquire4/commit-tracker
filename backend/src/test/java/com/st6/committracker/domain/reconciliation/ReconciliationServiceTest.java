@@ -26,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.access.AccessDeniedException;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -350,7 +351,7 @@ class ReconciliationServiceTest {
                 .thenReturn(List.of(commitment));
         when(visibilityEnforcer.filterVisible(employee, List.of(commitment)))
                 .thenReturn(List.of(commitment));
-        when(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitmentId))
+        when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of());
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
                 .thenReturn(List.of(record));
@@ -400,9 +401,7 @@ class ReconciliationServiceTest {
                 .thenReturn(List.of(commitment, commitment2));
         when(visibilityEnforcer.filterVisible(employee, List.of(commitment, commitment2)))
                 .thenReturn(List.of(commitment, commitment2));
-        when(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitmentId))
-                .thenReturn(List.of());
-        when(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitment2Id))
+        when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of());
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
                 .thenReturn(List.of(record));
@@ -498,7 +497,7 @@ class ReconciliationServiceTest {
                 .thenReturn(List.of(commitment, c2, c3));
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
                 .thenReturn(List.of(r1, r2, r3));
-        when(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(any()))
+        when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of());
 
         ReconciliationSummary summary = reconciliationService.computeSummary(cycleId);
@@ -530,7 +529,7 @@ class ReconciliationServiceTest {
                 .thenReturn(List.of(commitment));
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
                 .thenReturn(List.of(record));
-        when(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitmentId))
+        when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of(completedBullet, pendingBullet));
 
         ReconciliationSummary summary = reconciliationService.computeSummary(cycleId);

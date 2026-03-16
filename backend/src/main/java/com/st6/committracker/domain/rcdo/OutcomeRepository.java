@@ -7,4 +7,5 @@ import java.util.UUID;
 public interface OutcomeRepository extends JpaRepository<Outcome, UUID> {
     List<Outcome> findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(UUID definingObjectiveId);
     List<Outcome> findByOwnerIdAndArchivedAtIsNull(UUID ownerUserId);
+    List<Outcome> findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(UUID orgId);
 }

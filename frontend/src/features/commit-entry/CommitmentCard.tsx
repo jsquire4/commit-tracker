@@ -33,6 +33,34 @@ const CATEGORY_LABELS: Record<ChessCategoryType, string> = {
   CAPABILITY_BUILDING: 'Capability Building',
 };
 
+interface ExpandButtonProps {
+  expanded: boolean;
+  onToggle: () => void;
+  className?: string;
+}
+
+function ExpandButton({ expanded, onToggle, className = '' }: ExpandButtonProps) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`p-1 text-gray-400 hover:text-gray-600 focus:outline-none rounded transition-colors ${className}`}
+      aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
+      aria-expanded={expanded}
+    >
+      <svg
+        className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        aria-hidden="true"
+      >
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+      </svg>
+    </button>
+  );
+}
+
 export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: CommitmentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isDraft = cycleState === 'DRAFT';
@@ -164,46 +192,18 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               </button>
               {/* Expand toggle */}
               {commitment.bullets.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setExpanded((prev) => !prev)}
-                  className="p-1 text-gray-400 hover:text-gray-600 focus:outline-none rounded transition-colors"
-                  aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
-                  aria-expanded={expanded}
-                >
-                  <svg
-                    className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
+                <ExpandButton expanded={expanded} onToggle={() => setExpanded((prev) => !prev)} />
               )}
             </div>
           )}
 
           {/* Non-draft: just expand toggle */}
           {!isDraft && commitment.bullets.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setExpanded((prev) => !prev)}
-              className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 focus:outline-none rounded transition-colors"
-              aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
-              aria-expanded={expanded}
-            >
-              <svg
-                className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                aria-hidden="true"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            <ExpandButton
+              expanded={expanded}
+              onToggle={() => setExpanded((prev) => !prev)}
+              className="flex-shrink-0"
+            />
           )}
         </div>
       </div>
