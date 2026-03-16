@@ -29,4 +29,10 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     long countByUserIdAndCycleId(UUID userId, UUID cycleId);
 
     List<Commitment> findByCarriedFromId(UUID carriedFromId);
+
+    long countByRallyCryId(UUID rallyCryId);
+
+    long countByDefiningObjectiveId(UUID definingObjectiveId);
+
+    long countByOutcomeId(UUID outcomeId);
 }
