@@ -189,7 +189,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
               {/* Body */}
               <form
                 id="commitment-form"
-                onSubmit={handleSubmit(onSubmit)}
+                onSubmit={(e) => { void handleSubmit(onSubmit)(e); }}
                 className="flex-1 overflow-y-auto px-6 py-5 space-y-6"
               >
                 {/* Title */}
@@ -235,7 +235,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                     render={({ field }) => (
                       <CategorySelector
                         value={(field.value ?? null) as ChessCategoryType | null}
-                        onChange={(c) => field.onChange(c)}
+                        onChange={(c) => { field.onChange(c); }}
                       />
                     )}
                   />

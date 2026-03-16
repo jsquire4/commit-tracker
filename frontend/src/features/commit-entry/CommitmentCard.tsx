@@ -117,7 +117,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
             {/* Title row */}
             <button
               type="button"
-              onClick={() => setExpanded((prev) => !prev)}
+              onClick={() => { setExpanded((prev) => !prev); }}
               className="w-full text-left focus:outline-none"
             >
               <h3 className="text-sm font-semibold text-gray-900 leading-snug">{commitment.title}</h3>
@@ -134,7 +134,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
 
             {/* Badges row */}
             <div className="mt-2 flex flex-wrap items-center gap-1.5">
-              {categoryKey && CATEGORY_VARIANTS[categoryKey] && (
+              {categoryKey && (
                 <Badge variant={CATEGORY_VARIANTS[categoryKey]}>
                   {CATEGORY_LABELS[categoryKey]}
                 </Badge>
@@ -172,7 +172,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
             <div className="flex-shrink-0 flex items-center gap-1 ml-1">
               <button
                 type="button"
-                onClick={() => onEdit(commitment.id)}
+                onClick={() => { onEdit(commitment.id); }}
                 className="p-1 text-gray-400 hover:text-blue-600 focus:outline-none rounded transition-colors"
                 aria-label="Edit commitment"
               >
@@ -182,7 +182,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               </button>
               <button
                 type="button"
-                onClick={() => onDelete(commitment.id)}
+                onClick={() => { onDelete(commitment.id); }}
                 className="p-1 text-gray-400 hover:text-red-600 focus:outline-none rounded transition-colors"
                 aria-label="Delete commitment"
               >
@@ -192,7 +192,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               </button>
               {/* Expand toggle */}
               {commitment.bullets.length > 0 && (
-                <ExpandButton expanded={expanded} onToggle={() => setExpanded((prev) => !prev)} />
+                <ExpandButton expanded={expanded} onToggle={() => { setExpanded((prev) => !prev); }} />
               )}
             </div>
           )}
@@ -201,7 +201,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
           {!isDraft && commitment.bullets.length > 0 && (
             <ExpandButton
               expanded={expanded}
-              onToggle={() => setExpanded((prev) => !prev)}
+              onToggle={() => { setExpanded((prev) => !prev); }}
               className="flex-shrink-0"
             />
           )}

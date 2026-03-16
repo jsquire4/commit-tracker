@@ -58,8 +58,8 @@ export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
       <div className="flex flex-wrap gap-4">
         <SignalCard
           label="Manager-assigned work"
-          value={`${Math.round(signals.managerAssignedPercentage)}%`}
-          sublabel={`${signals.managerAssignedCount} of ${signals.totalCommitments} total commitments`}
+          value={`${String(Math.round(signals.managerAssignedPercentage))}%`}
+          sublabel={`${String(signals.managerAssignedCount)} of ${String(signals.totalCommitments)} total commitments`}
           isAmber={signals.managerAssignedPercentage > 60}
         />
 
@@ -67,12 +67,12 @@ export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
           label="Top assignee"
           value={
             topConcentration
-              ? `${topConcentration.assignedToName} — ${Math.round(topConcentrationPct)}%`
+              ? `${topConcentration.assignedToName} — ${String(Math.round(topConcentrationPct))}%`
               : 'None'
           }
           sublabel={
             topConcentration
-              ? `${topConcentration.assignmentCount} assignments (dependency risk)`
+              ? `${String(topConcentration.assignmentCount)} assignments (dependency risk)`
               : 'No assignments recorded'
           }
           isAmber={isConcentrationRisk}
@@ -81,7 +81,7 @@ export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
         <SignalCard
           label="Total assignments this week"
           value={String(signals.managerAssignedCount)}
-          sublabel={`${signals.totalCommitments} total commitments across team`}
+          sublabel={`${String(signals.totalCommitments)} total commitments across team`}
         />
       </div>
     </div>

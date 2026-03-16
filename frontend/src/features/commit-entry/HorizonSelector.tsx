@@ -27,7 +27,7 @@ export function HorizonSelector({ value, onChange, disabled = false }: HorizonSe
             key={horizon.value}
             type="button"
             disabled={disabled}
-            onClick={() => onChange(horizon.value)}
+            onClick={() => { onChange(horizon.value); }}
             aria-pressed={isActive}
             className={[
               'flex-1 px-3 py-2 text-sm font-medium border focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',

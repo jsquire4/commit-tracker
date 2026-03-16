@@ -90,7 +90,7 @@ export function ChessboardPage() {
                   'bg-white text-gray-900',
                 ].join(' ')}
                 value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
+                onChange={(e) => { setSelectedUserId(e.target.value); }}
               >
                 <option value={userId}>My Commitments</option>
                 {teamQuery.data.map((member) => (

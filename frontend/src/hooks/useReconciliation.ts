@@ -26,7 +26,7 @@ export function useReconcileCommitment(cycleId: string) {
       req: ReconcileCommitmentRequest;
     }) => reconcileCommitment(id, req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
     },
   });
 }
@@ -36,8 +36,8 @@ export function useCompleteReconciliation(cycleId: string) {
   return useMutation({
     mutationFn: () => completeReconciliation(cycleId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
-      queryClient.invalidateQueries({ queryKey: ['cycle', 'current'] });
+      void queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['cycle', 'current'] });
     },
   });
 }

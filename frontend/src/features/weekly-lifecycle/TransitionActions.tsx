@@ -92,9 +92,10 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
   const isDisabled = Boolean(config.disabledReason) || isPending;
 
   function handleConfirm() {
+    if (!config) return;
     transitionCycle(
-      { id: cycle.id, req: { targetState: config!.targetState } },
-      { onSuccess: () => setDialogOpen(false) }
+      { id: cycle.id, req: { targetState: config.targetState } },
+      { onSuccess: () => { setDialogOpen(false); } }
     );
   }
 
@@ -116,7 +117,7 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
           <button
             type="button"
             disabled={isDisabled}
-            onClick={() => setDialogOpen(true)}
+            onClick={() => { setDialogOpen(true); }}
             title={config.disabledReason}
             className={[
               'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
@@ -133,7 +134,7 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
 
       <ConfirmDialog
         open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
+        onClose={() => { setDialogOpen(false); }}
         onConfirm={handleConfirm}
         title={config.label}
         description={config.description}

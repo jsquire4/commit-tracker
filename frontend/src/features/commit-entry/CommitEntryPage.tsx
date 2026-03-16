@@ -90,7 +90,7 @@ export function CommitEntryPage() {
             <button
               type="button"
               disabled={!isDraft}
-              onClick={() => openCommitmentForm()}
+              onClick={() => { openCommitmentForm(); }}
               className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               aria-label={!isDraft ? 'Commitments can only be added in Draft state' : 'Add commitment'}
             >
@@ -118,7 +118,7 @@ export function CommitEntryPage() {
             isDraft ? (
               <button
                 type="button"
-                onClick={() => openCommitmentForm()}
+                onClick={() => { openCommitmentForm(); }}
                 className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Create your first commitment
@@ -149,8 +149,8 @@ export function CommitEntryPage() {
       {/* Delete confirmation dialog */}
       <ConfirmDialog
         open={deleteConfirmId !== null}
-        onClose={() => setDeleteConfirmId(null)}
-        onConfirm={handleDeleteConfirm}
+        onClose={() => { setDeleteConfirmId(null); }}
+        onConfirm={() => { void handleDeleteConfirm(); }}
         title="Delete Commitment"
         description="Are you sure you want to delete this commitment? This action cannot be undone."
         confirmLabel="Delete"

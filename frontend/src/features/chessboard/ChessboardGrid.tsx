@@ -60,7 +60,7 @@ export function ChessboardGrid({ commitments, categories }: ChessboardGridProps)
       <div
         className="grid gap-3"
         style={{
-          gridTemplateColumns: `repeat(${allColumns.length}, minmax(0, 1fr))`,
+          gridTemplateColumns: `repeat(${String(allColumns.length)}, minmax(0, 1fr))`,
         }}
       >
         {/* Header row: category names */}

@@ -26,26 +26,26 @@ export const useUIStore = create<UIStore>((set) => ({
   dashboardFilters: DEFAULT_DASHBOARD_FILTERS,
 
   openCommitmentForm: (commitmentId?: string) =>
-    set({
+    { set({
       commitmentFormOpen: true,
       editingCommitmentId: commitmentId ?? null,
-    }),
+    }); },
 
   closeCommitmentForm: () =>
-    set({
+    { set({
       commitmentFormOpen: false,
       editingCommitmentId: null,
-    }),
+    }); },
 
-  setActiveDrag: (id: string | null) => set({ activeDragId: id }),
+  setActiveDrag: (id: string | null) => { set({ activeDragId: id }); },
 
-  setDragOverIndex: (index: number | null) => set({ dragOverIndex: index }),
+  setDragOverIndex: (index: number | null) => { set({ dragOverIndex: index }); },
 
   setDashboardFilters: (filters: Partial<DashboardFilters>) =>
-    set((state) => ({
+    { set((state) => ({
       dashboardFilters: { ...state.dashboardFilters, ...filters },
-    })),
+    })); },
 
   resetDashboardFilters: () =>
-    set({ dashboardFilters: DEFAULT_DASHBOARD_FILTERS }),
+    { set({ dashboardFilters: DEFAULT_DASHBOARD_FILTERS }); },
 }));

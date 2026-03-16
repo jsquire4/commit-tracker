@@ -31,7 +31,7 @@ export function ReconciliationPage() {
   const completeMutation = useCompleteReconciliation(cycleId);
 
   // Loading states
-  if (cycleLoading || (!cycle && !cycleLoading)) {
+  if (cycleLoading || !cycle) {
     return (
       <div className="flex items-center justify-center py-16">
         <p className="text-gray-500">Loading cycle…</p>
@@ -82,7 +82,7 @@ export function ReconciliationPage() {
         <div>
           <h2 className="text-xl font-bold text-gray-900">Reconciliation</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {cycle?.label} — Review your planned commitments and mark actual outcomes.
+            {cycle.label} — Review your planned commitments and mark actual outcomes.
           </p>
         </div>
         <div className="flex items-center gap-2">

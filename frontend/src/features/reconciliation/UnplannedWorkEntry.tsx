@@ -117,7 +117,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
     return (
       <button
         type="button"
-        onClick={() => setOpen(true)}
+        onClick={() => { setOpen(true); }}
         className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       >
         <span aria-hidden="true">+</span>
@@ -130,7 +130,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
     <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
       <h3 className="text-sm font-semibold text-blue-800 mb-3">Add Unplanned Work</h3>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
+      <form onSubmit={(e) => { void handleSubmit(e); }} className="flex flex-col gap-4" noValidate>
         {/* Title */}
         <div className="flex flex-col gap-1">
           <label htmlFor="unplanned-title" className="text-sm font-medium text-gray-700">
@@ -140,7 +140,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
             id="unplanned-title"
             type="text"
             value={form.title}
-            onChange={(e) => setForm((prev) => ({ ...prev, title: e.target.value }))}
+            onChange={(e) => { setForm((prev) => ({ ...prev, title: e.target.value })); }}
             placeholder="What did you work on?"
             maxLength={500}
             className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -158,15 +158,15 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
               <input
                 type="text"
                 value={bullet}
-                onChange={(e) => handleBulletChange(idx, e.target.value)}
-                placeholder={`Bullet ${idx + 1}`}
+                onChange={(e) => { handleBulletChange(idx, e.target.value); }}
+                placeholder={`Bullet ${String(idx + 1)}`}
                 className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {form.bullets.length > 2 && (
                 <button
                   type="button"
-                  onClick={() => removeBullet(idx)}
-                  aria-label={`Remove bullet ${idx + 1}`}
+                  onClick={() => { removeBullet(idx); }}
+                  aria-label={`Remove bullet ${String(idx + 1)}`}
                   className="text-gray-400 hover:text-red-500 text-lg leading-none px-1"
                 >
                   ×
@@ -194,7 +194,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
             id="unplanned-horizon"
             value={form.completionHorizon}
             onChange={(e) =>
-              setForm((prev) => ({ ...prev, completionHorizon: e.target.value as CompletionHorizon }))
+              { setForm((prev) => ({ ...prev, completionHorizon: e.target.value as CompletionHorizon })); }
             }
             className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
@@ -214,7 +214,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
           <select
             id="unplanned-rcdo"
             value={form.rallyCryId}
-            onChange={(e) => setForm((prev) => ({ ...prev, rallyCryId: e.target.value }))}
+            onChange={(e) => { setForm((prev) => ({ ...prev, rallyCryId: e.target.value })); }}
             className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
           >
             <option value="">— Select Rally Cry —</option>
@@ -233,7 +233,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
           </span>
           <CommitmentStatusMarker
             value={form.reconciliationStatus}
-            onChange={(s) => setForm((prev) => ({ ...prev, reconciliationStatus: s }))}
+            onChange={(s) => { setForm((prev) => ({ ...prev, reconciliationStatus: s })); }}
           />
         </div>
 

@@ -28,7 +28,7 @@ export function ChangeReasonCapture({
       </label>
       <textarea
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => { onChange(e.target.value); }}
         disabled={disabled}
         required={required}
         maxLength={MAX_CHARS}

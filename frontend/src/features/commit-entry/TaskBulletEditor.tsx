@@ -43,7 +43,7 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
           {...attributes}
           {...listeners}
           className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
-          aria-label={`Drag to reorder bullet ${index + 1}`}
+          aria-label={`Drag to reorder bullet ${String(index + 1)}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
@@ -53,10 +53,10 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
       <input
         type="text"
         value={value}
-        onChange={(e) => onChange(e.target.value)}
+        onChange={(e) => { onChange(e.target.value); }}
         disabled={disabled}
         placeholder="What's involved?"
-        aria-label={`Task bullet ${index + 1}`}
+        aria-label={`Task bullet ${String(index + 1)}`}
         className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
       />
       {!disabled && (
@@ -64,7 +64,7 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
           type="button"
           onClick={onRemove}
           disabled={!canRemove}
-          aria-label={`Remove bullet ${index + 1}`}
+          aria-label={`Remove bullet ${String(index + 1)}`}
           className="flex-shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -92,7 +92,7 @@ export function TaskBulletEditor({
   max = 5,
 }: TaskBulletEditorProps) {
   // Each bullet needs a stable id for dnd-kit
-  const ids = bullets.map((_, i) => `bullet-${i}`);
+  const ids = bullets.map((_, i) => `bullet-${String(i)}`);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -133,14 +133,14 @@ export function TaskBulletEditor({
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {bullets.map((bullet, index) => (
             <BulletItem
-              key={ids[index] ?? `bullet-${index}`}
-              id={ids[index] ?? `bullet-${index}`}
+              key={ids[index] ?? `bullet-${String(index)}`}
+              id={ids[index] ?? `bullet-${String(index)}`}
               value={bullet}
               index={index}
               canRemove={bullets.length > min}
               disabled={disabled}
-              onChange={(value) => handleChange(index, value)}
-              onRemove={() => handleRemove(index)}
+              onChange={(value) => { handleChange(index, value); }}
+              onRemove={() => { handleRemove(index); }}
             />
           ))}
         </SortableContext>

@@ -23,7 +23,7 @@ function useRecentRcdo(userId: string, orgId: string) {
 
   function getRecent(): RecentRcdo[] {
     try {
-      return JSON.parse(localStorage.getItem(key) ?? '[]');
+      return JSON.parse(localStorage.getItem(key) ?? '[]') as RecentRcdo[];
     } catch {
       return [];
     }
@@ -46,8 +46,8 @@ function useRecentRcdo(userId: string, orgId: string) {
 function useDebounce(value: string, delay = 300): string {
   const [debounced, setDebounced] = useState(value);
   useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
+    const timer = setTimeout(() => { setDebounced(value); }, delay);
+    return () => { clearTimeout(timer); };
   }, [value, delay]);
   return debounced;
 }
@@ -80,12 +80,12 @@ function RcdoCombobox({
   return (
     <div>
       <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
-      <Combobox value={value} onChange={(item) => { if (item) onChange(item as RcdoNode); }} disabled={disabled}>
+      <Combobox value={value} onChange={(item) => { if (item) onChange(item); }} disabled={disabled}>
         <div className="relative">
           <Combobox.Input
             className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
-            displayValue={(item: RcdoNode | null) => (item as RcdoNode | null)?.title ?? ''}
-            onChange={(e) => onQueryChange(e.target.value)}
+            displayValue={(item: RcdoNode | null) => (item)?.title ?? ''}
+            onChange={(e) => { onQueryChange(e.target.value); }}
             placeholder={placeholder}
           />
           <Transition

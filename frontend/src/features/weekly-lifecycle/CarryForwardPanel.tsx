@@ -98,7 +98,7 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
             </button>
             <button
               type="button"
-              onClick={() => setDeclining(true)}
+              onClick={() => { setDeclining(true); }}
               disabled={isPending}
               className="rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:opacity-50"
             >
@@ -121,7 +121,7 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
             type="text"
             value={declineState.reason}
             onChange={(e) =>
-              setDeclineState((prev) => ({ ...prev, reason: e.target.value }))
+              { setDeclineState((prev) => ({ ...prev, reason: e.target.value })); }
             }
             placeholder="e.g. no longer relevant"
             className="w-full rounded border border-red-200 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
@@ -129,7 +129,7 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
           <div className="mt-2 flex items-center justify-end gap-2">
             <button
               type="button"
-              onClick={() => setDeclining(false)}
+              onClick={() => { setDeclining(false); }}
               className="text-xs text-gray-500 hover:text-gray-700"
             >
               Cancel

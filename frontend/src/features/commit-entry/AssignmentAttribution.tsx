@@ -50,7 +50,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
         <button
           type="button"
           disabled={disabled}
-          onClick={() => handleToggle('SELF_DIRECTED')}
+          onClick={() => { handleToggle('SELF_DIRECTED'); }}
           aria-pressed={isSelf}
           className={[
             'flex-1 px-4 py-2 text-sm font-medium border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',
@@ -67,7 +67,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
         <button
           type="button"
           disabled={disabled}
-          onClick={() => handleToggle('ASSIGNED_BY')}
+          onClick={() => { handleToggle('ASSIGNED_BY'); }}
           aria-pressed={!isSelf}
           className={[
             'flex-1 px-4 py-2 text-sm font-medium border -ml-px rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',

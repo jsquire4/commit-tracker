@@ -12,7 +12,7 @@ export async function getCommitments(
   cycleId: string,
   filters?: CommitmentFilters
 ): Promise<Commitment[]> {
-  return fetchData<Commitment[]>(`${BASE}`, {
+  return fetchData<Commitment[]>(BASE, {
     cycleId,
     ...filters,
   });

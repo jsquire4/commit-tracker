@@ -72,10 +72,10 @@ export function ChessboardCommitmentChip({ commitment }: ChessboardCommitmentChi
   return (
     <div
       className="relative"
-      onMouseEnter={() => setPopoverVisible(true)}
-      onMouseLeave={() => setPopoverVisible(false)}
-      onFocus={() => setPopoverVisible(true)}
-      onBlur={() => setPopoverVisible(false)}
+      onMouseEnter={() => { setPopoverVisible(true); }}
+      onMouseLeave={() => { setPopoverVisible(false); }}
+      onFocus={() => { setPopoverVisible(true); }}
+      onBlur={() => { setPopoverVisible(false); }}
     >
       {/* Chip pill */}
       <div

@@ -3,7 +3,7 @@ import axios from 'axios';
 import type { ApiResponse } from '@/types/api.types';
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
+  baseURL: (import.meta.env.VITE_API_BASE_URL as string | undefined) ?? '',
   timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -26,11 +26,12 @@ apiClient.interceptors.request.use((config) => {
 // Response interceptor — error normalization
 apiClient.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  (error: unknown) => {
+    const axiosError = error as { response?: { status?: number } };
+    if (axiosError.response?.status === 401) {
       window.dispatchEvent(new CustomEvent('st6:auth:expired'));
     }
-    return Promise.reject(error);
+    return Promise.reject(error instanceof Error ? error : new Error(String(error)));
   }
 );
 

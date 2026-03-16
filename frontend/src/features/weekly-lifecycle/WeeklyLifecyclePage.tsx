@@ -66,7 +66,7 @@ function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
     <section className="rounded-lg border border-gray-200 bg-white">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => { setOpen((v) => !v); }}
         className="flex w-full items-center justify-between px-5 py-4 text-left"
       >
         <span className="text-sm font-semibold text-gray-700">Cycle History</span>

@@ -56,7 +56,7 @@ function SortableHeader({
       className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${
         sticky ? 'sticky left-0 bg-gray-50 z-10' : ''
       }`}
-      onClick={() => onSort(sortKey)}
+      onClick={() => { onSort(sortKey); }}
       scope="col"
     >
       <span className="inline-flex items-center gap-1">
@@ -249,7 +249,7 @@ export function TeamRollupTable({
                 <Fragment key={raw.userId}>
                   <tr
                     className={`hover:bg-gray-50 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50' : ''}`}
-                    onClick={() => handleRowClick(raw.userId)}
+                    onClick={() => { handleRowClick(raw.userId); }}
                     aria-expanded={isExpanded}
                   >
                     <td className="sticky left-0 px-4 py-3 font-medium text-gray-900 bg-inherit whitespace-nowrap">

@@ -8,7 +8,7 @@ import type {
 
 let _idCounter = 1;
 function uid(prefix: string): string {
-  return `${prefix}-${_idCounter++}`;
+  return `${prefix}-${String(_idCounter++)}`;
 }
 
 export function commitmentFactory(overrides: Partial<Commitment> = {}): Commitment {

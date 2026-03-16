@@ -8,6 +8,6 @@ global.ResizeObserver = class ResizeObserver {
   disconnect() {}
 };
 
-beforeAll(() => server.listen({ onUnhandledRequest: 'warn' }));
-afterEach(() => server.resetHandlers());
-afterAll(() => server.close());
+beforeAll(() => { server.listen({ onUnhandledRequest: 'warn' }); });
+afterEach(() => { server.resetHandlers(); });
+afterAll(() => { server.close(); });

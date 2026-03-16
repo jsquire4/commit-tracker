@@ -29,8 +29,10 @@ describe('TaskBulletEditor', () => {
     );
 
     const inputs = screen.getAllByRole('textbox', { name: /task bullet/i });
-    await user.clear(inputs[0]!);
-    await user.type(inputs[0]!, 'Updated');
+    const firstInput = inputs[0];
+    if (!firstInput) throw new Error('Expected at least one bullet input');
+    await user.clear(firstInput);
+    await user.type(firstInput, 'Updated');
 
     expect(onChange).toHaveBeenCalled();
   });
@@ -83,7 +85,9 @@ describe('TaskBulletEditor', () => {
     );
 
     const removeButtons = screen.getAllByRole('button', { name: /remove bullet/i });
-    await user.click(removeButtons[0]!);
+    const firstRemove = removeButtons[0];
+    if (!firstRemove) throw new Error('Expected at least one remove button');
+    await user.click(firstRemove);
 
     expect(onChange).toHaveBeenCalledWith(['Second', 'Third']);
   });

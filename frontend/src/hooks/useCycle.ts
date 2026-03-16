@@ -29,8 +29,8 @@ export function useTransitionCycle() {
     mutationFn: ({ id, req }: { id: string; req: TransitionRequest }) =>
       transitionCycle(id, req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cycle'] });
-      queryClient.invalidateQueries({ queryKey: ['commitments'] });
+      void queryClient.invalidateQueries({ queryKey: ['cycle'] });
+      void queryClient.invalidateQueries({ queryKey: ['commitments'] });
     },
   });
 }

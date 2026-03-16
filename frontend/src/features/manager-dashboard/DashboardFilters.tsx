@@ -90,7 +90,7 @@ export function DashboardFilters({
           id="filter-member"
           className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={filters.teamMemberId ?? ''}
-          onChange={(e) => handleMemberChange(e.target.value)}
+          onChange={(e) => { handleMemberChange(e.target.value); }}
         >
           <option value="">All members</option>
           {teamMemberOptions.map((m) => (
@@ -110,7 +110,7 @@ export function DashboardFilters({
           id="filter-rcdo"
           className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={filters.rcdoId ?? ''}
-          onChange={(e) => handleRcdoChange(e.target.value)}
+          onChange={(e) => { handleRcdoChange(e.target.value); }}
         >
           <option value="">All objectives</option>
           {rcdoOptions.map((r) => (
@@ -131,7 +131,7 @@ export function DashboardFilters({
           type="date"
           className="rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={filters.cycleWeekStart ?? ''}
-          onChange={(e) => handleWeekChange(e.target.value)}
+          onChange={(e) => { handleWeekChange(e.target.value); }}
         />
       </div>
 
@@ -150,7 +150,7 @@ export function DashboardFilters({
                   ? 'bg-blue-600 text-white border-blue-600'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-blue-400'
               }`}
-              onClick={() => handleCategoryToggle(cat.value)}
+              onClick={() => { handleCategoryToggle(cat.value); }}
             >
               {cat.label}
             </button>
@@ -168,7 +168,7 @@ export function DashboardFilters({
             type="checkbox"
             className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             checked={filters.includeSubtree ?? false}
-            onChange={(e) => handleSubtreeChange(e.target.checked)}
+            onChange={(e) => { handleSubtreeChange(e.target.checked); }}
           />
           <span className="text-sm text-gray-700">Include org subtree</span>
         </label>

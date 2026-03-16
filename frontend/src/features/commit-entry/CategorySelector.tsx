@@ -58,7 +58,7 @@ export function CategorySelector({ value, onChange, disabled = false }: Category
             role="radio"
             aria-checked={isSelected}
             disabled={disabled}
-            onClick={() => onChange(category.value)}
+            onClick={() => { onChange(category.value); }}
             className={[
               'relative flex items-start p-3 rounded-md border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-blue-500',
               isSelected ? category.colorClass + ' border-opacity-100' : 'border-gray-200 bg-white hover:border-gray-300',

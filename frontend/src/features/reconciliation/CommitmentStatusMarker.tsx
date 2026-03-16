@@ -60,7 +60,7 @@ export function CommitmentStatusMarker({
             role="radio"
             aria-checked={isSelected}
             disabled={disabled}
-            onClick={() => onChange(option.value)}
+            onClick={() => { onChange(option.value); }}
             className={[
               'px-3 py-1.5 text-sm font-medium rounded border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1',
               isSelected ? option.activeClass : option.inactiveClass,

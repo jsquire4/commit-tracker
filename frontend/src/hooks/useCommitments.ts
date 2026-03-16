@@ -33,7 +33,7 @@ export function useCreateCommitment(cycleId: string) {
   return useMutation({
     mutationFn: (req: CreateCommitmentRequest) => createCommitment(req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
     },
   });
 }
@@ -44,7 +44,7 @@ export function useUpdateCommitment(cycleId: string) {
     mutationFn: ({ id, req }: { id: string; req: UpdateCommitmentRequest }) =>
       updateCommitment(id, req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
     },
   });
 }
@@ -54,7 +54,7 @@ export function useDeleteCommitment(cycleId: string) {
   return useMutation({
     mutationFn: (id: string) => deleteCommitment(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
     },
   });
 }
@@ -103,11 +103,12 @@ export function useReorderCommitments() {
       }
     },
     onSettled: (
+      // eslint-disable-next-line @typescript-eslint/no-invalid-void-type
       _data: void | undefined,
       _err: unknown,
       variables: ReorderVariables
     ) => {
-      queryClient.invalidateQueries({
+      void queryClient.invalidateQueries({
         queryKey: ['commitments', variables.cycleId],
       });
     },
@@ -119,8 +120,8 @@ export function useCreateUnplannedCommitment(cycleId: string) {
   return useMutation({
     mutationFn: (req: CreateCommitmentRequest) => createUnplannedCommitment(req),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
-      queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
+      void queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });
     },
   });
 }

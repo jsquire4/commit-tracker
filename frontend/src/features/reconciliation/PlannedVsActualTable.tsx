@@ -186,7 +186,7 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
               </p>
               <CommitmentStatusMarker
                 value={row.status}
-                onChange={handleStatusChange}
+                onChange={(s) => { void handleStatusChange(s); }}
                 disabled={row.saving}
               />
             </div>
@@ -204,7 +204,7 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
                         type="checkbox"
                         id={`bullet-${bullet.id}`}
                         checked={row.bulletStatuses[bullet.id] ?? bullet.isCompleted}
-                        onChange={(e) => handleBulletToggle(bullet.id, e.target.checked)}
+                        onChange={(e) => { void handleBulletToggle(bullet.id, e.target.checked); }}
                         disabled={row.saving}
                         className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
                       />
@@ -234,7 +234,7 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
             {row.status !== null && row.notes !== (reconciliation?.notes ?? '') && (
               <button
                 type="button"
-                onClick={handleNotesBlur}
+                onClick={() => { void handleNotesBlur(); }}
                 disabled={row.saving}
                 className="self-start text-xs text-blue-600 hover:underline disabled:opacity-50"
               >
