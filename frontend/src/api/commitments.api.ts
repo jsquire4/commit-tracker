@@ -12,10 +12,11 @@ export async function getCommitments(
   cycleId: string,
   filters?: CommitmentFilters
 ): Promise<Commitment[]> {
-  return fetchData<Commitment[]>(BASE, {
+  const page = await fetchData<{ items: Commitment[]; page: number; size: number; totalElements: number; totalPages: number }>(BASE, {
     cycleId,
     ...filters,
   });
+  return page.items;
 }
 
 export async function createCommitment(
