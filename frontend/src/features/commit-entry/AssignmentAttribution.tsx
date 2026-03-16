@@ -13,6 +13,10 @@ interface AssignmentAttributionProps {
 export function AssignmentAttribution({ value, onChange, disabled = false }: AssignmentAttributionProps) {
   const isSelf = value.kind === 'SELF_DIRECTED';
 
+  // getTeam() returns direct reports — these are the people who could
+  // have work assigned TO them. For "assigned by" we show the same list
+  // since any visible colleague can be the assigner. In a full implementation
+  // this would show the management chain above the current user.
   const { data: teamMembers = [] } = useQuery({
     queryKey: ['users', 'team'],
     queryFn: getTeam,

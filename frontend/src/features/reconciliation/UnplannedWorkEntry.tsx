@@ -94,6 +94,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
 
     try {
       await createMutation.mutateAsync({
+        cycleId,
         title: form.title.trim(),
         bullets: filledBullets,
         completionHorizon: form.completionHorizon,

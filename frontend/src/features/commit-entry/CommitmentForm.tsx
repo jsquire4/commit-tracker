@@ -103,6 +103,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     try {
       // Build payload, omitting undefined optional fields to satisfy exactOptionalPropertyTypes
       const payload = {
+        cycleId,
         title: data.title,
         bullets: data.bullets,
         completionHorizon: data.completionHorizon,

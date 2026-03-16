@@ -40,6 +40,7 @@ export interface Commitment {
 }
 
 export interface CreateCommitmentRequest {
+  cycleId: string;
   title: string;
   description?: string;
   bullets: string[];
