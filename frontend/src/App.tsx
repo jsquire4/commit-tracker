@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
+import { setTokenProvider } from './api/client';
 
 interface AuthContext {
   token: string;
@@ -24,7 +25,9 @@ const queryClient = new QueryClient({
   },
 });
 
-export default function App({ basename, authContext: _authContext }: AppProps) {
+export default function App({ basename, authContext }: AppProps) {
+  setTokenProvider(() => authContext.token);
+
   return (
     <ErrorBoundary>
       <BrowserRouter basename={basename}>

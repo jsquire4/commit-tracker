@@ -18,6 +18,9 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            // TODO: Phase 3B replaces this with JWT filter + role-based authorization.
+            // Until then, all endpoints are public. Do not add feature endpoints
+            // without updating this configuration.
             .authorizeHttpRequests(authorize ->
                 authorize.anyRequest().permitAll())
             .cors(cors -> {});
