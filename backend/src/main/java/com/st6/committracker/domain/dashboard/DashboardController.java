@@ -1,0 +1,53 @@
+package com.st6.committracker.domain.dashboard;
+
+import com.st6.committracker.domain.dashboard.dto.DashboardFilters;
+import com.st6.committracker.domain.dashboard.dto.DashboardResponse;
+import com.st6.committracker.domain.user.AppUser;
+import com.st6.committracker.security.SecurityContextHelper;
+import com.st6.committracker.shared.ApiResponse;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Instant;
+import java.util.UUID;
+
+/**
+ * Single composite dashboard endpoint.
+ * All four dashboard sections query the same underlying data in one pass,
+ * avoiding 4 redundant round-trips.
+ */
+@RestController
+@RequestMapping("/api/v1/dashboard")
+public class DashboardController {
+
+    private final DashboardService dashboardService;
+
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<DashboardResponse>> getDashboard(
+            @RequestParam(required = false) Instant cycleWeekStart,
+            @RequestParam(required = false) UUID teamMemberId,
+            @RequestParam(required = false) UUID rcdoId,
+            @RequestParam(required = false) String rcdoType,
+            @RequestParam(defaultValue = "false") boolean includeSubtree) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+
+        DashboardFilters filters = new DashboardFilters(
+                cycleWeekStart, teamMemberId, rcdoId, rcdoType, includeSubtree);
+
+        DashboardResponse response = new DashboardResponse(
+                dashboardService.getTeamRollup(actor, filters),
+                dashboardService.getAlignmentSignal(actor, filters),
+                dashboardService.getAssignmentAttribution(actor, filters),
+                dashboardService.getRcdoCoverage(actor, filters)
+        );
+
+        return ResponseEntity.ok(ApiResponse.of(response));
+    }
+}
