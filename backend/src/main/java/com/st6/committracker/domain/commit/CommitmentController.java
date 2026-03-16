@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +34,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/commitments")
+@Transactional(readOnly = true)
 public class CommitmentController {
 
     private final CommitmentService commitmentService;
@@ -48,6 +50,7 @@ public class CommitmentController {
     }
 
     @PostMapping
+    @Transactional
     public ResponseEntity<ApiResponse<CommitmentResponse>> create(
             @Valid @RequestBody CreateCommitmentRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
@@ -72,6 +75,7 @@ public class CommitmentController {
     }
 
     @PutMapping("/{id}")
+    @Transactional
     public ResponseEntity<ApiResponse<CommitmentResponse>> update(
             @PathVariable UUID id,
             @Valid @RequestBody UpdateCommitmentRequest request) {
@@ -82,6 +86,7 @@ public class CommitmentController {
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         commitmentService.delete(id, actor);
@@ -140,6 +145,7 @@ public class CommitmentController {
     }
 
     @PutMapping("/reorder")
+    @Transactional
     public ResponseEntity<Void> reorder(
             @RequestParam UUID cycleId,
             @Valid @RequestBody ReorderRequest request) {
@@ -149,6 +155,7 @@ public class CommitmentController {
     }
 
     @PostMapping("/unplanned")
+    @Transactional
     public ResponseEntity<ApiResponse<CommitmentResponse>> createUnplanned(
             @Valid @RequestBody CreateUnplannedCommitmentRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();

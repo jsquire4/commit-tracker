@@ -12,7 +12,7 @@ const ReconciliationPage = lazy(() => import('./features/reconciliation/Reconcil
 const ManagerDashboardPage = lazy(() => import('./features/manager-dashboard/ManagerDashboardPage').then(m => ({ default: m.ManagerDashboardPage })));
 const ChessboardPage = lazy(() => import('./features/chessboard/ChessboardPage').then(m => ({ default: m.ChessboardPage })));
 
-interface AuthContext {
+export interface AuthContext {
   token: string;
   userId: string;
   orgId: string;

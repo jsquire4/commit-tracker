@@ -55,6 +55,9 @@ public class AppUser {
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
 
+    @Column(name = "commit_module_enabled")
+    private Boolean commitModuleEnabled; // null = inherit from org
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -99,6 +102,9 @@ public class AppUser {
 
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
+
+    public Boolean getCommitModuleEnabled() { return commitModuleEnabled; }
+    public void setCommitModuleEnabled(Boolean commitModuleEnabled) { this.commitModuleEnabled = commitModuleEnabled; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

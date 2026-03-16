@@ -22,6 +22,7 @@ import com.st6.committracker.domain.reconciliation.ReconciliationRecordRepositor
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.AppUserRepository;
 import com.st6.committracker.domain.user.Org;
+import com.st6.committracker.domain.user.TeamActivationService;
 import com.st6.committracker.security.VisibilityEnforcer;
 import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
@@ -46,6 +47,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -65,6 +67,7 @@ class CommitmentServiceTest {
     @Mock private VisibilityEnforcer visibilityEnforcer;
     @Mock private AuditService auditService;
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
+    @Mock private TeamActivationService teamActivationService;
     @InjectMocks private CommitmentService commitmentService;
 
     private Org org;
@@ -122,6 +125,11 @@ class CommitmentServiceTest {
                 .isActive(false)
                 .build();
         reconcilingCycle.setId(UUID.randomUUID());
+
+        // Default: all users are activated unless a specific test overrides this.
+        // Lenient because many tests don't call create() and would otherwise fail
+        // with UnnecessaryStubbingException under Mockito strict mode.
+        lenient().when(teamActivationService.isUserActivated(any())).thenReturn(true);
     }
 
     // -------------------------------------------------------------------------

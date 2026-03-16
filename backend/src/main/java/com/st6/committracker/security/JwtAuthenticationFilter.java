@@ -49,7 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Optional<TokenValidator.JwtClaims> claimsOpt = tokenValidator.validate(token);
                 if (claimsOpt.isPresent()) {
                     TokenValidator.JwtClaims claims = claimsOpt.get();
-                    Optional<AppUser> userOpt = userRepository.findById(claims.userId());
+                    // Load user with org eagerly to avoid LazyInitializationException
+                    // when actor is passed to services that access actor.getOrg()
+                    Optional<AppUser> userOpt = userRepository.findWithOrgById(claims.userId());
                     if (userOpt.isPresent()) {
                         AppUser user = userOpt.get();
                         UsernamePasswordAuthenticationToken auth =

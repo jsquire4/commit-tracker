@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -27,6 +28,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/cycles")
+@Transactional(readOnly = true)
 public class CycleController {
 
     private final CycleService cycleService;
@@ -38,6 +40,7 @@ public class CycleController {
     }
 
     @GetMapping("/current")
+    @Transactional
     public ResponseEntity<ApiResponse<CycleResponse>> getCurrentCycle() {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         Cycle cycle = cycleService.getCurrentCycle(actor);
@@ -81,6 +84,7 @@ public class CycleController {
     }
 
     @PostMapping("/{id}/transition")
+    @Transactional
     public ResponseEntity<ApiResponse<CycleResponse>> transition(
             @PathVariable UUID id,
             @Valid @RequestBody TransitionRequest request) {

@@ -21,6 +21,7 @@ import com.st6.committracker.domain.reconciliation.ReconciliationRecord;
 import com.st6.committracker.domain.reconciliation.ReconciliationRecordRepository;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.AppUserRepository;
+import com.st6.committracker.domain.user.TeamActivationService;
 import com.st6.committracker.security.VisibilityEnforcer;
 import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
@@ -57,6 +58,7 @@ public class CommitmentService {
     private final VisibilityEnforcer visibilityEnforcer;
     private final AuditService auditService;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
+    private final TeamActivationService teamActivationService;
 
     public CommitmentService(CommitmentRepository commitmentRepository,
                              TaskBulletRepository taskBulletRepository,
@@ -68,7 +70,8 @@ public class CommitmentService {
                              AppUserRepository userRepository,
                              VisibilityEnforcer visibilityEnforcer,
                              AuditService auditService,
-                             ReconciliationRecordRepository reconciliationRecordRepository) {
+                             ReconciliationRecordRepository reconciliationRecordRepository,
+                             TeamActivationService teamActivationService) {
         this.commitmentRepository = commitmentRepository;
         this.taskBulletRepository = taskBulletRepository;
         this.cycleRepository = cycleRepository;
@@ -80,6 +83,7 @@ public class CommitmentService {
         this.visibilityEnforcer = visibilityEnforcer;
         this.auditService = auditService;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
+        this.teamActivationService = teamActivationService;
     }
 
     /**
@@ -97,6 +101,10 @@ public class CommitmentService {
      */
     public Commitment create(CreateCommitmentRequest request, AppUser actor) {
         requireNotAnalyst(actor);
+
+        if (!teamActivationService.isUserActivated(actor)) {
+            throw new AccessDeniedException("Commit module not yet enabled for your team");
+        }
 
         Cycle cycle = cycleRepository.findById(request.cycleId())
                 .orElseThrow(() -> new EntityNotFoundException("Cycle", request.cycleId()));

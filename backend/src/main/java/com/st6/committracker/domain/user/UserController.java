@@ -7,6 +7,8 @@ import com.st6.committracker.shared.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -19,10 +21,13 @@ public class UserController {
 
     private final AppUserRepository userRepository;
     private final VisibilityEnforcer visibilityEnforcer;
+    private final TeamActivationService teamActivationService;
 
-    public UserController(AppUserRepository userRepository, VisibilityEnforcer visibilityEnforcer) {
+    public UserController(AppUserRepository userRepository, VisibilityEnforcer visibilityEnforcer,
+                          TeamActivationService teamActivationService) {
         this.userRepository = userRepository;
         this.visibilityEnforcer = visibilityEnforcer;
+        this.teamActivationService = teamActivationService;
     }
 
     @GetMapping("/me")
@@ -55,6 +60,28 @@ public class UserController {
 
         List<UserResponse> responses = subtree.stream().map(this::toResponse).toList();
         return ResponseEntity.ok(ApiResponse.of(responses));
+    }
+
+    /**
+     * Activate the commit module for the target user and their subtree.
+     * Requires DIRECTOR+ role.
+     */
+    @PostMapping("/{userId}/activate")
+    public ResponseEntity<Void> activateTeam(@PathVariable UUID userId) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        teamActivationService.activateTeam(userId, actor);
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Deactivate the commit module for the target user.
+     * Requires DIRECTOR+ role.
+     */
+    @PostMapping("/{userId}/deactivate")
+    public ResponseEntity<Void> deactivateTeam(@PathVariable UUID userId) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        teamActivationService.deactivateTeam(userId, actor);
+        return ResponseEntity.noContent().build();
     }
 
     private UserResponse toResponse(AppUser user) {
