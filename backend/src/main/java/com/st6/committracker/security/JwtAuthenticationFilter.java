@@ -62,7 +62,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         // Set MDC fields for structured logging
                         MDC.put("userId", user.getId().toString());
                         MDC.put("orgId", user.getOrg().getId().toString());
-                        String requestId = request.getHeader("X-Request-ID");
+                        String requestId = request.getHeader("X-Request-Id");
                         if (requestId != null) {
                             MDC.put("requestId", requestId);
                         }

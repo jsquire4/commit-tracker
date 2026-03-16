@@ -45,15 +45,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
             String userId = null;
             String orgId = null;
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getPrincipal())) {
-                userId = auth.getName();
-                Object details = auth.getDetails();
-                if (details instanceof java.util.Map<?, ?> detailsMap) {
-                    Object orgIdValue = detailsMap.get("orgId");
-                    if (orgIdValue != null) {
-                        orgId = orgIdValue.toString();
-                    }
-                }
+            if (auth != null && auth.isAuthenticated()
+                    && auth.getPrincipal() instanceof com.st6.committracker.security.AppUserPrincipal principal) {
+                userId = principal.user().getId().toString();
+                orgId = principal.user().getOrg().getId().toString();
             }
 
             if (userId != null) {
