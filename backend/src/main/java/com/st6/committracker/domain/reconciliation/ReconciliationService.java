@@ -91,9 +91,10 @@ public class ReconciliationService {
             throw new ConflictException("Cycle must be in RECONCILING state to reconcile a commitment");
         }
 
-        // 3. Actor must be the commitment owner
-        if (!commitment.getUser().getId().equals(actor.getId())) {
-            throw new AccessDeniedException("Only the commitment owner can reconcile it");
+        // 3. Actor must be the commitment owner OR have visibility (manager+ can reconcile reports)
+        if (!commitment.getUser().getId().equals(actor.getId())
+                && !visibilityEnforcer.canViewCommitment(actor, commitment)) {
+            throw new AccessDeniedException("Only the commitment owner or their manager can reconcile it");
         }
 
         // 5. Notes required when status != COMPLETED
