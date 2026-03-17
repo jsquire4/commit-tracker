@@ -3,6 +3,7 @@ const MAX_CHARS = 500;
 interface ChangeReasonCaptureProps {
   value: string;
   onChange: (s: string) => void;
+  onBlur?: () => void;
   required: boolean;
   disabled?: boolean;
 }
@@ -10,6 +11,7 @@ interface ChangeReasonCaptureProps {
 export function ChangeReasonCapture({
   value,
   onChange,
+  onBlur,
   required,
   disabled = false,
 }: ChangeReasonCaptureProps) {
@@ -29,6 +31,7 @@ export function ChangeReasonCapture({
       <textarea
         value={value}
         onChange={(e) => { onChange(e.target.value); }}
+        onBlur={onBlur}
         disabled={disabled}
         required={required}
         maxLength={MAX_CHARS}

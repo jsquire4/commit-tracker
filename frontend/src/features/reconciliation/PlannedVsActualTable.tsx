@@ -94,11 +94,16 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
   );
 
   const handleStatusChange = useCallback(
-    (status: ReconciliationStatus) => {
-      // Always just update local state — user saves explicitly via Save button
+    async (status: ReconciliationStatus) => {
       setRow((prev) => ({ ...prev, status, saveError: null }));
+      // Auto-save if notes aren't required, or if notes are already filled in
+      const notesRequired = status !== 'COMPLETED';
+      if (!notesRequired || row.notes.trim().length > 0) {
+        setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
+        await buildAndSave(status, row.notes, row.bulletStatuses);
+      }
     },
-    []
+    [row, buildAndSave]
   );
 
   const handleNotesChange = useCallback((notes: string) => {
@@ -107,7 +112,11 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
 
   const handleNotesBlur = useCallback(async () => {
     if (!row.status) return;
-    if (row.notes === (reconciliation?.notes ?? '')) return;
+    // Don't save if notes unchanged
+    if (row.notes === (reconciliation?.notes ?? '') && row.status === reconciliation?.status) return;
+    // Don't save if notes required but empty
+    const notesRequired = row.status !== 'COMPLETED';
+    if (notesRequired && row.notes.trim().length === 0) return;
 
     setRow((prev) => ({ ...prev, saving: true, saveError: null }));
     await buildAndSave(row.status, row.notes, row.bulletStatuses);
@@ -219,29 +228,15 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
               </div>
             )}
 
-            {/* Notes — always visible when a status is selected */}
+            {/* Notes — always visible when a status is selected, auto-saves on blur */}
             {row.status !== null && (
               <ChangeReasonCapture
                 value={row.notes}
                 onChange={handleNotesChange}
+                onBlur={() => { void handleNotesBlur(); }}
                 required={isReasonRequired}
                 disabled={row.saving}
               />
-            )}
-
-            {/* Save button — visible when status is set and there are unsaved changes */}
-            {row.status !== null && (
-              row.status !== reconciliation?.status
-              || row.notes !== (reconciliation?.notes ?? '')
-            ) && (
-              <button
-                type="button"
-                onClick={() => { void handleNotesBlur(); }}
-                disabled={row.saving || (isReasonRequired && row.notes.trim().length === 0)}
-                className="self-start px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {row.saving ? 'Saving…' : 'Save'}
-              </button>
             )}
 
             {/* Error */}
