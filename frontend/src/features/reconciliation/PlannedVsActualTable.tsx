@@ -95,9 +95,14 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
 
   const handleStatusChange = useCallback(
     async (status: ReconciliationStatus) => {
-      const next: RowState = { ...row, status, saving: true, saveError: null };
-      setRow(next);
-      await buildAndSave(status, next.notes, next.bulletStatuses);
+      // COMPLETED doesn't require notes — save immediately
+      if (status === 'COMPLETED') {
+        setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
+        await buildAndSave(status, row.notes, row.bulletStatuses);
+      } else {
+        // Other statuses require notes — just update local state, user saves after adding notes
+        setRow((prev) => ({ ...prev, status, saveError: null }));
+      }
     },
     [row, buildAndSave]
   );
@@ -230,15 +235,18 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
               />
             )}
 
-            {/* Onblur trigger for notes persistence */}
-            {row.status !== null && row.notes !== (reconciliation?.notes ?? '') && (
+            {/* Save button — visible when status is set and there are unsaved changes */}
+            {row.status !== null && (
+              row.status !== reconciliation?.status
+              || row.notes !== (reconciliation?.notes ?? '')
+            ) && row.status !== 'COMPLETED' && (
               <button
                 type="button"
                 onClick={() => { void handleNotesBlur(); }}
-                disabled={row.saving}
-                className="self-start text-xs text-blue-600 hover:underline disabled:opacity-50"
+                disabled={row.saving || (isReasonRequired && row.notes.trim().length === 0)}
+                className="self-start px-3 py-1.5 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {row.saving ? 'Saving…' : 'Save notes'}
+                {row.saving ? 'Saving…' : 'Save'}
               </button>
             )}
 
