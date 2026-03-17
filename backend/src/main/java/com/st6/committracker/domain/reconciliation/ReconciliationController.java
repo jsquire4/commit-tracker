@@ -34,6 +34,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/reconciliation")
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class ReconciliationController {
 
     private final ReconciliationService reconciliationService;

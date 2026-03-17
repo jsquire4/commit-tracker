@@ -25,6 +25,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/rcdo")
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class RcdoController {
 
     private final RcdoService rcdoService;

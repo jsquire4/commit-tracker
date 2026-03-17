@@ -17,6 +17,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class UserController {
 
     private final AppUserRepository userRepository;

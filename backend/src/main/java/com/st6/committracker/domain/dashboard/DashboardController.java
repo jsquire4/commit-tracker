@@ -21,6 +21,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/dashboard")
+@org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class DashboardController {
 
     private final DashboardService dashboardService;
