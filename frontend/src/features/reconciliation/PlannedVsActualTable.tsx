@@ -94,17 +94,11 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
   );
 
   const handleStatusChange = useCallback(
-    async (status: ReconciliationStatus) => {
-      // COMPLETED doesn't require notes — save immediately
-      if (status === 'COMPLETED') {
-        setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
-        await buildAndSave(status, row.notes, row.bulletStatuses);
-      } else {
-        // Other statuses require notes — just update local state, user saves after adding notes
-        setRow((prev) => ({ ...prev, status, saveError: null }));
-      }
+    (status: ReconciliationStatus) => {
+      // Always just update local state — user saves explicitly via Save button
+      setRow((prev) => ({ ...prev, status, saveError: null }));
     },
-    [row, buildAndSave]
+    []
   );
 
   const handleNotesChange = useCallback((notes: string) => {
@@ -225,7 +219,7 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
               </div>
             )}
 
-            {/* Change reason */}
+            {/* Notes — always visible when a status is selected */}
             {row.status !== null && (
               <ChangeReasonCapture
                 value={row.notes}
@@ -239,7 +233,7 @@ function CommitmentRow({ detail, cycleId }: CommitmentRowProps) {
             {row.status !== null && (
               row.status !== reconciliation?.status
               || row.notes !== (reconciliation?.notes ?? '')
-            ) && row.status !== 'COMPLETED' && (
+            ) && (
               <button
                 type="button"
                 onClick={() => { void handleNotesBlur(); }}
