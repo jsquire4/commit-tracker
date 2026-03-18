@@ -74,8 +74,12 @@ export function ManagerDashboardPage() {
 
   const { teamRollup, alignmentSignal, assignmentAttribution, rcdoCoverage } = data;
 
+  // Defensive: ensure arrays exist even if API returns unexpected shape
+  const members = teamRollup?.members ?? [];
+  const byTeamMember = alignmentSignal?.byTeamMember ?? [];
+
   // Build team member options for the filters dropdown
-  const teamMemberOptions = teamRollup.members.map((m) => ({
+  const teamMemberOptions = members.map((m) => ({
     id: m.userId,
     displayName: m.displayName,
   }));
@@ -112,7 +116,7 @@ export function ManagerDashboardPage() {
       {/* Alignment gap chart — THE key differentiator */}
       <AlignmentGapChart
         aggregate={alignmentSignal}
-        members={alignmentSignal.byTeamMember}
+        members={byTeamMember}
         onSegmentClick={handleSegmentClick}
       />
 
@@ -130,7 +134,7 @@ export function ManagerDashboardPage() {
 
       {/* Team rollup table with inline expansion */}
       <TeamRollupTable
-        members={teamRollup.members}
+        members={members}
         cycleId={derivedCycleId}
         onSelectMember={(id) => {
           // When a member is selected via the table, update the filter as well

@@ -122,7 +122,7 @@ export function AlignmentGapChart({
   members,
   onSegmentClick,
 }: AlignmentGapChartProps) {
-  const data = buildChartData(aggregate, members);
+  const data = buildChartData(aggregate, members ?? []);
 
   const barHeight = 36;
   const teamTotalHeight = 52;
