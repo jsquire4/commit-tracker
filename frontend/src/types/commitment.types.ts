@@ -9,8 +9,11 @@ export interface TaskBullet {
 
 export interface RcdoLink {
   rallyCryId: string | null;
+  rallyCryTitle: string | null;
   definingObjectiveId: string | null;
+  definingObjectiveTitle: string | null;
   outcomeId: string | null;
+  outcomeTitle: string | null;
 }
 
 export type AssignmentAttribution =

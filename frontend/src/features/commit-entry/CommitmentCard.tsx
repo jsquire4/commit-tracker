@@ -44,7 +44,7 @@ function ExpandButton({ expanded, onToggle, className = '' }: ExpandButtonProps)
     <button
       type="button"
       onClick={onToggle}
-      className={`p-1 text-gray-400 hover:text-gray-600 focus:outline-none rounded transition-colors ${className}`}
+      className={`p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none rounded transition-colors ${className}`}
       aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
       aria-expanded={expanded}
     >
@@ -86,8 +86,8 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
       ref={setNodeRef}
       style={style}
       className={[
-        'bg-white rounded-lg border shadow-sm transition-shadow',
-        isDragging ? 'shadow-lg opacity-70 border-blue-300' : 'border-gray-200 hover:shadow-md',
+        'bg-white dark:bg-gray-900 rounded-lg border shadow-sm transition-shadow',
+        isDragging ? 'shadow-lg opacity-70 border-blue-300' : 'border-gray-200 dark:border-gray-700 hover:shadow-md',
       ].join(' ')}
     >
       <div className="p-4">
@@ -98,7 +98,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               type="button"
               {...attributes}
               {...listeners}
-              className="flex-shrink-0 mt-0.5 text-gray-300 hover:text-gray-500 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
+              className="flex-shrink-0 mt-0.5 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
               aria-label="Drag to reorder"
             >
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -108,8 +108,8 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
           )}
 
           {/* Priority rank */}
-          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center">
-            <span className="text-xs font-semibold text-gray-500">{commitment.priorityRank}</span>
+          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{commitment.priorityRank}</span>
           </div>
 
           {/* Main content */}
@@ -120,15 +120,15 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               onClick={() => { setExpanded((prev) => !prev); }}
               className="w-full text-left focus:outline-none"
             >
-              <h3 className="text-sm font-semibold text-gray-900 leading-snug">{commitment.title}</h3>
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">{commitment.title}</h3>
             </button>
 
             {/* RCDO breadcrumb */}
             {commitment.rcdoLink.rallyCryId && (
-              <p className="mt-0.5 text-xs text-gray-400 truncate">
-                {commitment.rcdoLink.rallyCryId}
-                {commitment.rcdoLink.definingObjectiveId && ` › ${commitment.rcdoLink.definingObjectiveId}`}
-                {commitment.rcdoLink.outcomeId && ` › ${commitment.rcdoLink.outcomeId}`}
+              <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 truncate">
+                {commitment.rcdoLink.rallyCryTitle ?? commitment.rcdoLink.rallyCryId}
+                {commitment.rcdoLink.definingObjectiveId && ` › ${commitment.rcdoLink.definingObjectiveTitle ?? commitment.rcdoLink.definingObjectiveId}`}
+                {commitment.rcdoLink.outcomeId && ` › ${commitment.rcdoLink.outcomeTitle ?? commitment.rcdoLink.outcomeId}`}
               </p>
             )}
 
@@ -152,13 +152,13 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
 
             {/* Expanded bullets */}
             {expanded && commitment.bullets.length > 0 && (
-              <ul className="mt-3 space-y-1 border-t border-gray-100 pt-3">
+              <ul className="mt-3 space-y-1 border-t border-gray-100 dark:border-gray-800 pt-3">
                 {commitment.bullets.map((bullet) => (
-                  <li key={bullet.id} className="flex items-start gap-2 text-xs text-gray-600">
+                  <li key={bullet.id} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
                     <span
-                      className={`flex-shrink-0 mt-0.5 w-3 h-3 rounded-full border ${bullet.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300'}`}
+                      className={`flex-shrink-0 mt-0.5 w-3 h-3 rounded-full border ${bullet.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-gray-600'}`}
                     />
-                    <span className={bullet.isCompleted ? 'line-through text-gray-400' : ''}>
+                    <span className={bullet.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
                       {bullet.body}
                     </span>
                   </li>
@@ -173,7 +173,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               <button
                 type="button"
                 onClick={() => { onEdit(commitment.id); }}
-                className="p-1 text-gray-400 hover:text-blue-600 focus:outline-none rounded transition-colors"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none rounded transition-colors"
                 aria-label="Edit commitment"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -183,7 +183,7 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
               <button
                 type="button"
                 onClick={() => { onDelete(commitment.id); }}
-                className="p-1 text-gray-400 hover:text-red-600 focus:outline-none rounded transition-colors"
+                className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 focus:outline-none rounded transition-colors"
                 aria-label="Delete commitment"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">

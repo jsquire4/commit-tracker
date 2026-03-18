@@ -22,8 +22,11 @@ export function commitmentFactory(overrides: Partial<Commitment> = {}): Commitme
     description: null,
     rcdoLink: {
       rallyCryId: null,
+      rallyCryTitle: null,
       definingObjectiveId: null,
+      definingObjectiveTitle: null,
       outcomeId: null,
+      outcomeTitle: null,
     },
     chessCategoryId: null,
     chessCategoryName: null,
