@@ -86,7 +86,8 @@ class CommitmentApiTest extends IntegrationTestBase {
                 CompletionHorizon.EOW,
                 null,
                 null, null, null, null,
-                List.of("Bullet one", "Bullet two")
+                List.of("Bullet one", "Bullet two"),
+                null
         );
 
         mockMvc.perform(post("/api/v1/commitments")
@@ -109,7 +110,8 @@ class CommitmentApiTest extends IntegrationTestBase {
                 CompletionHorizon.EOW,
                 null,
                 null, null, null, null,
-                List.of("Bullet one", "Bullet two")
+                List.of("Bullet one", "Bullet two"),
+                null
         );
 
         mockMvc.perform(post("/api/v1/commitments")
@@ -138,7 +140,8 @@ class CommitmentApiTest extends IntegrationTestBase {
                 CompletionHorizon.EOD,
                 null,
                 null, null, null, null,
-                List.of("New bullet one", "New bullet two")
+                List.of("New bullet one", "New bullet two"),
+                null
         );
 
         mockMvc.perform(put("/api/v1/commitments/" + commitment.getId())
@@ -217,7 +220,8 @@ class CommitmentApiTest extends IntegrationTestBase {
                 CompletionHorizon.EOW,
                 null,
                 null, null, null, null,
-                List.of("Bullet one", "Bullet two")
+                List.of("Bullet one", "Bullet two"),
+                null
         );
 
         mockMvc.perform(post("/api/v1/commitments")

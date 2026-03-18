@@ -1,0 +1,19 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/st6}
+    username: ${DB_USERNAME:st6}
+    password: ${DB_PASSWORD:st6local}
+    hikari:
+      maximum-pool-size: 5
+
+st6:
+  seed:
+    enabled: false
+    observatory: false
+  simulation:
+    setup-file: ${ST6_SIMULATION_SETUP_FILE:classpath:simulation-setup.json}
+
+logging:
+  level:
+    com.st6.committracker.seed: DEBUG
+    com.st6.committracker: INFO

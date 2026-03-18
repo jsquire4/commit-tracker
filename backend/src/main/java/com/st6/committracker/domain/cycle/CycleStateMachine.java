@@ -5,7 +5,7 @@ import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.user.AppUser;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.time.temporal.WeekFields;
 
 /**
@@ -34,7 +34,8 @@ public class CycleStateMachine {
             int commitmentCount,
             int reconciledCommitmentCount,
             int totalCommitmentsInCycle,
-            Instant now
+            Instant now,
+            String orgTimezone
     ) {}
 
     // -------------------------------------------------------------------------
@@ -89,7 +90,7 @@ public class CycleStateMachine {
             return TransitionResult.rejected("Cannot lock cycle with no commitments");
         }
 
-        if (isBeforeCurrentWeek(cycle.getStartsAt(), context.now())) {
+        if (isBeforeCurrentWeek(cycle.getStartsAt(), context.now(), context.orgTimezone())) {
             return TransitionResult.rejected("Cannot lock a cycle for a past week");
         }
 
@@ -169,11 +170,12 @@ public class CycleStateMachine {
      * Returns {@code true} if {@code startsAt} falls in an ISO week that is strictly
      * earlier than the ISO week containing {@code now}.
      *
-     * Both instants are interpreted in UTC.
+     * Both instants are interpreted in the org's timezone.
      */
-    private boolean isBeforeCurrentWeek(Instant startsAt, Instant now) {
-        var startsAtDate = startsAt.atZone(ZoneOffset.UTC).toLocalDate();
-        var nowDate = now.atZone(ZoneOffset.UTC).toLocalDate();
+    private boolean isBeforeCurrentWeek(Instant startsAt, Instant now, String timezone) {
+        ZoneId zone = ZoneId.of(timezone != null ? timezone : "UTC");
+        var startsAtDate = startsAt.atZone(zone).toLocalDate();
+        var nowDate = now.atZone(zone).toLocalDate();
 
         WeekFields iso = WeekFields.ISO;
 

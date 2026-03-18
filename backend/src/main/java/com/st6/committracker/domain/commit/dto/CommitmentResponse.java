@@ -3,6 +3,7 @@ package com.st6.committracker.domain.commit.dto;
 import com.st6.committracker.domain.CompletionHorizon;
 import com.st6.committracker.domain.ReconciliationStatus;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ public record CommitmentResponse(
     List<TaskBulletResponse> bullets,
     UUID carriedFromCommitmentId,
     boolean isUnplanned,
+    BigDecimal estimatedHours,
     ReconciliationStatus reconciliationStatus,
     String reconciliationNote,
     Instant createdAt,

@@ -15,7 +15,6 @@ import com.st6.committracker.domain.reconciliation.ReconciliationRecord;
 import com.st6.committracker.domain.reconciliation.ReconciliationRecordRepository;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.Org;
-import com.st6.committracker.security.VisibilityEnforcer;
 import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -55,7 +54,6 @@ class CycleServiceTest {
     @Mock private CommitmentRepository commitmentRepository;
     @Mock private CommitmentService commitmentService;
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
-    @Mock private VisibilityEnforcer visibilityEnforcer;
     @Mock private AuditService auditService;
 
     @InjectMocks private CycleService cycleService;
@@ -359,6 +357,83 @@ class CycleServiceTest {
         verify(commitmentService, never()).cloneForCarryForward(any(), any());
     }
 
+    @Test
+    void transition_toReconciled_deactivatesCycle() {
+        UUID cycleId = UUID.randomUUID();
+        Cycle cycle = buildCycle(org, CycleState.RECONCILING, true);
+        cycle.setId(cycleId);
+        cycle.setStartsAt(Instant.now().minus(14, ChronoUnit.DAYS));
+        cycle.setEndsAt(Instant.now().minus(7, ChronoUnit.DAYS));
+
+        when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
+        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+                .thenReturn(List.of(buildCommitment(cycle)));
+        // 1 COMPLETED record = all commitments reconciled
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.<Object[]>of(new Object[]{ReconciliationStatus.COMPLETED, 1L}));
+        when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(List.of());
+
+        TransitionRequest request = new TransitionRequest(CycleState.RECONCILED, null);
+        Cycle result = cycleService.transition(cycleId, request, manager);
+
+        assertThat(result.getState()).isEqualTo(CycleState.RECONCILED);
+        assertThat(result.isActive()).isFalse();
+    }
+
+    @Test
+    void transition_reconcilingToReconciled_allowsMixedStatuses() {
+        UUID cycleId = UUID.randomUUID();
+        Cycle cycle = buildCycle(org, CycleState.RECONCILING, true);
+        cycle.setId(cycleId);
+        cycle.setStartsAt(Instant.now().minus(14, ChronoUnit.DAYS));
+        cycle.setEndsAt(Instant.now().minus(7, ChronoUnit.DAYS));
+
+        when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
+        // 3 commitments total
+        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+                .thenReturn(List.of(buildCommitment(cycle), buildCommitment(cycle), buildCommitment(cycle)));
+        // Mix of statuses: 1 COMPLETED + 1 CARRIED_FORWARD + 1 PARTIALLY_COMPLETED = 3 total
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.<Object[]>of(
+                        new Object[]{ReconciliationStatus.COMPLETED, 1L},
+                        new Object[]{ReconciliationStatus.CARRIED_FORWARD, 1L},
+                        new Object[]{ReconciliationStatus.PARTIALLY_COMPLETED, 1L}
+                ));
+        when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(List.of());
+
+        TransitionRequest request = new TransitionRequest(CycleState.RECONCILED, null);
+        Cycle result = cycleService.transition(cycleId, request, manager);
+
+        assertThat(result.getState()).isEqualTo(CycleState.RECONCILED);
+    }
+
+    @Test
+    void transition_reconcilingToReconciled_rejectsWhenNotAllReconciled() {
+        UUID cycleId = UUID.randomUUID();
+        Cycle cycle = buildCycle(org, CycleState.RECONCILING, true);
+        cycle.setId(cycleId);
+        cycle.setStartsAt(Instant.now().minus(14, ChronoUnit.DAYS));
+        cycle.setEndsAt(Instant.now().minus(7, ChronoUnit.DAYS));
+
+        when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
+        // 3 commitments but only 2 reconciled
+        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+                .thenReturn(List.of(buildCommitment(cycle), buildCommitment(cycle), buildCommitment(cycle)));
+        when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
+                .thenReturn(List.<Object[]>of(
+                        new Object[]{ReconciliationStatus.COMPLETED, 1L},
+                        new Object[]{ReconciliationStatus.CARRIED_FORWARD, 1L}
+                ));
+
+        TransitionRequest request = new TransitionRequest(CycleState.RECONCILED, null);
+
+        assertThatThrownBy(() -> cycleService.transition(cycleId, request, manager))
+                .isInstanceOf(ConflictException.class)
+                .hasMessageContaining("2 of 3 reconciled");
+    }
+
     // -------------------------------------------------------------------------
     // completeCycle (5 tests)
     // -------------------------------------------------------------------------
@@ -376,7 +451,7 @@ class CycleServiceTest {
 
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycle.getId()))
                 .thenReturn(List.of(record));
-        when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId())).thenReturn(Optional.empty());
+        when(cycleRepository.findByOrgIdAndStartsAt(eq(org.getId()), any(Instant.class))).thenReturn(Optional.empty());
         when(cycleRepository.save(any(Cycle.class))).thenAnswer(inv -> {
             Cycle c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -413,7 +488,7 @@ class CycleServiceTest {
 
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycle.getId()))
                 .thenReturn(List.of(record));
-        when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId())).thenReturn(Optional.empty());
+        when(cycleRepository.findByOrgIdAndStartsAt(eq(org.getId()), any(Instant.class))).thenReturn(Optional.empty());
         when(cycleRepository.save(any(Cycle.class))).thenAnswer(inv -> {
             Cycle c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -461,7 +536,7 @@ class CycleServiceTest {
 
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycle.getId()))
                 .thenReturn(List.of(record));
-        when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId())).thenReturn(Optional.empty());
+        when(cycleRepository.findByOrgIdAndStartsAt(eq(org.getId()), any(Instant.class))).thenReturn(Optional.empty());
         when(cycleRepository.save(any(Cycle.class))).thenAnswer(inv -> {
             Cycle c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -496,7 +571,7 @@ class CycleServiceTest {
 
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycle.getId()))
                 .thenReturn(List.of(record));
-        when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId())).thenReturn(Optional.empty());
+        when(cycleRepository.findByOrgIdAndStartsAt(eq(org.getId()), any(Instant.class))).thenReturn(Optional.empty());
         when(cycleRepository.save(any(Cycle.class))).thenAnswer(inv -> {
             Cycle c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -551,7 +626,7 @@ class CycleServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycle.getId()))
                 .thenReturn(List.of(record));
         // No active next-week cycle exists
-        when(cycleRepository.findByOrgIdAndIsActiveTrue(org.getId())).thenReturn(Optional.empty());
+        when(cycleRepository.findByOrgIdAndStartsAt(eq(org.getId()), any(Instant.class))).thenReturn(Optional.empty());
 
         ArgumentCaptor<Cycle> cycleCaptor = ArgumentCaptor.forClass(Cycle.class);
         when(cycleRepository.save(cycleCaptor.capture())).thenAnswer(inv -> {

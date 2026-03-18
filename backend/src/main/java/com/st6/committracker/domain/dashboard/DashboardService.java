@@ -102,8 +102,17 @@ public class DashboardService {
 
         DashboardData data = loadDashboardData(manager, filters);
 
+        // Fetch reconciliation records once for the whole org+cycle, not per member
+        Set<UUID> reconciledCommitmentIds = data.cycle()
+                .map(cycle -> reconciliationRecordRepository
+                        .findByOrgIdAndCycleId(manager.getOrg().getId(), cycle.getId())
+                        .stream()
+                        .map(r -> r.getCommitment().getId())
+                        .collect(Collectors.toSet()))
+                .orElse(Set.of());
+
         List<TeamRollupResponse.TeamMemberSummary> summaries = data.members().stream()
-                .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser()))
+                .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser(), reconciledCommitmentIds))
                 .toList();
 
         log.debug("getTeamRollup managerId={} cycleId={} memberCount={}",
@@ -366,7 +375,8 @@ public class DashboardService {
     }
 
     private TeamRollupResponse.TeamMemberSummary buildTeamMemberSummary(AppUser member, Optional<Cycle> cycleOpt,
-                                                                         Map<UUID, List<Commitment>> commitmentsByUser) {
+                                                                         Map<UUID, List<Commitment>> commitmentsByUser,
+                                                                         Set<UUID> reconciledCommitmentIds) {
         if (cycleOpt.isEmpty()) {
             return new TeamRollupResponse.TeamMemberSummary(
                     member.getId(), member.getDisplayName(), member.getRole().name(),
@@ -386,12 +396,7 @@ public class DashboardService {
             }
         }
 
-        // Reconciliation count: count commitments that have a reconciliation record
-        List<ReconciliationRecord> reconciliations = reconciliationRecordRepository
-                .findByOrgIdAndCycleId(member.getOrg().getId(), cycle.getId());
-        Set<UUID> reconciledCommitmentIds = reconciliations.stream()
-                .map(r -> r.getCommitment().getId())
-                .collect(Collectors.toSet());
+        // Reconciliation count: use pre-fetched set (queried once per org+cycle, not per member)
         int reconciledCount = (int) commitments.stream()
                 .filter(c -> reconciledCommitmentIds.contains(c.getId()))
                 .count();

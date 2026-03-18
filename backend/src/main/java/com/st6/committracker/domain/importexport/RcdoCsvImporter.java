@@ -31,7 +31,7 @@ import java.util.UUID;
 
 /**
  * Import RCDO hierarchy from CSV.
- * Format: rally_cry, defining_objective, outcome, owner_email
+ * Format: rally_cry, defining_objective, outcome, owner_email, rc_description, do_description, outcome_description, outcome_owner_email
  * Deduplicates by title within each level. Idempotent.
  * Validates: file size <= 5MB, row count <= 10,000.
  */
@@ -48,6 +48,10 @@ public class RcdoCsvImporter {
     private static final int COL_DEFINING_OBJECTIVE = 1;
     private static final int COL_OUTCOME = 2;
     private static final int COL_OWNER_EMAIL = 3;
+    private static final int COL_RC_DESCRIPTION = 4;
+    private static final int COL_DO_DESCRIPTION = 5;
+    private static final int COL_OUTCOME_DESCRIPTION = 6;
+    private static final int COL_OUTCOME_OWNER_EMAIL = 7;
 
     private final RallyCryRepository rallyCryRepository;
     private final DefiningObjectiveRepository definingObjectiveRepository;
@@ -141,11 +145,21 @@ public class RcdoCsvImporter {
                 }
             }
 
+            String rcDescription = trim(row, COL_RC_DESCRIPTION);
+            String doDescription = trim(row, COL_DO_DESCRIPTION);
+            String outcomeDescription = trim(row, COL_OUTCOME_DESCRIPTION);
+            String outcomeOwnerEmail = trim(row, COL_OUTCOME_OWNER_EMAIL);
+
             // Upsert RallyCry
             RallyCry rc = rcByTitle.computeIfAbsent(rcTitle, title -> {
-                RallyCry newRc = new RallyCry(org, title, null, rcByTitle.size());
+                RallyCry newRc = new RallyCry(org, title, rcDescription.isEmpty() ? null : rcDescription, rcByTitle.size());
                 return rallyCryRepository.save(newRc);
             });
+            // Update description if provided and RC already existed
+            if (!rcDescription.isEmpty() && (rc.getDescription() == null || !rc.getDescription().equals(rcDescription))) {
+                rc.setDescription(rcDescription);
+                rallyCryRepository.save(rc);
+            }
 
             if (doTitle.isEmpty()) {
                 importedRows++;
@@ -156,13 +170,23 @@ public class RcdoCsvImporter {
             String doKey = rcTitle + "||" + doTitle;
             AppUser finalOwner = owner;
             RallyCry finalRc = rc;
+            String finalDoDescription = doDescription;
             DefiningObjective doObj = doByKey.computeIfAbsent(doKey, key -> {
-                DefiningObjective newDo = new DefiningObjective(org, finalRc, doTitle, null, finalOwner, doByKey.size());
+                DefiningObjective newDo = new DefiningObjective(org, finalRc, doTitle,
+                        finalDoDescription.isEmpty() ? null : finalDoDescription, finalOwner, doByKey.size());
                 return definingObjectiveRepository.save(newDo);
             });
-            // Update owner if changed
+            // Update owner and description if changed
+            boolean doUpdated = false;
             if (owner != null && !owner.equals(doObj.getOwner())) {
                 doObj.setOwner(owner);
+                doUpdated = true;
+            }
+            if (!doDescription.isEmpty() && (doObj.getDescription() == null || !doObj.getDescription().equals(doDescription))) {
+                doObj.setDescription(doDescription);
+                doUpdated = true;
+            }
+            if (doUpdated) {
                 definingObjectiveRepository.save(doObj);
             }
 
@@ -171,16 +195,44 @@ public class RcdoCsvImporter {
                 continue;
             }
 
-            // Upsert Outcome — deduplicate by (doId + outcomeTitle) within this import
-            String outcomeKey = doObj.getId() + "||" + outcomeTitle;
+            // Resolve outcome owner (separate from DO owner) — only needed when outcome is present
+            AppUser outcomeOwner = null;
+            if (!outcomeOwnerEmail.isEmpty()) {
+                outcomeOwner = userRepository.findByOrgIdAndEmail(orgId, outcomeOwnerEmail).orElse(null);
+                if (outcomeOwner == null) {
+                    errors.add(new ImportError(rowNum, "outcome_owner_email", "User not found: " + outcomeOwnerEmail));
+                    importedRows++; // RC and DO were still created/updated
+                    continue;
+                }
+            }
+
+            // Upsert Outcome — deduplicate by (doId + outcomeTitle)
+            AppUser effectiveOutcomeOwner = outcomeOwner != null ? outcomeOwner : owner;
             List<Outcome> existingOutcomes = outcomeRepository
                     .findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(doObj.getId());
-            boolean outcomeExists = existingOutcomes.stream()
-                    .anyMatch(o -> o.getTitle().equals(outcomeTitle));
+            Outcome existingOutcome = existingOutcomes.stream()
+                    .filter(o -> o.getTitle().equals(outcomeTitle))
+                    .findFirst().orElse(null);
 
-            if (!outcomeExists) {
-                Outcome newOutcome = new Outcome(org, doObj, outcomeTitle, null, owner, existingOutcomes.size());
+            if (existingOutcome == null) {
+                Outcome newOutcome = new Outcome(org, doObj, outcomeTitle,
+                        outcomeDescription.isEmpty() ? null : outcomeDescription,
+                        effectiveOutcomeOwner, existingOutcomes.size());
                 outcomeRepository.save(newOutcome);
+            } else {
+                // Update description and owner if changed
+                boolean outcomeUpdated = false;
+                if (!outcomeDescription.isEmpty() && (existingOutcome.getDescription() == null || !existingOutcome.getDescription().equals(outcomeDescription))) {
+                    existingOutcome.setDescription(outcomeDescription);
+                    outcomeUpdated = true;
+                }
+                if (effectiveOutcomeOwner != null && !effectiveOutcomeOwner.equals(existingOutcome.getOwner())) {
+                    existingOutcome.setOwner(effectiveOutcomeOwner);
+                    outcomeUpdated = true;
+                }
+                if (outcomeUpdated) {
+                    outcomeRepository.save(existingOutcome);
+                }
             }
 
             importedRows++;
@@ -188,12 +240,12 @@ public class RcdoCsvImporter {
 
         int totalRows = rows.size();
         int errorRows = errors.size();
-        int skippedRows = totalRows - importedRows - errorRows;
+        int skippedRows = Math.max(0, totalRows - importedRows - errorRows);
 
         auditService.log(orgId, "RallyCry", null, "CSV_IMPORT", actor,
                 Map.of("importedRows", importedRows, "errorRows", errorRows, "totalRows", totalRows));
 
-        return new ImportResult(totalRows, importedRows, skippedRows < 0 ? 0 : skippedRows, errorRows, errors);
+        return new ImportResult(totalRows, importedRows, skippedRows, errorRows, errors);
     }
 
     private List<String[]> parseRows(MultipartFile file, List<ImportError> errors) {

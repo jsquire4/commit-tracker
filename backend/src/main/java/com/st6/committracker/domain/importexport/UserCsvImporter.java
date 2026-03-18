@@ -6,6 +6,8 @@ import com.opencsv.CSVReaderBuilder;
 import com.st6.committracker.audit.AuditService;
 import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.importexport.ImportResult.ImportError;
+import com.st6.committracker.domain.observatory.CostBand;
+import com.st6.committracker.domain.observatory.CostBandRepository;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.Org;
 import com.st6.committracker.domain.user.AppUserRepository;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStreamReader;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,7 +30,7 @@ import java.util.regex.Pattern;
 
 /**
  * Import users from CSV.
- * Format: email, display_name, role, reports_to_email, external_id
+ * Format: email, display_name, role, reports_to_email, external_id, cost_band_name, weekly_capacity_hours
  * Two-pass: Pass 1 creates/updates users (upsert by org_id + email).
  * Pass 2 resolves reports_to references.
  * Idempotent. Validates: email format, valid role enum, reports_to email exists.
@@ -48,16 +51,21 @@ public class UserCsvImporter {
     private static final int COL_ROLE = 2;
     private static final int COL_REPORTS_TO_EMAIL = 3;
     private static final int COL_EXTERNAL_ID = 4;
+    private static final int COL_COST_BAND_NAME = 5;
+    private static final int COL_WEEKLY_CAPACITY_HOURS = 6;
 
     private final AppUserRepository userRepository;
     private final OrgRepository orgRepository;
+    private final CostBandRepository costBandRepository;
     private final AuditService auditService;
 
     public UserCsvImporter(AppUserRepository userRepository,
                            OrgRepository orgRepository,
+                           CostBandRepository costBandRepository,
                            AuditService auditService) {
         this.userRepository = userRepository;
         this.orgRepository = orgRepository;
+        this.costBandRepository = costBandRepository;
         this.auditService = auditService;
     }
 
@@ -141,6 +149,31 @@ public class UserCsvImporter {
                 user.setExternalId(externalId);
             }
 
+            String costBandName = trim(row, COL_COST_BAND_NAME);
+            if (!costBandName.isEmpty()) {
+                CostBand band = costBandRepository.findByOrgIdAndName(orgId, costBandName).orElse(null);
+                if (band == null) {
+                    errors.add(new ImportError(rowNum, "cost_band_name", "Cost band not found: " + costBandName));
+                    continue;
+                }
+                user.setCostBand(band);
+            }
+
+            String capacityStr = trim(row, COL_WEEKLY_CAPACITY_HOURS);
+            if (!capacityStr.isEmpty()) {
+                try {
+                    BigDecimal capacity = new BigDecimal(capacityStr);
+                    if (capacity.compareTo(BigDecimal.ZERO) <= 0 || capacity.compareTo(new BigDecimal("168")) > 0) {
+                        errors.add(new ImportError(rowNum, "weekly_capacity_hours", "Must be between 0.01 and 168: " + capacityStr));
+                        continue;
+                    }
+                    user.setWeeklyCapacityHours(capacity);
+                } catch (NumberFormatException e) {
+                    errors.add(new ImportError(rowNum, "weekly_capacity_hours", "Invalid number: " + capacityStr));
+                    continue;
+                }
+            }
+
             user = userRepository.save(user);
             importedByEmail.put(email, user);
         }
@@ -184,8 +217,8 @@ public class UserCsvImporter {
 
         int totalRows = rows.size();
         int errorRows = errors.size();
-        int importedRows = importedByEmail.size() - reportsToErrors;
-        int skippedRows = totalRows - importedByEmail.size();
+        int importedRows = importedByEmail.size();
+        int skippedRows = Math.max(0, totalRows - importedRows - errorRows);
 
         auditService.log(orgId, "AppUser", null, "CSV_IMPORT", actor,
                 Map.of("importedRows", importedRows, "errorRows", errorRows, "totalRows", totalRows));

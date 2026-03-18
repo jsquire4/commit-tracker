@@ -15,7 +15,6 @@ import com.st6.committracker.domain.reconciliation.ReconciliationRecord;
 import com.st6.committracker.domain.reconciliation.ReconciliationRecordRepository;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.Org;
-import com.st6.committracker.security.VisibilityEnforcer;
 import com.st6.committracker.shared.ConflictException;
 import com.st6.committracker.shared.EntityNotFoundException;
 import org.slf4j.Logger;
@@ -49,7 +48,6 @@ public class CycleService {
     private final CommitmentRepository commitmentRepository;
     private final CommitmentService commitmentService;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
-    private final VisibilityEnforcer visibilityEnforcer;
     private final AuditService auditService;
     private final CycleStateMachine stateMachine;
 
@@ -57,13 +55,11 @@ public class CycleService {
                         CommitmentRepository commitmentRepository,
                         CommitmentService commitmentService,
                         ReconciliationRecordRepository reconciliationRecordRepository,
-                        VisibilityEnforcer visibilityEnforcer,
                         AuditService auditService) {
         this.cycleRepository = cycleRepository;
         this.commitmentRepository = commitmentRepository;
         this.commitmentService = commitmentService;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
-        this.visibilityEnforcer = visibilityEnforcer;
         this.auditService = auditService;
         this.stateMachine = new CycleStateMachine();
     }
@@ -129,13 +125,17 @@ public class CycleService {
                         row -> (ReconciliationStatus) row[0],
                         row -> (Long) row[1]
                 ));
-        int completedCount = countByStatus.getOrDefault(ReconciliationStatus.COMPLETED, 0L).intValue();
+        int reconciledCount = countByStatus.values().stream()
+                .mapToInt(Long::intValue)
+                .sum();
 
+        String orgTimezone = actor.getOrg().getTimezone() != null ? actor.getOrg().getTimezone() : "UTC";
         TransitionContext context = new TransitionContext(
                 commitmentCount,
-                completedCount,
+                reconciledCount,
                 commitmentCount,
-                Instant.now()
+                Instant.now(),
+                orgTimezone
         );
 
         CycleState targetState = request.targetState();
@@ -147,6 +147,10 @@ public class CycleService {
 
         CycleState fromState = cycle.getState();
         cycle.setState(targetState);
+
+        if (targetState == CycleState.RECONCILED) {
+            cycle.setActive(false);
+        }
 
         auditService.log(
                 actor.getOrg().getId(),
@@ -198,8 +202,7 @@ public class CycleService {
         Instant nextWeekEnd = computeWeekEnd(nextWeekAlignedStart);
         String nextLabel = computeLabel(nextWeekAlignedStart, timezone);
 
-        Cycle nextCycle = cycleRepository.findByOrgIdAndIsActiveTrue(actor.getOrg().getId())
-                .filter(c -> !c.getId().equals(cycle.getId()))
+        Cycle nextCycle = cycleRepository.findByOrgIdAndStartsAt(actor.getOrg().getId(), nextWeekAlignedStart)
                 .orElseGet(() -> createDraftCycle(actor.getOrg(), nextWeekAlignedStart, nextWeekEnd, nextLabel));
 
         for (Commitment original : carriedForwardCommitments) {

@@ -63,12 +63,12 @@ class CycleStateMachineTest {
                 .build();
     }
 
-    // Helper: build a TransitionContext with common defaults.
+    // Helper: build a TransitionContext with common defaults (UTC timezone).
     private CycleStateMachine.TransitionContext ctx(int commitmentCount,
                                                      int reconciled,
                                                      int total,
                                                      Instant now) {
-        return new CycleStateMachine.TransitionContext(commitmentCount, reconciled, total, now);
+        return new CycleStateMachine.TransitionContext(commitmentCount, reconciled, total, now, "UTC");
     }
 
     // =========================================================================

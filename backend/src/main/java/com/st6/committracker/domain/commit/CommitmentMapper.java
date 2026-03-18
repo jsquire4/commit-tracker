@@ -59,6 +59,7 @@ public class CommitmentMapper {
             bulletResponses,
             entity.getCarriedFrom() != null ? entity.getCarriedFrom().getId() : null,
             entity.isUnplanned(),
+            entity.getEstimatedHours(),
             null,   // reconciliationStatus — not available from entity alone
             null,   // reconciliationNote — not available from entity alone
             entity.getCreatedAt(),

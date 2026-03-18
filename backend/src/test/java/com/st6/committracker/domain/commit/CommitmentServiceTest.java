@@ -49,7 +49,6 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -202,7 +201,8 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 category.getId(),
                 null, null, null, null,
-                List.of("bullet 1", "bullet 2")
+                List.of("bullet 1", "bullet 2"),
+                null
         );
 
         Commitment result = commitmentService.create(request, employee);
@@ -211,7 +211,7 @@ class CommitmentServiceTest {
         assertThat(result.getTitle()).isEqualTo("My commitment");
         assertThat(result.isUnplanned()).isFalse();
         verify(commitmentRepository).save(any(Commitment.class));
-        verify(taskBulletRepository, times(2)).save(any(TaskBullet.class));
+        verify(taskBulletRepository).saveAll(any());
         verify(auditService).log(eq(org.getId()), eq("Commitment"), any(), eq("COMMITMENT_CREATED"), eq(employee), any());
     }
 
@@ -243,7 +243,8 @@ class CommitmentServiceTest {
                 null, // missing definingObjectiveId
                 outcomeId,
                 null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -269,7 +270,8 @@ class CommitmentServiceTest {
                 null,
                 rallyCryId,
                 null, null, null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -299,7 +301,8 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 inactiveCatId,
                 null, null, null, null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -333,7 +336,8 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 category.getId(),
                 null, null, null, null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         commitmentService.create(request, employee);
@@ -356,7 +360,8 @@ class CommitmentServiceTest {
                 null,
                 null, null, null,
                 assignedById,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -375,7 +380,8 @@ class CommitmentServiceTest {
                 null,
                 CompletionHorizon.EOD,
                 null, null, null, null, null,
-                List.of("only one bullet")
+                List.of("only one bullet"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -394,7 +400,8 @@ class CommitmentServiceTest {
                 null,
                 CompletionHorizon.EOD,
                 null, null, null, null, null,
-                List.of("b1", "b2", "b3", "b4", "b5", "b6")
+                List.of("b1", "b2", "b3", "b4", "b5", "b6"),
+                null
         );
 
         assertThatThrownBy(() -> commitmentService.create(request, employee))
@@ -423,7 +430,8 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 category.getId(),
                 null, null, null, null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         commitmentService.create(request, employee);
@@ -453,14 +461,15 @@ class CommitmentServiceTest {
                 CompletionHorizon.MIDDAY,
                 category.getId(),
                 null, null, null, null,
-                List.of("new bullet 1", "new bullet 2")
+                List.of("new bullet 1", "new bullet 2"),
+                null
         );
 
         Commitment result = commitmentService.update(commitmentId, request, employee);
 
         assertThat(result.getTitle()).isEqualTo("Updated title");
         verify(taskBulletRepository).deleteAll(any());
-        verify(taskBulletRepository, times(2)).save(any(TaskBullet.class));
+        verify(taskBulletRepository).saveAll(any());
         verify(auditService).log(eq(org.getId()), eq("Commitment"), eq(commitmentId), eq("COMMITMENT_UPDATED"), eq(employee), any());
     }
 
@@ -525,7 +534,8 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 category.getId(),
                 null, null, null, null,
-                List.of("b1", "b2")
+                List.of("b1", "b2"),
+                null
         );
 
         commitmentService.update(commitmentId, request, employee);
@@ -602,17 +612,13 @@ class CommitmentServiceTest {
         c3.setId(id3);
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(draftCycle));
-        when(commitmentRepository.findById(id1)).thenReturn(Optional.of(c1));
-        when(commitmentRepository.findById(id2)).thenReturn(Optional.of(c2));
-        when(commitmentRepository.findById(id3)).thenReturn(Optional.of(c3));
-        when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> inv.getArgument(0));
-
+        when(commitmentRepository.findAllById(List.of(id1, id2, id3))).thenReturn(List.of(c1, c2, c3));
         commitmentService.reorder(cycleId, List.of(id1, id2, id3), employee);
 
         assertThat(c1.getPriorityRank()).isEqualTo(0);
         assertThat(c2.getPriorityRank()).isEqualTo(1);
         assertThat(c3.getPriorityRank()).isEqualTo(2);
-        verify(commitmentRepository, times(3)).save(any(Commitment.class));
+        verify(commitmentRepository).saveAll(any());
         verify(auditService).log(eq(org.getId()), eq("Commitment"), eq(cycleId), eq("COMMITMENTS_REORDERED"), eq(employee), any());
     }
 
@@ -626,7 +632,7 @@ class CommitmentServiceTest {
         c1.setId(id1);
 
         when(cycleRepository.findById(targetCycleId)).thenReturn(Optional.of(draftCycle));
-        when(commitmentRepository.findById(id1)).thenReturn(Optional.of(c1));
+        when(commitmentRepository.findAllById(List.of(id1))).thenReturn(List.of(c1));
 
         assertThatThrownBy(() -> commitmentService.reorder(targetCycleId, List.of(id1), employee))
                 .isInstanceOf(IllegalArgumentException.class)
@@ -653,7 +659,7 @@ class CommitmentServiceTest {
         c1.setId(id1);
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(draftCycle));
-        when(commitmentRepository.findById(id1)).thenReturn(Optional.of(c1));
+        when(commitmentRepository.findAllById(List.of(id1))).thenReturn(List.of(c1));
 
         assertThatThrownBy(() -> commitmentService.reorder(cycleId, List.of(id1), employee))
                 .isInstanceOf(AccessDeniedException.class);
@@ -856,7 +862,7 @@ class CommitmentServiceTest {
 
         commitmentService.cloneForCarryForward(source, newCycle);
 
-        verify(taskBulletRepository, times(2)).save(any(TaskBullet.class));
+        verify(taskBulletRepository).saveAll(any());
     }
 
     // -------------------------------------------------------------------------
@@ -886,6 +892,7 @@ class CommitmentServiceTest {
                 null, null, null,
                 List.of("b1", "b2"),
                 ReconciliationStatus.COMPLETED,
+                null,
                 null
         );
 
@@ -907,6 +914,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 List.of("b1", "b2"),
                 ReconciliationStatus.COMPLETED,
+                null,
                 null
         );
 
@@ -927,6 +935,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 List.of("b1", "b2"),
                 ReconciliationStatus.COMPLETED,
+                null,
                 null
         );
 
@@ -958,7 +967,8 @@ class CommitmentServiceTest {
                 null, null, null,
                 List.of("b1", "b2"),
                 ReconciliationStatus.PARTIALLY_COMPLETED,
-                "Some notes"
+                "Some notes",
+                null
         );
 
         commitmentService.createUnplanned(request, employee);
@@ -991,6 +1001,7 @@ class CommitmentServiceTest {
                 null, null, null,
                 List.of("b1", "b2"),
                 ReconciliationStatus.COMPLETED,
+                null,
                 null
         );
 
@@ -1012,7 +1023,8 @@ class CommitmentServiceTest {
                 null,
                 CompletionHorizon.EOD,
                 null, null, null, null, null,
-                bullets
+                bullets,
+                null
         );
     }
 
@@ -1022,7 +1034,8 @@ class CommitmentServiceTest {
                 null,
                 CompletionHorizon.EOD,
                 null, null, null, null, null,
-                bullets
+                bullets,
+                null
         );
     }
 

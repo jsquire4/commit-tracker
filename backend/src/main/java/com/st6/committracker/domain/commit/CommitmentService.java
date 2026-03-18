@@ -34,6 +34,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -216,6 +217,7 @@ public class CommitmentService {
         commitment.setDefiningObjective(request.definingObjectiveId() != null ? definingObjectiveRepository.getReferenceById(request.definingObjectiveId()) : null);
         commitment.setOutcome(request.outcomeId() != null ? outcomeRepository.getReferenceById(request.outcomeId()) : null);
         commitment.setAssignedBy(assignedBy);
+        commitment.setEstimatedHours(request.estimatedHours());
 
         // Replace task bullets
         taskBulletRepository.deleteAll(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitmentId));
@@ -269,10 +271,15 @@ public class CommitmentService {
             throw new ConflictException("Cycle must be in DRAFT state to reorder commitments");
         }
 
+        List<Commitment> fetched = commitmentRepository.findAllById(orderedIds);
+        Map<UUID, Commitment> byId = fetched.stream()
+                .collect(Collectors.toMap(Commitment::getId, c -> c));
         List<Commitment> commitments = new ArrayList<>();
         for (UUID id : orderedIds) {
-            Commitment c = commitmentRepository.findById(id)
-                    .orElseThrow(() -> new EntityNotFoundException("Commitment", id));
+            Commitment c = byId.get(id);
+            if (c == null) {
+                throw new EntityNotFoundException("Commitment", id);
+            }
             commitments.add(c);
         }
 
@@ -288,8 +295,8 @@ public class CommitmentService {
 
         for (int i = 0; i < commitments.size(); i++) {
             commitments.get(i).setPriorityRank(i);
-            commitmentRepository.save(commitments.get(i));
         }
+        commitmentRepository.saveAll(commitments);
 
         auditService.log(actor.getOrg().getId(), "Commitment", cycleId, "COMMITMENTS_REORDERED", actor,
                 Map.of("cycleId", cycleId, "count", orderedIds.size()));
@@ -374,16 +381,17 @@ public class CommitmentService {
                 .carriedFrom(source)
                 .priorityRank(0)
                 .isUnplanned(false)
+                .estimatedHours(source.getEstimatedHours())
                 .build();
 
         Commitment saved = commitmentRepository.save(clone);
 
         // Clone task bullets
         List<TaskBullet> sourceBullets = taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(source.getId());
-        for (TaskBullet sourceBullet : sourceBullets) {
-            TaskBullet clonedBullet = new TaskBullet(saved, saved.getOrg(), sourceBullet.getBody(), sourceBullet.getSortOrder());
-            taskBulletRepository.save(clonedBullet);
-        }
+        List<TaskBullet> clonedBullets = sourceBullets.stream()
+                .map(sb -> new TaskBullet(saved, saved.getOrg(), sb.getBody(), sb.getSortOrder()))
+                .toList();
+        taskBulletRepository.saveAll(clonedBullets);
 
         log.info("Cloned commitment id={} to new commitment id={} in targetCycle={}",
                 source.getId(), saved.getId(), targetCycle.getId());
@@ -412,7 +420,7 @@ public class CommitmentService {
         return buildAndSaveCommitmentCore(
                 request.title(), request.description(), request.completionHorizon(),
                 request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
-                request.outcomeId(), request.bullets(),
+                request.outcomeId(), request.bullets(), request.estimatedHours(),
                 actor, cycle, assignedBy, isUnplanned);
     }
 
@@ -425,7 +433,7 @@ public class CommitmentService {
         return buildAndSaveCommitmentCore(
                 request.title(), request.description(), request.completionHorizon(),
                 request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
-                request.outcomeId(), request.bullets(),
+                request.outcomeId(), request.bullets(), request.estimatedHours(),
                 actor, cycle, assignedBy, isUnplanned);
     }
 
@@ -438,6 +446,7 @@ public class CommitmentService {
             UUID definingObjectiveId,
             UUID outcomeId,
             List<String> bullets,
+            BigDecimal estimatedHours,
             AppUser actor,
             Cycle cycle,
             AppUser assignedBy,
@@ -464,6 +473,7 @@ public class CommitmentService {
                 .assignedBy(assignedBy)
                 .priorityRank(rank)
                 .isUnplanned(isUnplanned)
+                .estimatedHours(estimatedHours)
                 .build();
 
         Commitment saved = commitmentRepository.save(commitment);
@@ -542,10 +552,11 @@ public class CommitmentService {
     }
 
     private void saveBullets(Commitment commitment, List<String> bulletTexts) {
+        List<TaskBullet> bullets = new ArrayList<>();
         for (int i = 0; i < bulletTexts.size(); i++) {
-            TaskBullet bullet = new TaskBullet(commitment, commitment.getOrg(), bulletTexts.get(i), i);
-            taskBulletRepository.save(bullet);
+            bullets.add(new TaskBullet(commitment, commitment.getOrg(), bulletTexts.get(i), i));
         }
+        taskBulletRepository.saveAll(bullets);
     }
 
     private String buildRcdoLinkDescription(UUID rallyCryId, UUID definingObjectiveId, UUID outcomeId) {
