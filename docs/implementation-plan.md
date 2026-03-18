@@ -258,15 +258,19 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
 
 ### Task 2.1: Cross-Cycle Analytics Service (PARALLEL)
 
-**File:** `backend/src/main/java/com/st6/committracker/domain/observatory/AnalyticsService.java`
+**Files:**
+- `backend/src/main/java/com/st6/committracker/domain/observatory/AnalyticsService.java` — main service
+- `backend/src/main/java/com/st6/committracker/domain/observatory/CategoryUtils.java` — shared static helpers (category normalization, effort resolution)
 
 **Purpose:** Compute metrics across multiple cycles for drift detection, trend analysis, and historical comparisons. This is the analytical engine that powers the executive view.
+
+**Decomposition:** Extract `normalizeCategoryName()` and `resolveEffortHours()` into a separate `CategoryUtils` utility class. These are used by both AnalyticsService and DriftDetectionService — putting them in the service creates a coupling where DriftDetectionService needs to import AnalyticsService just for a static helper.
 
 **Chess category name mapping — CRITICAL for all analytics:**
 
 The `chess_categories` table stores category names as title-case strings: `"Strategic"`, `"Operational"`, `"Defensive"`, `"Capability Building"`. The frontend uses screaming-case enum keys: `STRATEGIC`, `OPERATIONAL`, etc. All analytics services must normalize category names to a canonical key for aggregation.
 
-Create a static helper in this service (or a shared utility):
+Create these as static methods in `CategoryUtils.java`:
 ```java
 /** Normalize a chess category name to a canonical key for analytics aggregation.
  *  "Strategic" → "Strategic", "STRATEGIC" → "Strategic", null → "Uncategorized".
@@ -316,11 +320,11 @@ static String normalizeCategoryName(String name) {
 
    Implementation notes:
    - Join commitments with users, cost_bands
-   - **Effort estimation fallback** — extract as a private helper method:
+   - **Effort estimation fallback** — use `CategoryUtils.resolveEffortHours()` (shared utility, also used by seed generator):
      ```java
      /** Returns estimated hours for a commitment. Uses explicit value if set,
       *  otherwise falls back to horizon-based defaults. */
-     private static BigDecimal resolveEffortHours(Commitment c) {
+     public static BigDecimal resolveEffortHours(Commitment c) {
          if (c.getEstimatedHours() != null) return c.getEstimatedHours();
          return switch (c.getCompletionHorizon()) {
              case EOW -> new BigDecimal("8");
@@ -379,9 +383,28 @@ public record TeamAlignmentTrend(
 
 ### Task 2.2: Drift Detection Service (PARALLEL)
 
-**File:** `backend/src/main/java/com/st6/committracker/domain/observatory/DriftDetectionService.java`
+**Files:**
+- `backend/src/main/java/com/st6/committracker/domain/observatory/DriftDetectionService.java` — main service
+- `backend/src/main/java/com/st6/committracker/domain/observatory/TrendAnalyzer.java` — pure-function utility for the consecutive-decline algorithm
 
 **Purpose:** Detect when organizational units are drifting away from strategic alignment over time. Uses the configurable thresholds from `ObservatoryConfig`.
+
+**Decomposition:** The consecutive-decline algorithm is used for ALIGNMENT drift, VELOCITY drift, and potentially future metric types. Extract it into `TrendAnalyzer` as a pure static method that takes a `List<Double>` (metric values, chronological) and returns a `TrendResult(int consecutiveDeclineWeeks, double baselineValue, double currentValue, TrendDirection direction)`. This keeps `DriftDetectionService.detectDrift()` focused on orchestration (load config, iterate managers, classify severity) rather than containing the math inline.
+
+```java
+/** Pure analysis utility — no Spring dependencies, no repository access. Easily testable. */
+public class TrendAnalyzer {
+
+    public record TrendResult(int declineWeeks, double baselineValue,
+                               double currentValue, TrendDirection direction) {}
+
+    /** Count consecutive declining weeks from the most recent data point backward.
+     *  tolerance = minimum absolute change to count as a decline (e.g., 2.0 for ±2%). */
+    public static TrendResult analyzeDecline(List<Double> values, double tolerance) { ... }
+}
+```
+
+Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 
 **This service must:**
 
@@ -403,26 +426,13 @@ public record TeamAlignmentTrend(
    - Load `ObservatoryConfig` for the org. If none exists, create one with all defaults from the migration (V018) and persist it.
    - Get all managers/directors in the org via `userRepository.findByOrgIdAndIsActiveTrue()`, filter to roles MANAGER, DIRECTOR, VP only (not EMPLOYEE, ANALYST, EXECUTIVE).
    - For each manager, call `AnalyticsService.computeTeamAlignmentTrend()` with `config.driftStructuralWeeks` as the weekCount (ensures enough data for the most severe classification).
-   - **Drift detection algorithm — use consecutive-decline counting (NOT linear regression).** Linear regression is overkill for this feature and introduces unnecessary complexity. The algorithm:
-     ```
-     For each manager's alignment trend (list of AlignmentDataPoints, chronological):
-       1. Start from the most recent week, walk backward
-       2. Count consecutive weeks where strategicPct decreased from the previous week
-          (allow ±2% tolerance — a 1% fluctuation is noise, not drift)
-       3. That count = weekCount for this signal
-       4. baselineValue = strategicPct at the start of the declining streak
-       5. currentValue = strategicPct at the most recent week
-       6. trendDirection:
-          - If weekCount >= 1 and currentValue < baselineValue: DECLINING
-          - If weekCount == 0 and last 3 weeks are within ±3%: FLAT
-          - If most recent week is higher than 3 weeks ago by >3%: IMPROVING
-     ```
+   - **Drift detection:** For each manager, extract `strategicPct` values from the `AlignmentDataPoint` list, then call `TrendAnalyzer.analyzeDecline(values, 2.0)`. The returned `TrendResult` gives `declineWeeks`, `baselineValue`, `currentValue`, and `direction`.
    - Classify severity based on config thresholds:
      - `weekCount >= config.driftStructuralWeeks` → STRUCTURAL
      - `weekCount >= config.driftSustainedWeeks` → SUSTAINED
      - `weekCount >= config.driftEmergingWeeks` → EMERGING
      - `weekCount < config.driftEmergingWeeks` → don't surface (no signal emitted)
-   - **VELOCITY drift:** Same consecutive-decline algorithm applied to `completionRate` from `AnalyticsService.computeCompletionTrend()`. Use the same severity thresholds.
+   - **VELOCITY drift:** Extract `completionRate` values from `AnalyticsService.computeCompletionTrend()`, call `TrendAnalyzer.analyzeDecline(values, 2.0)`. Same severity thresholds.
    - **COVERAGE drift:** For each Rally Cry in the org, count how many consecutive recent cycles have zero commitments linked to it. If that count >= `config.driftEmergingWeeks`, emit a COVERAGE signal. Use `commitmentRepository.findByRallyCryIdAndCycleId()` for each cycle.
 
 2. **`detectSignalIntegrity(UUID orgId, UUID cycleId)`** — Detect when data looks gamed.
@@ -541,11 +551,28 @@ public record TeamAlignmentTrend(
 
 ---
 
-### Task 2.5: Observatory REST Controller (PARALLEL)
+### Task 2.5: Observatory REST Controller + Health Composer (PARALLEL)
 
-**File:** `backend/src/main/java/com/st6/committracker/domain/observatory/ObservatoryController.java`
+**Files:**
+- `backend/src/main/java/com/st6/committracker/domain/observatory/ObservatoryController.java` — thin REST controller, delegates to services
+- `backend/src/main/java/com/st6/committracker/domain/observatory/ExecutiveHealthComposer.java` — composes the `/health` response from multiple services
 
-**Purpose:** Single controller exposing all observatory endpoints. Role-gated to EXECUTIVE, VP, DIRECTOR.
+**Purpose:** Expose observatory endpoints. The controller is thin — each endpoint is a 1-3 line method that calls a service and wraps in `ApiResponse`. The `/health` endpoint is the exception: it composes data from AnalyticsService + DriftDetectionService + integrity analysis into a single `ExecutiveHealthResponse`. That composition logic goes in `ExecutiveHealthComposer`, NOT in the controller method.
+
+**`ExecutiveHealthComposer`** is a `@Service` with one public method:
+```java
+public ExecutiveHealthResponse computeHealth(UUID orgId, int weekCount) {
+    // 1. Load config (or create default)
+    // 2. Get alignment trend from AnalyticsService → extract most recent strategicPct
+    // 3. Get completion trend → extract most recent completionRate, carryForwardRate
+    // 4. Get drift report from DriftDetectionService → count signals
+    // 5. Get integrity report → count flags
+    // 6. For each VP/Director, build OrgUnitHealth using per-team alignment data
+    // 7. Compute overall HealthGrade via computeGrade()
+    // 8. Assemble and return ExecutiveHealthResponse
+}
+```
+This keeps the controller method to: `return ApiResponse.of(healthComposer.computeHealth(orgId, weekCount));`
 
 **Endpoints:**
 
@@ -813,30 +840,64 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 
 ### Task 4.3: Team Drill-Down View (PARALLEL)
 
-**File:** `frontend/src/features/observatory/TeamDrillDown.tsx`
-
 **Purpose:** When the executive clicks an org unit card, show detailed team-level analytics.
 
-**Layout:** Single-column page, sections stacked vertically with `gap-6`. Use `useParams()` to get `managerId` from the route.
+**Decomposition — this is a complex page. Do NOT build as a single file.** Split into a page shell + 5 section components:
 
-**Sections:**
-1. **Team header** — Full-width card. Manager name (text-xl bold), role badge, headcount, cost band summary. Use the existing `PageHeader` component pattern.
+**Files to create:**
+- `frontend/src/features/observatory/TeamDrillDown.tsx` — page shell (data fetching, layout, navigation)
+- `frontend/src/features/observatory/CompletionTrendChart.tsx` — completion rate area chart
+- `frontend/src/features/observatory/CostImpactTable.tsx` — sortable cost impact table
+- `frontend/src/features/observatory/DisplacementReport.tsx` — category bar chart + note clusters
+- `frontend/src/features/observatory/CarryForwardChainList.tsx` — carry chain list
+- `frontend/src/features/observatory/DarkWorkAttribution.tsx` — manager-assigned vs self-directed chart
 
-2. **Alignment trend chart** — `<AlignmentTrendChart managerId={managerId} weekCount={12} showTarget />` (reuse Task 4.2 component, scoped to this team).
+**`TeamDrillDown.tsx` (page shell, ~80 lines):**
+- Use `useParams()` to get `managerId` from the route
+- Fetch all data: `useAlignmentTrend(12, managerId)`, `useCompletionTrend(12)`, `useCostImpact(cycleId)`, `useDisplacementReport(12)`, `useCarryChains(cycleId)`
+- Handle loading (single `<LoadingSpinner>`) and error states
+- Render navigation: back button (← Observatory) and breadcrumb (Observatory > [Manager Name])
+- Layout: single-column `<div className="flex flex-col gap-6">`, each section as a self-contained component:
+  ```tsx
+  <PageHeader title={managerName} badge={<Badge>{role}</Badge>} />
+  <AlignmentTrendChart managerId={managerId} weekCount={12} showTarget />
+  <CompletionTrendChart data={completionData} />
+  <CostImpactTable signals={costSignals} />
+  <DisplacementReport summary={displacementData} />
+  <CarryForwardChainList chains={carryChains} />
+  <DarkWorkAttribution commitments={commitments} />
+  ```
 
-3. **Completion trend chart** — Recharts `<AreaChart>` with the same dimensions/styling as the alignment chart. Two stacked areas: completion rate (green) and carry-forward rate (amber). X-axis: week labels, Y-axis: 0-100%. Data from `useCompletionTrend()`.
+**`CompletionTrendChart.tsx` (~60 lines):**
+- Recharts `<AreaChart>` with same dimensions/styling as AlignmentTrendChart
+- Two stacked areas: completion rate (green) and carry-forward rate (amber)
+- X-axis: week labels, Y-axis: 0-100%
+- Props: `data: CompletionDataPoint[]`
 
-4. **Cost impact table** — HTML `<table>` (same pattern as `TeamRollupTable`). Columns: Name, Role, Cost Band, Total Hours, Strategic Hours, Non-Strategic Hours, Misalignment Cost ($). Sortable by any column (reuse the `SortableHeader` component from TeamRollupTable). Default sort: misalignment cost descending.
+**`CostImpactTable.tsx` (~120 lines):**
+- HTML `<table>` (same pattern as `TeamRollupTable`)
+- Columns: Name, Role, Cost Band, Total Hours, Strategic Hours, Non-Strategic Hours, Misalignment Cost ($)
+- Sortable by any column — **extract `SortableHeader` from `TeamRollupTable.tsx` into `frontend/src/components/SortableHeader.tsx`** so both tables can reuse it. Currently it's defined inline inside TeamRollupTable.
+- Default sort: misalignment cost descending
+- Props: `signals: CostWeightedSignal[]`
 
-5. **Displacement report** — Two sub-sections side-by-side on desktop (`grid grid-cols-1 lg:grid-cols-2`):
-   - Left: Recharts horizontal `<BarChart>` showing displacement count by category (one bar per DisplacementCategory)
-   - Right: Note clusters as a simple list. Each cluster shows: theme phrase in bold, count, then up to 3 representative notes as indented italic text.
+**`DisplacementReport.tsx` (~100 lines):**
+- Two sub-sections side-by-side on desktop (`grid grid-cols-1 lg:grid-cols-2`)
+- Left: Recharts horizontal `<BarChart>` showing displacement count by category
+- Right: Note clusters as a simple list. Each cluster: theme phrase bold, count, up to 3 representative notes indented italic
+- Props: `summary: DisplacementSummary`
 
-6. **Carry-forward chains** — List of items carried >2 times. Each item: commitment title, chain length badge (e.g., "Carried 4 weeks"), origin cycle label, user name. Sorted by chain length descending.
+**`CarryForwardChainList.tsx` (~50 lines):**
+- List of items carried >2 times
+- Each item: commitment title, chain length badge (e.g., "Carried 4 weeks"), origin cycle label, user name
+- Sorted by chain length descending
+- Props: `chains: CarryForwardChain[]`
 
-7. **Dark work attribution** — Recharts stacked `<BarChart layout="vertical">`. Two bars per team member: "Manager-Assigned" and "Self-Directed", each subdivided by chess category color. Same color scheme as `AlignmentGapChart` (Strategic=#2563EB, Operational=#6B7280, Defensive=#DC2626, Capability=#059669). This reuses the visual language from the existing chart.
-
-**Navigation:** Back button (← Observatory) and breadcrumb: Observatory > [Manager Name]. Use `useNavigate()` for the back button, `<Link>` for breadcrumb.
+**`DarkWorkAttribution.tsx` (~80 lines):**
+- Recharts stacked `<BarChart layout="vertical">`
+- Two bars per team member: "Manager-Assigned" and "Self-Directed", each subdivided by chess category color
+- Color scheme: Strategic=#2563EB, Operational=#6B7280, Defensive=#DC2626, Capability=#059669
+- Props: `commitments: Commitment[]` — computes attribution breakdown internally
 
 ---
 
@@ -844,12 +905,25 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceL
 
 **Purpose:** Update the reconciliation flow to capture displacement data.
 
-**Files to modify:**
-- `frontend/src/features/reconciliation/PlannedVsActualTable.tsx`
-- `frontend/src/features/reconciliation/ChangeReasonCapture.tsx`
+**Decomposition:** `PlannedVsActualTable.tsx` is already 275 lines. Do NOT add displacement UI inline — create a new component.
 
-**Changes to PlannedVsActualTable:**
-When status is NOT_STARTED, PARTIALLY_COMPLETED, or CARRIED_FORWARD, show a new section below the notes field:
+**Files to create:**
+- `frontend/src/features/reconciliation/DisplacementCapture.tsx` — self-contained displacement capture section
+
+**Files to modify:**
+- `frontend/src/features/reconciliation/PlannedVsActualTable.tsx` — import and render `<DisplacementCapture>` below the notes field when status warrants it
+
+**`DisplacementCapture.tsx` (~80 lines):**
+Props: `value: { category: DisplacementCategory | null, detail: string, displacingCommitmentId: string | null }`, `onChange: (v) => void`, `cycleCommitments: Commitment[]` (for the "which commitment" dropdown), `currentCommitmentCreatedAt: string` (for filtering candidates), `disabled: boolean`.
+
+When status is NOT_STARTED, PARTIALLY_COMPLETED, or CARRIED_FORWARD, `PlannedVsActualTable`'s `CommitmentRow` renders:
+```tsx
+{isReasonRequired && (
+  <DisplacementCapture value={...} onChange={...} cycleCommitments={...} disabled={row.saving} />
+)}
+```
+
+**`DisplacementCapture` renders:**
 
 1. **"What displaced this?"** — dropdown with DisplacementCategory options:
    - Manager reassigned me to other work
@@ -944,6 +1018,9 @@ const { role } = useAuth();
 const showObservatory = role && ['DIRECTOR', 'VP', 'EXECUTIVE'].includes(role);
 ```
 
+**Shared component extraction (do during Wave 4, before Task 4.3):**
+- Extract `SortableHeader` from `frontend/src/features/manager-dashboard/TeamRollupTable.tsx` into `frontend/src/components/SortableHeader.tsx`. Update `TeamRollupTable` to import from the shared location. `CostImpactTable` (Task 4.3) will also import it.
+
 **Gate for Wave 4:** `pnpm typecheck && pnpm build` passes. All pages render without errors. Manual click-through of the full user flow: Executive Health → Org Unit Drill-Down → back. Reconciliation flow with displacement tracking.
 
 ---
@@ -954,16 +1031,36 @@ const showObservatory = role && ['DIRECTOR', 'VP', 'EXECUTIVE'].includes(role);
 
 ### Task 5.1: Enhanced Manager Dashboard (PARALLEL)
 
+**Decomposition:** `ManagerDashboardPage.tsx` is already 130 lines with 4 sections. Adding 3 more sections inline would push it to 250+ lines and make it a God page. Extract the new additions as components.
+
+**Files to create:**
+- `frontend/src/features/manager-dashboard/CarryForwardVelocity.tsx` — stat card
+- `frontend/src/features/manager-dashboard/RcdoCoverageGaps.tsx` — coverage gap list
+
 **Files to modify:**
-- `frontend/src/features/manager-dashboard/ManagerDashboardPage.tsx`
+- `frontend/src/features/manager-dashboard/ManagerDashboardPage.tsx` — add imports and render the 3 new sections
 
-**Additions (all below the existing `AssignmentSignals` section, above `TeamRollupTable`):**
+**`ManagerDashboardPage.tsx` changes (~15 lines of additions):**
+Add below `AssignmentSignals`, above `TeamRollupTable`:
+```tsx
+<AlignmentTrendChart managerId={userId} weekCount={8} showTarget />
+<CarryForwardVelocity cycleId={activeCycleId} />
+<RcdoCoverageGaps coverage={data.rcdoCoverage} />
+```
+The trend chart is reused from Task 4.2 (no new file needed). The other two are small, focused components.
 
-1. **Trend section** — New `<section>` with heading "Alignment Trend". Render `<AlignmentTrendChart managerId={currentUserId} weekCount={8} showTarget />` (reuse component from Task 4.2). The current user's ID comes from `useAuth()`. This shows the manager their own team's alignment trajectory over the last 8 weeks.
+**`CarryForwardVelocity.tsx` (~40 lines):**
+- Uses `useCommitments(cycleId)` to fetch current cycle commitments
+- Counts items where `carriedFromCommitmentId !== null`
+- Renders a single stat card (same pattern as `SignalCard` in `AssignmentSignals.tsx`)
+- Props: `cycleId: string`
+- Label: "Active Carry Chains", amber variant if count > 3
 
-2. **Carry-forward velocity indicator** — A single stat card (same pattern as `SignalCard` in `AssignmentSignals.tsx`). Label: "Active Carry Chains". Value: count of commitments in the current cycle with `carriedFromCommitmentId !== null`. Sublabel: "items carried from prior weeks". Amber variant if count > 3. Data source: the commitments already fetched via the dashboard — filter `commitments` where `carriedFromCommitmentId != null`. This requires adding the current cycle's commitments to the dashboard page (use `useCommitments(activeCycleId)` — already available since Bug 1 fix provides `activeCycleId`).
-
-3. **RCDO coverage gaps** — New section with heading "RCDO Coverage Gaps". Render the `uncoveredObjectives` array from `data.rcdoCoverage` as a prominent list. Each item shows: defining objective title, parent rally cry title. Style: amber background cards (`bg-amber-50 border-amber-200`), icon: warning triangle. If `uncoveredObjectives.length === 0`, show a green "All objectives covered" message.
+**`RcdoCoverageGaps.tsx` (~50 lines):**
+- Renders `uncoveredObjectives` array as a list of amber cards
+- Each item: defining objective title, parent rally cry title, warning icon
+- If empty, shows a green "All objectives covered" message
+- Props: `coverage: RcdoCoverageResponse`
 
 ### Task 5.2: Org Chart Visualization (PARALLEL)
 
@@ -1022,9 +1119,49 @@ This is ~150 lines of code, not 400+. The indented list pattern is proven and fa
 
 ### Task 6.1: Extended Seed Data
 
-**File:** `backend/src/main/java/com/st6/committracker/seed/ObservatorySeedGenerator.java`
+**Decomposition:** A single 500+ line seed generator is unmaintainable and hard for a sub-agent to produce correctly in one pass. Split into 4 files:
 
-This is a programmatic seed generator that replaces the existing `DataInitializer` for demo purposes. It uses the EntityManager directly (same pattern as `DataInitializer`). Activated via a new property `st6.seed.observatory=true` (separate from the existing `st6.seed.enabled` which seeds the small 10-user dataset).
+**Files to create:**
+- `backend/src/main/java/com/st6/committracker/seed/ObservatorySeedGenerator.java` — orchestrator (ApplicationRunner), delegates to phase classes
+- `backend/src/main/java/com/st6/committracker/seed/SeedOrgBuilder.java` — creates orgs, portfolios, users, hierarchy, cost bands, RCDO, chess categories, observatory config
+- `backend/src/main/java/com/st6/committracker/seed/SeedCycleBuilder.java` — creates cycles, commitments, reconciliation records, carry-forward chains
+- `backend/src/main/java/com/st6/committracker/seed/SeedTemplates.java` — static constants only: name arrays, displacement templates, commitment title templates, reconciliation note templates
+
+**`ObservatorySeedGenerator.java` (~50 lines):**
+```java
+@Component
+@ConditionalOnProperty(name = "st6.seed.observatory", havingValue = "true")
+public class ObservatorySeedGenerator implements ApplicationRunner {
+    @PersistenceContext private EntityManager em;
+
+    @Override @Transactional
+    public void run(ApplicationArguments args) {
+        if (orgCount() > 0) return; // already seeded
+        SeedOrgBuilder orgBuilder = new SeedOrgBuilder(em);
+        List<SeedOrgBuilder.OrgContext> orgs = orgBuilder.buildAll();
+        SeedCycleBuilder cycleBuilder = new SeedCycleBuilder(em);
+        for (var org : orgs) cycleBuilder.buildCycles(org);
+    }
+}
+```
+
+**`SeedOrgBuilder.java` (~150 lines):**
+Returns an `OrgContext` record containing all the entities needed by `SeedCycleBuilder`: org, users (by role), RCDO tree, chess categories, cost bands. This class handles only structure — no cycles, no commitments.
+
+**`SeedCycleBuilder.java` (~200 lines):**
+Takes an `OrgContext`, creates 12 cycles, generates commitments per week using the narrative arc, generates reconciliation records, handles carry-forward chain generation. This is the most complex phase but it's isolated from org structure creation.
+
+**`SeedTemplates.java` (~100 lines):**
+Pure static data. No logic. Contains:
+- `FIRST_NAMES`, `LAST_NAMES` arrays
+- `DISPLACEMENT_TEMPLATES` map
+- `COMMITMENT_TITLE_TEMPLATES` per category
+- `RECONCILIATION_NOTE_TEMPLATES`
+- `ORG_NARRATIVES` — the strategic % arc arrays
+
+This separation means a sub-agent can implement each file independently and they compose cleanly.
+
+Activated via a new property `st6.seed.observatory=true` (separate from the existing `st6.seed.enabled` which seeds the small 10-user dataset).
 
 **Requirements:**
 - 3 organizations in 1 portfolio
