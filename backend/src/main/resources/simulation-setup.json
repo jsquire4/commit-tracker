@@ -1,0 +1,492 @@
+{
+  "portfolio": {
+    "name": "Apex Capital Partners",
+    "slug": "apex-capital",
+    "description": "Mid-market PE firm specializing in industrial and services roll-ups. Operational excellence thesis across four portfolio companies."
+  },
+  "companies": [
+    {
+      "name": "Meridian Advanced Manufacturing",
+      "slug": "meridian-mfg",
+      "timezone": "America/Chicago",
+      "cycleStartDate": "2026-03-16",
+      "cycleCount": 26,
+      "costBands": [
+        { "name": "L1 - Entry",     "tier": 1, "hourlyRate": "35.00" },
+        { "name": "L2 - Mid",       "tier": 2, "hourlyRate": "55.00" },
+        { "name": "L3 - Senior",    "tier": 3, "hourlyRate": "80.00" },
+        { "name": "L4 - Lead",      "tier": 4, "hourlyRate": "110.00" },
+        { "name": "L5 - Executive", "tier": 5, "hourlyRate": "160.00" }
+      ],
+      "users": [
+        {
+          "email": "sarah.chen@meridian-mfg.com",
+          "displayName": "Sarah Chen",
+          "role": "EXECUTIVE",
+          "reportsTo": null,
+          "costBand": "L5 - Executive",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "marcus.wright@meridian-mfg.com",
+          "displayName": "Marcus Wright",
+          "role": "VP",
+          "reportsTo": "sarah.chen@meridian-mfg.com",
+          "costBand": "L5 - Executive",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "priya.sharma@meridian-mfg.com",
+          "displayName": "Priya Sharma",
+          "role": "VP",
+          "reportsTo": "sarah.chen@meridian-mfg.com",
+          "costBand": "L5 - Executive",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "james.okafor@meridian-mfg.com",
+          "displayName": "James Okafor",
+          "role": "DIRECTOR",
+          "reportsTo": "marcus.wright@meridian-mfg.com",
+          "costBand": "L4 - Lead",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "david.kim@meridian-mfg.com",
+          "displayName": "David Kim",
+          "role": "DIRECTOR",
+          "reportsTo": "marcus.wright@meridian-mfg.com",
+          "costBand": "L4 - Lead",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "raj.patel@meridian-mfg.com",
+          "displayName": "Raj Patel",
+          "role": "DIRECTOR",
+          "reportsTo": "priya.sharma@meridian-mfg.com",
+          "costBand": "L4 - Lead",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "elena.rodriguez@meridian-mfg.com",
+          "displayName": "Elena Rodriguez",
+          "role": "MANAGER",
+          "reportsTo": "james.okafor@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "tom.jackson@meridian-mfg.com",
+          "displayName": "Tom Jackson",
+          "role": "MANAGER",
+          "reportsTo": "james.okafor@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "anna.mueller@meridian-mfg.com",
+          "displayName": "Anna Mueller",
+          "role": "MANAGER",
+          "reportsTo": "david.kim@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "wei.zhang@meridian-mfg.com",
+          "displayName": "Wei Zhang",
+          "role": "MANAGER",
+          "reportsTo": "david.kim@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "grace.lee@meridian-mfg.com",
+          "displayName": "Grace Lee",
+          "role": "MANAGER",
+          "reportsTo": "raj.patel@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "victor.solis@meridian-mfg.com",
+          "displayName": "Victor Solis",
+          "role": "MANAGER",
+          "reportsTo": "raj.patel@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "carlos.vega@meridian-mfg.com",
+          "displayName": "Carlos Vega",
+          "role": "EMPLOYEE",
+          "reportsTo": "elena.rodriguez@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "maria.santos@meridian-mfg.com",
+          "displayName": "Maria Santos",
+          "role": "EMPLOYEE",
+          "reportsTo": "elena.rodriguez@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "ryan.park@meridian-mfg.com",
+          "displayName": "Ryan Park",
+          "role": "EMPLOYEE",
+          "reportsTo": "elena.rodriguez@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "aisha.johnson@meridian-mfg.com",
+          "displayName": "Aisha Johnson",
+          "role": "EMPLOYEE",
+          "reportsTo": "elena.rodriguez@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "derek.chen@meridian-mfg.com",
+          "displayName": "Derek Chen",
+          "role": "EMPLOYEE",
+          "reportsTo": "tom.jackson@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "jackie.liu@meridian-mfg.com",
+          "displayName": "Jackie Liu",
+          "role": "EMPLOYEE",
+          "reportsTo": "tom.jackson@meridian-mfg.com",
+          "costBand": "L1 - Entry",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "miguel.fernandez@meridian-mfg.com",
+          "displayName": "Miguel Fernandez",
+          "role": "EMPLOYEE",
+          "reportsTo": "tom.jackson@meridian-mfg.com",
+          "costBand": "L1 - Entry",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "lisa.park@meridian-mfg.com",
+          "displayName": "Lisa Park",
+          "role": "ANALYST",
+          "reportsTo": "tom.jackson@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "robert.chang@meridian-mfg.com",
+          "displayName": "Robert Chang",
+          "role": "EMPLOYEE",
+          "reportsTo": "anna.mueller@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "sarah.kim@meridian-mfg.com",
+          "displayName": "Sarah Kim",
+          "role": "EMPLOYEE",
+          "reportsTo": "anna.mueller@meridian-mfg.com",
+          "costBand": "L1 - Entry",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "jennifer.wu@meridian-mfg.com",
+          "displayName": "Jennifer Wu",
+          "role": "EMPLOYEE",
+          "reportsTo": "anna.mueller@meridian-mfg.com",
+          "costBand": "L1 - Entry",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "ben.torres@meridian-mfg.com",
+          "displayName": "Ben Torres",
+          "role": "EMPLOYEE",
+          "reportsTo": "anna.mueller@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "patricia.nguyen@meridian-mfg.com",
+          "displayName": "Patricia Nguyen",
+          "role": "EMPLOYEE",
+          "reportsTo": "wei.zhang@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "alex.petrov@meridian-mfg.com",
+          "displayName": "Alex Petrov",
+          "role": "EMPLOYEE",
+          "reportsTo": "wei.zhang@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "mark.thompson@meridian-mfg.com",
+          "displayName": "Mark Thompson",
+          "role": "EMPLOYEE",
+          "reportsTo": "wei.zhang@meridian-mfg.com",
+          "costBand": "L1 - Entry",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "daniel.park@meridian-mfg.com",
+          "displayName": "Daniel Park",
+          "role": "EMPLOYEE",
+          "reportsTo": "grace.lee@meridian-mfg.com",
+          "costBand": "L3 - Senior",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "rachel.torres@meridian-mfg.com",
+          "displayName": "Rachel Torres",
+          "role": "EMPLOYEE",
+          "reportsTo": "grace.lee@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "kevin.wright@meridian-mfg.com",
+          "displayName": "Kevin Wright",
+          "role": "EMPLOYEE",
+          "reportsTo": "grace.lee@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "amy.chen@meridian-mfg.com",
+          "displayName": "Amy Chen",
+          "role": "EMPLOYEE",
+          "reportsTo": "grace.lee@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "chris.martinez@meridian-mfg.com",
+          "displayName": "Chris Martinez",
+          "role": "EMPLOYEE",
+          "reportsTo": "victor.solis@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "diana.flores@meridian-mfg.com",
+          "displayName": "Diana Flores",
+          "role": "EMPLOYEE",
+          "reportsTo": "victor.solis@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        },
+        {
+          "email": "sam.wilson@meridian-mfg.com",
+          "displayName": "Sam Wilson",
+          "role": "EMPLOYEE",
+          "reportsTo": "victor.solis@meridian-mfg.com",
+          "costBand": "L2 - Mid",
+          "weeklyCapacityHours": "40"
+        }
+      ],
+      "rallyCries": [
+        {
+          "title": "Zero-Defect Manufacturing by Q3",
+          "description": "Eliminate scrap waste and delivery failures across Production Operations. Target: defect rate below 0.5% and on-time delivery above 98% by end of Q3.",
+          "definingObjectives": [
+            {
+              "title": "Reduce Scrap Rate to Below 0.5%",
+              "description": "Implement statistical process controls and root-cause analysis workflows to drive scrap generation below 0.5% across all production lines.",
+              "ownerEmail": "james.okafor@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "SPC Controls Live on All Lines",
+                  "description": "Statistical process control monitoring deployed and actively alerting on every production line.",
+                  "ownerEmail": "elena.rodriguez@meridian-mfg.com"
+                },
+                {
+                  "title": "Root-Cause Closure Rate Above 90%",
+                  "description": "90%+ of defect root-cause investigations closed within 5 business days with documented corrective actions.",
+                  "ownerEmail": "elena.rodriguez@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Achieve 98%+ On-Time Delivery",
+              "description": "Stabilize assembly floor scheduling and reduce unplanned line stoppages to bring on-time delivery above 98%.",
+              "ownerEmail": "james.okafor@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Unplanned Line Stoppages Below 2 Per Week",
+                  "description": "Preventive maintenance and cross-trained operators reduce unplanned stoppages to fewer than 2 per week company-wide.",
+                  "ownerEmail": "tom.jackson@meridian-mfg.com"
+                },
+                {
+                  "title": "Assembly Schedule Adherence at 95%+",
+                  "description": "Weekly assembly schedule completed within 5% variance, tracked and reported every cycle.",
+                  "ownerEmail": "tom.jackson@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Build Quality Culture Across Production Teams",
+              "description": "Establish team-level quality ownership so that every employee can identify and escalate defects without management escalation.",
+              "ownerEmail": "elena.rodriguez@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Quality Ownership Training Complete for All Operators",
+                  "description": "100% of production operators complete quality ownership training with certification.",
+                  "ownerEmail": "elena.rodriguez@meridian-mfg.com"
+                },
+                {
+                  "title": "Peer Defect Reporting Rate Up 3x from Baseline",
+                  "description": "Employee-initiated defect reports increase 3x from baseline, indicating active quality ownership rather than passive compliance.",
+                  "ownerEmail": "carlos.vega@meridian-mfg.com"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Supplier Consolidation — 30% Fewer Vendors by Q2",
+          "description": "Reduce vendor count by 30%, consolidate to preferred supplier agreements, and cut procurement overhead to fund the transformation roadmap.",
+          "definingObjectives": [
+            {
+              "title": "Complete Vendor Rationalization Analysis",
+              "description": "Audit all active vendors, score by strategic value and switching cost, and produce a consolidation target list approved by leadership.",
+              "ownerEmail": "david.kim@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Full Vendor Audit Completed",
+                  "description": "All active vendor contracts audited, categorized, and scored. Audit report delivered to leadership.",
+                  "ownerEmail": "anna.mueller@meridian-mfg.com"
+                },
+                {
+                  "title": "Consolidation Target List Approved",
+                  "description": "Leadership-approved list of vendors to exit, consolidate, or elevate to preferred status.",
+                  "ownerEmail": "david.kim@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Execute Preferred Supplier Agreements for Top 10 Categories",
+              "description": "Negotiate and execute preferred supplier agreements across the top 10 spend categories, replacing ad-hoc purchasing.",
+              "ownerEmail": "david.kim@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "5 Preferred Supplier Agreements Signed by Q1 End",
+                  "description": "First 5 preferred supplier contracts executed, covering at least 40% of total annual spend.",
+                  "ownerEmail": "anna.mueller@meridian-mfg.com"
+                },
+                {
+                  "title": "10 Preferred Supplier Agreements Signed by Q2 End",
+                  "description": "All 10 preferred supplier contracts executed and purchasing policy updated to enforce compliance.",
+                  "ownerEmail": "anna.mueller@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Transition Procurement to Strategic Vendor Management",
+              "description": "Shift procurement team from transactional purchasing to strategic vendor development, using time freed by consolidation.",
+              "ownerEmail": "wei.zhang@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Procurement Team Capacity Freed: 20% Redirected to Strategic Work",
+                  "description": "Measurable reduction in transactional purchasing hours, with freed capacity directed to vendor development and strategic sourcing projects.",
+                  "ownerEmail": "wei.zhang@meridian-mfg.com"
+                },
+                {
+                  "title": "Vendor Scorecards Live for All Preferred Suppliers",
+                  "description": "Quarterly vendor scorecards operational for all preferred supplier relationships, tracking quality, delivery, and cost performance.",
+                  "ownerEmail": "patricia.nguyen@meridian-mfg.com"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Next-Gen Quality Automation — AI Inspection Live by Q4",
+          "description": "Deploy AI-powered visual inspection across production lines, eliminating manual end-of-line inspection and enabling real-time defect detection.",
+          "definingObjectives": [
+            {
+              "title": "Build and Validate AI Inspection Models",
+              "description": "Develop, train, and validate machine vision models capable of detecting all defect classes currently caught by manual inspection.",
+              "ownerEmail": "raj.patel@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Defect Classification Model Achieves 99% Accuracy",
+                  "description": "AI inspection model validated against 6 months of historical defect data, achieving 99% classification accuracy before production deployment.",
+                  "ownerEmail": "grace.lee@meridian-mfg.com"
+                },
+                {
+                  "title": "Real-Time Inference Pipeline Operational",
+                  "description": "Model serving infrastructure operational with sub-100ms inference latency, integrated with production line PLC systems.",
+                  "ownerEmail": "daniel.park@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Deploy Vision System Hardware Across All Lines",
+              "description": "Install and commission camera hardware, lighting, and integration controllers on all production lines.",
+              "ownerEmail": "raj.patel@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Pilot Line Hardware Deployed and Certified",
+                  "description": "Vision system hardware installed and production-certified on the pilot line (Line 3). Baseline performance benchmarks established.",
+                  "ownerEmail": "grace.lee@meridian-mfg.com"
+                },
+                {
+                  "title": "All Production Lines Hardware-Ready by Q3",
+                  "description": "Camera systems, lighting rigs, and PLC integration hardware installed and certified across all production lines.",
+                  "ownerEmail": "raj.patel@meridian-mfg.com"
+                }
+              ]
+            },
+            {
+              "title": "Decommission Manual End-of-Line Inspection",
+              "description": "Replace manual inspection workforce with AI-supervised quality roles and retrain affected employees for higher-value positions.",
+              "ownerEmail": "priya.sharma@meridian-mfg.com",
+              "outcomes": [
+                {
+                  "title": "Retraining Program Designed and Piloted",
+                  "description": "Inspection-to-AI-operator retraining curriculum designed, piloted with 10 employees, and validated before full rollout.",
+                  "ownerEmail": "grace.lee@meridian-mfg.com"
+                },
+                {
+                  "title": "100% of Manual Inspection Replaced by Q4",
+                  "description": "AI inspection system handling 100% of end-of-line quality checks. Manual inspection headcount redeployed or retrained.",
+                  "ownerEmail": "raj.patel@meridian-mfg.com"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "chessCategories": [
+        { "name": "Strategic",            "colorHex": "#4F46E5" },
+        { "name": "Operational",          "colorHex": "#0891B2" },
+        { "name": "Defensive",            "colorHex": "#DC2626" },
+        { "name": "Capability Building",  "colorHex": "#16A34A" }
+      ],
+      "observatoryConfig": {
+        "driftEmergingWeeks": 3,
+        "driftSustainedWeeks": 6,
+        "driftStructuralWeeks": 12,
+        "strategicAlignmentTarget": "55.0",
+        "misalignmentWarningPct": "40.0",
+        "darkWorkWarningPct": "60.0",
+        "concentrationRiskPct": "50.0",
+        "uniformityThreshold": "90.0"
+      },
+      "analystScopes": [
+        {
+          "analystEmail": "lisa.park@meridian-mfg.com",
+          "orgUnitRootEmail": "james.okafor@meridian-mfg.com"
+        }
+      ]
+    }
+  ]
+}
