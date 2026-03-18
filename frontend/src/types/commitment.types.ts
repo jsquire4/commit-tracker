@@ -36,6 +36,7 @@ export interface Commitment {
   attribution: AssignmentAttribution;
   carriedFromCommitmentId: string | null;
   isUnplanned: boolean;
+  estimatedHours: number | null;
   reconciliationStatus: ReconciliationStatus | null;
   reconciliationNote: string | null;
   createdAt: string;

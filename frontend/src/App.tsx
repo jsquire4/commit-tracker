@@ -13,6 +13,10 @@ const WeeklyLifecyclePage = lazy(() => import('./features/weekly-lifecycle/Weekl
 const ReconciliationPage = lazy(() => import('./features/reconciliation/ReconciliationPage').then(m => ({ default: m.ReconciliationPage })));
 const ManagerDashboardPage = lazy(() => import('./features/manager-dashboard/ManagerDashboardPage').then(m => ({ default: m.ManagerDashboardPage })));
 const ChessboardPage = lazy(() => import('./features/chessboard/ChessboardPage').then(m => ({ default: m.ChessboardPage })));
+const ExecutiveHealthPage = lazy(() => import('./features/observatory/ExecutiveHealthPage').then(m => ({ default: m.ExecutiveHealthPage })));
+const TeamDrillDown = lazy(() => import('./features/observatory/TeamDrillDown').then(m => ({ default: m.TeamDrillDown })));
+const ObservatoryConfigPage = lazy(() => import('./features/observatory/ObservatoryConfigPage').then(m => ({ default: m.ObservatoryConfigPage })));
+const PortfolioPage = lazy(() => import('./features/observatory/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
 
 export interface AuthContext {
   token: string;
@@ -59,8 +63,13 @@ export default function App({ basename, authContext }: AppProps) {
                   <Route path="/" element={<CommitEntryPage />} />
                   <Route path="/cycle" element={<WeeklyLifecyclePage />} />
                   <Route path="/reconciliation" element={<ReconciliationPage />} />
+                  <Route path="/reconciliation/:cycleId" element={<ReconciliationPage />} />
                   <Route path="/dashboard" element={<ManagerDashboardPage />} />
                   <Route path="/chessboard" element={<ChessboardPage />} />
+                  <Route path="/observatory" element={<ExecutiveHealthPage />} />
+                  <Route path="/observatory/team/:managerId" element={<TeamDrillDown />} />
+                  <Route path="/observatory/config" element={<ObservatoryConfigPage />} />
+                  <Route path="/observatory/portfolio" element={<PortfolioPage />} />
                 </Routes>
               </Suspense>
             </Layout>

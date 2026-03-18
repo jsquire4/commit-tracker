@@ -9,6 +9,10 @@ export interface ReconciliationRecord {
   plannedHorizon: CompletionHorizon | null;
   reconciledAt: string;
   reconciledByUserId: string;
+  displacementCategory: import('./observatory.types').DisplacementCategory | null;
+  displacementDetail: string | null;
+  displacingCommitmentId: string | null;
+  displacingCommitmentTitle: string | null;
 }
 
 export interface ReconcileCommitmentRequest {
@@ -16,6 +20,9 @@ export interface ReconcileCommitmentRequest {
   completionNotes?: string;
   carryForward: boolean;
   bulletStatuses: BulletStatus[];
+  displacementCategory?: import('./observatory.types').DisplacementCategory;
+  displacementDetail?: string;
+  displacingCommitmentId?: string;
 }
 
 export interface BulletStatus {

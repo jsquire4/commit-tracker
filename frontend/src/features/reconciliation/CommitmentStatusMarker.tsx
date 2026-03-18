@@ -18,25 +18,25 @@ const STATUS_OPTIONS: StatusOption[] = [
     value: 'COMPLETED',
     label: 'Completed',
     activeClass: 'bg-green-600 text-white border-green-600',
-    inactiveClass: 'bg-white text-green-700 border-green-300 hover:bg-green-50',
+    inactiveClass: 'bg-white dark:bg-gray-800 text-green-700 dark:text-green-400 border-green-300 dark:border-green-700 hover:bg-green-50 dark:hover:bg-green-900/30',
   },
   {
     value: 'PARTIALLY_COMPLETED',
     label: 'Partial',
     activeClass: 'bg-yellow-500 text-white border-yellow-500',
-    inactiveClass: 'bg-white text-yellow-700 border-yellow-300 hover:bg-yellow-50',
+    inactiveClass: 'bg-white dark:bg-gray-800 text-yellow-700 dark:text-yellow-400 border-yellow-300 dark:border-yellow-700 hover:bg-yellow-50 dark:hover:bg-yellow-900/30',
   },
   {
     value: 'NOT_STARTED',
     label: 'Not Started',
     activeClass: 'bg-red-600 text-white border-red-600',
-    inactiveClass: 'bg-white text-red-700 border-red-300 hover:bg-red-50',
+    inactiveClass: 'bg-white dark:bg-gray-800 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 hover:bg-red-50 dark:hover:bg-red-900/30',
   },
   {
     value: 'CARRIED_FORWARD',
     label: 'Carry Forward',
     activeClass: 'bg-blue-600 text-white border-blue-600',
-    inactiveClass: 'bg-white text-blue-700 border-blue-300 hover:bg-blue-50',
+    inactiveClass: 'bg-white dark:bg-gray-800 text-blue-700 dark:text-blue-400 border-blue-300 dark:border-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/30',
   },
 ];
 

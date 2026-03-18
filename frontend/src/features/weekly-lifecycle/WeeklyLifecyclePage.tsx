@@ -63,15 +63,15 @@ function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <section className="rounded-lg border border-gray-200 bg-white">
+    <section className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
       <button
         type="button"
         onClick={() => { setOpen((v) => !v); }}
         className="flex w-full items-center justify-between px-5 py-4 text-left"
       >
-        <span className="text-sm font-semibold text-gray-700">Cycle History</span>
+        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Cycle History</span>
         <svg
-          className={`h-4 w-4 text-gray-400 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 text-gray-400 dark:text-gray-500 transition-transform ${open ? 'rotate-180' : ''}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -83,8 +83,8 @@ function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
       </button>
 
       {open && (
-        <div className="border-t border-gray-100 px-5 py-4">
-          <p className="text-sm text-gray-400">
+        <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-4">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             Past cycle history will appear here once previous cycles are available.
           </p>
         </div>
@@ -114,8 +114,8 @@ export function WeeklyLifecyclePage() {
 
   if (cycleError || !cycle) {
     return (
-      <div className="rounded-lg border border-red-200 bg-red-50 p-6">
-        <p className="text-sm font-medium text-red-700">
+      <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-6">
+        <p className="text-sm font-medium text-red-700 dark:text-red-400">
           {cycleError instanceof Error
             ? cycleError.message
             : 'Failed to load the current cycle. Please try again.'}

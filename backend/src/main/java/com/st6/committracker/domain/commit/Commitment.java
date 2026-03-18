@@ -24,6 +24,7 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,6 +90,9 @@ public class Commitment {
 
     @Column(name = "is_unplanned", nullable = false)
     private boolean isUnplanned = false;
+
+    @Column(name = "estimated_hours")
+    private BigDecimal estimatedHours;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -157,6 +161,9 @@ public class Commitment {
     public boolean isUnplanned() { return isUnplanned; }
     public void setUnplanned(boolean unplanned) { isUnplanned = unplanned; }
 
+    public BigDecimal getEstimatedHours() { return estimatedHours; }
+    public void setEstimatedHours(BigDecimal estimatedHours) { this.estimatedHours = estimatedHours; }
+
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
@@ -201,6 +208,7 @@ public class Commitment {
         private AppUser assignedBy;
         private Commitment carriedFrom;
         private boolean isUnplanned = false;
+        private BigDecimal estimatedHours;
 
         public Builder org(Org org) { this.org = org; return this; }
         public Builder user(AppUser user) { this.user = user; return this; }
@@ -216,6 +224,7 @@ public class Commitment {
         public Builder assignedBy(AppUser assignedBy) { this.assignedBy = assignedBy; return this; }
         public Builder carriedFrom(Commitment carriedFrom) { this.carriedFrom = carriedFrom; return this; }
         public Builder isUnplanned(boolean isUnplanned) { this.isUnplanned = isUnplanned; return this; }
+        public Builder estimatedHours(BigDecimal estimatedHours) { this.estimatedHours = estimatedHours; return this; }
 
         public Commitment build() {
             Commitment c = new Commitment(org, user, cycle, title, completionHorizon);
@@ -228,6 +237,7 @@ public class Commitment {
             c.assignedBy = assignedBy;
             c.carriedFrom = carriedFrom;
             c.isUnplanned = isUnplanned;
+            c.estimatedHours = estimatedHours;
             return c;
         }
     }

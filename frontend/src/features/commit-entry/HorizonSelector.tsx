@@ -36,7 +36,7 @@ export function HorizonSelector({ value, onChange, disabled = false }: HorizonSe
               !isFirst ? '-ml-px' : '',
               isActive
                 ? 'bg-blue-600 text-white border-blue-600 z-10'
-                : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+                : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800',
               disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
             ]
               .filter(Boolean)

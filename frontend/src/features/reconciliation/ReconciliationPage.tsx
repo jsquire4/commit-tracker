@@ -1,6 +1,6 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { useCurrentCycle } from '@/hooks/useCycle';
+import { useCurrentCycle, useCycle } from '@/hooks/useCycle';
 import {
   useReconciliationView,
   useCompleteReconciliation,
@@ -10,16 +10,23 @@ import { UnplannedWorkEntry } from './UnplannedWorkEntry';
 
 export function ReconciliationPage() {
   const navigate = useNavigate();
-  const { data: cycle, isLoading: cycleLoading } = useCurrentCycle();
+  const { cycleId: paramCycleId } = useParams<{ cycleId?: string }>();
+
+  // When a cycleId param is present, fetch that specific cycle; otherwise fetch current.
+  const { data: currentCycle, isLoading: currentCycleLoading } = useCurrentCycle();
+  const { data: specificCycle, isLoading: specificCycleLoading } = useCycle(paramCycleId ?? '');
+
+  const cycle = paramCycleId ? specificCycle : currentCycle;
+  const cycleLoading = paramCycleId ? specificCycleLoading : currentCycleLoading;
 
   const isReadOnly = cycle?.state === 'RECONCILED' || cycle?.state === 'LOCKED';
 
-  // Only redirect if cycle is in DRAFT (nothing to reconcile yet)
+  // Only redirect if cycle is in DRAFT (nothing to reconcile yet) — skip when viewing a specific historical cycle
   useEffect(() => {
-    if (!cycleLoading && cycle && cycle.state === 'DRAFT') {
+    if (!paramCycleId && !cycleLoading && cycle && cycle.state === 'DRAFT') {
       navigate('/');
     }
-  }, [cycle, cycleLoading, navigate]);
+  }, [paramCycleId, cycle, cycleLoading, navigate]);
 
   const cycleId = cycle?.id ?? '';
 

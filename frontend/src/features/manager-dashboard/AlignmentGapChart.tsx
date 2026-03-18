@@ -61,8 +61,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!row) return null;
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3 min-w-[220px]">
-      <p className="font-semibold text-gray-900 mb-2">{label}</p>
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 min-w-[220px]">
+      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2">{label}</p>
       {payload.map((entry) => {
         const key = entry.dataKey;
         const pct =
@@ -75,7 +75,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
               className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
               style={{ backgroundColor: CATEGORY_COLORS[key] ?? '#ccc' }}
             />
-            <span className="text-gray-700">
+            <span className="text-gray-700 dark:text-gray-300">
               {CATEGORY_LABELS[key] ?? key}: {pct}% ({entry.value} of {row.totalCommitments})
             </span>
           </div>
@@ -132,11 +132,11 @@ export function AlignmentGapChart({
   );
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
         Alignment Gap
       </h2>
-      <p className="text-sm text-gray-500 mb-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
         Commitment distribution by chess category across the team
       </p>
 
@@ -148,7 +148,7 @@ export function AlignmentGapChart({
               className="inline-block w-3 h-3 rounded-sm"
               style={{ backgroundColor: CATEGORY_COLORS[key] }}
             />
-            <span className="text-xs text-gray-600">{CATEGORY_LABELS[key]}</span>
+            <span className="text-xs text-gray-600 dark:text-gray-400">{CATEGORY_LABELS[key]}</span>
           </div>
         ))}
       </div>

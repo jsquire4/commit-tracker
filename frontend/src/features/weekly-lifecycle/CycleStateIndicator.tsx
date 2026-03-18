@@ -56,8 +56,8 @@ export function CycleStateIndicator({
   );
 
   return (
-    <div className="rounded-lg bg-white border border-gray-200 p-6">
-      <h2 className="mb-6 text-sm font-semibold uppercase tracking-wide text-gray-500">
+    <div className="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-6">
+      <h2 className="mb-6 text-sm font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
         Cycle Progress
       </h2>
 
@@ -75,7 +75,7 @@ export function CycleStateIndicator({
                 {idx > 0 && (
                   <div
                     className={`h-0.5 flex-1 ${
-                      isPast || isCurrent ? 'bg-gray-400' : 'bg-gray-200'
+                      isPast || isCurrent ? 'bg-gray-400 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-700'
                     }`}
                   />
                 )}
@@ -88,7 +88,7 @@ export function CycleStateIndicator({
                       ? `h-8 w-8 ${STATE_COLORS[state]} animate-pulse shadow-lg`
                       : isPast
                         ? `h-6 w-6 ${STATE_COLORS[state]} opacity-60`
-                        : 'h-6 w-6 border-gray-300 bg-white',
+                        : 'h-6 w-6 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900',
                   ].join(' ')}
                 >
                   {isPast && (
@@ -116,7 +116,7 @@ export function CycleStateIndicator({
                 {idx < STATES.length - 1 && (
                   <div
                     className={`h-0.5 flex-1 ${
-                      isCurrent || isPast ? 'bg-gray-400' : 'bg-gray-200'
+                      isCurrent || isPast ? 'bg-gray-400 dark:bg-gray-600' : 'bg-gray-200 dark:bg-gray-700'
                     }`}
                   />
                 )}
@@ -130,20 +130,20 @@ export function CycleStateIndicator({
                     isCurrent
                       ? STATE_TEXT_COLORS[state]
                       : isPast
-                        ? 'text-gray-500'
-                        : 'text-gray-300',
+                        ? 'text-gray-500 dark:text-gray-400'
+                        : 'text-gray-300 dark:text-gray-600',
                     isCurrent ? 'text-sm' : '',
                   ].join(' ')}
                 >
                   {STATE_LABELS[state]}
                 </span>
                 {transitionTime && (
-                  <span className="text-xs text-gray-400">
+                  <span className="text-xs text-gray-400 dark:text-gray-500">
                     {formatTransitionTime(transitionTime)}
                   </span>
                 )}
                 {isCurrent && !transitionTime && (
-                  <span className="text-xs text-gray-400">Now</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">Now</span>
                 )}
               </div>
             </div>

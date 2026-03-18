@@ -7,3 +7,4 @@ export * from './user.types';
 export * from './chess.types';
 export * from './enums';
 export * from './dashboard.types';
+export * from './observatory.types';

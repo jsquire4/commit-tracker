@@ -20,7 +20,7 @@ export function ChangeReasonCapture({
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700">
+      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
         What changed and why?
         {required && (
           <span className="ml-1 text-red-500" aria-label="required">
@@ -40,8 +40,8 @@ export function ChangeReasonCapture({
         className={[
           'w-full rounded border px-3 py-2 text-sm resize-y',
           'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-          disabled ? 'bg-gray-100 cursor-not-allowed text-gray-500' : 'bg-white text-gray-900',
-          isOverLimit ? 'border-red-400' : 'border-gray-300',
+          disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:border-gray-600',
+          isOverLimit ? 'border-red-400 dark:border-red-500' : 'border-gray-300',
         ].join(' ')}
         aria-describedby="change-reason-counter"
       />
@@ -49,7 +49,7 @@ export function ChangeReasonCapture({
         id="change-reason-counter"
         className={[
           'text-xs text-right',
-          isOverLimit ? 'text-red-500 font-medium' : 'text-gray-500',
+          isOverLimit ? 'text-red-500 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400',
         ].join(' ')}
       >
         {remaining} characters remaining

@@ -17,5 +17,9 @@ public record ReconciliationResponse(
     CompletionHorizon plannedHorizon,
     Instant reconciledAt,
     UUID reconciledByUserId,
-    List<CommitmentResponse.TaskBulletResponse> bulletStatuses
+    List<CommitmentResponse.TaskBulletResponse> bulletStatuses,
+    String displacementCategory,
+    String displacementDetail,
+    UUID displacingCommitmentId,
+    String displacingCommitmentTitle
 ) {}

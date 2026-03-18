@@ -125,7 +125,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_asAnalyst_throwsForbidden() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         assertThatThrownBy(() -> reconciliationService.reconcileCommitment(commitmentId, request, analyst))
                 .isInstanceOf(AccessDeniedException.class);
@@ -138,7 +138,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_inReconcilingCycle_createsRecord() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -161,7 +161,7 @@ class ReconciliationServiceTest {
         draftCommitment.setId(commitmentId);
 
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(draftCommitment));
 
@@ -178,7 +178,7 @@ class ReconciliationServiceTest {
         lockedCommitment.setId(commitmentId);
 
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(lockedCommitment));
 
@@ -190,7 +190,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_byNonOwner_throwsForbidden() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
 
@@ -218,7 +218,7 @@ class ReconciliationServiceTest {
                 new ReconcileRequest.BulletStatusUpdate(bullet2Id, false)
         );
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, bulletStatuses);
+                ReconciliationStatus.COMPLETED, null, false, bulletStatuses, null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -239,7 +239,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_withCarryForward_setsCorrectStatus() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.PARTIALLY_COMPLETED, "some notes", true, List.of());
+                ReconciliationStatus.PARTIALLY_COMPLETED, "some notes", true, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -266,7 +266,7 @@ class ReconciliationServiceTest {
         existing.setId(UUID.randomUUID());
 
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -287,7 +287,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_notCompleted_withoutNotes_throwsValidation() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.PARTIALLY_COMPLETED, null, false, List.of());
+                ReconciliationStatus.PARTIALLY_COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
 
@@ -299,7 +299,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_completed_withoutNotes_succeeds() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -316,7 +316,7 @@ class ReconciliationServiceTest {
     @Test
     void reconcile_auditsAction() {
         ReconcileRequest request = new ReconcileRequest(
-                ReconciliationStatus.COMPLETED, null, false, List.of());
+                ReconciliationStatus.COMPLETED, null, false, List.of(), null, null, null);
 
         when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
         when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
@@ -535,5 +535,34 @@ class ReconciliationServiceTest {
         ReconciliationSummary summary = reconciliationService.computeSummary(cycleId);
 
         assertThat(summary.bulletCompletionRate()).isCloseTo(0.5, within(0.001));
+    }
+
+    // --------------- displacement tracking ---------------
+
+    @Test
+    void reconcile_withDisplacement_persistsDisplacementFields() {
+        UUID displacingId = UUID.randomUUID();
+        Commitment displacingCommitment = Commitment.builder()
+                .org(org).user(employee).cycle(reconcilingCycle)
+                .title("Displacing Commitment").completionHorizon(CompletionHorizon.EOW).build();
+        displacingCommitment.setId(displacingId);
+
+        ReconcileRequest request = new ReconcileRequest(
+                ReconciliationStatus.CARRIED_FORWARD, "carried due to reassignment", false, List.of(),
+                "MANAGER_REASSIGNED", "Manager changed priorities mid-week", displacingId);
+
+        when(commitmentRepository.findById(commitmentId)).thenReturn(Optional.of(commitment));
+        when(commitmentRepository.findById(displacingId)).thenReturn(Optional.of(displacingCommitment));
+        when(reconciliationRecordRepository.findByCommitmentIdAndCycleId(commitmentId, cycleId))
+                .thenReturn(Optional.empty());
+        when(reconciliationRecordRepository.save(any(ReconciliationRecord.class)))
+                .thenAnswer(inv -> inv.getArgument(0));
+
+        ReconciliationRecord result = reconciliationService.reconcileCommitment(commitmentId, request, employee);
+
+        assertThat(result.getDisplacementCategory())
+                .isEqualTo(com.st6.committracker.domain.DisplacementCategory.MANAGER_REASSIGNED);
+        assertThat(result.getDisplacementDetail()).isEqualTo("Manager changed priorities mid-week");
+        assertThat(result.getDisplacingCommitment()).isEqualTo(displacingCommitment);
     }
 }

@@ -4,6 +4,7 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments } from '@/hooks/useCommitments';
 import { useAuth } from '@/hooks/useAuth';
 import { getTeam } from '@/api/users.api';
+import { listCycles } from '@/api/cycles.api';
 import { PageHeader } from '@/components/PageHeader';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { EmptyState } from '@/components/EmptyState';
@@ -39,11 +40,35 @@ export function ChessboardPage() {
   const isManager = role !== null && MANAGER_ROLES.has(role);
 
   const [selectedUserId, setSelectedUserId] = useState<string>(userId);
+  const [selectedCycleId, setSelectedCycleId] = useState<string>('');
 
   const cycleQuery = useCurrentCycle();
-  const cycleId = cycleQuery.data?.id ?? '';
+  const currentCycleId = cycleQuery.data?.id ?? '';
 
-  const commitmentsQuery = useCommitments(cycleId, {
+  // Default selected cycle to current cycle once loaded
+  const effectiveCycleId = selectedCycleId || currentCycleId;
+
+  const cyclesQuery = useQuery({
+    queryKey: ['cycles'],
+    queryFn: () => listCycles(),
+    staleTime: 60_000,
+  });
+  const allCycles = cyclesQuery.data?.items ?? [];
+
+  // Find the previous cycle: the most recent cycle with startsAt before the selected cycle
+  const selectedCycle = allCycles.find((c) => c.id === effectiveCycleId);
+  const prevCycle = selectedCycle
+    ? allCycles
+        .filter((c) => new Date(c.startsAt) < new Date(selectedCycle.startsAt))
+        .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())[0]
+    : undefined;
+  const prevCycleId = prevCycle?.id ?? '';
+
+  const commitmentsQuery = useCommitments(effectiveCycleId, {
+    userId: selectedUserId,
+  });
+
+  const prevCommitmentsQuery = useCommitments(prevCycleId, {
     userId: selectedUserId,
   });
 
@@ -57,6 +82,7 @@ export function ChessboardPage() {
   const isLoading = cycleQuery.isLoading || commitmentsQuery.isLoading;
   const isError = cycleQuery.isError || commitmentsQuery.isError;
   const commitments = commitmentsQuery.data ?? [];
+  const previousCommitments = prevCommitmentsQuery.data;
 
   const categories = deriveCategoriesFromCommitments(commitments);
 
@@ -70,37 +96,74 @@ export function ChessboardPage() {
     <div className="p-6 max-w-full">
       <PageHeader
         title="Chessboard View"
-        {...(cycleQuery.data
+        {...(selectedCycle
+          ? { subtitle: `${selectedCycle.label} · ${selectedCycle.state}` }
+          : cycleQuery.data
           ? { subtitle: `${cycleQuery.data.label} · ${cycleQuery.data.state}` }
           : {})}
         actions={
-          isManager && teamQuery.data && teamQuery.data.length > 0 ? (
-            <div className="flex items-center gap-2">
-              <label
-                htmlFor="chessboard-user-select"
-                className="text-sm font-medium text-gray-700 whitespace-nowrap"
-              >
-                Viewing:
-              </label>
-              <select
-                id="chessboard-user-select"
-                className={[
-                  'text-sm border border-gray-300 rounded-md px-3 py-1.5',
-                  'focus:outline-none focus:ring-2 focus:ring-blue-500',
-                  'bg-white text-gray-900',
-                ].join(' ')}
-                value={selectedUserId}
-                onChange={(e) => { setSelectedUserId(e.target.value); }}
-              >
-                <option value={userId}>My Commitments</option>
-                {teamQuery.data.map((member) => (
-                  <option key={member.id} value={member.id}>
-                    {member.displayName}
-                  </option>
-                ))}
-              </select>
-            </div>
-          ) : null
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Cycle selector */}
+            {allCycles.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="chessboard-cycle-select"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                >
+                  Cycle:
+                </label>
+                <select
+                  id="chessboard-cycle-select"
+                  className={[
+                    'text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500',
+                    'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
+                  ].join(' ')}
+                  value={effectiveCycleId}
+                  onChange={(e) => { setSelectedCycleId(e.target.value); }}
+                >
+                  {allCycles
+                    .slice()
+                    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())
+                    .map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.label}
+                        {c.id === currentCycleId ? ' (current)' : ''}
+                      </option>
+                    ))}
+                </select>
+              </div>
+            )}
+
+            {/* User selector — managers only */}
+            {isManager && teamQuery.data && teamQuery.data.length > 0 && (
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="chessboard-user-select"
+                  className="text-sm font-medium text-gray-700 dark:text-gray-300 whitespace-nowrap"
+                >
+                  Viewing:
+                </label>
+                <select
+                  id="chessboard-user-select"
+                  className={[
+                    'text-sm border border-gray-300 dark:border-gray-600 rounded-md px-3 py-1.5',
+                    'focus:outline-none focus:ring-2 focus:ring-blue-500',
+                    'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100',
+                  ].join(' ')}
+                  value={selectedUserId}
+                  onChange={(e) => { setSelectedUserId(e.target.value); }}
+                >
+                  <option value={userId}>My Commitments</option>
+                  {teamQuery.data.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.displayName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         }
       />
 
@@ -109,7 +172,7 @@ export function ChessboardPage() {
       )}
 
       {!isLoading && isError && (
-        <div className="rounded-md bg-red-50 border border-red-200 p-4 text-sm text-red-700">
+        <div className="rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 p-4 text-sm text-red-700 dark:text-red-400">
           Failed to load chessboard data. Please refresh and try again.
         </div>
       )}
@@ -152,7 +215,11 @@ export function ChessboardPage() {
 
             {/* Main grid */}
             <div className="flex-1 min-w-0">
-              <ChessboardGrid commitments={commitments} categories={categories} />
+              <ChessboardGrid
+                commitments={commitments}
+                categories={categories}
+                {...(previousCommitments !== undefined ? { previousCommitments } : {})}
+              />
             </div>
           </div>
         </>

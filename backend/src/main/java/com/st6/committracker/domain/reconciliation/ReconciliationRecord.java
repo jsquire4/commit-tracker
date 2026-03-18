@@ -1,6 +1,7 @@
 package com.st6.committracker.domain.reconciliation;
 
 import com.st6.committracker.domain.CompletionHorizon;
+import com.st6.committracker.domain.DisplacementCategory;
 import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.commit.Commitment;
 import com.st6.committracker.domain.cycle.Cycle;
@@ -63,6 +64,17 @@ public class ReconciliationRecord {
     @JoinColumn(name = "reconciled_by")
     private AppUser reconciledBy;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "displacement_category")
+    private DisplacementCategory displacementCategory;
+
+    @Column(name = "displacement_detail")
+    private String displacementDetail;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "displacing_commitment_id")
+    private Commitment displacingCommitment;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -106,6 +118,15 @@ public class ReconciliationRecord {
     public AppUser getReconciledBy() { return reconciledBy; }
     public void setReconciledBy(AppUser reconciledBy) { this.reconciledBy = reconciledBy; }
 
+    public DisplacementCategory getDisplacementCategory() { return displacementCategory; }
+    public void setDisplacementCategory(DisplacementCategory displacementCategory) { this.displacementCategory = displacementCategory; }
+
+    public String getDisplacementDetail() { return displacementDetail; }
+    public void setDisplacementDetail(String displacementDetail) { this.displacementDetail = displacementDetail; }
+
+    public Commitment getDisplacingCommitment() { return displacingCommitment; }
+    public void setDisplacingCommitment(Commitment displacingCommitment) { this.displacingCommitment = displacingCommitment; }
+
     public Instant getCreatedAt() { return createdAt; }
 
     @Override
@@ -141,6 +162,9 @@ public class ReconciliationRecord {
         private CompletionHorizon plannedHorizon;
         private Instant reconciledAt;
         private AppUser reconciledBy;
+        private DisplacementCategory displacementCategory;
+        private String displacementDetail;
+        private Commitment displacingCommitment;
 
         public Builder org(Org org) { this.org = org; return this; }
         public Builder commitment(Commitment commitment) { this.commitment = commitment; return this; }
@@ -150,11 +174,17 @@ public class ReconciliationRecord {
         public Builder plannedHorizon(CompletionHorizon plannedHorizon) { this.plannedHorizon = plannedHorizon; return this; }
         public Builder reconciledAt(Instant reconciledAt) { this.reconciledAt = reconciledAt; return this; }
         public Builder reconciledBy(AppUser reconciledBy) { this.reconciledBy = reconciledBy; return this; }
+        public Builder displacementCategory(DisplacementCategory displacementCategory) { this.displacementCategory = displacementCategory; return this; }
+        public Builder displacementDetail(String displacementDetail) { this.displacementDetail = displacementDetail; return this; }
+        public Builder displacingCommitment(Commitment displacingCommitment) { this.displacingCommitment = displacingCommitment; return this; }
 
         public ReconciliationRecord build() {
             ReconciliationRecord r = new ReconciliationRecord(org, commitment, cycle, status, reconciledAt, reconciledBy);
             r.notes = notes;
             r.plannedHorizon = plannedHorizon;
+            r.displacementCategory = displacementCategory;
+            r.displacementDetail = displacementDetail;
+            r.displacingCommitment = displacingCommitment;
             return r;
         }
     }

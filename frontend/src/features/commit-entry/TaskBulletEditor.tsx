@@ -42,7 +42,7 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
           type="button"
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 text-gray-400 hover:text-gray-600 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
+          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
           aria-label={`Drag to reorder bullet ${String(index + 1)}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
@@ -57,7 +57,7 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
         disabled={disabled}
         placeholder="What's involved?"
         aria-label={`Task bullet ${String(index + 1)}`}
-        className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+        className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400"
       />
       {!disabled && (
         <button
@@ -65,7 +65,7 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
           onClick={onRemove}
           disabled={!canRemove}
           aria-label={`Remove bullet ${String(index + 1)}`}
-          className="flex-shrink-0 text-gray-400 hover:text-red-500 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none transition-colors"
+          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none transition-colors"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

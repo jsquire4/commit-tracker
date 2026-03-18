@@ -65,7 +65,7 @@ export function CommitEntryPage() {
     return (
       <div className="flex items-center justify-center min-h-[50vh]">
         <div className="text-center">
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             {cycleError instanceof Error
               ? cycleError.message
               : 'Could not load the current cycle. Please try again.'}

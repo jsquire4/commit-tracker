@@ -1,10 +1,12 @@
 package com.st6.committracker.domain.user;
 
+import com.st6.committracker.domain.UserRole;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -28,6 +30,17 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     List<AppUser> findDirectReports(@Param("orgId") UUID orgId, @Param("managerId") UUID managerId);
 
     List<AppUser> findByOrgIdAndCommitModuleEnabledTrue(UUID orgId);
+
+    /**
+     * Count active users in the given org — used by PortfolioService for headcount.
+     */
+    long countByOrgIdAndIsActiveTrue(UUID orgId);
+
+    /**
+     * Find active users in the given org whose role is one of the supplied roles.
+     * Used by ExecutiveHealthComposer to load VP/Director leaders for unit health breakdown.
+     */
+    List<AppUser> findByOrgIdAndRoleIn(UUID orgId, Collection<UserRole> roles);
 
     @Query(value = """
         WITH RECURSIVE subtree AS (

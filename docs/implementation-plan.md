@@ -1,5 +1,9 @@
 # ST6 Execution Observatory — Implementation Plan
 
+**STATUS: COMPLETED (2026-03-18)**
+
+All 6 waves implemented, audited, and complexity-swept. 183 unit tests passing. Frontend and backend build clean. Final audit: zero issues.
+
 ## Overview
 
 Transform ST6 from a weekly commitment tracker into a PE turnaround execution observatory. This plan is structured as sequential waves with parallelizable tasks within each wave. Every wave has explicit gates that must pass before the next wave begins.
@@ -151,8 +155,6 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
 
 **Gate:** Backend compiles. `./gradlew compileJava` passes. Flyway migrations run cleanly against a fresh database (start Docker, run backend with `st6.seed.enabled=false`, verify no errors).
 
----
-
 ### Task 1.3: Backend Entities for New Tables
 
 **Purpose:** Create JPA entities, repositories, and builders for the new tables. These must exist before any service code references them.
@@ -248,6 +250,19 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
 
 **Gate:** `./gradlew compileJava` passes. All entities are wired correctly. No Hibernate mapping errors on startup.
 
+### Wave 1 Audit Loop
+
+Run `/audit` on all files created or modified in Wave 1. This includes:
+- All 5 migration SQL files (V015–V019)
+- All new entity files (CostBand, ObservatoryConfig, Portfolio, DisplacementCategory)
+- All modified entity files (AppUser, Org, ReconciliationRecord, Commitment)
+- All repository files (CostBandRepository, ObservatoryConfigRepository, PortfolioRepository)
+- Bug fix files from Task 1.1 (already committed but verify no regressions)
+
+**Audit scope:** Types, compilation, Hibernate mapping correctness, builder consistency, migration SQL syntax.
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean. Do NOT proceed to Wave 2 until the audit returns zero issues.
+
 ---
 
 ## Wave 2 — Observatory Backend Services (Parallelizable)
@@ -308,7 +323,16 @@ static String normalizeCategoryName(String name) {
 
 3. **`computeTeamAlignmentTrend(UUID orgId, UUID managerId, int weekCount)`** — Same as alignment trend but scoped to a specific manager's team (direct reports or subtree). Uses `AppUserRepository.findSubtreeUserIds()` to get the team, then uses existing `commitmentRepository.findByUserIdInAndCycleId(userIds, cycleId)` to fetch commitments for the team in each cycle.
 
-4. **`computeCarryForwardChains(UUID orgId, UUID cycleId)`** — For commitments in the given cycle, trace carry-forward chains backward using `Commitment.carriedFrom`. Return `CarryForwardChain`. A chain length of 4 means the item has been carried forward 4 times.
+4. **`computeTeamCompletionTrend(UUID orgId, UUID managerId, int weekCount)`** — Per-manager completion trend. For the last N cycles, compute completion rate and carry-forward rate scoped to the manager's team. Returns `List<CompletionDataPoint>`.
+
+   Implementation notes:
+   - Get team user IDs via `AppUserRepository.findSubtreeUserIds(managerId)` (same as team alignment trend)
+   - For each cycle, fetch commitments for the team via `commitmentRepository.findByUserIdInAndCycleId(userIds, cycleId)`
+   - Fetch reconciliation records for those commitments — use `reconciliationRecordRepository.findByOrgIdAndCycleId(orgId, cycleId)` and filter in-memory to team commitment IDs (or add a new repo method if performance warrants)
+   - Compute: completionRate = COMPLETED count / total, carryForwardRate = CARRIED_FORWARD count / total
+   - This method is called by `DriftDetectionService` for VELOCITY drift detection per manager
+
+5. **`computeCarryForwardChains(UUID orgId, UUID cycleId)`** — For commitments in the given cycle, trace carry-forward chains backward using `Commitment.carriedFrom`. Return `CarryForwardChain`. A chain length of 4 means the item has been carried forward 4 times.
 
    Implementation notes:
    - Start from commitments in the target cycle where `carriedFrom != null`
@@ -432,7 +456,7 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
      - `weekCount >= config.driftSustainedWeeks` → SUSTAINED
      - `weekCount >= config.driftEmergingWeeks` → EMERGING
      - `weekCount < config.driftEmergingWeeks` → don't surface (no signal emitted)
-   - **VELOCITY drift:** Extract `completionRate` values from `AnalyticsService.computeCompletionTrend()`, call `TrendAnalyzer.analyzeDecline(values, 2.0)`. Same severity thresholds.
+   - **VELOCITY drift:** Detect per-manager completion rate decline (not just org-level). For each manager in the same iteration loop, call `AnalyticsService.computeTeamCompletionTrend(orgId, managerId, weekCount)`. Extract `completionRate` values from the returned `CompletionDataPoint` list, call `TrendAnalyzer.analyzeDecline(values, 2.0)`. Same severity thresholds. This catches a team whose velocity is tanking even when the org average looks healthy.
    - **COVERAGE drift:** For each Rally Cry in the org, count how many consecutive recent cycles have zero commitments linked to it. If that count >= `config.driftEmergingWeeks`, emit a COVERAGE signal. Use `commitmentRepository.findByRallyCryIdAndCycleId()` for each cycle.
 
 2. **`detectSignalIntegrity(UUID orgId, UUID cycleId)`** — Detect when data looks gamed.
@@ -675,6 +699,37 @@ enum HealthGrade { GREEN, YELLOW, RED }
 
 **Gate for Wave 2:** `./gradlew test` — all existing tests still pass, all new tests pass. `./gradlew compileJava` clean. Manual review of service logic by Opus.
 
+### Wave 2 Audit Loop
+
+Run `/audit` on all files created or modified in Wave 2. This includes:
+- All observatory service files (AnalyticsService, DriftDetectionService, DisplacementService, PortfolioService, ExecutiveHealthComposer, ObservatoryController)
+- All utility files (CategoryUtils, TrendAnalyzer)
+- All DTO record files in `domain/observatory/dto/`
+- Modified reconciliation files (ReconcileRequest, ReconciliationService, ReconciliationResponse)
+- All new test files
+- All new repository methods added during Wave 2
+
+**Audit scope:** Logic correctness, null safety, N+1 query patterns, test coverage, error handling, security (role guards on controller).
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean.
+
+### >>> COMPLEXITY SWEEP #1 — After Wave 2 <<<
+
+All backend logic now exists. The API surface is defined but not yet consumed by the frontend. This is the optimal time to catch:
+- **Over-engineered abstractions** — services that are doing too much, unnecessary indirection layers
+- **Brittle coupling** — services that depend on each other's internal implementation details
+- **Redundant computation** — the same data being queried multiple times across services (AnalyticsService, DriftDetectionService, ExecutiveHealthComposer all touch alignment data)
+- **Overly complex DTOs** — records with too many fields that could be split or simplified
+- **TrendAnalyzer complexity** — is the consecutive-decline algorithm more complex than it needs to be?
+- **CategoryUtils** — is the normalization logic correct and complete? Edge cases?
+- **Note clustering algorithm** — is the n-gram approach in DisplacementService unnecessarily complex for the demo? Could a simpler group-by-category-only approach suffice?
+
+Run `/complexity-sweep` targeting:
+- `backend/src/main/java/com/st6/committracker/domain/observatory/`
+- `backend/src/main/java/com/st6/committracker/domain/reconciliation/`
+
+If the sweep identifies issues, fix them before proceeding to Wave 3. The frontend will cement whatever API shape exists at that point — cleaning up the backend after the frontend is built means changing both layers.
+
 ---
 
 ## Wave 3 — Frontend Types, API, and Hooks (Sequential, Fast)
@@ -746,6 +801,19 @@ Create React Query hooks wrapping each API call:
 - `usePortfolioHealth()` — staleTime: 60s
 
 **Gate:** `pnpm typecheck` passes. `pnpm build` passes.
+
+### Wave 3 Audit Loop
+
+Run `/audit` on all files created or modified in Wave 3. This includes:
+- `frontend/src/types/observatory.types.ts`
+- `frontend/src/api/observatory.api.ts`
+- `frontend/src/hooks/useObservatory.ts`
+- Modified type files (reconciliation.types.ts, commitment.types.ts, user.types.ts)
+- Updated `frontend/src/types/index.ts`
+
+**Audit scope:** Type correctness (do TS interfaces match backend DTOs exactly?), API function signatures, hook query key uniqueness, staleTime consistency, missing error handling.
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean. Do NOT proceed to Wave 4 until clean — every frontend component depends on these types being correct.
 
 ---
 
@@ -1023,6 +1091,19 @@ const showObservatory = role && ['DIRECTOR', 'VP', 'EXECUTIVE'].includes(role);
 
 **Gate for Wave 4:** `pnpm typecheck && pnpm build` passes. All pages render without errors. Manual click-through of the full user flow: Executive Health → Org Unit Drill-Down → back. Reconciliation flow with displacement tracking.
 
+### Wave 4 Audit Loop
+
+Run `/audit` on all files created in Wave 4. This includes:
+- All observatory page and component files (~15 files in `features/observatory/`)
+- `DisplacementCapture.tsx` in `features/reconciliation/`
+- Modified files: `PlannedVsActualTable.tsx`, `App.tsx`, `Layout.tsx`
+- Extracted `SortableHeader.tsx` in `components/`
+- Modified `TeamRollupTable.tsx` (SortableHeader extraction)
+
+**Audit scope:** Component correctness, dark mode styling consistency, accessibility (aria labels, role attributes), loading/error/empty states for every component, Recharts rendering in dark mode, responsive layout, navigation correctness (links, back buttons, breadcrumbs).
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean.
+
 ---
 
 ## Wave 5 — Update Existing Views + Org Chart (Parallelizable)
@@ -1110,6 +1191,18 @@ This is ~150 lines of code, not 400+. The indented list pattern is proven and fa
 3. **Delta indicators in ChessboardCell** — Pass `previousCommitments` as a prop. Compute delta = current cell count - previous cell count (same category × same priority tier). If delta > 0, show `<span className="text-green-600 text-xs font-bold">↑{delta}</span>`. If delta < 0, show `<span className="text-red-600 text-xs font-bold">↓{Math.abs(delta)}</span>`. If delta === 0 or no previous data, show nothing.
 
 **Gate for Wave 5:** `pnpm build` passes. All pages render correctly.
+
+### Wave 5 Audit Loop
+
+Run `/audit` on all files created or modified in Wave 5. This includes:
+- `CarryForwardVelocity.tsx`, `RcdoCoverageGaps.tsx` (new components)
+- Modified `ManagerDashboardPage.tsx`
+- `OrgChartView.tsx` (new component)
+- Modified `ChessboardPage.tsx`, `ChessboardCell.tsx`
+
+**Audit scope:** Component correctness, dark mode styling, data flow (do the new components receive correct props?), org chart tree-building logic, chessboard delta calculation correctness, integration with observatory hooks.
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean.
 
 ---
 
@@ -1294,7 +1387,57 @@ Assign cost bands by role: EMPLOYEE → L1-L2, MANAGER → L3, DIRECTOR → L4, 
 - Add empty states for all new components
 - Verify responsive design on smaller screens
 
-**Final Gate:** Full build passes. Backend tests pass. Frontend builds clean. Manual walk-through of the complete demo flow:
+### Wave 6 Audit Loop
+
+Run `/audit` on all seed data files and any polish changes:
+- All 4 seed generator files (ObservatorySeedGenerator, SeedOrgBuilder, SeedCycleBuilder, SeedTemplates)
+- Any files modified during the polish pass (dark mode fixes, empty states, loading skeletons)
+
+**Audit scope:** Seed data correctness (do the narratives produce the intended strategic % arcs?), entity relationship integrity (carry-forward chains, RCDO links), performance (seed time, N+1 queries), any regressions introduced during polish.
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until clean.
+
+### >>> COMPLEXITY SWEEP #2 — Final Full-Codebase Sweep <<<
+
+The entire platform is now built. Run `/complexity-sweep` on the full codebase (backend + frontend):
+
+**Backend targets:**
+- `backend/src/main/java/com/st6/committracker/domain/observatory/` — all new services
+- `backend/src/main/java/com/st6/committracker/domain/reconciliation/` — modified reconciliation flow
+- `backend/src/main/java/com/st6/committracker/domain/dashboard/` — existing dashboard (verify no degradation)
+- `backend/src/main/java/com/st6/committracker/seed/` — seed generators
+
+**Frontend targets:**
+- `frontend/src/features/observatory/` — all new observatory components
+- `frontend/src/features/reconciliation/` — displacement capture additions
+- `frontend/src/features/manager-dashboard/` — enhanced dashboard
+- `frontend/src/features/chessboard/` — chessboard enhancements
+- `frontend/src/hooks/` — all hooks (original + new)
+
+**What to look for:**
+- Components or services that grew beyond 200 lines — candidates for extraction
+- Duplicate logic across observatory components (chart configurations, color mappings, grade computations)
+- Backend services with methods that do too many things (should a method be split?)
+- Frontend components that fetch data they don't use, or fetch the same data multiple times
+- Over-abstraction — helper functions or utilities that are only called once
+- Dead code from refactoring during earlier waves
+
+Fix any issues found. Re-run the sweep to confirm clean.
+
+### Final Audit Loop
+
+Run `/audit` one final time across the **entire codebase** — not just Wave 6 changes, but everything. This catches cross-wave issues that per-wave audits might miss:
+- Backend: `./gradlew test` must pass with zero failures
+- Frontend: `pnpm typecheck && pnpm build` must pass clean
+- Full integration: every API endpoint exercised, every page rendered, every user flow tested
+
+**Audit scope:** Everything — types, tests, build, security (role guards on all observatory endpoints), data integrity (seed data FK relationships), performance (response times with 150-user seed data), accessibility, dark mode consistency.
+
+**Remediation:** Fix every issue from critical to low. Re-run audit until it returns zero issues across all categories.
+
+### Final Verification Walk-Through
+
+Only after the final audit is clean, manually verify the complete demo flow:
 1. Login as PE MD → Portfolio view → see 3 portcos with different health grades
 2. Click into struggling portco → Executive Health view → see drift signals and red units
 3. Drill into a red unit → Team detail → see cost impact, displacement patterns, carry-forward chains
@@ -1308,16 +1451,21 @@ Assign cost bands by role: EMPLOYEE → L1-L2, MANAGER → L3, DIRECTOR → L4, 
 
 ```
 Wave 1 (Sequential: bugs → migrations → entities)
-    ↓
+    ↓ audit loop until clean
 Wave 2 (Parallel: 6 backend services)
-    ↓
+    ↓ audit loop until clean
+    ↓ >>> COMPLEXITY SWEEP #1 <<<
 Wave 3 (Sequential: types → API → hooks)
-    ↓
+    ↓ audit loop until clean
 Wave 4 (Parallel: 7 frontend tasks)
-    ↓
+    ↓ audit loop until clean
 Wave 5 (Parallel: 3 enhancement tasks)
-    ↓
+    ↓ audit loop until clean
 Wave 6 (Sequential: seed data → polish)
+    ↓ audit loop until clean
+    ↓ >>> COMPLEXITY SWEEP #2 (full codebase) <<<
+    ↓ FINAL audit loop until clean
+    ↓ verification walk-through
 ```
 
 **Estimated agent dispatches:** ~25-30 Sonnet agents across all waves

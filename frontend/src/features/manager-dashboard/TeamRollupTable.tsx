@@ -1,6 +1,7 @@
 import { useState, Fragment } from 'react';
 import type { TeamMemberSummary } from '@/types';
 import { MemberCommitmentDetail } from './MemberCommitmentDetail';
+import { SortableHeader } from '@/components/SortableHeader';
 
 interface TeamRollupTableProps {
   members: TeamMemberSummary[];
@@ -27,60 +28,12 @@ const CYCLE_STATE_LABELS: Record<string, string> = {
 };
 
 const CYCLE_STATE_COLORS: Record<string, string> = {
-  DRAFT: 'bg-gray-100 text-gray-700',
-  LOCKED: 'bg-blue-100 text-blue-800',
-  RECONCILING: 'bg-yellow-100 text-yellow-800',
-  RECONCILED: 'bg-green-100 text-green-800',
+  DRAFT: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
+  LOCKED: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
+  RECONCILING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+  RECONCILED: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
 };
 
-interface SortableHeaderProps {
-  label: string;
-  sortKey: SortKey;
-  currentSort: SortKey;
-  direction: SortDir;
-  onSort: (key: SortKey) => void;
-  sticky?: boolean;
-}
-
-function SortableHeader({
-  label,
-  sortKey,
-  currentSort,
-  direction,
-  onSort,
-  sticky = false,
-}: SortableHeaderProps) {
-  const isActive = currentSort === sortKey;
-  return (
-    <th
-      className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-gray-900 ${
-        sticky ? 'sticky left-0 bg-gray-50 z-10' : ''
-      }`}
-      onClick={() => { onSort(sortKey); }}
-      scope="col"
-    >
-      <span className="inline-flex items-center gap-1">
-        {label}
-        <span className="inline-flex flex-col leading-none" aria-hidden="true">
-          <svg
-            className={`w-2.5 h-2.5 -mb-0.5 ${isActive && direction === 'asc' ? 'text-blue-600' : 'text-gray-300'}`}
-            viewBox="0 0 10 6"
-            fill="currentColor"
-          >
-            <path d="M5 0L10 6H0L5 0Z" />
-          </svg>
-          <svg
-            className={`w-2.5 h-2.5 ${isActive && direction === 'desc' ? 'text-blue-600' : 'text-gray-300'}`}
-            viewBox="0 0 10 6"
-            fill="currentColor"
-          >
-            <path d="M5 6L0 0H10L5 6Z" />
-          </svg>
-        </span>
-      </span>
-    </th>
-  );
-}
 
 interface DerivedMember {
   raw: TeamMemberSummary;
@@ -172,20 +125,20 @@ export function TeamRollupTable({
 
   if (sorted.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-8 text-center text-gray-400 text-sm">
+      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
         No team members found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 px-6 py-4 border-b border-gray-200">
+    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
         Team Rollup
       </h2>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
             <tr>
               <SortableHeader
                 label="Name"
@@ -239,7 +192,7 @@ export function TeamRollupTable({
               />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {sorted.map(({ raw, strategicPct, operationalPct, completionRate, topRcdo }) => {
               const isExpanded = expandedUserId === raw.userId;
               const stateLabel = CYCLE_STATE_LABELS[raw.cycleState] ?? raw.cycleState;
@@ -248,14 +201,14 @@ export function TeamRollupTable({
               return (
                 <Fragment key={raw.userId}>
                   <tr
-                    className={`hover:bg-gray-50 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50' : ''}`}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
                     onClick={() => { handleRowClick(raw.userId); }}
                     aria-expanded={isExpanded}
                   >
-                    <td className="sticky left-0 px-4 py-3 font-medium text-gray-900 bg-inherit whitespace-nowrap">
+                    <td className="sticky left-0 px-4 py-3 font-medium text-gray-900 dark:text-gray-100 bg-inherit whitespace-nowrap">
                       <span className="flex items-center gap-2">
                         <span
-                          className={`transition-transform duration-200 text-gray-400 ${isExpanded ? 'rotate-90' : ''}`}
+                          className={`transition-transform duration-200 text-gray-400 dark:text-gray-500 ${isExpanded ? 'rotate-90' : ''}`}
                           aria-hidden="true"
                         >
                           ▶
@@ -268,37 +221,37 @@ export function TeamRollupTable({
                         {stateLabel}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-700 text-right tabular-nums">
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-right tabular-nums">
                       {raw.totalCommitments}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      <span className={strategicPct >= 50 ? 'text-blue-700 font-semibold' : 'text-gray-700'}>
+                      <span className={strategicPct >= 50 ? 'text-blue-700 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>
                         {strategicPct}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-700">
+                    <td className="px-4 py-3 text-right tabular-nums text-gray-700 dark:text-gray-300">
                       {operationalPct}%
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       <span
                         className={
                           completionRate >= 80
-                            ? 'text-green-700 font-semibold'
+                            ? 'text-green-700 dark:text-green-400 font-semibold'
                             : completionRate >= 50
-                            ? 'text-yellow-700'
-                            : 'text-red-600'
+                            ? 'text-yellow-700 dark:text-yellow-400'
+                            : 'text-red-600 dark:text-red-400'
                         }
                       >
                         {completionRate}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{topRcdo}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{topRcdo}</td>
                   </tr>
                   {isExpanded && (
                     <tr>
                       <td
                         colSpan={7}
-                        className="bg-blue-50 border-t border-blue-100"
+                        className="bg-blue-50 dark:bg-blue-900/30 border-t border-blue-100 dark:border-blue-900/40"
                       >
                         <MemberCommitmentDetail userId={raw.userId} cycleId={cycleId} />
                       </td>

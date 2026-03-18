@@ -8,6 +8,10 @@ export interface User {
   role: UserRole;
   reportsToId: string | null;
   isActive: boolean;
+  costBandId: string | null;
+  costBandName: string | null;
+  costBandTier: number | null;
+  weeklyCapacityHours: number | null;
 }
 
 export interface TeamMember extends User {

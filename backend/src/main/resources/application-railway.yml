@@ -7,6 +7,7 @@ spring:
 st6:
   seed:
     enabled: ${ST6_SEED_ENABLED:false}
+    observatory: ${ST6_SEED_OBSERVATORY:false}
   cors:
     allowed-origins: ${ST6_CORS_ALLOWED_ORIGINS:}
   jwt:

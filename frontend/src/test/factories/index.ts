@@ -39,6 +39,7 @@ export function commitmentFactory(overrides: Partial<Commitment> = {}): Commitme
     attribution: { kind: 'SELF_DIRECTED' },
     carriedFromCommitmentId: null,
     isUnplanned: false,
+    estimatedHours: null,
     reconciliationStatus: null,
     reconciliationNote: null,
     createdAt: '2026-03-16T00:00:00Z',
@@ -121,6 +122,10 @@ export function userFactory(overrides: Partial<User> = {}): User {
     role: 'EMPLOYEE',
     reportsToId: null,
     isActive: true,
+    costBandId: null,
+    costBandName: null,
+    costBandTier: null,
+    weeklyCapacityHours: null,
     ...overrides,
   };
 }

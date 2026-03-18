@@ -18,7 +18,10 @@ public record ReconcileRequest(
     @NotNull ReconciliationStatus status,
     @Size(max = 2000) String completionNotes,
     boolean carryForward,
-    List<BulletStatusUpdate> bulletStatuses
+    List<BulletStatusUpdate> bulletStatuses,
+    String displacementCategory,
+    @Size(max = 500) String displacementDetail,
+    UUID displacingCommitmentId
 ) {
     public record BulletStatusUpdate(UUID bulletId, boolean done) {}
 }

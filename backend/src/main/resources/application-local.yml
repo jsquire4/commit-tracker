@@ -11,6 +11,7 @@ spring:
 st6:
   seed:
     enabled: true
+    observatory: false  # Set to true to seed 3 orgs × 12 weeks of rich observatory data (~30s)
   cors:
     allowed-origins: "http://localhost:3000,http://localhost:3001"
   jwt:

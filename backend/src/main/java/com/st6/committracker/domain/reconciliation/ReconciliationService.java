@@ -2,6 +2,7 @@ package com.st6.committracker.domain.reconciliation;
 
 import com.st6.committracker.audit.AuditService;
 import com.st6.committracker.domain.CycleState;
+import com.st6.committracker.domain.DisplacementCategory;
 import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.commit.Commitment;
@@ -133,6 +134,25 @@ public class ReconciliationService {
                     .build();
         }
 
+        // Apply displacement fields — always set (even to null) to allow clearing
+        if (request.displacementCategory() != null) {
+            DisplacementCategory category = DisplacementCategory.valueOf(request.displacementCategory());
+            record.setDisplacementCategory(category);
+            record.setDisplacementDetail(request.displacementDetail());
+            if (request.displacingCommitmentId() != null) {
+                Commitment displacingCommitment = commitmentRepository
+                        .findById(request.displacingCommitmentId())
+                        .orElseThrow(() -> new EntityNotFoundException("Commitment", request.displacingCommitmentId()));
+                record.setDisplacingCommitment(displacingCommitment);
+            } else {
+                record.setDisplacingCommitment(null);
+            }
+        } else {
+            record.setDisplacementCategory(null);
+            record.setDisplacementDetail(null);
+            record.setDisplacingCommitment(null);
+        }
+
         ReconciliationRecord saved = reconciliationRecordRepository.save(record);
 
         // Update bullet completion statuses
@@ -157,13 +177,21 @@ public class ReconciliationService {
         }
 
         // Audit log
+        Map<String, Object> auditDetails = new java.util.HashMap<>();
+        auditDetails.put("cycleId", cycle.getId());
+        auditDetails.put("status", effectiveStatus.name());
+        auditDetails.put("carryForward", request.carryForward());
+        if (request.displacementCategory() != null) {
+            auditDetails.put("displacementCategory", request.displacementCategory());
+            if (request.displacementDetail() != null) {
+                auditDetails.put("displacementDetail", request.displacementDetail());
+            }
+            if (request.displacingCommitmentId() != null) {
+                auditDetails.put("displacingCommitmentId", request.displacingCommitmentId());
+            }
+        }
         auditService.log(commitment.getOrg().getId(), "Commitment", commitmentId,
-                "COMMITMENT_RECONCILED", actor,
-                Map.of(
-                        "cycleId", cycle.getId(),
-                        "status", effectiveStatus.name(),
-                        "carryForward", request.carryForward()
-                ));
+                "COMMITMENT_RECONCILED", actor, auditDetails);
 
         log.info("Reconciled commitment id={} cycleId={} status={} carryForward={} bullets={}/{}",
                 commitmentId, cycle.getId(), effectiveStatus, request.carryForward(),

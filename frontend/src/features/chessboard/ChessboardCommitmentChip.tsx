@@ -107,28 +107,28 @@ export function ChessboardCommitmentChip({ commitment }: ChessboardCommitmentChi
           role="tooltip"
           className={[
             'absolute z-50 bottom-full left-0 mb-2 w-72',
-            'bg-white border border-gray-200 rounded-lg shadow-lg p-3',
-            'text-sm text-gray-700',
+            'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3',
+            'text-sm text-gray-700 dark:text-gray-300',
           ].join(' ')}
         >
           {/* Full title */}
-          <p className="font-semibold text-gray-900 mb-1">{commitment.title}</p>
+          <p className="font-semibold text-gray-900 dark:text-gray-100 mb-1">{commitment.title}</p>
 
           {/* RCDO breadcrumb */}
           {rcdoBreadcrumb && (
-            <p className="text-xs text-blue-600 mb-2">{rcdoBreadcrumb}</p>
+            <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">{rcdoBreadcrumb}</p>
           )}
 
           {/* Horizon */}
-          <p className="text-xs text-gray-500 mb-2">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
             Horizon: <span className="font-medium">{horizonLabel(commitment.completionHorizon)}</span>
           </p>
 
           {/* Bullets */}
           {commitment.bullets.length > 0 && (
-            <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600">
+            <ul className="list-disc list-inside space-y-0.5 text-xs text-gray-600 dark:text-gray-400">
               {commitment.bullets.map((bullet) => (
-                <li key={bullet.id} className={bullet.isCompleted ? 'line-through text-gray-400' : ''}>
+                <li key={bullet.id} className={bullet.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
                   {bullet.body}
                 </li>
               ))}

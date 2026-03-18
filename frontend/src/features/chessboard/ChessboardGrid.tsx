@@ -5,6 +5,7 @@ import { ChessboardCell } from './ChessboardCell';
 interface ChessboardGridProps {
   commitments: Commitment[];
   categories: ChessCategory[];
+  previousCommitments?: Commitment[];
 }
 
 interface PriorityTier {
@@ -19,7 +20,7 @@ const PRIORITY_TIERS: PriorityTier[] = [
   { label: 'Low', key: 'low', test: (rank) => rank >= 5 },
 ];
 
-export function ChessboardGrid({ commitments, categories }: ChessboardGridProps) {
+export function ChessboardGrid({ commitments, categories, previousCommitments }: ChessboardGridProps) {
   /** Sorted categories — respect the backend sortOrder */
   const sortedCategories = [...categories].sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -54,6 +55,17 @@ export function ChessboardGrid({ commitments, categories }: ChessboardGridProps)
     });
   }
 
+  function getPreviousCellCount(categoryId: string, tier: PriorityTier): number | undefined {
+    if (!previousCommitments) return undefined;
+    return previousCommitments.filter((c) => {
+      const matchesCategory =
+        categoryId === '__uncategorized__'
+          ? c.chessCategoryId === null
+          : c.chessCategoryId === categoryId;
+      return matchesCategory && tier.test(c.priorityRank);
+    }).length;
+  }
+
   return (
     <div className="overflow-x-auto">
       {/* Column count: 4 on lg+, 2 on md, 1 on sm */}
@@ -72,7 +84,7 @@ export function ChessboardGrid({ commitments, categories }: ChessboardGridProps)
             <div
               key={cat.id}
               role="columnheader"
-              className="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-600"
+              className="px-2 py-1.5 text-center text-xs font-semibold uppercase tracking-wide text-gray-600 dark:text-gray-400"
               style={cat.colorHex ? { color: cat.colorHex } : undefined}
             >
               {cat.name}
@@ -89,6 +101,9 @@ export function ChessboardGrid({ commitments, categories }: ChessboardGridProps)
                 commitments={getCellCommitments(cat.id, tier)}
                 category={cat}
                 priorityTier={tier.label}
+                {...(getPreviousCellCount(cat.id, tier) !== undefined
+                  ? { previousCount: getPreviousCellCount(cat.id, tier) as number }
+                  : {})}
               />
             ))}
           </div>
@@ -96,10 +111,10 @@ export function ChessboardGrid({ commitments, categories }: ChessboardGridProps)
       </div>
 
       {/* Tier legend below grid */}
-      <div className="mt-4 flex gap-6 text-xs text-gray-500">
+      <div className="mt-4 flex gap-6 text-xs text-gray-500 dark:text-gray-400">
         {PRIORITY_TIERS.map((tier) => (
           <span key={tier.key}>
-            <span className="font-semibold text-gray-700">{tier.label}</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-300">{tier.label}</span>
             {tier.key === 'high' && ' — rank 1–2'}
             {tier.key === 'medium' && ' — rank 3–4'}
             {tier.key === 'low' && ' — rank 5+'}

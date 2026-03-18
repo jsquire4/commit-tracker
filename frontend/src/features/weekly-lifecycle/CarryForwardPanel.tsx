@@ -22,14 +22,14 @@ function RcdoBreadcrumb({ commitment }: { commitment: Commitment }) {
   if (outcomeId) parts.push('Outcome');
 
   if (parts.length === 0) {
-    return <span className="text-xs text-gray-400 italic">No RCDO link</span>;
+    return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No RCDO link</span>;
   }
 
   return (
-    <span className="flex flex-wrap items-center gap-1 text-xs text-gray-500">
+    <span className="flex flex-wrap items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
       {parts.map((part, i) => (
         <span key={part} className="flex items-center gap-1">
-          {i > 0 && <span className="text-gray-300">›</span>}
+          {i > 0 && <span className="text-gray-300 dark:text-gray-600">›</span>}
           {part}
         </span>
       ))}
@@ -75,10 +75,10 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-gray-100 bg-white p-4">
+    <li className="flex flex-col gap-2 rounded-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-gray-900">
+          <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
             {commitment.title}
           </p>
           <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -92,7 +92,7 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
             <button
               type="button"
               onClick={handleAccept}
-              className="rounded-md border border-green-300 bg-green-50 px-3 py-1 text-xs font-medium text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
+              className="rounded-md border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
             >
               Accept
             </button>
@@ -100,7 +100,7 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
               type="button"
               onClick={() => { setDeclining(true); }}
               disabled={isPending}
-              className="rounded-md border border-red-200 bg-red-50 px-3 py-1 text-xs font-medium text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:opacity-50"
+              className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:opacity-50"
             >
               Decline
             </button>
@@ -109,10 +109,10 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
       </div>
 
       {declining && (
-        <div className="rounded-md border border-red-100 bg-red-50 p-3">
+        <div className="rounded-md border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-900/30 p-3">
           <label
             htmlFor={`decline-reason-${commitment.id}`}
-            className="mb-1 block text-xs font-medium text-red-700"
+            className="mb-1 block text-xs font-medium text-red-700 dark:text-red-400"
           >
             Reason for declining (optional)
           </label>
@@ -124,13 +124,13 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
               { setDeclineState((prev) => ({ ...prev, reason: e.target.value })); }
             }
             placeholder="e.g. no longer relevant"
-            className="w-full rounded border border-red-200 bg-white px-3 py-1.5 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+            className="w-full rounded border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
           />
           <div className="mt-2 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => { setDeclining(false); }}
-              className="text-xs text-gray-500 hover:text-gray-700"
+              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
             >
               Cancel
             </button>
@@ -152,11 +152,11 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
 export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelProps) {
   if (carriedItems.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-gray-50 p-5">
-        <h2 className="mb-1 text-sm font-semibold text-gray-700">
+      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-5">
+        <h2 className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
           Carried Forward
         </h2>
-        <p className="text-sm text-gray-400">
+        <p className="text-sm text-gray-400 dark:text-gray-500">
           No items carried forward from previous cycle.
         </p>
       </div>
@@ -164,7 +164,7 @@ export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelPr
   }
 
   return (
-    <section className="rounded-lg border border-amber-200 bg-amber-50 p-5">
+    <section className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 p-5">
       <div className="mb-4 flex items-center gap-2">
         <svg
           className="h-5 w-5 text-amber-500"
@@ -180,7 +180,7 @@ export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelPr
             d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
           />
         </svg>
-        <h2 className="text-sm font-semibold text-amber-800">
+        <h2 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
           Carried Forward ({carriedItems.length})
         </h2>
       </div>

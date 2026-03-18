@@ -60,7 +60,7 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
 
   if (cycle.state === 'RECONCILED') {
     return (
-      <div className="rounded-lg border border-green-200 bg-green-50 px-5 py-4">
+      <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30 px-5 py-4">
         <div className="flex items-center gap-2">
           <svg
             className="h-5 w-5 text-green-500"
@@ -76,9 +76,9 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="text-sm font-medium text-green-800">Cycle complete</p>
+          <p className="text-sm font-medium text-green-800 dark:text-green-300">Cycle complete</p>
         </div>
-        <p className="mt-1 pl-7 text-xs text-green-600">
+        <p className="mt-1 pl-7 text-xs text-green-600 dark:text-green-400">
           All commitments have been reconciled for this cycle.
         </p>
       </div>
@@ -101,9 +101,9 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
 
   return (
     <>
-      <div className="flex items-center gap-3 rounded-lg border border-gray-200 bg-white px-5 py-4">
+      <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-4">
         <div className="flex-1">
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
             {cycle.state === 'DRAFT'
               ? 'Ready to lock in commitments for this cycle?'
               : 'Ready to start reconciling commitments?'}

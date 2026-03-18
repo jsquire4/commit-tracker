@@ -15,37 +15,37 @@ const RECONCILIATION_LABELS: Record<string, string> = {
 };
 
 const RECONCILIATION_COLORS: Record<string, string> = {
-  COMPLETED: 'bg-green-100 text-green-800',
-  PARTIALLY_COMPLETED: 'bg-yellow-100 text-yellow-800',
-  NOT_STARTED: 'bg-red-100 text-red-800',
-  CARRIED_FORWARD: 'bg-gray-100 text-gray-700',
+  COMPLETED: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
+  PARTIALLY_COMPLETED: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
+  NOT_STARTED: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+  CARRIED_FORWARD: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  STRATEGIC: 'bg-blue-100 text-blue-800',
-  OPERATIONAL: 'bg-gray-100 text-gray-700',
-  DEFENSIVE: 'bg-red-100 text-red-800',
-  CAPABILITY_BUILDING: 'bg-emerald-100 text-emerald-800',
+  STRATEGIC: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
+  OPERATIONAL: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
+  DEFENSIVE: 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300',
+  CAPABILITY_BUILDING: 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300',
 };
 
 function CommitmentRow({ commitment }: { commitment: Commitment }) {
   const recStatus = commitment.reconciliationStatus;
   const recLabel = recStatus ? (RECONCILIATION_LABELS[recStatus] ?? recStatus) : null;
-  const recColor = recStatus ? (RECONCILIATION_COLORS[recStatus] ?? 'bg-gray-100 text-gray-700') : null;
+  const recColor = recStatus ? (RECONCILIATION_COLORS[recStatus] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300') : null;
   const catColor = commitment.chessCategoryName
-    ? (CATEGORY_COLORS[commitment.chessCategoryName] ?? 'bg-gray-100 text-gray-700')
-    : 'bg-gray-100 text-gray-700';
+    ? (CATEGORY_COLORS[commitment.chessCategoryName] ?? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300')
+    : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300';
 
   return (
-    <div className="py-3 border-b border-gray-100 last:border-b-0">
+    <div className="py-3 border-b border-gray-100 dark:border-gray-800 last:border-b-0">
       <div className="flex items-start gap-3">
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium text-gray-900 leading-snug">{commitment.title}</p>
+          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 leading-snug">{commitment.title}</p>
           {commitment.description && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{commitment.description}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{commitment.description}</p>
           )}
           {commitment.reconciliationNote && (
-            <p className="text-xs text-gray-400 italic mt-1">Note: {commitment.reconciliationNote}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 italic mt-1">Note: {commitment.reconciliationNote}</p>
           )}
         </div>
         <div className="flex flex-shrink-0 flex-wrap gap-1.5 justify-end">
@@ -83,7 +83,7 @@ export function MemberCommitmentDetail({ userId, cycleId }: MemberCommitmentDeta
 
   if (isError) {
     return (
-      <div className="py-4 px-3 text-sm text-red-600">
+      <div className="py-4 px-3 text-sm text-red-600 dark:text-red-400">
         Failed to load commitments.
       </div>
     );
@@ -91,7 +91,7 @@ export function MemberCommitmentDetail({ userId, cycleId }: MemberCommitmentDeta
 
   if (!commitments || commitments.length === 0) {
     return (
-      <div className="py-4 px-3 text-sm text-gray-400 italic">
+      <div className="py-4 px-3 text-sm text-gray-400 dark:text-gray-500 italic">
         No commitments found for this member.
       </div>
     );
@@ -103,11 +103,11 @@ export function MemberCommitmentDetail({ userId, cycleId }: MemberCommitmentDeta
   return (
     <div className="px-3 py-2">
       {hasReconciliation && (
-        <div className="mb-3 p-3 bg-gray-50 rounded-md border border-gray-200">
-          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">
+        <div className="mb-3 p-3 bg-gray-50 dark:bg-gray-900 rounded-md border border-gray-200 dark:border-gray-700">
+          <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
             Reconciliation Summary
           </p>
-          <div className="flex flex-wrap gap-3 text-xs text-gray-700">
+          <div className="flex flex-wrap gap-3 text-xs text-gray-700 dark:text-gray-300">
             <span>
               Planned: <strong>{commitments.filter((c) => !c.isUnplanned).length}</strong>
             </span>
@@ -129,7 +129,7 @@ export function MemberCommitmentDetail({ userId, cycleId }: MemberCommitmentDeta
           </div>
         </div>
       )}
-      <div className="divide-y divide-gray-100">
+      <div className="divide-y divide-gray-100 dark:divide-gray-800">
         {commitments.map((c) => (
           <CommitmentRow key={c.id} commitment={c} />
         ))}

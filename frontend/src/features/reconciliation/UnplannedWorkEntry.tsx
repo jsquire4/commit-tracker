@@ -119,7 +119,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
       <button
         type="button"
         onClick={() => { setOpen(true); }}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
       >
         <span aria-hidden="true">+</span>
         Add unplanned work
@@ -128,13 +128,13 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
   }
 
   return (
-    <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
-      <h3 className="text-sm font-semibold text-blue-800 mb-3">Add Unplanned Work</h3>
+    <div className="rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 p-4">
+      <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Add Unplanned Work</h3>
 
       <form onSubmit={(e) => { void handleSubmit(e); }} className="flex flex-col gap-4" noValidate>
         {/* Title */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-title" className="text-sm font-medium text-gray-700">
+          <label htmlFor="unplanned-title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Title <span className="text-red-500">*</span>
           </label>
           <input
@@ -144,15 +144,15 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
             onChange={(e) => { setForm((prev) => ({ ...prev, title: e.target.value })); }}
             placeholder="What did you work on?"
             maxLength={500}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 
         {/* Bullets */}
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Bullet items <span className="text-red-500">*</span>{' '}
-            <span className="text-gray-400 font-normal">(min 2, max 5)</span>
+            <span className="text-gray-400 dark:text-gray-500 font-normal">(min 2, max 5)</span>
           </span>
           {form.bullets.map((bullet, idx) => (
             <div key={idx} className="flex gap-2 items-center">
@@ -161,14 +161,14 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
                 value={bullet}
                 onChange={(e) => { handleBulletChange(idx, e.target.value); }}
                 placeholder={`Bullet ${String(idx + 1)}`}
-                className="flex-1 rounded border border-gray-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="flex-1 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {form.bullets.length > 2 && (
                 <button
                   type="button"
                   onClick={() => { removeBullet(idx); }}
                   aria-label={`Remove bullet ${String(idx + 1)}`}
-                  className="text-gray-400 hover:text-red-500 text-lg leading-none px-1"
+                  className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 text-lg leading-none px-1"
                 >
                   ×
                 </button>
@@ -179,7 +179,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
             <button
               type="button"
               onClick={addBullet}
-              className="self-start text-xs text-blue-600 hover:underline mt-1"
+              className="self-start text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
             >
               + Add bullet
             </button>
@@ -188,7 +188,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
 
         {/* Completion Horizon */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-horizon" className="text-sm font-medium text-gray-700">
+          <label htmlFor="unplanned-horizon" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Completion Horizon
           </label>
           <select
@@ -197,7 +197,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
             onChange={(e) =>
               { setForm((prev) => ({ ...prev, completionHorizon: e.target.value as CompletionHorizon })); }
             }
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             {HORIZON_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -209,14 +209,14 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
 
         {/* RCDO Linking */}
         <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-rcdo" className="text-sm font-medium text-gray-700">
+          <label htmlFor="unplanned-rcdo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Rally Cry <span className="text-red-500">*</span>
           </label>
           <select
             id="unplanned-rcdo"
             value={form.rallyCryId}
             onChange={(e) => { setForm((prev) => ({ ...prev, rallyCryId: e.target.value })); }}
-            className="rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
           >
             <option value="">— Select Rally Cry —</option>
             {rcdoTree?.rallyCries.map((rc) => (
@@ -229,7 +229,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
 
         {/* Reconciliation Status */}
         <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700">
+          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
             Reconciliation Status <span className="text-red-500">*</span>
           </span>
           <CommitmentStatusMarker
@@ -240,7 +240,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
 
         {/* Error */}
         {error && (
-          <p role="alert" className="text-sm text-red-600">
+          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
             {error}
           </p>
         )}
@@ -257,7 +257,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
           <button
             type="button"
             onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
+            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
           >
             Cancel
           </button>

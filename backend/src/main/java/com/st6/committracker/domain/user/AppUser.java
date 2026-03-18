@@ -1,6 +1,7 @@
 package com.st6.committracker.domain.user;
 
 import com.st6.committracker.domain.UserRole;
+import com.st6.committracker.domain.observatory.CostBand;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -17,6 +18,7 @@ import jakarta.persistence.UniqueConstraint;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,6 +59,13 @@ public class AppUser {
 
     @Column(name = "commit_module_enabled")
     private Boolean commitModuleEnabled; // null = inherit from org
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cost_band_id")
+    private CostBand costBand;
+
+    @Column(name = "weekly_capacity_hours")
+    private BigDecimal weeklyCapacityHours = new BigDecimal("40.0");
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -105,6 +114,12 @@ public class AppUser {
 
     public Boolean getCommitModuleEnabled() { return commitModuleEnabled; }
     public void setCommitModuleEnabled(Boolean commitModuleEnabled) { this.commitModuleEnabled = commitModuleEnabled; }
+
+    public CostBand getCostBand() { return costBand; }
+    public void setCostBand(CostBand costBand) { this.costBand = costBand; }
+
+    public BigDecimal getWeeklyCapacityHours() { return weeklyCapacityHours; }
+    public void setWeeklyCapacityHours(BigDecimal weeklyCapacityHours) { this.weeklyCapacityHours = weeklyCapacityHours; }
 
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }

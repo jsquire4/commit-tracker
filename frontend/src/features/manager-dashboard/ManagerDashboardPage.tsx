@@ -3,16 +3,19 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useUIStore } from '@/stores/ui.store';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { AlignmentTrendChart } from '@/features/observatory/AlignmentTrendChart';
 import { DashboardFilters } from './DashboardFilters';
 import { AlignmentGapChart } from './AlignmentGapChart';
 import { AssignmentSignals } from './AssignmentSignals';
+import { CarryForwardVelocity } from './CarryForwardVelocity';
+import { RcdoCoverageGaps } from './RcdoCoverageGaps';
 import { TeamRollupTable } from './TeamRollupTable';
 import type { UserRole, DashboardFilters as DashboardFiltersType } from '@/types';
 
 const ALLOWED_ROLES: UserRole[] = ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE', 'ANALYST'];
 
 export function ManagerDashboardPage() {
-  const { role } = useAuth();
+  const { role, userId } = useAuth();
   const dashboardFilters = useUIStore((s) => s.dashboardFilters);
   const setDashboardFilters = useUIStore((s) => s.setDashboardFilters);
 
@@ -69,7 +72,7 @@ export function ManagerDashboardPage() {
     );
   }
 
-  const { teamRollup, alignmentSignal, assignmentAttribution } = data;
+  const { teamRollup, alignmentSignal, assignmentAttribution, rcdoCoverage } = data;
 
   // Build team member options for the filters dropdown
   const teamMemberOptions = teamRollup.members.map((m) => ({
@@ -81,9 +84,9 @@ export function ManagerDashboardPage() {
     setDashboardFilters(partial);
   }
 
-  function handleSegmentClick(userId: string | null, _category: string) {
-    if (userId) {
-      setDashboardFilters({ teamMemberId: userId });
+  function handleSegmentClick(memberId: string | null, _category: string) {
+    if (memberId) {
+      setDashboardFilters({ teamMemberId: memberId });
     }
   }
 
@@ -115,6 +118,15 @@ export function ManagerDashboardPage() {
 
       {/* Assignment signals */}
       <AssignmentSignals signals={assignmentAttribution} />
+
+      {/* Alignment trend over time */}
+      <AlignmentTrendChart managerId={userId} weekCount={8} showTarget />
+
+      {/* Carry-forward velocity */}
+      <CarryForwardVelocity cycleId={activeCycleId} />
+
+      {/* RCDO coverage gaps */}
+      <RcdoCoverageGaps coverage={rcdoCoverage} />
 
       {/* Team rollup table with inline expansion */}
       <TeamRollupTable

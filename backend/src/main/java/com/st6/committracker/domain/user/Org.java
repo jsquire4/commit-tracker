@@ -1,10 +1,14 @@
 package com.st6.committracker.domain.user;
 
+import com.st6.committracker.domain.observatory.Portfolio;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -32,6 +36,10 @@ public class Org {
 
     @Column(name = "is_active", nullable = false)
     private boolean isActive = true;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "portfolio_id")
+    private Portfolio portfolio;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -66,6 +74,9 @@ public class Org {
     public boolean isActive() { return isActive; }
     public void setActive(boolean active) { isActive = active; }
 
+    public Portfolio getPortfolio() { return portfolio; }
+    public void setPortfolio(Portfolio portfolio) { this.portfolio = portfolio; }
+
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
@@ -99,15 +110,19 @@ public class Org {
         private String slug;
         private String timezone = "UTC";
         private boolean isActive = true;
+        private Portfolio portfolio;
 
         public Builder id(UUID id) { this.id = id; return this; }
         public Builder name(String name) { this.name = name; return this; }
         public Builder slug(String slug) { this.slug = slug; return this; }
         public Builder timezone(String timezone) { this.timezone = timezone; return this; }
         public Builder isActive(boolean isActive) { this.isActive = isActive; return this; }
+        public Builder portfolio(Portfolio portfolio) { this.portfolio = portfolio; return this; }
 
         public Org build() {
-            return new Org(id, name, slug, timezone, isActive);
+            Org org = new Org(id, name, slug, timezone, isActive);
+            org.setPortfolio(portfolio);
+            return org;
         }
     }
 }

@@ -60,7 +60,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
             'flex-1 px-4 py-2 text-sm font-medium border rounded-l-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',
             isSelf
               ? 'bg-blue-600 text-white border-blue-600 z-10'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800',
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           ]
             .filter(Boolean)
@@ -77,7 +77,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
             'flex-1 px-4 py-2 text-sm font-medium border -ml-px rounded-r-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-inset transition-colors',
             !isSelf
               ? 'bg-blue-600 text-white border-blue-600 z-10'
-              : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50',
+              : 'bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800',
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
           ]
             .filter(Boolean)
@@ -94,12 +94,12 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
           disabled={disabled}
         >
           <div className="relative">
-            <Listbox.Button className="relative w-full cursor-pointer rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
-              <span className="block truncate text-gray-700">
+            <Listbox.Button className="relative w-full cursor-pointer rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 py-2 pl-3 pr-10 text-left text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed">
+              <span className="block truncate text-gray-700 dark:text-gray-300">
                 {selectedAssigner ? selectedAssigner.displayName : 'Select assigner...'}
               </span>
               <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
-                <svg className="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                   <path fillRule="evenodd" d="M10 3a.75.75 0 01.55.24l3.25 3.5a.75.75 0 11-1.1 1.02L10 4.852 7.3 7.76a.75.75 0 01-1.1-1.02l3.25-3.5A.75.75 0 0110 3zm-3.76 9.2a.75.75 0 011.06.04l2.7 2.908 2.7-2.908a.75.75 0 111.1 1.02l-3.25 3.5a.75.75 0 01-1.1 0l-3.25-3.5a.75.75 0 01.04-1.06z" clipRule="evenodd" />
                 </svg>
               </span>
@@ -110,16 +110,16 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
               leaveFrom="opacity-100"
               leaveTo="opacity-0"
             >
-              <Listbox.Options className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none text-sm">
+              <Listbox.Options className="absolute z-20 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black/5 dark:ring-gray-700 focus:outline-none text-sm">
                 {teamMembers.length === 0 ? (
-                  <li className="px-4 py-2 text-gray-400 text-sm">No team members found</li>
+                  <li className="px-4 py-2 text-gray-400 dark:text-gray-500 text-sm">No team members found</li>
                 ) : (
                   teamMembers.map((member) => (
                     <Listbox.Option
                       key={member.id}
                       value={member.id}
                       className={({ active }) =>
-                        `relative cursor-pointer select-none py-2 pl-3 pr-9 ${active ? 'bg-blue-50 text-blue-900' : 'text-gray-900'}`
+                        `relative cursor-pointer select-none py-2 pl-3 pr-9 ${active ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-gray-100'}`
                       }
                     >
                       {({ selected }) => (
@@ -128,7 +128,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
                             {member.displayName}
                           </span>
                           {selected && (
-                            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-600">
+                            <span className="absolute inset-y-0 right-0 flex items-center pr-3 text-blue-600 dark:text-blue-400">
                               <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
                                 <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                               </svg>

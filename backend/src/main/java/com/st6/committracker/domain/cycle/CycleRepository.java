@@ -1,5 +1,6 @@
 package com.st6.committracker.domain.cycle;
 
+import com.st6.committracker.domain.CycleState;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -9,4 +10,5 @@ import java.util.UUID;
 public interface CycleRepository extends JpaRepository<Cycle, UUID> {
     Optional<Cycle> findByOrgIdAndIsActiveTrue(UUID orgId);
     List<Cycle> findByOrgIdOrderByStartsAtDesc(UUID orgId);
+    List<Cycle> findByOrgIdAndStateOrderByStartsAtDesc(UUID orgId, CycleState state);
 }

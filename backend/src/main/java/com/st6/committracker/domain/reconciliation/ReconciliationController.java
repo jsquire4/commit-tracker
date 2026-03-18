@@ -71,8 +71,7 @@ public class ReconciliationController {
         List<ReconciliationViewResponse.CommitmentReconciliationDetail> details =
                 view.commitments().stream()
                         .map(detail -> {
-                            List<TaskBullet> bullets = taskBulletRepository
-                                    .findByCommitmentIdOrderBySortOrderAsc(detail.commitment().getId());
+                            List<TaskBullet> bullets = detail.bullets();
                             CommitmentResponse commitmentResponse = commitmentMapper.toResponse(detail.commitment(), bullets);
 
                             ReconciliationResponse reconciliationResponse = null;
@@ -81,17 +80,7 @@ public class ReconciliationController {
                                 List<TaskBulletResponse> bulletStatuses = bullets.stream()
                                         .map(b -> new TaskBulletResponse(b.getId(), b.getBody(), b.getSortOrder(), b.isCompleted()))
                                         .toList();
-                                reconciliationResponse = new ReconciliationResponse(
-                                        rec.getId(),
-                                        rec.getCommitment().getId(),
-                                        rec.getCycle().getId(),
-                                        rec.getStatus(),
-                                        rec.getNotes(),
-                                        rec.getPlannedHorizon(),
-                                        rec.getReconciledAt(),
-                                        rec.getReconciledBy().getId(),
-                                        bulletStatuses
-                                );
+                                reconciliationResponse = toReconciliationResponse(rec, bulletStatuses);
                             }
 
                             return new ReconciliationViewResponse.CommitmentReconciliationDetail(
@@ -105,6 +94,7 @@ public class ReconciliationController {
     }
 
     @PutMapping("/commitments/{id}")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<ApiResponse<ReconciliationResponse>> reconcileCommitment(
             @PathVariable UUID id,
             @Valid @RequestBody ReconcileRequest request) {
@@ -116,22 +106,32 @@ public class ReconciliationController {
                 .map(b -> new TaskBulletResponse(b.getId(), b.getBody(), b.getSortOrder(), b.isCompleted()))
                 .toList();
 
-        ReconciliationResponse response = new ReconciliationResponse(
-                record.getId(),
-                record.getCommitment().getId(),
-                record.getCycle().getId(),
-                record.getStatus(),
-                record.getNotes(),
-                record.getPlannedHorizon(),
-                record.getReconciledAt(),
-                record.getReconciledBy().getId(),
-                bulletStatuses
-        );
+        ReconciliationResponse response = toReconciliationResponse(record, bulletStatuses);
 
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
+    private ReconciliationResponse toReconciliationResponse(ReconciliationRecord rec,
+                                                              List<TaskBulletResponse> bulletStatuses) {
+        return new ReconciliationResponse(
+                rec.getId(),
+                rec.getCommitment().getId(),
+                rec.getCycle().getId(),
+                rec.getStatus(),
+                rec.getNotes(),
+                rec.getPlannedHorizon(),
+                rec.getReconciledAt(),
+                rec.getReconciledBy().getId(),
+                bulletStatuses,
+                rec.getDisplacementCategory() != null ? rec.getDisplacementCategory().name() : null,
+                rec.getDisplacementDetail(),
+                rec.getDisplacingCommitment() != null ? rec.getDisplacingCommitment().getId() : null,
+                rec.getDisplacingCommitment() != null ? rec.getDisplacingCommitment().getTitle() : null
+        );
+    }
+
     @PostMapping("/cycles/{cycleId}/complete")
+    @org.springframework.transaction.annotation.Transactional
     public ResponseEntity<ApiResponse<CycleResponse>> completeReconciliation(
             @PathVariable UUID cycleId) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
