@@ -74,6 +74,13 @@ export function ReconciliationPage() {
   const { commitments, summary } = view;
   const allReconciled = summary.reconciledCount >= summary.totalCommitments && summary.totalCommitments > 0;
 
+  const strategicCommitments = commitments.filter(
+    (d) => d.commitment.chessCategoryName === 'Strategic'
+  );
+  const strategicCompleted = strategicCommitments.filter(
+    (d) => d.reconciliation?.status === 'COMPLETED'
+  ).length;
+
   async function handleSubmit() {
     if (!allReconciled) return;
     try {
@@ -93,6 +100,14 @@ export function ReconciliationPage() {
             This cycle has been completed. Viewing in read-only mode.
           </p>
         </div>
+      )}
+
+      {/* Framing text */}
+      {!isReadOnly && (
+        <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+          Review your week. For each commitment, mark what happened and why. This data drives the
+          executive briefing and team health analytics.
+        </p>
       )}
 
       {/* Page Header */}
@@ -148,7 +163,7 @@ export function ReconciliationPage() {
         </dl>
 
         {summary.totalCommitments > 0 && (
-          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex gap-6 text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-600 dark:text-gray-400">
             <span>
               Completion rate:{' '}
               <strong className="text-gray-900 dark:text-gray-100">
@@ -161,6 +176,14 @@ export function ReconciliationPage() {
                 {Math.round(summary.bulletCompletionRate * 100)}%
               </strong>
             </span>
+            {strategicCommitments.length > 0 && (
+              <span>
+                Strategic commitments completed:{' '}
+                <strong className="text-gray-900 dark:text-gray-100">
+                  {strategicCompleted} of {strategicCommitments.length}
+                </strong>
+              </span>
+            )}
           </div>
         )}
       </div>

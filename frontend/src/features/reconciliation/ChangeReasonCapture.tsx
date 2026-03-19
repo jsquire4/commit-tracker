@@ -6,6 +6,7 @@ interface ChangeReasonCaptureProps {
   onBlur?: () => void;
   required: boolean;
   disabled?: boolean;
+  placeholder?: string;
 }
 
 export function ChangeReasonCapture({
@@ -14,6 +15,7 @@ export function ChangeReasonCapture({
   onBlur,
   required,
   disabled = false,
+  placeholder = 'Describe what happened and the reason for any deviation from plan…',
 }: ChangeReasonCaptureProps) {
   const remaining = MAX_CHARS - value.length;
   const isOverLimit = remaining < 0;
@@ -36,7 +38,7 @@ export function ChangeReasonCapture({
         required={required}
         maxLength={MAX_CHARS}
         rows={3}
-        placeholder="Describe what happened and the reason for any deviation from plan…"
+        placeholder={placeholder}
         className={[
           'w-full rounded border px-3 py-2 text-sm resize-y',
           'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',

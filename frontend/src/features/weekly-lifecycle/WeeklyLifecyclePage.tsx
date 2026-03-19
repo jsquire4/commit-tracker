@@ -1,14 +1,19 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments } from '@/hooks/useCommitments';
+import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/Badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CycleStateIndicator } from './CycleStateIndicator';
 import { TransitionActions } from './TransitionActions';
 import { CarryForwardPanel } from './CarryForwardPanel';
-import type { Cycle } from '@/types';
+import { listCycles } from '@/api/cycles.api';
+import type { Cycle, UserRole } from '@/types';
 import type { StateTransition } from './CycleStateIndicator';
+
+const MANAGER_PLUS_ROLES: UserRole[] = ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE'];
 
 // Derive transitions from the cycle's audit timestamps.
 // The backend does not currently return a transitions log, so we reconstruct
@@ -57,10 +62,20 @@ interface CycleHistoryProps {
   currentCycleId: string;
 }
 
-// Placeholder — full history would come from a listCycles hook, which is out
-// of scope for this component. We render a stub that shows no past cycles yet.
-function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
+function CycleHistory({ currentCycleId }: CycleHistoryProps) {
   const [open, setOpen] = useState(false);
+
+  const { data: cyclesData, isLoading } = useQuery({
+    queryKey: ['cycles', 'history', currentCycleId],
+    queryFn: () => listCycles({ state: 'RECONCILED' }),
+    staleTime: 60_000,
+    enabled: open,
+  });
+
+  // Filter out the current cycle and take the 4 most recent completed ones
+  const pastCycles = (cyclesData?.items ?? [])
+    .filter((c) => c.id !== currentCycleId)
+    .slice(0, 4);
 
   return (
     <section className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
@@ -84,9 +99,39 @@ function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
 
       {open && (
         <div className="border-t border-gray-100 dark:border-gray-800 px-5 py-4">
-          <p className="text-sm text-gray-400 dark:text-gray-500">
-            Past cycle history will appear here once previous cycles are available.
-          </p>
+          {isLoading ? (
+            <p className="text-sm text-gray-400 dark:text-gray-500">Loading history…</p>
+          ) : pastCycles.length === 0 ? (
+            <p className="text-sm text-gray-400 dark:text-gray-500">
+              No completed past cycles found.
+            </p>
+          ) : (
+            <ul className="flex flex-col gap-2">
+              {pastCycles.map((c) => (
+                <li
+                  key={c.id}
+                  className="flex items-center justify-between gap-4 rounded-md border border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50 px-4 py-2.5"
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {c.label}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDateRange(c.startsAt, c.endsAt)}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {c.commitmentCount} commitment{c.commitmentCount !== 1 ? 's' : ''}
+                    </span>
+                    <Badge variant={cycleStateBadgeVariant(c.state)}>
+                      {c.state.charAt(0) + c.state.slice(1).toLowerCase()}
+                    </Badge>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       )}
     </section>
@@ -98,6 +143,9 @@ function CycleHistory({ currentCycleId: _currentCycleId }: CycleHistoryProps) {
 // ------------------------------------------------------------------
 
 export function WeeklyLifecyclePage() {
+  const { role } = useAuth();
+  const isManagerPlus = role !== null && MANAGER_PLUS_ROLES.includes(role);
+
   const { data: cycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
   const {
     data: commitments,
@@ -130,6 +178,14 @@ export function WeeklyLifecyclePage() {
   );
   const transitions = deriveTransitions(cycle);
 
+  const rallyCryLinkedCount = allCommitments.filter(
+    (c) => c.rcdoLink.rallyCryId !== null
+  ).length;
+  const rallyCryPct =
+    allCommitments.length > 0
+      ? Math.round((rallyCryLinkedCount / allCommitments.length) * 100)
+      : 0;
+
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
@@ -142,15 +198,28 @@ export function WeeklyLifecyclePage() {
         }
       />
 
+      {/* Narrative context */}
+      <p className="text-sm text-gray-600 dark:text-gray-400">
+        This week:{' '}
+        <strong className="text-gray-800 dark:text-gray-200">
+          {allCommitments.length} commitment{allCommitments.length !== 1 ? 's' : ''}
+        </strong>{' '}
+        across the team.{' '}
+        <strong className="text-gray-800 dark:text-gray-200">{rallyCryPct}%</strong> linked to a
+        rally cry.
+      </p>
+
       <CycleStateIndicator
         currentState={cycle.state}
         transitions={transitions}
       />
 
-      <TransitionActions
-        cycle={cycle}
-        commitmentCount={allCommitments.length}
-      />
+      {isManagerPlus && (
+        <TransitionActions
+          cycle={cycle}
+          commitmentCount={allCommitments.length}
+        />
+      )}
 
       <CarryForwardPanel carriedItems={carriedItems} cycleId={cycle.id} />
 

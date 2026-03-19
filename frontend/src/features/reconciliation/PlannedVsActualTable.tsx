@@ -267,6 +267,9 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
                 onBlur={() => { void handleNotesBlur(); }}
                 required={isReasonRequired}
                 disabled={row.saving}
+                {...(row.status === 'PARTIALLY_COMPLETED' || row.status === 'NOT_STARTED'
+                  ? { placeholder: "Why didn't this complete? This information helps leadership understand blockers." }
+                  : {})}
               />
             )}
 
