@@ -1,15 +1,21 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useCommitments } from '@/hooks/useCommitments';
+import { useRcdoTree } from '@/hooks/useRcdo';
 import {
   useExecutiveHealth,
   useCarryChains,
   useCostImpact,
 } from '@/hooks/useObservatory';
+import { listCycles } from '@/api/cycles.api';
+import { getCommitments } from '@/api/commitments.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { UserRole } from '@/types';
+import type { RallyCryNode } from '@/types/rcdo.types';
 import type { Commitment } from '@/types/commitment.types';
 import type {
   RcdoCoverageResponse,
@@ -53,6 +59,12 @@ const STATUS_GLOW: Record<RallyCryStatus, string> = {
 
 // ─── Derived Types ───────────────────────────────────────────────────────────────
 
+interface CoveredObjectiveDetail {
+  definingObjectiveId: string;
+  title: string;
+  commitmentCount: number;
+}
+
 interface RallyCryCard {
   rallyCryId: string;
   title: string;
@@ -62,13 +74,17 @@ interface RallyCryCard {
   coveredObjectiveCount: number;
   totalObjectiveCount: number;
   uncoveredObjectives: { definingObjectiveId: string; title: string }[];
+  coveredObjectives: CoveredObjectiveDetail[];
   contributingTeams: string[];
+  sortOrder: number;
+  trendDirection: 'up' | 'down' | 'flat' | null;
 }
 
 interface WatchItem {
   id: string;
   message: string;
   severity: 'warning' | 'critical';
+  linkTo: string | null;
 }
 
 // ─── Data Processing ─────────────────────────────────────────────────────────────
@@ -77,6 +93,8 @@ function buildRallyCryCards(
   rcdo: RcdoCoverageResponse,
   commitments: Commitment[],
   totalHeadcount: number,
+  rcdoTree: RallyCryNode[] | undefined,
+  previousCommitments: Commitment[] | undefined,
 ): RallyCryCard[] {
   // Group commitments by rally cry
   const commitsByRC = new Map<string, Commitment[]>();
@@ -85,6 +103,34 @@ function buildRallyCryCards(
     if (!rcId) continue;
     if (!commitsByRC.has(rcId)) commitsByRC.set(rcId, []);
     commitsByRC.get(rcId)!.push(c);
+  }
+
+  // Group previous-cycle commitments by rally cry for trend comparison
+  const prevCommitsByRC = new Map<string, number>();
+  if (previousCommitments) {
+    for (const c of previousCommitments) {
+      const rcId = c.rcdoLink.rallyCryId;
+      if (!rcId) continue;
+      prevCommitsByRC.set(rcId, (prevCommitsByRC.get(rcId) ?? 0) + 1);
+    }
+  }
+
+  // Build sortOrder lookup from RCDO tree
+  const sortOrderMap = new Map<string, number>();
+  if (rcdoTree) {
+    for (const rc of rcdoTree) {
+      sortOrderMap.set(rc.id, rc.sortOrder);
+    }
+  }
+
+  // Build a lookup for defining objective titles from the RCDO tree
+  const doTitleMap = new Map<string, string>();
+  if (rcdoTree) {
+    for (const rc of rcdoTree) {
+      for (const dObj of rc.definingObjectives) {
+        doTitleMap.set(dObj.id, dObj.title);
+      }
+    }
   }
 
   // Group uncovered objectives by rally cry title
@@ -108,10 +154,29 @@ function buildRallyCryCards(
     }
     const contributingTeams = [...contributorNames];
 
-    // Count total objectives: covered + uncovered for this RC
-    const coveredCount = rcCommitments.length > 0
-      ? new Set(rcCommitments.map((c) => c.rcdoLink.definingObjectiveId).filter(Boolean)).size
-      : 0;
+    // Build covered objectives with commitment counts
+    const coveredObjectiveMap = new Map<string, { title: string; count: number }>();
+    for (const c of rcCommitments) {
+      const doId = c.rcdoLink.definingObjectiveId;
+      if (!doId) continue;
+      const existing = coveredObjectiveMap.get(doId);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        const title = c.rcdoLink.definingObjectiveTitle ?? doTitleMap.get(doId) ?? 'Unknown Objective';
+        coveredObjectiveMap.set(doId, { title, count: 1 });
+      }
+    }
+
+    const coveredObjectives: CoveredObjectiveDetail[] = [...coveredObjectiveMap.entries()].map(
+      ([doId, info]) => ({
+        definingObjectiveId: doId,
+        title: info.title,
+        commitmentCount: info.count,
+      }),
+    );
+
+    const coveredCount = coveredObjectives.length;
     const totalObjectiveCount = coveredCount + uncovered.length;
 
     // Determine status
@@ -138,6 +203,20 @@ function buildRallyCryCards(
       totalHeadcount,
     );
 
+    // Trend direction
+    let trendDirection: 'up' | 'down' | 'flat' | null = null;
+    if (previousCommitments) {
+      const prevCount = prevCommitsByRC.get(rc.rallyCryId) ?? 0;
+      const currCount = rc.commitmentCount;
+      if (currCount > prevCount) {
+        trendDirection = 'up';
+      } else if (currCount < prevCount) {
+        trendDirection = 'down';
+      } else {
+        trendDirection = 'flat';
+      }
+    }
+
     return {
       rallyCryId: rc.rallyCryId,
       title: rc.title,
@@ -147,7 +226,10 @@ function buildRallyCryCards(
       coveredObjectiveCount: coveredCount,
       totalObjectiveCount,
       uncoveredObjectives: uncovered,
+      coveredObjectives,
       contributingTeams,
+      sortOrder: sortOrderMap.get(rc.rallyCryId) ?? 999,
+      trendDirection,
     };
   });
 }
@@ -200,6 +282,7 @@ function buildWatchList(
         id: `unlinked-${m.userId}`,
         message: `${m.displayName} has ${String(m.unlinkedCount)} commitment${m.unlinkedCount === 1 ? '' : 's'} with no rally cry linkage`,
         severity: 'warning',
+        linkTo: `/observatory/team/${m.userId}`,
       });
     }
   }
@@ -212,6 +295,7 @@ function buildWatchList(
         id: `carry-${chain.commitmentId}`,
         message: `"${chain.title}" carried forward ${String(chain.chainLength)} weeks by ${chain.userDisplayName} (since ${chain.originCycleLabel})`,
         severity: chain.chainLength > 4 ? 'critical' : 'warning',
+        linkTo: `/observatory/team/${chain.userId}`,
       });
     }
   }
@@ -228,6 +312,7 @@ function buildWatchList(
         id: `cost-${signal.userId}`,
         message: `${signal.displayName} (${signal.costBandName}): ${String(Math.round(cost))}h equivalent misalignment cost from non-strategic work`,
         severity: cost > 20 ? 'critical' : 'warning',
+        linkTo: `/observatory/team/${signal.userId}`,
       });
     }
   }
@@ -242,6 +327,7 @@ function buildWatchList(
         id: `decline-${unit.managerId}`,
         message: `${unit.managerName}'s team declining for ${String(unit.weeksTrending)} consecutive weeks (${String(Math.round(unit.strategicAlignmentPct))}% strategic alignment)`,
         severity: unit.weeksTrending >= 4 ? 'critical' : 'warning',
+        linkTo: `/observatory/team/${unit.managerId}`,
       });
     }
   }
@@ -300,6 +386,36 @@ function StatusBadge({ status }: { status: RallyCryStatus }) {
     </span>
   );
 }
+
+function ObjectiveProgressBar({
+  covered,
+  total,
+}: {
+  covered: number;
+  total: number;
+}) {
+  if (total === 0) return null;
+  const pct = Math.round((covered / total) * 100);
+  return (
+    <div className="flex items-center gap-2 mt-2">
+      <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+        <div
+          className="h-full bg-green-500 rounded-full transition-all duration-500"
+          style={{ width: `${String(pct)}%` }}
+        />
+      </div>
+      <span className="text-xs text-gray-500 tabular-nums whitespace-nowrap">
+        {String(pct)}%
+      </span>
+    </div>
+  );
+}
+
+const TREND_INDICATOR: Record<'up' | 'down' | 'flat', { symbol: string; color: string }> = {
+  up: { symbol: '\u2191', color: 'text-green-400' },
+  down: { symbol: '\u2193', color: 'text-red-400' },
+  flat: { symbol: '\u2192', color: 'text-gray-500' },
+};
 
 function RallyCryStatusCard({
   card,
@@ -360,8 +476,28 @@ function RallyCryStatusCard({
             {String(card.commitmentCount)}
           </span>{' '}
           commitment{card.commitmentCount === 1 ? '' : 's'}
+          {card.trendDirection !== null && (
+            <span
+              className={`ml-1 ${TREND_INDICATOR[card.trendDirection].color}`}
+              title={
+                card.trendDirection === 'up'
+                  ? 'Up from previous cycle'
+                  : card.trendDirection === 'down'
+                    ? 'Down from previous cycle'
+                    : 'Same as previous cycle'
+              }
+            >
+              {TREND_INDICATOR[card.trendDirection].symbol}
+            </span>
+          )}
         </span>
       </div>
+
+      {/* Inline progress bar */}
+      <ObjectiveProgressBar
+        covered={card.coveredObjectiveCount}
+        total={card.totalObjectiveCount}
+      />
 
       {/* Expandable objective breakdown */}
       {card.totalObjectiveCount > 0 && (
@@ -390,6 +526,27 @@ function RallyCryStatusCard({
 
           {expanded && (
             <div className="mt-3 space-y-2 animate-briefing-fade-in">
+              {card.coveredObjectives.length > 0 && (
+                <div>
+                  <p className="text-xs font-semibold text-green-400 mb-1.5 uppercase tracking-wider">
+                    Covered ({String(card.coveredObjectiveCount)})
+                  </p>
+                  {card.coveredObjectives.map((obj) => (
+                    <div
+                      key={obj.definingObjectiveId}
+                      className="flex items-center justify-between gap-2 py-1 text-sm text-gray-400"
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500/60 flex-shrink-0" />
+                        {obj.title}
+                      </span>
+                      <span className="text-xs text-gray-600 whitespace-nowrap">
+                        {String(obj.commitmentCount)} commitment{obj.commitmentCount === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               {card.uncoveredObjectives.length > 0 && (
                 <div>
                   <p className="text-xs font-semibold text-red-400 mb-1.5 uppercase tracking-wider">
@@ -404,17 +561,6 @@ function RallyCryStatusCard({
                       {obj.title}
                     </div>
                   ))}
-                </div>
-              )}
-              {card.coveredObjectiveCount > 0 && (
-                <div>
-                  <p className="text-xs font-semibold text-green-400 mb-1.5 uppercase tracking-wider">
-                    Covered ({String(card.coveredObjectiveCount)})
-                  </p>
-                  <p className="text-xs text-gray-600">
-                    {String(card.coveredObjectiveCount)} objective{card.coveredObjectiveCount === 1 ? '' : 's'} with
-                    active commitments this cycle.
-                  </p>
                 </div>
               )}
             </div>
@@ -443,9 +589,18 @@ function WatchList({ items }: { items: WatchItem[] }) {
                   item.severity === 'critical' ? 'bg-red-500' : 'bg-amber-500'
                 }`}
               />
-              <span className="text-sm text-gray-400 leading-relaxed">
-                {item.message}
-              </span>
+              {item.linkTo ? (
+                <Link
+                  to={item.linkTo}
+                  className="text-sm text-gray-400 leading-relaxed hover:underline hover:text-gray-200 transition-colors"
+                >
+                  {item.message}
+                </Link>
+              ) : (
+                <span className="text-sm text-gray-400 leading-relaxed">
+                  {item.message}
+                </span>
+              )}
             </li>
           ))}
         </ul>
@@ -467,9 +622,37 @@ export function BriefingPage() {
     includeSubtree: true,
   });
   const { data: commitments, isLoading: commitmentsLoading } = useCommitments(cycleId);
+  const { data: rcdoTree } = useRcdoTree();
   const { data: health } = useExecutiveHealth(6);
   const { data: carryChains } = useCarryChains(cycleId);
   const { data: costSignals } = useCostImpact(cycleId);
+
+  // Fetch previous cycle for trend comparison
+  const { data: previousCycleData } = useQuery({
+    queryKey: ['cycles', 'previous', cycle?.startsAt],
+    queryFn: async () => {
+      if (!cycle?.startsAt) return null;
+      const result = await listCycles({
+        dateTo: cycle.startsAt,
+      });
+      // The current cycle may appear in results — filter it out and take the most recent
+      const previous = result.items
+        .filter((c: { id: string }) => c.id !== cycle.id)
+        .sort((a: { startsAt: string }, b: { startsAt: string }) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime());
+      return previous[0] ?? null;
+    },
+    staleTime: 5 * 60_000,
+    enabled: Boolean(cycle?.startsAt),
+  });
+
+  const previousCycleId = previousCycleData?.id ?? '';
+
+  const { data: previousCommitments } = useQuery({
+    queryKey: ['commitments', 'previous', previousCycleId],
+    queryFn: () => getCommitments(previousCycleId),
+    staleTime: 5 * 60_000,
+    enabled: Boolean(previousCycleId),
+  });
 
   const isLoading = cycleLoading || dashLoading || commitmentsLoading;
 
@@ -501,15 +684,20 @@ export function BriefingPage() {
     );
   }
 
-  // Derive rally cry cards
+  // Derive rally cry cards — sorted by RCDO tree sortOrder
   const rallyCryCards = useMemo(() => {
     if (!dashboard?.rcdoCoverage || !commitments) return [];
     const headcount = dashboard.teamRollup?.members?.length ?? 0;
-    const cards = buildRallyCryCards(dashboard.rcdoCoverage, commitments, headcount);
-    // Sort: OFF_TRACK first, then AT_RISK, then ON_TRACK
-    const order: Record<RallyCryStatus, number> = { OFF_TRACK: 0, AT_RISK: 1, ON_TRACK: 2 };
-    return cards.sort((a, b) => order[a.status] - order[b.status]);
-  }, [dashboard, commitments]);
+    const cards = buildRallyCryCards(
+      dashboard.rcdoCoverage,
+      commitments,
+      headcount,
+      rcdoTree?.rallyCries,
+      previousCommitments,
+    );
+    // Sort by executive-defined sortOrder from RCDO tree
+    return cards.sort((a, b) => a.sortOrder - b.sortOrder);
+  }, [dashboard, commitments, rcdoTree, previousCommitments]);
 
   // Derive headline counts
   const onTrackCount = rallyCryCards.filter((c) => c.status === 'ON_TRACK').length;
