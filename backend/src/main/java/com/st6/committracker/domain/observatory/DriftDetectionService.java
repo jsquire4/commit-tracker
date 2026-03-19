@@ -1,5 +1,6 @@
 package com.st6.committracker.domain.observatory;
 
+import com.st6.committracker.domain.CycleState;
 import com.st6.committracker.domain.UserRole;
 import com.st6.committracker.domain.commit.Commitment;
 import com.st6.committracker.domain.commit.CommitmentRepository;
@@ -175,6 +176,19 @@ public class DriftDetectionService {
      * @return IntegrityReport containing all detected flags
      */
     public IntegrityReport detectSignalIntegrity(UUID orgId, UUID cycleId) {
+        // Resolve null cycleId to most recent RECONCILED cycle
+        UUID resolvedCycleId = cycleId;
+        if (resolvedCycleId == null) {
+            resolvedCycleId = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId).stream()
+                    .filter(c -> c.getState() == CycleState.RECONCILED)
+                    .findFirst()
+                    .map(Cycle::getId)
+                    .orElse(null);
+        }
+        if (resolvedCycleId == null) {
+            return new IntegrityReport(List.of());
+        }
+
         ObservatoryConfig config = configRepository.findByOrgId(orgId)
                 .orElseGet(() -> {
                     Org org = orgRepository.findById(orgId)
@@ -194,7 +208,7 @@ public class DriftDetectionService {
             allUserIds.add(manager.getId());
 
             List<Commitment> teamCommitments =
-                    commitmentRepository.findByUserIdInAndCycleId(allUserIds, cycleId);
+                    commitmentRepository.findByUserIdInAndCycleId(allUserIds, resolvedCycleId);
 
             // ── UNIFORM_CATEGORIZATION ────────────────────────────────────────
             detectUniformCategorization(manager, teamCommitments, config, flags);
@@ -247,8 +261,10 @@ public class DriftDetectionService {
         List<RallyCry> rallyCries =
                 rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
 
-        // Load recent cycles ordered newest-first; we need at most driftStructuralWeeks cycles.
-        List<Cycle> allCycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+        // Load recent RECONCILED cycles ordered newest-first; we need at most driftStructuralWeeks cycles.
+        List<Cycle> allCycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId).stream()
+                .filter(c -> c.getState() == CycleState.RECONCILED)
+                .toList();
         int maxLookback = config.getDriftStructuralWeeks();
         List<Cycle> lookbackCycles = allCycles.size() > maxLookback
                 ? allCycles.subList(0, maxLookback)

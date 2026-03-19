@@ -1,5 +1,6 @@
 package com.st6.committracker.domain.observatory;
 
+import com.st6.committracker.domain.CycleState;
 import com.st6.committracker.domain.ReconciliationStatus;
 import com.st6.committracker.domain.commit.Commitment;
 import com.st6.committracker.domain.commit.CommitmentRepository;
@@ -340,11 +341,16 @@ public class AnalyticsService {
     // ===== Internal helpers =====
 
     /**
-     * Returns the most-recent {@code limit} cycles for the org, fetched in descending order.
+     * Returns the most-recent {@code limit} RECONCILED cycles for the org,
+     * fetched in descending order. Only reconciled cycles have meaningful data
+     * for analytics — DRAFT and in-progress cycles are excluded.
      */
     private List<Cycle> latestCycles(UUID orgId, int limit) {
         List<Cycle> all = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
-        return all.size() <= limit ? all : all.subList(0, limit);
+        List<Cycle> reconciled = all.stream()
+                .filter(c -> c.getState() == CycleState.RECONCILED)
+                .toList();
+        return reconciled.size() <= limit ? reconciled : reconciled.subList(0, limit);
     }
 
     /**
