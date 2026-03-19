@@ -33,7 +33,11 @@ export async function getAlignmentTrend(
   const params: Record<string, unknown> = {};
   if (weekCount !== undefined) params.weekCount = weekCount;
   if (managerId !== undefined) params.managerId = managerId;
-  return fetchData<AlignmentDataPoint[]>(`${BASE}/alignment-trend`, Object.keys(params).length > 0 ? params : undefined);
+  const raw = await fetchData<AlignmentDataPoint[] | { dataPoints: AlignmentDataPoint[] }>(`${BASE}/alignment-trend`, Object.keys(params).length > 0 ? params : undefined);
+  // When managerId is set, backend returns TeamAlignmentTrend { dataPoints: [...] }
+  // When no managerId, backend returns AlignmentDataPoint[] directly
+  if (Array.isArray(raw)) return raw;
+  return (raw as { dataPoints: AlignmentDataPoint[] }).dataPoints ?? [];
 }
 
 export async function getCompletionTrend(
