@@ -28,6 +28,7 @@ export function Layout({ children }: LayoutProps) {
     ...(isLeader ? [
       { to: '/observatory', label: 'Observatory' },
       { to: '/briefing', label: 'Briefing' },
+      { to: '/strategy', label: 'Strategy' },
     ] : []),
   ];
 

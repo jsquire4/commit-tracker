@@ -20,6 +20,7 @@ const MyTeamPage = lazy(() => import('./features/team/MyTeamPage').then(m => ({ 
 // Executive views
 const ExecutiveHealthPage = lazy(() => import('./features/observatory/ExecutiveHealthPage').then(m => ({ default: m.ExecutiveHealthPage })));
 const BriefingPage = lazy(() => import('./features/briefing/BriefingPage').then(m => ({ default: m.BriefingPage })));
+const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
 const TeamDrillDown = lazy(() => import('./features/observatory/TeamDrillDown').then(m => ({ default: m.TeamDrillDown })));
 const ObservatoryConfigPage = lazy(() => import('./features/observatory/ObservatoryConfigPage').then(m => ({ default: m.ObservatoryConfigPage })));
 const PortfolioPage = lazy(() => import('./features/observatory/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
@@ -79,6 +80,7 @@ export default function App({ basename, authContext }: AppProps) {
                   {/* Executive views */}
                   <Route path="/observatory" element={<ExecutiveHealthPage />} />
                   <Route path="/briefing" element={<BriefingPage />} />
+                  <Route path="/strategy" element={<StrategyPage />} />
                   <Route path="/observatory/team/:managerId" element={<TeamDrillDown />} />
                   <Route path="/observatory/config" element={<ObservatoryConfigPage />} />
                   <Route path="/observatory/portfolio" element={<PortfolioPage />} />

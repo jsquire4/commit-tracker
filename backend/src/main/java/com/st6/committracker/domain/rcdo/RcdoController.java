@@ -1,5 +1,7 @@
 package com.st6.committracker.domain.rcdo;
 
+import com.st6.committracker.domain.rcdo.dto.CreateDefiningObjectiveRequest;
+import com.st6.committracker.domain.rcdo.dto.CreateOutcomeRequest;
 import com.st6.committracker.domain.rcdo.dto.CreateRallyCryRequest;
 import com.st6.committracker.domain.rcdo.dto.RallyCryResponse;
 import com.st6.committracker.domain.rcdo.dto.RcdoTreeResponse;
@@ -72,6 +74,38 @@ public class RcdoController {
                 .toUri();
 
         return ResponseEntity.created(location).body(ApiResponse.of(response));
+    }
+
+    @PostMapping("/defining-objectives")
+    public ResponseEntity<ApiResponse<Object>> createDefiningObjective(
+            @Valid @RequestBody CreateDefiningObjectiveRequest request) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        DefiningObjective saved = rcdoService.createDefiningObjective(
+                actor.getOrg().getId(), request.rallyCryId(),
+                request.title(), request.description(), request.ownerUserId(), actor);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/../defining-objectives/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(ApiResponse.of(saved));
+    }
+
+    @PostMapping("/outcomes")
+    public ResponseEntity<ApiResponse<Object>> createOutcome(
+            @Valid @RequestBody CreateOutcomeRequest request) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        Outcome saved = rcdoService.createOutcome(
+                actor.getOrg().getId(), request.definingObjectiveId(),
+                request.title(), request.description(), request.ownerUserId(), actor);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/../outcomes/{id}")
+                .buildAndExpand(saved.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(ApiResponse.of(saved));
     }
 
     /**
