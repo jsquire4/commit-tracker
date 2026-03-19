@@ -2,6 +2,8 @@ package com.st6.committracker.config;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.PlainJWT;
+import com.st6.committracker.domain.commit.ChessCategory;
+import com.st6.committracker.domain.commit.ChessCategoryRepository;
 import com.st6.committracker.domain.user.AppUser;
 import com.st6.committracker.domain.user.AppUserRepository;
 import com.st6.committracker.shared.ApiResponse;
@@ -28,9 +30,11 @@ import java.util.UUID;
 public class DevController {
 
     private final AppUserRepository userRepository;
+    private final ChessCategoryRepository chessCategoryRepository;
 
-    public DevController(AppUserRepository userRepository) {
+    public DevController(AppUserRepository userRepository, ChessCategoryRepository chessCategoryRepository) {
         this.userRepository = userRepository;
+        this.chessCategoryRepository = chessCategoryRepository;
     }
 
     /**
@@ -73,6 +77,21 @@ public class DevController {
                 })
                 .orElse(ResponseEntity.notFound().<ApiResponse<Map<String, String>>>build());
     }
+
+    /**
+     * GET /api/dev/chess-categories
+     * Returns all chess categories across all orgs.
+     */
+    @GetMapping("/chess-categories")
+    public ApiResponse<List<DevChessCategoryDto>> listChessCategories() {
+        List<ChessCategory> categories = chessCategoryRepository.findAll();
+        List<DevChessCategoryDto> dtos = categories.stream()
+                .map(c -> new DevChessCategoryDto(c.getId(), c.getName(), c.getOrg().getId()))
+                .toList();
+        return ApiResponse.of(dtos);
+    }
+
+    public record DevChessCategoryDto(UUID id, String name, UUID orgId) {}
 
     public record DevUserDto(
             UUID id,
