@@ -6,25 +6,19 @@ interface LayoutProps {
   children: ReactNode;
 }
 
-const OBSERVATORY_ROLES = new Set(['DIRECTOR', 'VP', 'EXECUTIVE']);
-
-const BASE_NAV_ITEMS = [
-  { to: '/', label: 'Commitments' },
-  { to: '/cycle', label: 'Lifecycle' },
-  { to: '/reconciliation', label: 'Reconciliation' },
-  { to: '/dashboard', label: 'Dashboard' },
-  { to: '/chessboard', label: 'Chessboard' },
-];
+const LEADERSHIP_ROLES = new Set(['DIRECTOR', 'VP', 'EXECUTIVE']);
+const MANAGER_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
 
 export function Layout({ children }: LayoutProps) {
-  // AuthContext may not be available if Layout is rendered outside the provider;
-  // use useContext directly so we can handle a null context gracefully.
   const auth = useContext(AuthContext);
-  const showObservatory = auth?.role != null && OBSERVATORY_ROLES.has(auth.role);
+  const isLeader = auth?.role != null && LEADERSHIP_ROLES.has(auth.role);
+  const isManager = auth?.role != null && MANAGER_ROLES.has(auth.role);
 
-  const navItems = showObservatory
-    ? [{ to: '/observatory', label: 'Observatory' }, ...BASE_NAV_ITEMS]
-    : BASE_NAV_ITEMS;
+  const navItems = [
+    { to: '/', label: 'This Week' },
+    ...(isManager ? [{ to: '/team', label: 'My Team' }] : []),
+    ...(isLeader ? [{ to: '/briefing', label: 'Briefing' }] : []),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
