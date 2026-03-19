@@ -15,10 +15,20 @@ export function Layout({ children }: LayoutProps) {
   const isManager = auth?.role != null && MANAGER_ROLES.has(auth.role);
 
   const navItems = [
-    { to: '/', label: 'This Week' },
+    // Core workflow — everyone
+    { to: '/', label: 'Commitments' },
+    { to: '/cycle', label: 'Lifecycle' },
     { to: '/reconciliation', label: 'Reconciliation' },
-    ...(isManager ? [{ to: '/team', label: 'My Team' }] : []),
-    ...(isLeader ? [{ to: '/briefing', label: 'Briefing' }] : []),
+    // Manager views
+    ...(isManager ? [
+      { to: '/dashboard', label: 'Dashboard' },
+      { to: '/team', label: 'My Team' },
+    ] : []),
+    // Executive views
+    ...(isLeader ? [
+      { to: '/observatory', label: 'Observatory' },
+      { to: '/briefing', label: 'Briefing' },
+    ] : []),
   ];
 
   return (

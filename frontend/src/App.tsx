@@ -8,13 +8,18 @@ import { setTokenProvider } from './api/client';
 import { AuthContext as AuthCtx } from './hooks/useAuth';
 import type { AuthContextValue } from './hooks/useAuth';
 
-// Primary navigation pages
-const ThisWeekPage = lazy(() => import('./features/this-week/ThisWeekPage').then(m => ({ default: m.ThisWeekPage })));
-const MyTeamPage = lazy(() => import('./features/team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
-const BriefingPage = lazy(() => import('./features/briefing/BriefingPage').then(m => ({ default: m.BriefingPage })));
-
-// Drill-down and secondary pages
+// Core workflow pages
+const CommitEntryPage = lazy(() => import('./features/commit-entry/CommitEntryPage').then(m => ({ default: m.CommitEntryPage })));
+const WeeklyLifecyclePage = lazy(() => import('./features/weekly-lifecycle/WeeklyLifecyclePage').then(m => ({ default: m.WeeklyLifecyclePage })));
 const ReconciliationPage = lazy(() => import('./features/reconciliation/ReconciliationPage').then(m => ({ default: m.ReconciliationPage })));
+
+// Manager views
+const ManagerDashboardPage = lazy(() => import('./features/manager-dashboard/ManagerDashboardPage').then(m => ({ default: m.ManagerDashboardPage })));
+const MyTeamPage = lazy(() => import('./features/team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
+
+// Executive views
+const ExecutiveHealthPage = lazy(() => import('./features/observatory/ExecutiveHealthPage').then(m => ({ default: m.ExecutiveHealthPage })));
+const BriefingPage = lazy(() => import('./features/briefing/BriefingPage').then(m => ({ default: m.BriefingPage })));
 const TeamDrillDown = lazy(() => import('./features/observatory/TeamDrillDown').then(m => ({ default: m.TeamDrillDown })));
 const ObservatoryConfigPage = lazy(() => import('./features/observatory/ObservatoryConfigPage').then(m => ({ default: m.ObservatoryConfigPage })));
 const PortfolioPage = lazy(() => import('./features/observatory/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
@@ -61,14 +66,19 @@ export default function App({ basename, authContext }: AppProps) {
             <Layout>
               <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
                 <Routes>
-                  {/* Primary navigation */}
-                  <Route path="/" element={<ThisWeekPage />} />
-                  <Route path="/team" element={<MyTeamPage />} />
-                  <Route path="/briefing" element={<BriefingPage />} />
-
-                  {/* Workflow pages */}
+                  {/* Core workflow — everyone */}
+                  <Route path="/" element={<CommitEntryPage />} />
+                  <Route path="/cycle" element={<WeeklyLifecyclePage />} />
                   <Route path="/reconciliation" element={<ReconciliationPage />} />
                   <Route path="/reconciliation/:cycleId" element={<ReconciliationPage />} />
+
+                  {/* Manager views */}
+                  <Route path="/dashboard" element={<ManagerDashboardPage />} />
+                  <Route path="/team" element={<MyTeamPage />} />
+
+                  {/* Executive views */}
+                  <Route path="/observatory" element={<ExecutiveHealthPage />} />
+                  <Route path="/briefing" element={<BriefingPage />} />
                   <Route path="/observatory/team/:managerId" element={<TeamDrillDown />} />
                   <Route path="/observatory/config" element={<ObservatoryConfigPage />} />
                   <Route path="/observatory/portfolio" element={<PortfolioPage />} />
