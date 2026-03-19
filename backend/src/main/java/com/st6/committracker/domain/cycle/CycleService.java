@@ -82,6 +82,13 @@ public class CycleService {
         String timezone = org.getTimezone() != null ? org.getTimezone() : "UTC";
         Instant now = Instant.now();
         Instant weekStart = computeWeekStart(now, timezone);
+
+        // Check if a cycle already exists for this week (may be RECONCILED or another state)
+        Optional<Cycle> existingForWeek = cycleRepository.findByOrgIdAndStartsAt(org.getId(), weekStart);
+        if (existingForWeek.isPresent()) {
+            return existingForWeek.get();
+        }
+
         Instant weekEnd = computeWeekEnd(weekStart);
         String label = computeLabel(weekStart, timezone);
 
