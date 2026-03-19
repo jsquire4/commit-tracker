@@ -90,7 +90,7 @@ function rallyCryColor(label: string): string {
   for (let i = 0; i < label.length; i++) {
     hash = (hash * 31 + label.charCodeAt(i)) | 0;
   }
-  return colors[Math.abs(hash) % colors.length] as string;
+  return colors[Math.abs(hash) % colors.length]!;
 }
 
 const RECON_STATUS_LABEL: Record<ReconciliationStatus, string> = {
@@ -194,7 +194,7 @@ function PersonCard({ member, commitments }: PersonCardProps) {
       {/* Expanded commitment list */}
       <div
         className="overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ maxHeight: expanded ? `${commitments.length * 64 + 16}px` : '0px' }}
+        style={{ maxHeight: expanded ? '2000px' : '0px' }}
       >
         <ul className="mt-3 space-y-2">
           {commitments.map((c) => (
@@ -244,7 +244,7 @@ function TeamOverview({
         Your team: {memberCount} people, {totalCommitments} commitment{totalCommitments !== 1 ? 's' : ''} this week
       </h2>
       <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1 text-sm text-gray-400">
-        <span>{linkedPercentage}% linked to a rally cry</span>
+        <span>{Math.round(linkedPercentage)}% linked to a rally cry</span>
         <span>{carriedCount} carried forward</span>
       </div>
     </div>
@@ -262,14 +262,14 @@ function AssignmentPatterns({
         Assignment Patterns
       </h2>
       <p className="text-sm text-gray-400">
-        You assigned {attribution.managerAssignedPercentage}% of work this week.{' '}
-        {attribution.selfDirectedPercentage}% was self-directed.
+        You assigned {Math.round(attribution.managerAssignedPercentage)}% of work this week.{' '}
+        {Math.round(attribution.selfDirectedPercentage)}% was self-directed.
       </p>
       {(attribution.concentrationRisks ?? []).length > 0 && (
         <div className="mt-2 space-y-1">
           {attribution.concentrationRisks.map((risk) => (
             <p key={risk.assignedToUserId} className="text-sm text-amber-400">
-              {risk.assignedToName} received {risk.percentageOfTotal}% of all assignments.
+              {risk.assignedToName} received {Math.round(risk.percentageOfTotal)}% of all assignments.
             </p>
           ))}
         </div>

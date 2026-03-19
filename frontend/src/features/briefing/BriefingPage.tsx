@@ -459,7 +459,21 @@ function WatchList({ items }: { items: WatchItem[] }) {
 export function BriefingPage() {
   const { role } = useAuth();
 
-  // Role guard
+  // All hooks must be called unconditionally (React rules of hooks)
+  const { data: cycle, isLoading: cycleLoading } = useCurrentCycle();
+  const cycleId = cycle?.id ?? '';
+
+  const { data: dashboard, isLoading: dashLoading } = useDashboard({
+    includeSubtree: true,
+  });
+  const { data: commitments, isLoading: commitmentsLoading } = useCommitments(cycleId);
+  const { data: health } = useExecutiveHealth(6);
+  const { data: carryChains } = useCarryChains(cycleId);
+  const { data: costSignals } = useCostImpact(cycleId);
+
+  const isLoading = cycleLoading || dashLoading || commitmentsLoading;
+
+  // Role guard (after hooks)
   if (!role || !ALLOWED_ROLES.includes(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 gap-4 text-center p-8">
@@ -486,19 +500,6 @@ export function BriefingPage() {
       </div>
     );
   }
-
-  const { data: cycle, isLoading: cycleLoading } = useCurrentCycle();
-  const cycleId = cycle?.id ?? '';
-
-  const { data: dashboard, isLoading: dashLoading } = useDashboard({
-    includeSubtree: true,
-  });
-  const { data: commitments, isLoading: commitmentsLoading } = useCommitments(cycleId);
-  const { data: health } = useExecutiveHealth(6);
-  const { data: carryChains } = useCarryChains(cycleId);
-  const { data: costSignals } = useCostImpact(cycleId);
-
-  const isLoading = cycleLoading || dashLoading || commitmentsLoading;
 
   // Derive rally cry cards
   const rallyCryCards = useMemo(() => {
