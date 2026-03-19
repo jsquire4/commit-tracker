@@ -16,6 +16,7 @@ export function Layout({ children }: LayoutProps) {
 
   const navItems = [
     { to: '/', label: 'This Week' },
+    { to: '/reconciliation', label: 'Reconciliation' },
     ...(isManager ? [{ to: '/team', label: 'My Team' }] : []),
     ...(isLeader ? [{ to: '/briefing', label: 'Briefing' }] : []),
   ];

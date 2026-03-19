@@ -66,7 +66,8 @@ export default function App({ basename, authContext }: AppProps) {
                   <Route path="/team" element={<MyTeamPage />} />
                   <Route path="/briefing" element={<BriefingPage />} />
 
-                  {/* Drill-down and secondary */}
+                  {/* Workflow pages */}
+                  <Route path="/reconciliation" element={<ReconciliationPage />} />
                   <Route path="/reconciliation/:cycleId" element={<ReconciliationPage />} />
                   <Route path="/observatory/team/:managerId" element={<TeamDrillDown />} />
                   <Route path="/observatory/config" element={<ObservatoryConfigPage />} />
