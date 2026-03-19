@@ -15,21 +15,9 @@ export function Layout({ children }: LayoutProps) {
   const isManager = auth?.role != null && MANAGER_ROLES.has(auth.role);
 
   const navItems = [
-    // Core workflow — everyone
-    { to: '/', label: 'Commitments' },
-    { to: '/cycle', label: 'Lifecycle' },
-    { to: '/reconciliation', label: 'Reconciliation' },
-    // Manager views
-    ...(isManager ? [
-      { to: '/dashboard', label: 'Dashboard' },
-      { to: '/team', label: 'My Team' },
-    ] : []),
-    // Executive views
-    ...(isLeader ? [
-      { to: '/observatory', label: 'Observatory' },
-      { to: '/briefing', label: 'Briefing' },
-      { to: '/strategy', label: 'Strategy' },
-    ] : []),
+    { to: '/', label: 'My Week' },
+    ...(isManager ? [{ to: '/team', label: 'My Team' }] : []),
+    ...(isLeader ? [{ to: '/briefing', label: 'Briefing' }] : []),
   ];
 
   return (
@@ -38,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-xl font-bold shrink-0 text-gradient from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">ST6</h1>
-            <div className="flex items-center gap-1 overflow-x-auto">
+            <div className="flex items-center gap-1">
               {navItems.map(({ to, label }) => (
                 <NavLink
                   key={to}
@@ -46,7 +34,7 @@ export function Layout({ children }: LayoutProps) {
                   end={to === '/'}
                   className={({ isActive }) =>
                     [
-                      'px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200',
+                      'px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200',
                       isActive
                         ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
                         : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',

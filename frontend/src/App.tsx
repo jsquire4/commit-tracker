@@ -1,5 +1,5 @@
 import { lazy, Suspense, useMemo } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
@@ -8,22 +8,10 @@ import { setTokenProvider } from './api/client';
 import { AuthContext as AuthCtx } from './hooks/useAuth';
 import type { AuthContextValue } from './hooks/useAuth';
 
-// Core workflow pages
-const CommitEntryPage = lazy(() => import('./features/commit-entry/CommitEntryPage').then(m => ({ default: m.CommitEntryPage })));
-const WeeklyLifecyclePage = lazy(() => import('./features/weekly-lifecycle/WeeklyLifecyclePage').then(m => ({ default: m.WeeklyLifecyclePage })));
-const ReconciliationPage = lazy(() => import('./features/reconciliation/ReconciliationPage').then(m => ({ default: m.ReconciliationPage })));
-
-// Manager views
-const ManagerDashboardPage = lazy(() => import('./features/manager-dashboard/ManagerDashboardPage').then(m => ({ default: m.ManagerDashboardPage })));
-const MyTeamPage = lazy(() => import('./features/team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
-
-// Executive views
-const ExecutiveHealthPage = lazy(() => import('./features/observatory/ExecutiveHealthPage').then(m => ({ default: m.ExecutiveHealthPage })));
-const BriefingPage = lazy(() => import('./features/briefing/BriefingPage').then(m => ({ default: m.BriefingPage })));
-const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
-const TeamDrillDown = lazy(() => import('./features/observatory/TeamDrillDown').then(m => ({ default: m.TeamDrillDown })));
-const ObservatoryConfigPage = lazy(() => import('./features/observatory/ObservatoryConfigPage').then(m => ({ default: m.ObservatoryConfigPage })));
-const PortfolioPage = lazy(() => import('./features/observatory/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+// 3-view architecture
+const MyWeekPage = lazy(() => import('./features/my-week/MyWeekPage').then(m => ({ default: m.MyWeekPage })));
+const MyTeamPage = lazy(() => import('./features/my-team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
+const BriefingView = lazy(() => import('./features/briefing/BriefingView').then(m => ({ default: m.BriefingView })));
 
 export interface AuthContext {
   token: string;
@@ -67,23 +55,21 @@ export default function App({ basename, authContext }: AppProps) {
             <Layout>
               <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
                 <Routes>
-                  {/* Core workflow — everyone */}
-                  <Route path="/" element={<CommitEntryPage />} />
-                  <Route path="/cycle" element={<WeeklyLifecyclePage />} />
-                  <Route path="/reconciliation" element={<ReconciliationPage />} />
-                  <Route path="/reconciliation/:cycleId" element={<ReconciliationPage />} />
-
-                  {/* Manager views */}
-                  <Route path="/dashboard" element={<ManagerDashboardPage />} />
+                  {/* 3-view architecture */}
+                  <Route path="/" element={<MyWeekPage />} />
                   <Route path="/team" element={<MyTeamPage />} />
+                  <Route path="/briefing" element={<BriefingView />} />
 
-                  {/* Executive views */}
-                  <Route path="/observatory" element={<ExecutiveHealthPage />} />
-                  <Route path="/briefing" element={<BriefingPage />} />
-                  <Route path="/strategy" element={<StrategyPage />} />
-                  <Route path="/observatory/team/:managerId" element={<TeamDrillDown />} />
-                  <Route path="/observatory/config" element={<ObservatoryConfigPage />} />
-                  <Route path="/observatory/portfolio" element={<PortfolioPage />} />
+                  {/* Backward-compat redirects */}
+                  <Route path="/cycle" element={<Navigate to="/" replace />} />
+                  <Route path="/reconciliation" element={<Navigate to="/" replace />} />
+                  <Route path="/reconciliation/:cycleId" element={<Navigate to="/" replace />} />
+                  <Route path="/dashboard" element={<Navigate to="/team" replace />} />
+                  <Route path="/observatory" element={<Navigate to="/briefing" replace />} />
+                  <Route path="/observatory/team/:managerId" element={<Navigate to="/briefing" replace />} />
+                  <Route path="/observatory/config" element={<Navigate to="/briefing?mode=config" replace />} />
+                  <Route path="/observatory/portfolio" element={<Navigate to="/briefing" replace />} />
+                  <Route path="/strategy" element={<Navigate to="/briefing?mode=strategy" replace />} />
                 </Routes>
               </Suspense>
             </Layout>

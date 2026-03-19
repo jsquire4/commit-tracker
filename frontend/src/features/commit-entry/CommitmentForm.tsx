@@ -13,7 +13,7 @@ import { HorizonSelector } from './HorizonSelector';
 import { CategorySelector } from './CategorySelector';
 import { AssignmentAttribution } from './AssignmentAttribution';
 import { TaskBulletEditor } from './TaskBulletEditor';
-import { RcdoAutocomplete } from './RcdoAutocomplete';
+import { StrategyLinker } from '@/features/shared/StrategyLinker';
 import type { CompletionHorizon, ChessCategoryType } from '@/types';
 
 type FormValues = z.infer<typeof CreateCommitmentFormSchema>;
@@ -132,11 +132,11 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
   const rcdoValue = useWatch({ control, name: ['rallyCryId', 'definingObjectiveId', 'outcomeId'] });
   const rcdoLink = {
     rallyCryId: rcdoValue[0] ?? null,
-    rallyCryTitle: null,
+    rallyCryTitle: existingCommitment?.rcdoLink.rallyCryTitle ?? null,
     definingObjectiveId: rcdoValue[1] ?? null,
-    definingObjectiveTitle: null,
+    definingObjectiveTitle: existingCommitment?.rcdoLink.definingObjectiveTitle ?? null,
     outcomeId: rcdoValue[2] ?? null,
-    outcomeTitle: null,
+    outcomeTitle: existingCommitment?.rcdoLink.outcomeTitle ?? null,
   };
 
   const apiError =
@@ -214,11 +214,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                 </div>
 
                 {/* RCDO Link */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Strategic Link
-                  </label>
-                  <RcdoAutocomplete
+                <div className="relative">
+                  <StrategyLinker
                     value={rcdoLink}
                     onChange={(link) => {
                       setValue('rallyCryId', link.rallyCryId ?? undefined);

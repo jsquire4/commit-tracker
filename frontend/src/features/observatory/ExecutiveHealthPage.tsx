@@ -139,15 +139,33 @@ function buildVPGroups(
       }];
     }
 
-    // If we have VPs but no org tree, create groups but can't assign managers
-    return vps.map((vp) => ({
+    // If we have VPs but no org tree, show each VP as a header but don't
+    // duplicate managers — split non-VPs evenly by index as a rough grouping,
+    // or just show them all in one ungrouped section if we can't determine hierarchy.
+    // Better to show one honest "All Teams" than duplicated data.
+    const allManagers = [...nonVps].sort((a, b) => a.strategicAlignmentPct - b.strategicAlignmentPct);
+    const result: VPGroup[] = vps.map((vp) => ({
       vpId: vp.managerId,
       vpName: vp.managerName,
       vpGrade: vp.grade,
       vpTrend: vp.trendDirection,
       vpAlignment: vp.strategicAlignmentPct,
-      managers: nonVps, // Can't determine which managers belong to which VP without tree
+      managers: [], // Can't assign without org tree
     }));
+    // Put all non-VP managers in a single "All Teams" group
+    if (allManagers.length > 0) {
+      const avg = allManagers.reduce((s, u) => s + u.strategicAlignmentPct, 0) / allManagers.length;
+      result.push({
+        vpId: '__all_teams__',
+        vpName: 'All Teams',
+        vpGrade: gradeFromAlignment(avg),
+        vpTrend: 'FLAT',
+        vpAlignment: avg,
+        managers: allManagers,
+      });
+    }
+    // Remove empty VP groups
+    return result.filter((g) => g.managers.length > 0 || g.vpId.startsWith('__'));
   }
 
   // Build a lookup: userId -> User
@@ -754,50 +772,7 @@ export function ExecutiveHealthPage() {
       {/* Zone 3: Exception Alerts */}
       <ExceptionAlerts alerts={alerts} />
 
-      {/* CSS animations injected via style tag */}
-      <style>{`
-        @keyframes fade-slide-in {
-          from {
-            opacity: 0;
-            transform: translateY(12px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes pulse-subtle {
-          0%, 100% {
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
-          }
-          50% {
-            box-shadow: 0 0 12px 2px rgba(239, 68, 68, 0.15);
-          }
-        }
-
-        .animate-fade-slide-in {
-          animation: fade-slide-in 0.4s ease-out;
-        }
-
-        .animate-pulse-subtle {
-          animation: pulse-subtle 3s ease-in-out infinite;
-        }
-
-        .scrollbar-thin {
-          scrollbar-width: thin;
-        }
-        .scrollbar-thin::-webkit-scrollbar {
-          height: 4px;
-        }
-        .scrollbar-thumb-gray-800::-webkit-scrollbar-thumb {
-          background: #1f2937;
-          border-radius: 2px;
-        }
-        .scrollbar-track-transparent::-webkit-scrollbar-track {
-          background: transparent;
-        }
-      `}</style>
+      {/* CSS animations are in global.css */}
     </div>
   );
 }
