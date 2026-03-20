@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Transition } from '@headlessui/react';
@@ -137,14 +137,35 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     }
   }
 
+  const [rcdoTitles, setRcdoTitles] = useState<{
+    rallyCryTitle: string | null;
+    definingObjectiveTitle: string | null;
+    outcomeTitle: string | null;
+  }>({
+    rallyCryTitle: existingCommitment?.rcdoLink.rallyCryTitle ?? null,
+    definingObjectiveTitle: existingCommitment?.rcdoLink.definingObjectiveTitle ?? null,
+    outcomeTitle: existingCommitment?.rcdoLink.outcomeTitle ?? null,
+  });
+
+  // Sync titles when the existing commitment loads (edit mode)
+  useEffect(() => {
+    if (existingCommitment) {
+      setRcdoTitles({
+        rallyCryTitle: existingCommitment.rcdoLink.rallyCryTitle,
+        definingObjectiveTitle: existingCommitment.rcdoLink.definingObjectiveTitle,
+        outcomeTitle: existingCommitment.rcdoLink.outcomeTitle,
+      });
+    }
+  }, [existingCommitment]);
+
   const rcdoValue = useWatch({ control, name: ['rallyCryId', 'definingObjectiveId', 'outcomeId'] });
   const rcdoLink = {
     rallyCryId: rcdoValue[0] ?? null,
-    rallyCryTitle: existingCommitment?.rcdoLink.rallyCryTitle ?? null,
+    rallyCryTitle: rcdoTitles.rallyCryTitle,
     definingObjectiveId: rcdoValue[1] ?? null,
-    definingObjectiveTitle: existingCommitment?.rcdoLink.definingObjectiveTitle ?? null,
+    definingObjectiveTitle: rcdoTitles.definingObjectiveTitle,
     outcomeId: rcdoValue[2] ?? null,
-    outcomeTitle: existingCommitment?.rcdoLink.outcomeTitle ?? null,
+    outcomeTitle: rcdoTitles.outcomeTitle,
   };
 
   const apiError =
@@ -300,6 +321,11 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                         setValue('rallyCryId', link.rallyCryId ?? undefined);
                         setValue('definingObjectiveId', link.definingObjectiveId ?? undefined);
                         setValue('outcomeId', link.outcomeId ?? undefined);
+                        setRcdoTitles({
+                          rallyCryTitle: link.rallyCryTitle,
+                          definingObjectiveTitle: link.definingObjectiveTitle,
+                          outcomeTitle: link.outcomeTitle,
+                        });
                       }}
                     />
                   </div>

@@ -28,7 +28,7 @@ const DISPLAY_NAME_TO_VARIANT: Record<string, 'strategic' | 'operational' | 'def
   'Capability Building': 'capability',
 };
 
-export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDelete, isAssigned }: CommitmentCardProps) {
+export function CommitmentCard({ commitment, cycleState, onEdit, onDelete, isAssigned }: CommitmentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isDraft = cycleState === 'DRAFT';
 
@@ -159,16 +159,30 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDe
 
           {/* Right side: edit pencil + chevron */}
           <div className="flex-shrink-0 flex items-center gap-1">
-            {/* Edit pencil — visible on hover */}
+            {/* Edit pencil — always visible on mobile, hover on desktop */}
             {isDraft && (
               <button
                 type="button"
                 onClick={() => { onEdit(commitment.id); }}
-                className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-accent focus:outline-none transition-opacity duration-[var(--duration-fast)]"
+                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1 text-muted hover:text-accent focus:outline-none transition-opacity duration-[var(--duration-fast)]"
                 aria-label="Edit commitment"
               >
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </button>
+            )}
+
+            {/* Delete button — always visible on mobile, hover on desktop */}
+            {isDraft && (
+              <button
+                type="button"
+                onClick={() => { onDelete(commitment.id); }}
+                className="opacity-100 sm:opacity-0 sm:group-hover:opacity-100 p-1 text-muted hover:text-rose-500 focus:outline-none transition-all duration-[var(--duration-fast)]"
+                aria-label="Delete commitment"
+              >
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
               </button>
             )}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { Commitment } from '@/types';
 import Card from '@/components/Card';
 import { useDeleteCommitment } from '@/hooks/useCommitments';
+import { useToast, ToastContainer } from '@/hooks/useToast';
 
 interface CarryForwardPanelProps {
   carriedItems: Commitment[];
@@ -11,9 +12,11 @@ interface CarryForwardPanelProps {
 interface CarriedItemRowProps {
   commitment: Commitment;
   cycleId: string;
+  onAccept: (id: string) => void;
+  accepted: boolean;
 }
 
-function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
+function CarriedItemRow({ commitment, cycleId, onAccept, accepted }: CarriedItemRowProps) {
   const [declining, setDeclining] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
   const { mutate: deleteCommitment, isPending } = useDeleteCommitment(cycleId);
@@ -26,7 +29,19 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
     reconStatus === 'CARRIED_FORWARD' ? 'Carried Forward' : 'Carried';
 
   function handleAccept() {
-    // Accept is a no-op -- the item already exists in the current cycle
+    onAccept(commitment.id);
+  }
+
+  if (accepted) {
+    return (
+      <div className="bg-surface-container-low rounded-sm p-3 flex items-center gap-2 opacity-60 transition-opacity duration-300">
+        <svg className="w-4 h-4 text-accent flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        <span className="text-body text-on-surface-variant line-through truncate">{commitment.title}</span>
+        <span className="text-small text-accent font-medium ml-auto flex-shrink-0">Accepted</span>
+      </div>
+    );
   }
 
   function handleDeclineSubmit() {
@@ -132,35 +147,57 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
 }
 
 export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelProps) {
+  const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
+  const { toast, toasts, dismiss } = useToast();
+
   if (carriedItems.length === 0) return null;
 
-  return (
-    <Card accent="amber" padding="compact" className="!p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <svg
-          className="h-4 w-4 text-warning"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-          aria-hidden="true"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-          />
-        </svg>
-        <span className="text-[0.8125rem] font-medium text-on-surface">
-          {carriedItems.length} item{carriedItems.length !== 1 ? 's' : ''} carried from last week
-        </span>
-      </div>
+  function handleAccept(id: string) {
+    setAcceptedIds((prev) => new Set(prev).add(id));
+    toast.success("Commitment accepted \u2014 it's in your list");
+  }
 
-      <div className="flex flex-col gap-2">
-        {carriedItems.map((item) => (
-          <CarriedItemRow key={item.id} commitment={item} cycleId={cycleId} />
-        ))}
-      </div>
-    </Card>
+  // Hide the panel entirely once all items are accepted
+  const allAccepted = carriedItems.every((item) => acceptedIds.has(item.id));
+
+  return (
+    <>
+      {!allAccepted && (
+        <Card accent="amber" padding="compact" className="!p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <svg
+              className="h-4 w-4 text-warning"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            <span className="text-[0.8125rem] font-medium text-on-surface">
+              {carriedItems.length - acceptedIds.size} item{carriedItems.length - acceptedIds.size !== 1 ? 's' : ''} carried from last week
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {carriedItems.map((item) => (
+              <CarriedItemRow
+                key={item.id}
+                commitment={item}
+                cycleId={cycleId}
+                onAccept={handleAccept}
+                accepted={acceptedIds.has(item.id)}
+              />
+            ))}
+          </div>
+        </Card>
+      )}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
+    </>
   );
 }

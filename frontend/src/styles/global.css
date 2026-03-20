@@ -5,7 +5,7 @@
 /* ── Compass Design Tokens ─────────────────────────────────────────── */
 
 :root {
-  /* Colors */
+  /* Colors (hex for direct use) */
   --color-surface: #F9F9F7;
   --color-surface-lowest: #FFFFFF;
   --color-surface-container-low: #F2F4F2;
@@ -21,6 +21,23 @@
   --color-error: #9F403D;
   --color-warning: #C2860B;
   --color-navy: #455F87;
+
+  /* RGB channels (for Tailwind opacity modifier support: bg-accent/20 etc.) */
+  --color-surface-rgb: 249 249 247;
+  --color-surface-lowest-rgb: 255 255 255;
+  --color-surface-container-low-rgb: 242 244 242;
+  --color-surface-container-rgb: 238 238 236;
+  --color-surface-container-high-rgb: 232 232 230;
+  --color-surface-container-highest-rgb: 224 224 222;
+  --color-on-surface-rgb: 45 52 50;
+  --color-on-surface-variant-rgb: 90 96 94;
+  --color-muted-rgb: 148 163 184;
+  --color-accent-rgb: 3 106 106;
+  --color-accent-dark-rgb: 0 80 80;
+  --color-outline-variant-rgb: 232 229 224;
+  --color-error-rgb: 159 64 61;
+  --color-warning-rgb: 194 134 11;
+  --color-navy-rgb: 69 95 135;
 
   /* Motion */
   --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);

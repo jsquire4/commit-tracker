@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect, useRef, type MutableRefObject } from 'react';
 import type { CommitmentReconciliationDetail, ReconcileCommitmentRequest } from '@/types/reconciliation.types';
 import type { ReconciliationStatus } from '@/types/enums';
 import type { BulletStatus } from '@/types/reconciliation.types';
@@ -131,6 +131,8 @@ interface CommitmentRowProps {
 function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, staggerIndex }: CommitmentRowProps) {
   const { commitment, reconciliation } = detail;
   const [row, setRow] = useState<RowState>(() => buildInitialRowState(detail));
+  const rowRef = useRef(row) as MutableRefObject<RowState>;
+  rowRef.current = row;
   const cardRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
 
@@ -174,13 +176,14 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
   const handleStatusChange = useCallback(
     async (status: ReconciliationStatus) => {
       setRow((prev) => ({ ...prev, status, saveError: null }));
+      const latest = rowRef.current;
       const notesRequired = status !== 'COMPLETED';
-      if (!notesRequired || row.notes.trim().length > 0) {
+      if (!notesRequired || latest.notes.trim().length > 0) {
         setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
-        await buildAndSave(status, row.notes, row.bulletStatuses, row.displacement, row.carryForward, undefined, row.displacementFlagged, row.displacementSelectedIds);
+        await buildAndSave(status, latest.notes, latest.bulletStatuses, latest.displacement, latest.carryForward, undefined, latest.displacementFlagged, latest.displacementSelectedIds);
       }
     },
-    [row, buildAndSave],
+    [rowRef, buildAndSave],
   );
 
   const handleNotesChange = useCallback((notes: string) => {
@@ -188,13 +191,14 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
   }, []);
 
   const handleNotesBlur = useCallback(async () => {
-    if (!row.status) return;
-    if (row.notes === (reconciliation?.notes ?? '') && row.status === reconciliation?.status) return;
-    const notesRequired = row.status !== 'COMPLETED';
-    if (notesRequired && row.notes.trim().length === 0) return;
+    const latest = rowRef.current;
+    if (!latest.status) return;
+    if (latest.notes === (reconciliation?.notes ?? '') && latest.status === reconciliation?.status) return;
+    const notesRequired = latest.status !== 'COMPLETED';
+    if (notesRequired && latest.notes.trim().length === 0) return;
     setRow((prev) => ({ ...prev, saving: true, saveError: null }));
-    await buildAndSave(row.status, row.notes, row.bulletStatuses, row.displacement, row.carryForward, undefined, row.displacementFlagged, row.displacementSelectedIds);
-  }, [row, reconciliation, buildAndSave]);
+    await buildAndSave(latest.status, latest.notes, latest.bulletStatuses, latest.displacement, latest.carryForward, undefined, latest.displacementFlagged, latest.displacementSelectedIds);
+  }, [rowRef, reconciliation, buildAndSave]);
 
   const handleDisplacementChange = useCallback((displacement: DisplacementValue) => {
     setRow((prev) => ({ ...prev, displacement }));
@@ -206,20 +210,21 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
 
   const handleBulletToggle = useCallback(
     async (bulletId: string, done: boolean) => {
-      const nextBulletStatuses = { ...row.bulletStatuses, [bulletId]: done };
+      const latest = rowRef.current;
+      const nextBulletStatuses = { ...latest.bulletStatuses, [bulletId]: done };
       setRow((prev) => ({ ...prev, bulletStatuses: nextBulletStatuses, saving: true, saveError: null }));
-      if (!row.status) {
+      if (!latest.status) {
         setRow((prev) => ({ ...prev, saving: false }));
         return;
       }
-      await buildAndSave(row.status, row.notes, nextBulletStatuses, row.displacement, row.carryForward, () => {
+      await buildAndSave(latest.status, latest.notes, nextBulletStatuses, latest.displacement, latest.carryForward, () => {
         setRow((prev) => ({
           ...prev,
           bulletStatuses: { ...nextBulletStatuses, [bulletId]: !done },
         }));
-      }, row.displacementFlagged, row.displacementSelectedIds);
+      }, latest.displacementFlagged, latest.displacementSelectedIds);
     },
-    [row, buildAndSave],
+    [rowRef, buildAndSave],
   );
 
   const isReasonRequired = row.status !== null && row.status !== 'COMPLETED';
