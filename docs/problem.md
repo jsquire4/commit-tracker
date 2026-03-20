@@ -1,4 +1,4 @@
-# ST6 — Problem Statement & Design Thinking
+# Compass — Problem Statement & Design Thinking
 
 *Working document — not a spec. A place to think.*
 
@@ -47,7 +47,7 @@ The app is currently built inside-out — organized around data entry (commitmen
 - **Middle management is the real lever.** ICs follow what managers assign and approve. A manager who assigns 80% operational work to their team is a turnaround risk, whether intentionally or not.
 - **Information asymmetry.** Portco leadership often doesn't know what's actually happening at the IC level. The tool needs to compress that gap.
 - **The data quality problem is a trust problem.** If employees believe this data feeds performance reviews, they'll game it. The signal becomes noise.
-- **The Superorg is the actual product.** The portco tool is data collection. ST6's real value accumulates across 10 acquisitions: "portcos that hit 70%+ strategic alignment in weeks 1-4 have 2x turnaround success rate." That's proprietary operational intelligence.
+- **The Superorg is the actual product.** The portco tool is data collection. The PE firm's real value accumulates across 10 acquisitions: "portcos that hit 70%+ strategic alignment in weeks 1-4 have 2x turnaround success rate." That's proprietary operational intelligence.
 
 ---
 

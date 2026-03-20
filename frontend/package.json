@@ -1,5 +1,5 @@
 {
-  "name": "@st6/commit-module",
+  "name": "@compass/commit-module",
   "version": "0.0.1",
   "private": true,
   "type": "module",

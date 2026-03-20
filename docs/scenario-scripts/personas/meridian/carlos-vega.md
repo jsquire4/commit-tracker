@@ -124,7 +124,7 @@ can see the progress. It's part of the bigger Apex thesis about operational exce
 
 ### Week 1 (Jan 5, 2026)
 
-**Strategic context this week:** First week of ST6 rollout. Sarah Chen's message
+**Strategic context this week:** First week of Compass rollout. Sarah Chen's message
 to the company: "We're implementing commitment tracking so we can prove to our
 investors that we execute, not just plan." Elena translated this to the quality
 team as: "Link your work to the rally cry. Be honest about what's strategic and

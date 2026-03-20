@@ -1,0 +1,6 @@
+package com.compass.platform.domain;
+
+public enum DisplacementCategory {
+    MANAGER_REASSIGNED, PRODUCTION_EMERGENCY, RESOURCE_BLOCKED,
+    SCOPE_CHANGE, DEPRIORITIZED, EXTERNAL_DEPENDENCY, OTHER
+}

@@ -25,7 +25,7 @@ export function Layout({ children }: LayoutProps) {
       <nav className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm sticky top-0 z-30 relative">
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold shrink-0 text-gradient from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">ST6</h1>
+            <h1 className="text-xl font-bold shrink-0 text-gradient from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Compass</h1>
             <div className="flex items-center gap-1">
               {navItems.map(({ to, label }) => (
                 <NavLink

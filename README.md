@@ -1,4 +1,4 @@
-# ST6 Execution Observatory
+# Compass Execution Observatory
 
 PE turnaround execution observatory that connects strategic intent to ground-level work patterns. Surfaces misalignment, drift, and dark work attribution before they hit the P&L.
 
@@ -40,8 +40,8 @@ For the full observatory seed data (3 orgs, ~150 users, 12 weeks of drift narrat
 
 ```bash
 # In application-local.yml, set:
-# st6.seed.observatory: true
-# st6.seed.enabled: false
+# compass.seed.observatory: true
+# compass.seed.enabled: false
 ```
 
 ## Architecture

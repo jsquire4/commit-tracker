@@ -1,4 +1,4 @@
-# ST6 Execution Observatory — Implementation Plan
+# Compass Execution Observatory — Implementation Plan
 
 **STATUS: COMPLETED (2026-03-18)**
 
@@ -6,7 +6,7 @@ All 6 waves implemented, audited, and complexity-swept. 183 unit tests passing. 
 
 ## Overview
 
-Transform ST6 from a weekly commitment tracker into a PE turnaround execution observatory. This plan is structured as sequential waves with parallelizable tasks within each wave. Every wave has explicit gates that must pass before the next wave begins.
+Transform Compass from a weekly commitment tracker into a PE turnaround execution observatory. This plan is structured as sequential waves with parallelizable tasks within each wave. Every wave has explicit gates that must pass before the next wave begins.
 
 **Timeline:** ~10 working days
 **Executor:** Claude (Sonnet agents for implementation, Opus for orchestration and review)
@@ -153,7 +153,7 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
 -- Commitment-level effort lets us compute: cost of misaligned work = estimated_hours × hourly_rate × misalignment_factor
 ```
 
-**Gate:** Backend compiles. `./gradlew compileJava` passes. Flyway migrations run cleanly against a fresh database (start Docker, run backend with `st6.seed.enabled=false`, verify no errors).
+**Gate:** Backend compiles. `./gradlew compileJava` passes. Flyway migrations run cleanly against a fresh database (start Docker, run backend with `compass.seed.enabled=false`, verify no errors).
 
 ### Task 1.3: Backend Entities for New Tables
 
@@ -161,30 +161,30 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
 
 **Files to create:**
 
-1. **`backend/src/main/java/com/st6/committracker/domain/observatory/CostBand.java`**
+1. **`backend/src/main/java/com/compass/platform/domain/observatory/CostBand.java`**
    - Entity mapping to `cost_bands` table
    - Fields: id, org (ManyToOne to Org), name, tier, annualCost (BigDecimal), hourlyRate (BigDecimal), createdAt, updatedAt
    - Include builder pattern (consistent with existing entities like Org.java, Commitment.java)
    - equals/hashCode on id only (consistent with all other entities)
 
-2. **`backend/src/main/java/com/st6/committracker/domain/observatory/CostBandRepository.java`**
+2. **`backend/src/main/java/com/compass/platform/domain/observatory/CostBandRepository.java`**
    - `findByOrgIdOrderByTierAsc(UUID orgId)` — for listing bands in order
    - `findByOrgIdAndName(UUID orgId, String name)` — for CSV import deduplication
 
-3. **`backend/src/main/java/com/st6/committracker/domain/observatory/ObservatoryConfig.java`**
+3. **`backend/src/main/java/com/compass/platform/domain/observatory/ObservatoryConfig.java`**
    - Entity mapping to `observatory_config` table
    - All threshold fields as their appropriate Java types (int for weeks, BigDecimal for percentages)
    - Include builder with all defaults matching the migration defaults
 
-4. **`backend/src/main/java/com/st6/committracker/domain/observatory/ObservatoryConfigRepository.java`**
+4. **`backend/src/main/java/com/compass/platform/domain/observatory/ObservatoryConfigRepository.java`**
    - `findByOrgId(UUID orgId)` — returns Optional, one config per org
 
-5. **`backend/src/main/java/com/st6/committracker/domain/observatory/Portfolio.java`**
+5. **`backend/src/main/java/com/compass/platform/domain/observatory/Portfolio.java`**
    - Entity mapping to `portfolios` table
    - Fields: id, name, slug, description, createdAt, updatedAt
    - Include builder
 
-6. **`backend/src/main/java/com/st6/committracker/domain/observatory/PortfolioRepository.java`**
+6. **`backend/src/main/java/com/compass/platform/domain/observatory/PortfolioRepository.java`**
    - `findBySlug(String slug)`
    - `findAll()` — portfolio list for PE view
 
@@ -229,9 +229,9 @@ ALTER TABLE commitments ADD COLUMN estimated_hours DECIMAL(5,2);
     ```
     Add getter/setter. Update Builder to include `estimatedHours`.
 
-11. **Create `DisplacementCategory.java`** in `com.st6.committracker.domain` (same package as `CycleState`, `ReconciliationStatus`, `CompletionHorizon`, `UserRole` — all top-level domain enums live here):
+11. **Create `DisplacementCategory.java`** in `com.compass.platform.domain` (same package as `CycleState`, `ReconciliationStatus`, `CompletionHorizon`, `UserRole` — all top-level domain enums live here):
     ```java
-    package com.st6.committracker.domain;
+    package com.compass.platform.domain;
 
     public enum DisplacementCategory {
         MANAGER_REASSIGNED, PRODUCTION_EMERGENCY, RESOURCE_BLOCKED,
@@ -274,8 +274,8 @@ Run `/audit` on all files created or modified in Wave 1. This includes:
 ### Task 2.1: Cross-Cycle Analytics Service (PARALLEL)
 
 **Files:**
-- `backend/src/main/java/com/st6/committracker/domain/observatory/AnalyticsService.java` — main service
-- `backend/src/main/java/com/st6/committracker/domain/observatory/CategoryUtils.java` — shared static helpers (category normalization, effort resolution)
+- `backend/src/main/java/com/compass/platform/domain/observatory/AnalyticsService.java` — main service
+- `backend/src/main/java/com/compass/platform/domain/observatory/CategoryUtils.java` — shared static helpers (category normalization, effort resolution)
 
 **Purpose:** Compute metrics across multiple cycles for drift detection, trend analysis, and historical comparisons. This is the analytical engine that powers the executive view.
 
@@ -397,7 +397,7 @@ public record TeamAlignmentTrend(
 ) {}
 ```
 
-**Test file:** `backend/src/test/java/com/st6/committracker/domain/observatory/AnalyticsServiceTest.java`
+**Test file:** `backend/src/test/java/com/compass/platform/domain/observatory/AnalyticsServiceTest.java`
 - Test `computeAlignmentTrend` with 3 cycles of seed data — verify correct percentages
 - Test `computeCarryForwardChains` — create a 3-link chain, verify chainLength=3
 - Test `computeCostWeightedMisalignment` — create 2 users with different cost bands, verify the higher-cost user's misalignment weighs more
@@ -408,8 +408,8 @@ public record TeamAlignmentTrend(
 ### Task 2.2: Drift Detection Service (PARALLEL)
 
 **Files:**
-- `backend/src/main/java/com/st6/committracker/domain/observatory/DriftDetectionService.java` — main service
-- `backend/src/main/java/com/st6/committracker/domain/observatory/TrendAnalyzer.java` — pure-function utility for the consecutive-decline algorithm
+- `backend/src/main/java/com/compass/platform/domain/observatory/DriftDetectionService.java` — main service
+- `backend/src/main/java/com/compass/platform/domain/observatory/TrendAnalyzer.java` — pure-function utility for the consecutive-decline algorithm
 
 **Purpose:** Detect when organizational units are drifting away from strategic alignment over time. Uses the configurable thresholds from `ObservatoryConfig`.
 
@@ -472,7 +472,7 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 - `IntegrityReport.java` (record — list of IntegrityFlag)
 - `IntegrityFlag.java` (record — type enum, userId, details map)
 
-**Test file:** `backend/src/test/java/com/st6/committracker/domain/observatory/DriftDetectionServiceTest.java`
+**Test file:** `backend/src/test/java/com/compass/platform/domain/observatory/DriftDetectionServiceTest.java`
 - Test with a team that has 5 weeks of declining strategic alignment — verify EMERGING signal at week 3
 - Test with a team where 95% of commitments are Strategic — verify UNIFORM_CATEGORIZATION flag
 - Test the threshold configurability — change config to 2-week emerging, verify signal appears earlier
@@ -481,7 +481,7 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 
 ### Task 2.3: Displacement Aggregation Service (PARALLEL)
 
-**File:** `backend/src/main/java/com/st6/committracker/domain/observatory/DisplacementService.java`
+**File:** `backend/src/main/java/com/compass/platform/domain/observatory/DisplacementService.java`
 
 **Purpose:** Aggregate displacement reasons across the organization. Surface recurring themes, not individual excuses.
 
@@ -533,7 +533,7 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 - `NoteCluster.java` (record)
 - `ManagerDisplacementReport.java` (record)
 
-**Test file:** `backend/src/test/java/com/st6/committracker/domain/observatory/DisplacementServiceTest.java`
+**Test file:** `backend/src/test/java/com/compass/platform/domain/observatory/DisplacementServiceTest.java`
 - Test aggregation with 10 displacement records across 3 categories — verify correct counts/percentages
 - Test note clustering with 5 notes containing "production line" and 3 containing "vendor delay" — verify 2 clusters
 
@@ -544,9 +544,9 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 **Purpose:** Extend the existing reconciliation flow to accept displacement data.
 
 **Files to modify:**
-- `backend/src/main/java/com/st6/committracker/domain/reconciliation/dto/ReconcileRequest.java`
-- `backend/src/main/java/com/st6/committracker/domain/reconciliation/ReconciliationService.java`
-- `backend/src/main/java/com/st6/committracker/domain/reconciliation/dto/ReconciliationResponse.java`
+- `backend/src/main/java/com/compass/platform/domain/reconciliation/dto/ReconcileRequest.java`
+- `backend/src/main/java/com/compass/platform/domain/reconciliation/ReconciliationService.java`
+- `backend/src/main/java/com/compass/platform/domain/reconciliation/dto/ReconciliationResponse.java`
 
 **Changes:**
 1. **ReconcileRequest** — add fields:
@@ -578,8 +578,8 @@ Test `TrendAnalyzer` independently with unit tests — it's a pure function.
 ### Task 2.5: Observatory REST Controller + Health Composer (PARALLEL)
 
 **Files:**
-- `backend/src/main/java/com/st6/committracker/domain/observatory/ObservatoryController.java` — thin REST controller, delegates to services
-- `backend/src/main/java/com/st6/committracker/domain/observatory/ExecutiveHealthComposer.java` — composes the `/health` response from multiple services
+- `backend/src/main/java/com/compass/platform/domain/observatory/ObservatoryController.java` — thin REST controller, delegates to services
+- `backend/src/main/java/com/compass/platform/domain/observatory/ExecutiveHealthComposer.java` — composes the `/health` response from multiple services
 
 **Purpose:** Expose observatory endpoints. The controller is thin — each endpoint is a 1-3 line method that calls a service and wraps in `ApiResponse`. The `/health` endpoint is the exception: it composes data from AnalyticsService + DriftDetectionService + integrity analysis into a single `ExecutiveHealthResponse`. That composition logic goes in `ExecutiveHealthComposer`, NOT in the controller method.
 
@@ -672,7 +672,7 @@ record OrgUnitHealth(
 enum HealthGrade { GREEN, YELLOW, RED }
 ```
 
-**Test file:** `backend/src/test/java/com/st6/committracker/domain/observatory/ObservatoryControllerTest.java`
+**Test file:** `backend/src/test/java/com/compass/platform/domain/observatory/ObservatoryControllerTest.java`
 - Integration test: call `/api/v1/observatory/health` as EXECUTIVE, verify response structure
 - Test role guard: call as EMPLOYEE, verify 403
 
@@ -680,7 +680,7 @@ enum HealthGrade { GREEN, YELLOW, RED }
 
 ### Task 2.6: Portfolio Service (PARALLEL)
 
-**File:** `backend/src/main/java/com/st6/committracker/domain/observatory/PortfolioService.java`
+**File:** `backend/src/main/java/com/compass/platform/domain/observatory/PortfolioService.java`
 
 **Purpose:** Compute portfolio-level health across multiple organizations. This is the Superorg view.
 
@@ -725,8 +725,8 @@ All backend logic now exists. The API surface is defined but not yet consumed by
 - **Note clustering algorithm** — is the n-gram approach in DisplacementService unnecessarily complex for the demo? Could a simpler group-by-category-only approach suffice?
 
 Run `/complexity-sweep` targeting:
-- `backend/src/main/java/com/st6/committracker/domain/observatory/`
-- `backend/src/main/java/com/st6/committracker/domain/reconciliation/`
+- `backend/src/main/java/com/compass/platform/domain/observatory/`
+- `backend/src/main/java/com/compass/platform/domain/reconciliation/`
 
 If the sweep identifies issues, fix them before proceeding to Wave 3. The frontend will cement whatever API shape exists at that point — cleaning up the backend after the frontend is built means changing both layers.
 
@@ -1215,15 +1215,15 @@ Run `/audit` on all files created or modified in Wave 5. This includes:
 **Decomposition:** A single 500+ line seed generator is unmaintainable and hard for a sub-agent to produce correctly in one pass. Split into 4 files:
 
 **Files to create:**
-- `backend/src/main/java/com/st6/committracker/seed/ObservatorySeedGenerator.java` — orchestrator (ApplicationRunner), delegates to phase classes
-- `backend/src/main/java/com/st6/committracker/seed/SeedOrgBuilder.java` — creates orgs, portfolios, users, hierarchy, cost bands, RCDO, chess categories, observatory config
-- `backend/src/main/java/com/st6/committracker/seed/SeedCycleBuilder.java` — creates cycles, commitments, reconciliation records, carry-forward chains
-- `backend/src/main/java/com/st6/committracker/seed/SeedTemplates.java` — static constants only: name arrays, displacement templates, commitment title templates, reconciliation note templates
+- `backend/src/main/java/com/compass/platform/seed/ObservatorySeedGenerator.java` — orchestrator (ApplicationRunner), delegates to phase classes
+- `backend/src/main/java/com/compass/platform/seed/SeedOrgBuilder.java` — creates orgs, portfolios, users, hierarchy, cost bands, RCDO, chess categories, observatory config
+- `backend/src/main/java/com/compass/platform/seed/SeedCycleBuilder.java` — creates cycles, commitments, reconciliation records, carry-forward chains
+- `backend/src/main/java/com/compass/platform/seed/SeedTemplates.java` — static constants only: name arrays, displacement templates, commitment title templates, reconciliation note templates
 
 **`ObservatorySeedGenerator.java` (~50 lines):**
 ```java
 @Component
-@ConditionalOnProperty(name = "st6.seed.observatory", havingValue = "true")
+@ConditionalOnProperty(name = "compass.seed.observatory", havingValue = "true")
 public class ObservatorySeedGenerator implements ApplicationRunner {
     @PersistenceContext private EntityManager em;
 
@@ -1254,7 +1254,7 @@ Pure static data. No logic. Contains:
 
 This separation means a sub-agent can implement each file independently and they compose cleanly.
 
-Activated via a new property `st6.seed.observatory=true` (separate from the existing `st6.seed.enabled` which seeds the small 10-user dataset).
+Activated via a new property `compass.seed.observatory=true` (separate from the existing `compass.seed.enabled` which seeds the small 10-user dataset).
 
 **Requirements:**
 - 3 organizations in 1 portfolio
@@ -1402,10 +1402,10 @@ Run `/audit` on all seed data files and any polish changes:
 The entire platform is now built. Run `/complexity-sweep` on the full codebase (backend + frontend):
 
 **Backend targets:**
-- `backend/src/main/java/com/st6/committracker/domain/observatory/` — all new services
-- `backend/src/main/java/com/st6/committracker/domain/reconciliation/` — modified reconciliation flow
-- `backend/src/main/java/com/st6/committracker/domain/dashboard/` — existing dashboard (verify no degradation)
-- `backend/src/main/java/com/st6/committracker/seed/` — seed generators
+- `backend/src/main/java/com/compass/platform/domain/observatory/` — all new services
+- `backend/src/main/java/com/compass/platform/domain/reconciliation/` — modified reconciliation flow
+- `backend/src/main/java/com/compass/platform/domain/dashboard/` — existing dashboard (verify no degradation)
+- `backend/src/main/java/com/compass/platform/seed/` — seed generators
 
 **Frontend targets:**
 - `frontend/src/features/observatory/` — all new observatory components

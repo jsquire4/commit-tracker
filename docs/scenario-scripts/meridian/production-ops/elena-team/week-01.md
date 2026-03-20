@@ -2,7 +2,7 @@
 
 ## Scene Context
 
-First full week of the ST6 rollout at Meridian. Sarah Chen (CEO) has mandated that every
+First full week of the Compass rollout at Meridian. Sarah Chen (CEO) has mandated that every
 team start tracking commitments against the strategic rally cries. Elena was an early
 champion — she's been pushing for structured execution tracking for months. Her team meeting
 Monday morning sets the tone. This is what "good" looks like from day one.

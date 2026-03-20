@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: st6
-      POSTGRES_USER: st6
-      POSTGRES_PASSWORD: st6local
+      POSTGRES_DB: compass
+      POSTGRES_USER: compass
+      POSTGRES_PASSWORD: compasslocal
     ports:
       - "127.0.0.1:5432:5432"
     volumes:

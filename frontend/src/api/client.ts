@@ -29,7 +29,7 @@ apiClient.interceptors.response.use(
   (error: unknown) => {
     const axiosError = error as { response?: { status?: number } };
     if (axiosError.response?.status === 401) {
-      window.dispatchEvent(new CustomEvent('st6:auth:expired'));
+      window.dispatchEvent(new CustomEvent('compass:auth:expired'));
     }
     return Promise.reject(error instanceof Error ? error : new Error(String(error)));
   }

@@ -1,4 +1,4 @@
-# ST6 Product Design — Comprehensive Redesign Plan
+# Compass Product Design — Comprehensive Redesign Plan
 
 ## The Problem
 
@@ -18,9 +18,9 @@ The best tools in this space share these patterns:
 
 5. **Cascade's executive briefing (Tapestry AI)**: Auto-generated narrative summaries organized by strategic objective, surfacing risks and recommending focus areas.
 
-**The key insight across all tools**: The executive's view should be organized by **strategic objective first, then people second**. No tool does this perfectly — ST6 can.
+**The key insight across all tools**: The executive's view should be organized by **strategic objective first, then people second**. No tool does this perfectly — Compass can.
 
-## The ST6 Information Architecture
+## The Compass Information Architecture
 
 ### Three Layers
 

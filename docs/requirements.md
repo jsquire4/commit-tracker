@@ -1,10 +1,10 @@
-# ST6 Weekly Commit Module — Requirements
+# Compass Weekly Commit Module — Requirements
 
 ## Strategic Context
 
 ST6 operates as a turnaround PE firm — acquiring mid-sized businesses, revamping operations
 with AI-enabled software, and exiting to other PE groups. This module isn't just a 15-Five
-replacement for one company. It's a potential component of ST6's operational playbook:
+replacement for one company. It's a potential component of the firm's operational playbook:
 deployable into any portfolio company to rapidly measure whether teams are executing against
 the turnaround strategy or just going through the motions.
 
@@ -17,7 +17,7 @@ worthless).
 
 ## Core Spec (what we build)
 
-These map directly to the ST6 functional requirements.
+These map directly to the Compass functional requirements.
 
 ### Weekly Commit CRUD
 - Create, read, update, delete weekly commitments
@@ -27,7 +27,7 @@ These map directly to the ST6 functional requirements.
 ### Chess Layer
 > **OPEN QUESTION:** The spec calls out a "chess layer" for categorization and prioritization
 > but does not define the framework. The interpretation below is our best reading of intent —
-> needs confirmation from ST6 stakeholders.
+> needs confirmation from stakeholders.
 
 **Concept:** A strategic positioning layer that forces employees to think about what kind of
 work each commitment represents and where to deploy limited capacity.
@@ -166,9 +166,9 @@ and understanding of the deeper organizational dynamics this tool creates.
 - CSV export and clean API surface for integrations
 
 ### Superorg Layer (PE portfolio visibility)
-- **Superorg** entity sits above individual orgs — represents ST6 itself
+- **Superorg** entity sits above individual orgs — represents the PE firm itself
 - Each portfolio company is an org within the superorg
-- ST6 leadership gets a cross-portco dashboard:
+- PE firm leadership gets a cross-portco dashboard:
   - "Portco A has 80% strategic alignment after 6 weeks — turnaround is tracking"
   - "Portco B has 45% — teams aren't executing against the plan"
   - Comparative view across the portfolio: which acquisitions are on track?
@@ -182,5 +182,5 @@ and understanding of the deeper organizational dynamics this tool creates.
 ### Deployment at Scale (PE playbook)
 - Multi-tenant deployment across portfolio companies
 - Fast standup for new acquisitions (CSV import + phased rollout)
-- Cross-portco visibility for ST6 leadership via superorg layer
-- Detachability story for exit (tool goes with the portco or stays with ST6?)
+- Cross-portco visibility for PE firm leadership via superorg layer
+- Detachability story for exit (tool goes with the portco or stays with the firm?)

@@ -1,4 +1,4 @@
-ST6 Project
+Compass Project
 
 Weekly Commit Module
 

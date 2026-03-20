@@ -5,7 +5,7 @@ import { DevLogin } from './DevLogin';
 import type { AuthContext } from './App';
 import './styles/global.css';
 
-const STORAGE_KEY = 'st6-dev-auth';
+const STORAGE_KEY = 'compass-dev-auth';
 
 interface SavedAuth extends AuthContext {
   displayName: string;
@@ -64,7 +64,7 @@ function Root() {
 
 const container = document.getElementById('root');
 if (!container) {
-  throw new Error('ST6: Root element #root not found. Cannot mount application.');
+  throw new Error('Compass: Root element #root not found. Cannot mount application.');
 }
 
 const root = createRoot(container);

@@ -1,4 +1,4 @@
-# ST6 Weekly Commit Module — Architecture
+# Compass Weekly Commit Module — Architecture
 
 ## Table of Contents
 1. [Repository Structure](#1-repository-structure)
@@ -14,7 +14,7 @@
 Monorepo with clear separation between frontend, backend, and shared infrastructure.
 
 ```
-st6/
+compass/
 ├── README.md
 ├── .gitignore
 ├── docker-compose.yml              # Full-stack local dev
@@ -33,7 +33,7 @@ st6/
 │   ├── gradlew
 │   └── src/
 │       ├── main/
-│       │   ├── java/com/st6/committracker/
+│       │   ├── java/com/compass/platform/
 │       │   │   ├── CommitTrackerApplication.java
 │       │   │   ├── config/
 │       │   │   ├── domain/
@@ -57,7 +57,7 @@ st6/
 │       │       ├── db/migration/
 │       │       └── seed/
 │       └── test/
-│           ├── java/com/st6/committracker/
+│           ├── java/com/compass/platform/
 │           │   ├── domain/
 │           │   ├── integration/
 │           │   └── support/
@@ -101,7 +101,7 @@ st6/
 | DB migrations | Flyway | Convention-based versioned SQL |
 | Frontend build | Webpack 5 | Module Federation requirement |
 | Frontend framework | React 18 + TypeScript strict | Host app compatibility |
-| CSS | Tailwind CSS 3 (prefix: `st6-`) | Scoped styles in host app |
+| CSS | Tailwind CSS 3 (prefix: `compass-`) | Scoped styles in host app |
 | Package manager | pnpm | Fast, strict resolution |
 
 ---
@@ -440,7 +440,7 @@ Spring Boot 3.2+ / Java 21 / Gradle (Kotlin DSL).
 ### 3.1 Package Layout
 
 ```
-com.st6.committracker/
+com.compass.platform/
 ├── CommitTrackerApplication.java
 ├── config/
 │   ├── SecurityConfig.java
@@ -731,7 +731,7 @@ React 18 / TypeScript strict / Webpack 5 Module Federation.
 | State (server) | TanStack Query v5 | Cache, background refetch, optimistic updates |
 | State (UI) | Zustand | Lightweight, no boilerplate |
 | Routing | React Router 6 | Host passes basename, remote handles sub-routes |
-| CSS | Tailwind CSS 3 (prefix: `st6-`) | Scoped styles, rapid development |
+| CSS | Tailwind CSS 3 (prefix: `compass-`) | Scoped styles, rapid development |
 | Drag-and-drop | @dnd-kit/core + @dnd-kit/sortable | Modern, accessible, maintained |
 | Charts | Recharts | Lightweight, React-native |
 | Forms | React Hook Form + Zod | Complex form validation, Zod doubles as API schema validator |
@@ -741,7 +741,7 @@ React 18 / TypeScript strict / Webpack 5 Module Federation.
 
 ```typescript
 new ModuleFederationPlugin({
-  name: 'st6CommitModule',
+  name: 'compassCommitModule',
   filename: 'remoteEntry.js',
   exposes: {
     './App': './src/index.ts',
@@ -760,7 +760,7 @@ new ModuleFederationPlugin({
 
 **Auth handoff:** Host passes `AuthContext` (token, user, refreshToken) as props at the mount boundary. Axios client reads token via React ref and injects as Bearer header.
 
-**Style isolation:** Tailwind prefix `st6-` prevents class collisions with host app.
+**Style isolation:** Tailwind prefix `compass-` prevents class collisions with host app.
 
 ### 4.3 Routing
 
@@ -1005,13 +1005,13 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: st6
-      POSTGRES_USER: st6
-      POSTGRES_PASSWORD: st6local
+      POSTGRES_DB: compass
+      POSTGRES_USER: compass
+      POSTGRES_PASSWORD: compasslocal
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U st6"]
+      test: ["CMD-SHELL", "pg_isready -U compass"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -1020,10 +1020,10 @@ services:
     build: { context: ./backend }
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/st6
-      SPRING_DATASOURCE_USERNAME: st6
-      SPRING_DATASOURCE_PASSWORD: st6local
-      ST6_SEED_ENABLED: "true"
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/compass
+      SPRING_DATASOURCE_USERNAME: compass
+      SPRING_DATASOURCE_PASSWORD: compasslocal
+      COMPASS_SEED_ENABLED: "true"
     ports: ["8080:8080"]
     depends_on: { db: { condition: service_healthy } }
 
@@ -1042,7 +1042,7 @@ version: "3.9"
 services:
   db:
     image: postgres:16-alpine
-    environment: { POSTGRES_DB: st6, POSTGRES_USER: st6, POSTGRES_PASSWORD: st6local }
+    environment: { POSTGRES_DB: compass, POSTGRES_USER: compass, POSTGRES_PASSWORD: compasslocal }
     ports: ["5432:5432"]
     volumes: [pgdata:/var/lib/postgresql/data]
 volumes:
@@ -1065,8 +1065,8 @@ Single Railway project with three services:
 |---|---|---|
 | `DATABASE_URL` | — | Auto-injected by Railway |
 | `SPRING_PROFILES_ACTIVE` | `local` | `railway` |
-| `ST6_SEED_ENABLED` | `true` | `false` (set `true` once for initial seed) |
-| `ST6_CORS_ALLOWED_ORIGINS` | `localhost:*` | Frontend Railway URL |
+| `COMPASS_SEED_ENABLED` | `true` | `false` (set `true` once for initial seed) |
+| `COMPASS_CORS_ALLOWED_ORIGINS` | `localhost:*` | Frontend Railway URL |
 | `REACT_APP_API_BASE_URL` | (empty, proxied) | Backend Railway URL |
 
 **Deploy:** `railway up` or auto-deploy on push to main.
@@ -1075,12 +1075,12 @@ Single Railway project with three services:
 
 ```bash
 # Full demo (no dev tools, just see it work)
-git clone <repo> st6 && cd st6
+git clone <repo> compass && cd compass
 docker compose up --build
 open http://localhost:3000
 
 # Development (hot reload)
-git clone <repo> st6 && cd st6
+git clone <repo> compass && cd compass
 cp .env.example .env
 docker compose -f docker-compose.dev.yml up -d    # Postgres only
 cd backend && ./gradlew bootRun &                  # Spring Boot on :8080
@@ -1104,7 +1104,7 @@ Demo dataset: **Meridian Manufacturing** — a fictional mid-size manufacturer (
 | Commitments | 3 weeks: Week 1 reconciled, Week 2 locked, Week 3 draft |
 | Mix | Strategic + operational categories, range of completion horizons, some manager-assigned |
 
-Loaded by `DataInitializer` (Spring `ApplicationRunner`) on first boot when `st6.seed.enabled=true`. Idempotent — checks if data exists before inserting.
+Loaded by `DataInitializer` (Spring `ApplicationRunner`) on first boot when `compass.seed.enabled=true`. Idempotent — checks if data exists before inserting.
 
 ### 5.5 CI Pipeline Shape
 

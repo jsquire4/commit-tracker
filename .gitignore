@@ -41,7 +41,7 @@ htmlcov/
 .pytest_cache/
 
 # Project docs — original source doc excluded, all else tracked
-docs/ST6 Project.docx
+docs/Compass Project.docx
 
 # Java / Gradle
 .gradle/
@@ -61,3 +61,4 @@ pgdata/
 
 # Test
 backend/bin/
+.gitnexus

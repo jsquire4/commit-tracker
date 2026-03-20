@@ -1,4 +1,4 @@
-# ST6 Execution Observatory — Scenario Bible
+# Compass Execution Observatory — Scenario Bible
 
 > This document defines the narratives that the seed data must encode.
 > Each story is written first, then validated against the application's data model.
@@ -10,7 +10,7 @@
 
 Apex is a mid-market PE firm specializing in industrial and services roll-ups. They acquired four companies over the last 18 months as part of an "operational excellence" thesis — the bet is that these companies have strong market positions but are poorly managed, and that installing disciplined execution practices will unlock 3-5x returns.
 
-Apex uses ST6 as their execution observatory across the entire portfolio. Every portfolio company runs weekly commitment cycles. The Apex operating partners watch the portfolio-level dashboard to answer one question: **"Are our companies executing against the transformation thesis, or are we burning cash?"**
+Apex uses Compass as their execution observatory across the entire portfolio. Every portfolio company runs weekly commitment cycles. The Apex operating partners watch the portfolio-level dashboard to answer one question: **"Are our companies executing against the transformation thesis, or are we burning cash?"**
 
 The story plays out over **26 weeks** (half a year, Jan–June 2026), long enough to show drift, recovery, seasonal patterns, and leadership changes.
 
@@ -253,7 +253,7 @@ When you look at Pinnacle's executive health, everything looks "yellow" — not 
 ### Organizational Structure
 
 **CEO: Frank Morrison** (EXECUTIVE, L5)
-Original Atlas founder. Keeps the CEO title but has stepped back. Doesn't engage with ST6 much — low commitment count, vague entries. He's a placeholder who represents legacy leadership that hasn't been replaced yet.
+Original Atlas founder. Keeps the CEO title but has stepped back. Doesn't engage with Compass much — low commitment count, vague entries. He's a placeholder who represents legacy leadership that hasn't been replaced yet.
 
 **VP of Warehouse Operations: Greg Sullivan** (VP, L5) — weeks 1-15
 Old guard. Resistant to automation. His divisions show the worst strategic alignment in the portfolio. Replaced at week 16.
@@ -483,4 +483,4 @@ Plus reconciliation records, task bullets, displacement records, carry-forward c
 
 ## Next Step
 
-With these narratives defined, the gap analysis asks: **can the ST6 data model encode every specific moment described above?** For each event and pattern, verify that the necessary fields, relationships, and enum values exist.
+With these narratives defined, the gap analysis asks: **can the Compass data model encode every specific moment described above?** For each event and pattern, verify that the necessary fields, relationships, and enum values exist.

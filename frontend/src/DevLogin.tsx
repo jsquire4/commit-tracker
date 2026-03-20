@@ -65,7 +65,7 @@ export function DevLogin({ onAuthenticated }: DevLoginProps) {
         role: user.role,
         orgName: user.orgName,
       };
-      localStorage.setItem('st6-dev-auth', JSON.stringify(savedAuth));
+      localStorage.setItem('compass-dev-auth', JSON.stringify(savedAuth));
       onAuthenticated(savedAuth);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));

@@ -1,13 +1,13 @@
 # Simulation profile — adds SimulationSetupRunner behavior.
 # Designed to layer on top of railway or local profiles (does not override datasource).
 
-st6:
+compass:
   seed:
     enabled: false
     observatory: false
   simulation:
-    setup-file: ${ST6_SIMULATION_SETUP_FILE:classpath:simulation-setup.json}
+    setup-file: ${COMPASS_SIMULATION_SETUP_FILE:classpath:simulation-setup.json}
 
 logging:
   level:
-    com.st6.committracker.seed: DEBUG
+    com.compass.platform.seed: DEBUG

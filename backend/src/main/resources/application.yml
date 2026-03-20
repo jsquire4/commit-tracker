@@ -1,6 +1,6 @@
 spring:
   application:
-    name: commit-tracker
+    name: compass-platform
   servlet:
     multipart:
       max-file-size: 10MB
@@ -39,7 +39,7 @@ management:
     health:
       show-details: when_authorized
 
-st6:
+compass:
   seed:
     enabled: false
   cors:
@@ -50,5 +50,5 @@ st6:
 
 logging:
   level:
-    com.st6.committracker: DEBUG
+    com.compass.platform: DEBUG
     org.hibernate.SQL: WARN

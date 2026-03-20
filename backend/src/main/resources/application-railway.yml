@@ -4,17 +4,17 @@ spring:
     hikari:
       maximum-pool-size: 10
 
-st6:
+compass:
   seed:
-    enabled: ${ST6_SEED_ENABLED:false}
-    observatory: ${ST6_SEED_OBSERVATORY:false}
+    enabled: ${COMPASS_SEED_ENABLED:false}
+    observatory: ${COMPASS_SEED_OBSERVATORY:false}
   cors:
-    allowed-origins: ${ST6_CORS_ALLOWED_ORIGINS:}
+    allowed-origins: ${COMPASS_CORS_ALLOWED_ORIGINS:}
   jwt:
-    issuer: ${ST6_JWT_ISSUER:}
-    public-key: ${ST6_JWT_PUBLIC_KEY:}
+    issuer: ${COMPASS_JWT_ISSUER:}
+    public-key: ${COMPASS_JWT_PUBLIC_KEY:}
 
 logging:
   level:
-    com.st6.committracker: INFO
+    com.compass.platform: INFO
     org.hibernate.SQL: WARN

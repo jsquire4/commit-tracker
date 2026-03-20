@@ -2,9 +2,9 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: st6
-      POSTGRES_USER: st6
-      POSTGRES_PASSWORD: st6local
+      POSTGRES_DB: compass
+      POSTGRES_USER: compass
+      POSTGRES_PASSWORD: compasslocal
     ports:
       - "127.0.0.1:5432:5432"
     volumes:
@@ -14,9 +14,9 @@ services:
     build: ./backend
     environment:
       SPRING_PROFILES_ACTIVE: local
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/st6
-      SPRING_DATASOURCE_USERNAME: st6
-      SPRING_DATASOURCE_PASSWORD: st6local
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/compass
+      SPRING_DATASOURCE_USERNAME: compass
+      SPRING_DATASOURCE_PASSWORD: compasslocal
     ports:
       - "8080:8080"
     depends_on:

@@ -1,14 +1,14 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/st6
-    username: st6
-    password: st6local
+    url: jdbc:postgresql://localhost:5432/compass
+    username: compass
+    password: compasslocal
     hikari:
       maximum-pool-size: 5
   jpa:
     show-sql: true
 
-st6:
+compass:
   seed:
     enabled: true
     observatory: false  # Set to true to seed 3 orgs × 12 weeks of rich observatory data (~30s)
@@ -20,5 +20,5 @@ st6:
 
 logging:
   level:
-    com.st6.committracker: DEBUG
+    com.compass.platform: DEBUG
     org.hibernate.SQL: DEBUG

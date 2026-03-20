@@ -20,7 +20,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
-    console.error('ST6 Commit Module error:', error, errorInfo);
+    console.error('Compass error:', error, errorInfo);
   }
 
   render(): ReactNode {

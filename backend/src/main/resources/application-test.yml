@@ -1,17 +1,17 @@
 spring:
   datasource:
     # Overridden by Testcontainers dynamically
-    url: jdbc:tc:postgresql:16-alpine:///st6_test
+    url: jdbc:tc:postgresql:16-alpine:///compass_test
   jpa:
     show-sql: false
   flyway:
     clean-disabled: false
 
-st6:
+compass:
   seed:
     enabled: false
 
 logging:
   level:
-    com.st6.committracker: WARN
+    com.compass.platform: WARN
     org.hibernate.SQL: WARN
