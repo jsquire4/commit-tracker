@@ -3,22 +3,25 @@ import { useAuth } from '@/hooks/useAuth';
 import { PageHeader } from '@/components/PageHeader';
 import { ProfileTab } from './ProfileTab';
 import { AdminTab } from './AdminTab';
+import { OrganizationsTab } from './OrganizationsTab';
 import type { UserRole } from '@/types';
 
 const ADMIN_ROLES: UserRole[] = ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE'];
+const ORG_ROLES: UserRole[] = ['VP', 'EXECUTIVE'];
 
-type TabId = 'profile' | 'admin';
+type TabId = 'profile' | 'admin' | 'organizations';
 
 export function SettingsPage() {
   const { role } = useAuth();
   const canAdmin = role != null && ADMIN_ROLES.includes(role);
+  const canOrgs = role != null && ORG_ROLES.includes(role);
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'profile', label: 'Profile' },
     ...(canAdmin ? [{ id: 'admin' as const, label: 'Admin' }] : []),
-    // Organizations tab slot reserved for Wave 3
+    ...(canOrgs ? [{ id: 'organizations' as const, label: 'Organizations' }] : []),
   ];
 
   return (
@@ -50,6 +53,7 @@ export function SettingsPage() {
         <div className="animate-fade-in">
           {activeTab === 'profile' && <ProfileTab />}
           {activeTab === 'admin' && canAdmin && <AdminTab />}
+          {activeTab === 'organizations' && canOrgs && <OrganizationsTab />}
         </div>
       </div>
     </div>

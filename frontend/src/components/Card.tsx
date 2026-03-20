@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 
 type AccentColor = 'teal' | 'amber' | 'rose';
 type PaddingSize = 'compact' | 'normal' | 'spacious';
@@ -10,6 +10,7 @@ interface CardProps {
   floating?: boolean;
   padding?: PaddingSize;
   className?: string;
+  style?: CSSProperties;
 }
 
 const accentClasses: Record<AccentColor, string> = {
@@ -31,9 +32,11 @@ export default function Card({
   floating = false,
   padding = 'normal',
   className = '',
+  style,
 }: CardProps) {
   return (
     <div
+      style={style}
       className={[
         'bg-surface-lowest rounded-sm',
         paddingClasses[padding],

@@ -39,23 +39,24 @@ export function DrillDownBreadcrumb({ drill, names }: DrillDownBreadcrumbProps) 
   if (segments.length <= 1) return null;
 
   return (
-    <nav className="flex items-center gap-1.5 text-sm px-8 py-3" aria-label="Breadcrumb">
+    <nav className="flex items-center gap-1.5 text-body px-8 py-3" aria-label="Breadcrumb">
       {segments.map((seg, i) => {
         const isLast = i === segments.length - 1;
         return (
           <span key={i} className="flex items-center gap-1.5">
             {i > 0 && (
-              <svg className="w-3 h-3 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+              <svg className="w-3 h-3 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             )}
             {isLast ? (
-              <span className="text-gray-300 font-medium">{seg.label}</span>
+              <span className="text-on-surface font-medium">{seg.label}</span>
             ) : (
               <button
                 type="button"
                 onClick={seg.onClick}
-                className="text-gray-500 hover:text-gray-200 transition-colors"
+                className="text-muted hover:text-on-surface-variant transition-colors"
+                style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
               >
                 {seg.label}
               </button>

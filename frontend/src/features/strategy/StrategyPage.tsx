@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import {
   useMutation,
   useQueryClient,
@@ -24,591 +24,49 @@ import type {
   RallyCryNode,
   DefiningObjectiveNode,
   OutcomeNode,
-  User,
 } from '@/types';
+import { RallyCryColumn } from './RallyCryColumn';
+import { StrategyModal, type StrategyModalMode } from './StrategyModal';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 // ── Constants ───────────────────────────────────────────────────────────
 
 const RCDO_TREE_KEY = ['rcdo', 'tree'];
 const ALLOWED_ROLES = new Set(['VP', 'EXECUTIVE']);
 
-// ── Owner dropdown ──────────────────────────────────────────────────────
+// ── Modal state types ───────────────────────────────────────────────────
 
-function OwnerSelect({
-  value,
-  onChange,
-  members,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  members: User[];
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => { onChange(e.target.value); }}
-      className="mt-1 block w-full rounded border border-gray-300 bg-white px-2 py-1.5 text-sm
-        dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-    >
-      <option value="">No owner</option>
-      {members.map((m) => (
-        <option key={m.id} value={m.id}>
-          {m.displayName}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-// ── Inline add form ─────────────────────────────────────────────────────
-
-function InlineAddForm({
-  placeholder,
-  showOwner,
-  members,
-  isPending,
-  onSave,
-  onCancel,
-}: {
-  placeholder: string;
-  showOwner: boolean;
-  members: User[];
-  isPending: boolean;
-  onSave: (title: string, description: string, ownerUserId: string) => void;
-  onCancel: () => void;
-}) {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [ownerUserId, setOwnerUserId] = useState('');
-  const titleRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    titleRef.current?.focus();
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    onSave(title.trim(), description.trim(), ownerUserId);
-  };
-
-  return (
-    <form onSubmit={handleSubmit} className="mt-2 space-y-2">
-      <input
-        ref={titleRef}
-        type="text"
-        value={title}
-        onChange={(e) => { setTitle(e.target.value); }}
-        placeholder={placeholder}
-        className="block w-full rounded border border-gray-300 px-3 py-1.5 text-sm
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-      />
-      <textarea
-        value={description}
-        onChange={(e) => { setDescription(e.target.value); }}
-        placeholder="Description (optional)"
-        rows={2}
-        className="block w-full rounded border border-gray-300 px-3 py-1.5 text-sm
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-      />
-      {showOwner && (
-        <OwnerSelect value={ownerUserId} onChange={setOwnerUserId} members={members} />
-      )}
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!title.trim() || isPending}
-          className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white
-            hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? 'Saving...' : 'Save'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700
-            dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// ── Inline edit field ───────────────────────────────────────────────────
-
-function InlineEditField({
-  initialTitle,
-  initialDescription,
-  initialOwnerUserId,
-  showOwner,
-  members,
-  isPending,
-  onSave,
-  onCancel,
-}: {
+interface ModalState {
+  open: boolean;
+  mode: StrategyModalMode;
+  /** For edit: the id of the node being edited */
+  editId: string | null;
+  /** For edit: the type path segment */
+  editType: 'rally-cries' | 'defining-objectives' | 'outcomes' | null;
+  /** Parent context IDs */
+  rallyCryId: string | null;
+  objectiveId: string | null;
+  /** Breadcrumb parts */
+  breadcrumb: string[];
+  /** Pre-filled values for edit */
   initialTitle: string;
   initialDescription: string;
   initialOwnerUserId: string;
-  showOwner: boolean;
-  members: User[];
-  isPending: boolean;
-  onSave: (title: string, description: string | null, ownerUserId: string | null) => void;
-  onCancel: () => void;
-}) {
-  const [title, setTitle] = useState(initialTitle);
-  const [description, setDescription] = useState(initialDescription);
-  const [ownerUserId, setOwnerUserId] = useState(initialOwnerUserId);
-  const titleRef = useRef<HTMLInputElement>(null);
+}
 
-  useEffect(() => {
-    titleRef.current?.focus();
-    titleRef.current?.select();
-  }, []);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim()) return;
-    onSave(
-      title.trim(),
-      description.trim() || null,
-      ownerUserId || null
-    );
+function emptyModal(): ModalState {
+  return {
+    open: false,
+    mode: 'rallycry',
+    editId: null,
+    editType: null,
+    rallyCryId: null,
+    objectiveId: null,
+    breadcrumb: [],
+    initialTitle: '',
+    initialDescription: '',
+    initialOwnerUserId: '',
   };
-
-  return (
-    <form onSubmit={handleSubmit} className="space-y-2">
-      <input
-        ref={titleRef}
-        type="text"
-        value={title}
-        onChange={(e) => { setTitle(e.target.value); }}
-        className="block w-full rounded border border-gray-300 px-3 py-1.5 text-sm font-semibold
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-      />
-      <textarea
-        value={description}
-        onChange={(e) => { setDescription(e.target.value); }}
-        placeholder="Description (optional)"
-        rows={2}
-        className="block w-full rounded border border-gray-300 px-3 py-1.5 text-sm
-          dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200"
-      />
-      {showOwner && (
-        <OwnerSelect value={ownerUserId} onChange={setOwnerUserId} members={members} />
-      )}
-      <div className="flex items-center gap-2">
-        <button
-          type="submit"
-          disabled={!title.trim() || isPending}
-          className="rounded bg-blue-600 px-3 py-1 text-sm font-medium text-white
-            hover:bg-blue-700 disabled:opacity-50"
-        >
-          {isPending ? 'Saving...' : 'Save'}
-        </button>
-        <button
-          type="button"
-          onClick={onCancel}
-          className="rounded px-3 py-1 text-sm text-gray-500 hover:text-gray-700
-            dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          Cancel
-        </button>
-      </div>
-    </form>
-  );
-}
-
-// ── Archive confirm button ──────────────────────────────────────────────
-
-function ArchiveButton({
-  label,
-  onConfirm,
-  isPending,
-}: {
-  label: string;
-  onConfirm: () => void;
-  isPending: boolean;
-}) {
-  const [confirming, setConfirming] = useState(false);
-
-  if (confirming) {
-    return (
-      <span className="inline-flex items-center gap-1 text-xs">
-        <span className="text-red-600 dark:text-red-400">Archive {label}?</span>
-        <button
-          onClick={onConfirm}
-          disabled={isPending}
-          className="font-medium text-red-600 underline hover:text-red-800
-            dark:text-red-400 dark:hover:text-red-300"
-        >
-          {isPending ? 'Archiving...' : 'Yes'}
-        </button>
-        <button
-          onClick={() => { setConfirming(false); }}
-          className="text-gray-500 underline hover:text-gray-700
-            dark:text-gray-400 dark:hover:text-gray-200"
-        >
-          No
-        </button>
-      </span>
-    );
-  }
-
-  return (
-    <button
-      onClick={() => { setConfirming(true); }}
-      title={`Archive ${label}`}
-      className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400"
-    >
-      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-      </svg>
-    </button>
-  );
-}
-
-// ── Outcome item ────────────────────────────────────────────────────────
-
-function OutcomeItem({
-  outcome,
-  members,
-}: {
-  outcome: OutcomeNode;
-  members: User[];
-}) {
-  const [editing, setEditing] = useState(false);
-  const queryClient = useQueryClient();
-
-  const updateMut = useMutation({
-    mutationFn: (req: UpdateRcdoNodeRequest) =>
-      updateRcdoNode('outcomes', outcome.id, req),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setEditing(false);
-    },
-  });
-
-  const archiveMut = useMutation({
-    mutationFn: () => archiveRcdoNode('outcomes', outcome.id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-    },
-  });
-
-  if (editing) {
-    return (
-      <li className="py-1">
-        <InlineEditField
-          initialTitle={outcome.title}
-          initialDescription={outcome.description ?? ''}
-          initialOwnerUserId={outcome.ownerUserId ?? ''}
-          showOwner
-          members={members}
-          isPending={updateMut.isPending}
-          onSave={(title, description, ownerUserId) => {
-            updateMut.mutate({ title, description, ownerUserId });
-          }}
-          onCancel={() => { setEditing(false); }}
-        />
-      </li>
-    );
-  }
-
-  return (
-    <li className="group flex items-start gap-2 py-1">
-      <span className="mt-1 text-gray-400 dark:text-gray-500">&bull;</span>
-      <div className="flex-1 min-w-0">
-        <button
-          onClick={() => { setEditing(true); }}
-          className="text-left text-sm text-gray-800 hover:text-blue-600
-            dark:text-gray-200 dark:hover:text-blue-400"
-        >
-          {outcome.title}
-        </button>
-        {outcome.ownerDisplayName && (
-          <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-            &mdash; {outcome.ownerDisplayName}
-          </span>
-        )}
-        {outcome.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400">{outcome.description}</p>
-        )}
-      </div>
-      <span className="opacity-0 transition-opacity group-hover:opacity-100">
-        <ArchiveButton
-          label="outcome"
-          onConfirm={() => { archiveMut.mutate(); }}
-          isPending={archiveMut.isPending}
-        />
-      </span>
-    </li>
-  );
-}
-
-// ── Objective card ──────────────────────────────────────────────────────
-
-function ObjectiveCard({
-  objective,
-  members,
-}: {
-  objective: DefiningObjectiveNode;
-  members: User[];
-}) {
-  const [editing, setEditing] = useState(false);
-  const [addingOutcome, setAddingOutcome] = useState(false);
-  const queryClient = useQueryClient();
-
-  const updateMut = useMutation({
-    mutationFn: (req: UpdateRcdoNodeRequest) =>
-      updateRcdoNode('defining-objectives', objective.id, req),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setEditing(false);
-    },
-  });
-
-  const archiveMut = useMutation({
-    mutationFn: () => archiveRcdoNode('defining-objectives', objective.id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-    },
-  });
-
-  const createOutcomeMut = useMutation({
-    mutationFn: (req: CreateOutcomeRequest) => createOutcome(req),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setAddingOutcome(false);
-    },
-  });
-
-  return (
-    <div className="ml-4 mt-3 rounded-lg border-l-4 border-l-green-500 bg-gray-50 p-4
-      dark:bg-gray-800/50">
-      {editing ? (
-        <InlineEditField
-          initialTitle={objective.title}
-          initialDescription={objective.description ?? ''}
-          initialOwnerUserId={objective.ownerUserId ?? ''}
-          showOwner
-          members={members}
-          isPending={updateMut.isPending}
-          onSave={(title, description, ownerUserId) => {
-            updateMut.mutate({ title, description, ownerUserId });
-          }}
-          onCancel={() => { setEditing(false); }}
-        />
-      ) : (
-        <div className="group flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <button
-              onClick={() => { setEditing(true); }}
-              className="text-left text-sm font-semibold text-gray-800 hover:text-green-600
-                dark:text-gray-200 dark:hover:text-green-400"
-            >
-              {objective.title}
-            </button>
-            {objective.ownerDisplayName && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Owner: {objective.ownerDisplayName}
-              </p>
-            )}
-            {objective.description && (
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                {objective.description}
-              </p>
-            )}
-          </div>
-          <span className="opacity-0 transition-opacity group-hover:opacity-100">
-            <ArchiveButton
-              label="objective"
-              onConfirm={() => { archiveMut.mutate(); }}
-              isPending={archiveMut.isPending}
-            />
-          </span>
-        </div>
-      )}
-
-      {/* Outcomes list */}
-      <ul className="mt-2 space-y-0.5">
-        {objective.outcomes.map((oc) => (
-          <OutcomeItem key={oc.id} outcome={oc} members={members} />
-        ))}
-      </ul>
-
-      {/* Add outcome */}
-      {addingOutcome ? (
-        <InlineAddForm
-          placeholder="Outcome title"
-          showOwner
-          members={members}
-          isPending={createOutcomeMut.isPending}
-          onSave={(title, description, ownerUserId) => {
-            createOutcomeMut.mutate({
-              definingObjectiveId: objective.id,
-              title,
-              description: description || undefined,
-              ownerUserId: ownerUserId || undefined,
-            });
-          }}
-          onCancel={() => { setAddingOutcome(false); }}
-        />
-      ) : (
-        <button
-          onClick={() => { setAddingOutcome(true); }}
-          className="mt-2 text-xs text-gray-400 hover:text-green-600
-            dark:text-gray-500 dark:hover:text-green-400"
-        >
-          + Add Outcome
-        </button>
-      )}
-    </div>
-  );
-}
-
-// ── Rally Cry card ──────────────────────────────────────────────────────
-
-function RallyCryCard({
-  rallyCry,
-  members,
-  defaultExpanded,
-}: {
-  rallyCry: RallyCryNode;
-  members: User[];
-  defaultExpanded: boolean;
-}) {
-  const [expanded, setExpanded] = useState(defaultExpanded);
-  const [editing, setEditing] = useState(false);
-  const [addingObjective, setAddingObjective] = useState(false);
-  const queryClient = useQueryClient();
-
-  const updateMut = useMutation({
-    mutationFn: (req: UpdateRcdoNodeRequest) =>
-      updateRcdoNode('rally-cries', rallyCry.id, req),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setEditing(false);
-    },
-  });
-
-  const archiveMut = useMutation({
-    mutationFn: () => archiveRcdoNode('rally-cries', rallyCry.id),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-    },
-  });
-
-  const createDoMut = useMutation({
-    mutationFn: (req: CreateDefiningObjectiveRequest) =>
-      createDefiningObjective(req),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setAddingObjective(false);
-    },
-  });
-
-  const objectiveCount = rallyCry.definingObjectives.length;
-
-  return (
-    <div className="rounded-xl border border-gray-200 border-l-4 border-l-blue-500 bg-white p-5
-      shadow-sm dark:border-gray-700 dark:border-l-blue-400 dark:bg-gray-900">
-      {editing ? (
-        <InlineEditField
-          initialTitle={rallyCry.title}
-          initialDescription={rallyCry.description ?? ''}
-          initialOwnerUserId=""
-          showOwner={false}
-          members={members}
-          isPending={updateMut.isPending}
-          onSave={(title, description) => {
-            updateMut.mutate({ title, description });
-          }}
-          onCancel={() => { setEditing(false); }}
-        />
-      ) : (
-        <div className="group flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => { setExpanded(!expanded); }}
-                className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
-              >
-                <svg
-                  className={`h-4 w-4 transition-transform ${expanded ? 'rotate-90' : ''}`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
-              <button
-                onClick={() => { setEditing(true); }}
-                className="text-left text-base font-bold text-gray-900 hover:text-blue-600
-                  dark:text-gray-100 dark:hover:text-blue-400"
-              >
-                {rallyCry.title}
-              </button>
-              <span className="text-xs text-gray-400 dark:text-gray-500">
-                {objectiveCount} objective{objectiveCount !== 1 ? 's' : ''}
-              </span>
-            </div>
-            {rallyCry.description && (
-              <p className="ml-6 mt-1 text-sm text-gray-500 dark:text-gray-400">
-                {rallyCry.description}
-              </p>
-            )}
-          </div>
-          <span className="opacity-0 transition-opacity group-hover:opacity-100">
-            <ArchiveButton
-              label="rally cry"
-              onConfirm={() => { archiveMut.mutate(); }}
-              isPending={archiveMut.isPending}
-            />
-          </span>
-        </div>
-      )}
-
-      {expanded && !editing && (
-        <div className="mt-3">
-          {rallyCry.definingObjectives.map((doNode) => (
-            <ObjectiveCard key={doNode.id} objective={doNode} members={members} />
-          ))}
-
-          {addingObjective ? (
-            <div className="ml-4 mt-3">
-              <InlineAddForm
-                placeholder="Objective title"
-                showOwner
-                members={members}
-                isPending={createDoMut.isPending}
-                onSave={(title, description, ownerUserId) => {
-                  createDoMut.mutate({
-                    rallyCryId: rallyCry.id,
-                    title,
-                    description: description || undefined,
-                    ownerUserId: ownerUserId || undefined,
-                  });
-                }}
-                onCancel={() => { setAddingObjective(false); }}
-              />
-            </div>
-          ) : (
-            <button
-              onClick={() => { setAddingObjective(true); }}
-              className="ml-4 mt-3 text-xs text-gray-400 hover:text-blue-600
-                dark:text-gray-500 dark:hover:text-blue-400"
-            >
-              + Add Objective
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
 }
 
 // ── Main page ───────────────────────────────────────────────────────────
@@ -624,31 +82,188 @@ export function StrategyPage() {
     staleTime: 10 * 60_000,
   });
 
-  const [addingRallyCry, setAddingRallyCry] = useState(false);
+  const [modal, setModal] = useState<ModalState>(emptyModal);
+  const [archiveTarget, setArchiveTarget] = useState<{
+    type: 'rally-cries' | 'defining-objectives' | 'outcomes';
+    id: string;
+    label: string;
+  } | null>(null);
+
+  // ── Mutations ─────────────────────────────────────────────────────────
 
   const createRcMut = useMutation({
     mutationFn: (req: CreateRallyCryRequest) => createRallyCry(req),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
-      setAddingRallyCry(false);
+      setModal(emptyModal());
     },
   });
 
-  const handleAddRallyCry = useCallback(
-    (title: string, description: string) => {
-      createRcMut.mutate({
-        title,
-        description: description || undefined,
-      });
+  const createDoMut = useMutation({
+    mutationFn: (req: CreateDefiningObjectiveRequest) => createDefiningObjective(req),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
+      setModal(emptyModal());
     },
-    [createRcMut]
+  });
+
+  const createOutcomeMut = useMutation({
+    mutationFn: (req: CreateOutcomeRequest) => createOutcome(req),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
+      setModal(emptyModal());
+    },
+  });
+
+  const updateMut = useMutation({
+    mutationFn: ({ type, id, req }: { type: string; id: string; req: UpdateRcdoNodeRequest }) =>
+      updateRcdoNode(type as 'rally-cries' | 'defining-objectives' | 'outcomes', id, req),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
+      setModal(emptyModal());
+    },
+  });
+
+  const archiveMut = useMutation({
+    mutationFn: ({ type, id }: { type: string; id: string }) =>
+      archiveRcdoNode(type as 'rally-cries' | 'defining-objectives' | 'outcomes', id),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: RCDO_TREE_KEY });
+      setArchiveTarget(null);
+    },
+  });
+
+  const isPending = createRcMut.isPending || createDoMut.isPending || createOutcomeMut.isPending || updateMut.isPending;
+
+  // ── Modal openers ─────────────────────────────────────────────────────
+
+  const openAddRallyCry = useCallback(() => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'rallycry',
+    });
+  }, []);
+
+  const openAddObjective = useCallback((rc: RallyCryNode) => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'objective',
+      rallyCryId: rc.id,
+      breadcrumb: [`Rally Cry: <strong class="text-accent">${rc.title}</strong>`],
+    });
+  }, []);
+
+  const openAddOutcome = useCallback((obj: DefiningObjectiveNode, rc: RallyCryNode) => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'outcome',
+      rallyCryId: rc.id,
+      objectiveId: obj.id,
+      breadcrumb: [
+        `Rally Cry: <strong class="text-accent">${rc.title}</strong>`,
+        `Objective: <strong class="text-accent">${obj.title}</strong>`,
+      ],
+    });
+  }, []);
+
+  const openEditRallyCry = useCallback((rc: RallyCryNode) => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'rallycry',
+      editId: rc.id,
+      editType: 'rally-cries',
+      initialTitle: rc.title,
+      initialDescription: rc.description ?? '',
+    });
+  }, []);
+
+  const openEditObjective = useCallback((obj: DefiningObjectiveNode, rc: RallyCryNode) => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'objective',
+      editId: obj.id,
+      editType: 'defining-objectives',
+      rallyCryId: rc.id,
+      breadcrumb: [`Rally Cry: <strong class="text-accent">${rc.title}</strong>`],
+      initialTitle: obj.title,
+      initialDescription: obj.description ?? '',
+      initialOwnerUserId: obj.ownerUserId ?? '',
+    });
+  }, []);
+
+  const openEditOutcome = useCallback((oc: OutcomeNode, obj: DefiningObjectiveNode, rc: RallyCryNode) => {
+    setModal({
+      ...emptyModal(),
+      open: true,
+      mode: 'outcome',
+      editId: oc.id,
+      editType: 'outcomes',
+      rallyCryId: rc.id,
+      objectiveId: obj.id,
+      breadcrumb: [
+        `Rally Cry: <strong class="text-accent">${rc.title}</strong>`,
+        `Objective: <strong class="text-accent">${obj.title}</strong>`,
+      ],
+      initialTitle: oc.title,
+      initialDescription: oc.description ?? '',
+      initialOwnerUserId: oc.ownerUserId ?? '',
+    });
+  }, []);
+
+  // ── Save handler ──────────────────────────────────────────────────────
+
+  const handleModalSave = useCallback(
+    (title: string, description: string, ownerUserId: string) => {
+      // Edit mode
+      if (modal.editId && modal.editType) {
+        updateMut.mutate({
+          type: modal.editType,
+          id: modal.editId,
+          req: {
+            title,
+            description: description || null,
+            ownerUserId: ownerUserId || null,
+          },
+        });
+        return;
+      }
+
+      // Create mode
+      if (modal.mode === 'rallycry') {
+        createRcMut.mutate({
+          title,
+          description: description || undefined,
+        });
+      } else if (modal.mode === 'objective' && modal.rallyCryId) {
+        createDoMut.mutate({
+          rallyCryId: modal.rallyCryId,
+          title,
+          description: description || undefined,
+          ownerUserId: ownerUserId || undefined,
+        });
+      } else if (modal.mode === 'outcome' && modal.objectiveId) {
+        createOutcomeMut.mutate({
+          definingObjectiveId: modal.objectiveId,
+          title,
+          description: description || undefined,
+          ownerUserId: ownerUserId || undefined,
+        });
+      }
+    },
+    [modal, createRcMut, createDoMut, createOutcomeMut, updateMut],
   );
 
-  // Access guard — hooks are already called above
+  // ── Access guard ──────────────────────────────────────────────────────
+
   if (!role || !ALLOWED_ROLES.has(role)) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">
+        <p className="text-on-surface-variant">
           You do not have access to manage strategy. VP or Executive role required.
         </p>
       </div>
@@ -658,7 +273,7 @@ export function StrategyPage() {
   if (isLoading) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-gray-500 dark:text-gray-400">Loading strategy...</p>
+        <p className="text-muted">Loading strategy...</p>
       </div>
     );
   }
@@ -666,7 +281,7 @@ export function StrategyPage() {
   if (isError) {
     return (
       <div className="flex h-64 items-center justify-center">
-        <p className="text-red-600 dark:text-red-400">
+        <p className="text-error">
           Failed to load strategy tree. Please try again.
         </p>
       </div>
@@ -674,47 +289,117 @@ export function StrategyPage() {
   }
 
   const rallyCries = tree?.rallyCries ?? [];
+  const totalObjectives = rallyCries.reduce((s, rc) => s + rc.definingObjectives.length, 0);
+  const totalOutcomes = rallyCries.reduce(
+    (s, rc) => s + rc.definingObjectives.reduce((os, d) => os + d.outcomes.length, 0),
+    0,
+  );
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Strategy</h1>
-        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-          Manage rally cries, defining objectives, and outcomes.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {rallyCries.map((rc, i) => (
-          <RallyCryCard
-            key={rc.id}
-            rallyCry={rc}
-            members={orgMembers}
-            defaultExpanded={i === 0}
-          />
-        ))}
-      </div>
-
-      {addingRallyCry ? (
-        <div className="mt-4">
-          <InlineAddForm
-            placeholder="Rally cry title"
-            showOwner={false}
-            members={[]}
-            isPending={createRcMut.isPending}
-            onSave={(title, description) => { handleAddRallyCry(title, description); }}
-            onCancel={() => { setAddingRallyCry(false); }}
-          />
+    <div className="min-h-screen bg-surface">
+      <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+        {/* Page Header */}
+        <div className="flex items-start justify-between mb-6 max-w-[1280px] mx-auto animate-fade-in">
+          <div>
+            <h1 className="font-serif text-headline text-on-surface">Strategic Framework</h1>
+            <p className="mt-1 text-body text-on-surface-variant">
+              Define rally cries, objectives, and outcomes. All commitments link back to this tree.
+            </p>
+          </div>
+          <div className="text-[0.8125rem] text-muted whitespace-nowrap mt-1 tabular-nums">
+            {rallyCries.length} rally {rallyCries.length === 1 ? 'cry' : 'cries'} &middot;{' '}
+            {totalObjectives} objective{totalObjectives !== 1 ? 's' : ''} &middot;{' '}
+            {totalOutcomes} outcome{totalOutcomes !== 1 ? 's' : ''}
+          </div>
         </div>
-      ) : (
-        <button
-          onClick={() => { setAddingRallyCry(true); }}
-          className="mt-4 text-sm text-gray-400 hover:text-blue-600
-            dark:text-gray-500 dark:hover:text-blue-400"
+
+        {/* Strategy Board — horizontal scroll Kanban */}
+        <div
+          className="flex gap-8 overflow-x-auto pb-4 scroll-smooth
+            [-webkit-overflow-scrolling:touch]
+            [&::-webkit-scrollbar]:h-1.5
+            [&::-webkit-scrollbar-track]:bg-transparent
+            [&::-webkit-scrollbar-thumb]:bg-surface-container-high
+            [&::-webkit-scrollbar-thumb]:rounded-full
+            [&::-webkit-scrollbar-thumb:hover]:bg-muted"
         >
-          + Add Rally Cry
-        </button>
-      )}
+          {rallyCries.map((rc) => (
+            <RallyCryColumn
+              key={rc.id}
+              rallyCry={rc}
+              onEditRallyCry={() => { openEditRallyCry(rc); }}
+              onArchiveRallyCry={() => {
+                setArchiveTarget({ type: 'rally-cries', id: rc.id, label: rc.title });
+              }}
+              onEditObjective={(obj) => { openEditObjective(obj, rc); }}
+              onArchiveObjective={(obj) => {
+                setArchiveTarget({ type: 'defining-objectives', id: obj.id, label: obj.title });
+              }}
+              onAddObjective={() => { openAddObjective(rc); }}
+              onEditOutcome={(oc, obj) => { openEditOutcome(oc, obj, rc); }}
+              onArchiveOutcome={(oc) => {
+                setArchiveTarget({ type: 'outcomes', id: oc.id, label: oc.title });
+              }}
+              onAddOutcome={(obj) => { openAddOutcome(obj, rc); }}
+            />
+          ))}
+
+          {/* Add Rally Cry — dashed column button */}
+          <button
+            type="button"
+            onClick={openAddRallyCry}
+            className="min-w-[340px] max-w-[440px] flex-[1_0_340px]
+              flex items-center justify-center gap-2
+              px-5 py-5 text-[0.9375rem] font-medium text-accent
+              bg-transparent border-[1.5px] border-dashed border-outline-variant rounded-sm
+              cursor-pointer self-stretch
+              transition-all duration-[150ms]
+              hover:bg-accent/[0.04] hover:border-accent
+              active:translate-y-px
+              animate-fade-up
+              relative
+              [&]:before:content-[''] [&]:before:absolute [&]:before:-left-4
+              [&]:before:top-0 [&]:before:bottom-0 [&]:before:w-px
+              [&]:before:bg-outline-variant/15"
+          >
+            <svg className="w-[18px] h-[18px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+            </svg>
+            Add Rally Cry
+          </button>
+        </div>
+      </div>
+
+      {/* Strategy Modal — create/edit */}
+      <StrategyModal
+        open={modal.open}
+        mode={modal.mode}
+        breadcrumb={modal.breadcrumb}
+        members={orgMembers}
+        isPending={isPending}
+        initialTitle={modal.initialTitle}
+        initialDescription={modal.initialDescription}
+        initialOwnerUserId={modal.initialOwnerUserId}
+        onSave={handleModalSave}
+        onClose={() => { setModal(emptyModal()); }}
+      />
+
+      {/* Archive confirmation */}
+      <ConfirmDialog
+        open={archiveTarget !== null}
+        onClose={() => { setArchiveTarget(null); }}
+        onConfirm={() => {
+          if (archiveTarget) {
+            archiveMut.mutate({ type: archiveTarget.type, id: archiveTarget.id });
+          }
+        }}
+        title={`Archive "${archiveTarget?.label ?? ''}"?`}
+        description="This will archive the item. Linked commitments will not be deleted."
+        confirmLabel="Archive"
+        cancelLabel="Cancel"
+        variant="danger"
+        loading={archiveMut.isPending}
+      />
     </div>
   );
 }

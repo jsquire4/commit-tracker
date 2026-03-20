@@ -1,9 +1,9 @@
 /**
  * Level 0: Rally Cry overview — the landing view of the Briefing.
- * Adapted from the original BriefingPage. Shows headline, rally cry status cards, and watch list.
- * Rally cry cards are now clickable — drilling into Level 1 (RallyCryDetailLevel).
+ * Restyled to Compass design: 3-column grid of rally cry cards with
+ * expandable linked commitments grouped by person.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
@@ -12,7 +12,7 @@ import { useRcdoTree } from '@/hooks/useRcdo';
 import { useExecutiveHealth, useCarryChains, useCostImpact } from '@/hooks/useObservatory';
 import { listCycles } from '@/api/cycles.api';
 import { getCommitments } from '@/api/commitments.api';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import type { RallyCryNode } from '@/types/rcdo.types';
 import type { Commitment } from '@/types/commitment.types';
 import type { RcdoCoverageResponse, AlignmentSignalResponse } from '@/types/dashboard.types';
@@ -25,6 +25,7 @@ type RallyCryStatus = 'ON_TRACK' | 'AT_RISK' | 'OFF_TRACK';
 interface RallyCryCard {
   rallyCryId: string;
   title: string;
+  description?: string | undefined;
   status: RallyCryStatus;
   commitmentCount: number;
   narrative: string;
@@ -35,6 +36,8 @@ interface RallyCryCard {
   contributingTeams: string[];
   sortOrder: number;
   trendDirection: 'up' | 'down' | 'flat' | null;
+  /** Grouped commitments by person for drill-down */
+  commitmentsByPerson: { name: string; titles: string[] }[];
 }
 
 interface WatchItem {
@@ -44,7 +47,7 @@ interface WatchItem {
   drillTarget: { team?: string; person?: string } | null;
 }
 
-// ─── Data Processing (preserved from BriefingPage) ────────────────────────────
+// ─── Data Processing ────────────────────────────────────────────────────────
 
 function buildRallyCryCards(
   rcdo: RcdoCoverageResponse,
@@ -72,9 +75,11 @@ function buildRallyCryCards(
 
   const sortOrderMap = new Map<string, number>();
   const doTitleMap = new Map<string, string>();
+  const rcDescriptionMap = new Map<string, string>();
   if (rcdoTree) {
     for (const rc of rcdoTree) {
       sortOrderMap.set(rc.id, rc.sortOrder);
+      if (rc.description) rcDescriptionMap.set(rc.id, rc.description);
       for (const dObj of rc.definingObjectives) {
         doTitleMap.set(dObj.id, dObj.title);
       }
@@ -137,12 +142,23 @@ function buildRallyCryCards(
       trendDirection = rc.commitmentCount > prevCount ? 'up' : rc.commitmentCount < prevCount ? 'down' : 'flat';
     }
 
+    // Group commitments by person
+    const byPerson = new Map<string, string[]>();
+    for (const c of rcCommitments) {
+      if (!byPerson.has(c.userDisplayName)) byPerson.set(c.userDisplayName, []);
+      byPerson.get(c.userDisplayName)!.push(c.title);
+    }
+
+    const desc = rcDescriptionMap.get(rc.rallyCryId);
     return {
-      rallyCryId: rc.rallyCryId, title: rc.title, status, commitmentCount: rc.commitmentCount,
+      rallyCryId: rc.rallyCryId, title: rc.title,
+      ...(desc ? { description: desc } : {}),
+      status, commitmentCount: rc.commitmentCount,
       narrative, coveredObjectiveCount: coveredObjectives.length,
       totalObjectiveCount: coveredObjectives.length + uncovered.length,
       uncoveredObjectives: uncovered, coveredObjectives, contributingTeams: contributors,
       sortOrder: sortOrderMap.get(rc.rallyCryId) ?? 999, trendDirection,
+      commitmentsByPerson: [...byPerson.entries()].map(([name, titles]) => ({ name, titles })),
     };
   });
 }
@@ -186,19 +202,96 @@ function buildWatchList(
   return items;
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
+// ─── Expandable Rally Card ────────────────────────────────────────────────────
 
-const STATUS_BADGE: Record<RallyCryStatus, string> = {
-  ON_TRACK: 'bg-green-500/10 border-green-500/30 text-green-400',
-  AT_RISK: 'bg-amber-500/10 border-amber-500/30 text-amber-400',
-  OFF_TRACK: 'bg-red-500/10 border-red-500/30 text-red-400',
-};
-const STATUS_LABEL: Record<RallyCryStatus, string> = { ON_TRACK: 'On Track', AT_RISK: 'At Risk', OFF_TRACK: 'Off Track' };
-const STATUS_DOT: Record<RallyCryStatus, string> = { ON_TRACK: 'bg-green-500', AT_RISK: 'bg-amber-500', OFF_TRACK: 'bg-red-500' };
-const STATUS_GLOW: Record<RallyCryStatus, string> = { ON_TRACK: 'shadow-green-500/5', AT_RISK: 'shadow-amber-500/5', OFF_TRACK: 'shadow-red-500/10' };
-const TREND_INDICATOR: Record<'up' | 'down' | 'flat', { symbol: string; color: string }> = {
-  up: { symbol: '\u2191', color: 'text-green-400' }, down: { symbol: '\u2193', color: 'text-red-400' }, flat: { symbol: '\u2192', color: 'text-gray-500' },
-};
+function RallyCryCardComponent({
+  card,
+  index,
+  onSelect,
+}: {
+  card: RallyCryCard;
+  index: number;
+  onSelect: () => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const isGapWarning = card.status === 'AT_RISK' || card.status === 'OFF_TRACK';
+
+  return (
+    <div
+      className={[
+        'bg-surface-lowest rounded-sm p-5 animate-fade-up transition-colors hover:bg-surface cursor-pointer',
+        isGapWarning ? 'border-l-[3px] border-l-warning' : 'border-l-[3px] border-l-transparent',
+      ].join(' ')}
+      style={{
+        animationDelay: `${(index + 6) * 40}ms`,
+        transitionDuration: 'var(--duration-fast, 150ms)',
+      }}
+      onClick={onSelect}
+    >
+      <h3 className="text-[0.9375rem] font-medium text-on-surface mb-1">{card.title}</h3>
+      {card.description && (
+        <p className="text-[0.8125rem] text-muted italic leading-[1.5] mb-2.5">{card.description}</p>
+      )}
+      <p className="text-[0.8125rem] text-muted mb-3.5">
+        {card.commitmentCount} commitment{card.commitmentCount !== 1 ? 's' : ''} linked across{' '}
+        {card.contributingTeams.length} {card.contributingTeams.length === 1 ? 'person' : 'people'}
+      </p>
+
+      {/* Objectives list */}
+      <ul className="space-y-1.5 mb-3.5">
+        {card.coveredObjectives.map((obj) => (
+          <li key={obj.definingObjectiveId} className="flex items-center justify-between text-[0.8125rem] text-on-surface-variant">
+            <span>{obj.title}</span>
+            <span className="text-[0.75rem] text-muted whitespace-nowrap">{obj.commitmentCount} linked</span>
+          </li>
+        ))}
+        {card.uncoveredObjectives.map((obj) => (
+          <li key={obj.definingObjectiveId} className="flex items-center justify-between text-[0.8125rem] text-on-surface-variant">
+            <span>{obj.title}</span>
+            <span className="text-[0.75rem] text-warning whitespace-nowrap">0 linked</span>
+          </li>
+        ))}
+      </ul>
+
+      {/* Expandable linked commitments */}
+      {card.commitmentsByPerson.length > 0 && (
+        <div className="border-t border-outline-variant pt-2.5">
+          <button
+            type="button"
+            className="text-[0.75rem] text-muted bg-transparent border-none cursor-pointer p-0 transition-colors hover:text-on-surface-variant"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpanded(!expanded);
+            }}
+            aria-expanded={expanded}
+          >
+            {expanded ? 'Hide linked commitments' : 'Show linked commitments'}{' '}
+            <span className="text-[0.625rem]">{expanded ? '\u25B4' : '\u25BE'}</span>
+          </button>
+
+          <div
+            className="overflow-hidden transition-all"
+            style={{
+              maxHeight: expanded ? '300px' : '0',
+              opacity: expanded ? 1 : 0,
+              transitionDuration: 'var(--duration-entrance, 300ms)',
+              transitionTimingFunction: 'var(--ease-entrance)',
+            }}
+          >
+            {card.commitmentsByPerson.map((group) => (
+              <div key={group.name} className="mt-2">
+                <div className="text-[0.75rem] font-medium text-on-surface mb-0.5">{group.name}</div>
+                <div className="text-[0.75rem] text-on-surface-variant leading-[1.5] pl-3 mb-1.5">
+                  {group.titles.join(', ')}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 
@@ -242,9 +335,6 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
   const rallyCryCards = useMemo(() => {
     if (!commitments || !rcdoTree?.rallyCries) return [];
 
-    // Build RCDO coverage from commitments directly (the dashboard endpoint
-    // may return empty coverage for executives whose direct reports are VPs
-    // with no personal commitments)
     const dashCoverage = dashboard?.rcdoCoverage;
     const hasDashData = dashCoverage && dashCoverage.byRallyCry.length > 0;
 
@@ -269,7 +359,6 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
       });
       linkedCount += rcCommitments.length;
 
-      // Check objective coverage
       for (const doNode of rc.definingObjectives) {
         const doCommitments = rcCommitments.filter((c) => c.rcdoLink.definingObjectiveId === doNode.id);
         if (doCommitments.length === 0) {
@@ -295,115 +384,79 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [dashboard, commitments, rcdoTree, previousCommitments]);
 
-  const onTrackCount = rallyCryCards.filter((c) => c.status === 'ON_TRACK').length;
-  const needAttentionCount = rallyCryCards.filter((c) => c.status === 'AT_RISK' || c.status === 'OFF_TRACK').length;
-
   const watchItems = useMemo(
     () => buildWatchList(carryChains, costSignals, health?.units, dashboard?.alignmentSignal),
     [carryChains, costSignals, health, dashboard],
   );
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" label="Preparing your briefing\u2026" /></div>;
-  }
-
-  if (!cycle) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <h1 className="text-xl font-semibold text-gray-100">No data available</h1>
-        <p className="text-sm text-gray-400 max-w-sm">Could not load data. Please try again.</p>
+      <div className="space-y-4">
+        <SkeletonLoader variant="card" count={3} />
       </div>
     );
   }
 
-  const completionRate = health?.completionRate ?? 0;
+  if (!cycle) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] gap-4 text-center p-8">
+        <h1 className="text-title font-medium text-on-surface">No data available</h1>
+        <p className="text-body text-on-surface-variant max-w-sm">Could not load data. Please try again.</p>
+      </div>
+    );
+  }
 
   return (
     <>
-      {/* Headline */}
-      <header className="px-8 py-10 animate-briefing-fade-in">
-        <h1 className="text-3xl font-bold text-gray-50 tracking-tight">
-          You set {rallyCryCards.length} priorit{rallyCryCards.length === 1 ? 'y' : 'ies'}.{' '}
-          <span className="text-green-400">{onTrackCount} on track</span>
-          {needAttentionCount > 0 && (
-            <>, <span className="text-amber-400">{needAttentionCount} need{needAttentionCount === 1 ? 's' : ''} attention</span></>
-          )}.
-        </h1>
-        <div className="mt-3 flex items-center gap-4">
-          <span className="text-sm text-gray-500">{cycle.label}</span>
-          <span className="text-xs text-gray-600">|</span>
-          <span className="text-sm text-gray-500">{Math.round(completionRate)}% completion rate</span>
-        </div>
-      </header>
+      {/* Rally Cry Coverage heading */}
+      <div className="animate-fade-up" style={{ animationDelay: '240ms' }}>
+        <h2 className="font-serif text-[1.25rem] text-on-surface mb-4 font-normal">Rally Cry Coverage</h2>
+      </div>
 
-      {/* Rally Cry Cards */}
-      <section className="px-8 pb-8">
-        {rallyCryCards.length === 0 ? (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-8 text-center">
-            <p className="text-sm text-gray-500">No rally cries with commitment linkage this cycle.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-            {rallyCryCards.map((card, i) => (
-              <button
-                key={card.rallyCryId}
-                type="button"
-                onClick={() => { onSelectRallyCry(card.rallyCryId); }}
-                className={`text-left bg-gray-900 border border-gray-800 rounded-xl p-6 shadow-lg animate-briefing-stagger hover:border-gray-600 hover:-translate-y-0.5 transition-all cursor-pointer ${STATUS_GLOW[card.status]}`}
-                style={{ animationDelay: `${(i + 1) * 100}ms`, animationFillMode: 'backwards' }}
-              >
-                <div className="mb-3">
-                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-xs font-semibold uppercase tracking-wider ${STATUS_BADGE[card.status]}`}>
-                    <span className={`w-1.5 h-1.5 rounded-full ${STATUS_DOT[card.status]}`} />
-                    {STATUS_LABEL[card.status]}
-                  </span>
-                </div>
-                <h2 className="text-xl font-bold text-gray-50 mb-3 leading-snug">{card.title}</h2>
-                <p className="text-sm text-gray-400 leading-relaxed mb-4">{card.narrative}</p>
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-500">
-                  <span><span className="text-gray-300 font-medium">{card.coveredObjectiveCount}</span> of <span className="text-gray-300 font-medium">{card.totalObjectiveCount}</span> objectives covered</span>
-                  <span><span className="text-gray-300 font-medium">{card.commitmentCount}</span> commitment{card.commitmentCount === 1 ? '' : 's'}
-                    {card.trendDirection !== null && (
-                      <span className={`ml-1 ${TREND_INDICATOR[card.trendDirection].color}`}>{TREND_INDICATOR[card.trendDirection].symbol}</span>
-                    )}
-                  </span>
-                </div>
-                {/* Progress bar */}
-                {card.totalObjectiveCount > 0 && (
-                  <div className="flex items-center gap-2 mt-3">
-                    <div className="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500 rounded-full transition-all duration-500" style={{ width: `${Math.round((card.coveredObjectiveCount / card.totalObjectiveCount) * 100)}%` }} />
-                    </div>
-                    <span className="text-xs text-gray-500 tabular-nums">{Math.round((card.coveredObjectiveCount / card.totalObjectiveCount) * 100)}%</span>
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* 3-column rally cry grid */}
+      {rallyCryCards.length === 0 ? (
+        <div className="bg-surface-lowest rounded-sm p-8 text-center">
+          <p className="text-body text-muted">No rally cries with commitment linkage this cycle.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {rallyCryCards.map((card, i) => (
+            <RallyCryCardComponent
+              key={card.rallyCryId}
+              card={card}
+              index={i}
+              onSelect={() => onSelectRallyCry(card.rallyCryId)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Watch List */}
       {watchItems.length > 0 && (
-        <section className="px-8 pb-10 animate-briefing-stagger" style={{ animationDelay: '600ms', animationFillMode: 'backwards' }}>
-          <h2 className="text-lg font-bold text-gray-100 mb-4">Watch List</h2>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
+        <div className="mt-8 animate-fade-up" style={{ animationDelay: '600ms' }}>
+          <h2 className="font-serif text-[1.25rem] text-on-surface mb-4 font-normal">Watch List</h2>
+          <div className="bg-surface-lowest rounded-sm p-5">
             <ul className="space-y-3">
               {watchItems.map((item) => (
                 <li key={item.id} className="flex items-start gap-3">
-                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.severity === 'critical' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.severity === 'critical' ? 'bg-error' : 'bg-warning'}`} />
                   {item.drillTarget?.team ? (
-                    <button type="button" onClick={() => { onDrillToTeam(item.drillTarget!.team!); }} className="text-sm text-gray-400 leading-relaxed hover:underline hover:text-gray-200 transition-colors text-left">
+                    <button
+                      type="button"
+                      onClick={() => { onDrillToTeam(item.drillTarget!.team!); }}
+                      className="text-body text-on-surface-variant leading-relaxed hover:underline hover:text-on-surface transition-colors text-left"
+                      style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
+                    >
                       {item.message}
                     </button>
                   ) : (
-                    <span className="text-sm text-gray-400 leading-relaxed">{item.message}</span>
+                    <span className="text-body text-on-surface-variant leading-relaxed">{item.message}</span>
                   )}
                 </li>
               ))}
             </ul>
           </div>
-        </section>
+        </div>
       )}
     </>
   );

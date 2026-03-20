@@ -1,19 +1,20 @@
 /**
  * Level 3: Person detail — shows individual commitments with RCDO links and reconciliation status.
- * The deepest drill-down level: strategic signal → team → this person.
+ * Restyled to Compass design system.
  */
 import { useMemo } from 'react';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments } from '@/hooks/useCommitments';
 import { Badge } from '@/components/Badge';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import Card from '@/components/Card';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import type { ReconciliationStatus } from '@/types/enums';
 
-const RECON_STATUS: Record<ReconciliationStatus, { label: string; color: string }> = {
-  COMPLETED: { label: 'Completed', color: 'text-green-400' },
-  PARTIALLY_COMPLETED: { label: 'Partial', color: 'text-amber-400' },
-  NOT_STARTED: { label: 'Not Started', color: 'text-red-400' },
-  CARRIED_FORWARD: { label: 'Carried Forward', color: 'text-blue-400' },
+const RECON_STATUS: Record<ReconciliationStatus, { label: string; className: string }> = {
+  COMPLETED: { label: 'Completed', className: 'text-accent' },
+  PARTIALLY_COMPLETED: { label: 'Partial', className: 'text-warning' },
+  NOT_STARTED: { label: 'Not Started', className: 'text-error' },
+  CARRIED_FORWARD: { label: 'Carried Forward', className: 'text-navy' },
 };
 
 interface PersonDetailLevelProps {
@@ -32,7 +33,6 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
 
   const personName = personCommitments[0]?.userDisplayName ?? 'Person';
 
-  // Rally cry coverage for this person
   const rcGroups = useMemo(() => {
     const groups = new Map<string, number>();
     let unlinked = 0;
@@ -51,15 +51,19 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
   const strategicCount = personCommitments.filter((c) => c.chessCategoryName === 'Strategic').length;
 
   if (isLoading) {
-    return <div className="flex items-center justify-center min-h-[40vh]"><LoadingSpinner size="lg" label="Loading..." /></div>;
+    return (
+      <div className="max-w-[1280px] mx-auto px-8 py-6">
+        <SkeletonLoader variant="card" count={3} />
+      </div>
+    );
   }
 
   return (
-    <div className="px-8 py-6 space-y-6">
+    <div className="max-w-[1280px] mx-auto px-8 py-6 space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-gray-50">{personName}</h1>
-        <p className="mt-2 text-sm text-gray-400">
+      <div className="animate-fade-up">
+        <h1 className="font-serif text-headline text-on-surface font-normal">{personName}</h1>
+        <p className="mt-2 text-body text-on-surface-variant">
           {personCommitments.length} commitment{personCommitments.length !== 1 ? 's' : ''} this week
           {' \u00B7 '}
           {strategicCount} strategic
@@ -70,70 +74,81 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
 
       {/* Rally cry coverage */}
       {rcGroups.length > 0 && (
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 animate-fade-up" style={{ animationDelay: '40ms' }}>
           {rcGroups.map((g) => (
-            <span key={g.title} className={`text-xs px-2 py-1 rounded ${g.title === 'Unlinked' ? 'bg-gray-800 text-gray-400' : 'bg-blue-800/40 text-blue-300'}`}>
+            <Badge
+              key={g.title}
+              variant={g.title === 'Unlinked' ? 'default' : 'category'}
+              {...(g.title !== 'Unlinked' ? { color: 'strategic' as const } : {})}
+            >
               {g.title} ({g.count})
-            </span>
+            </Badge>
           ))}
         </div>
       )}
 
       {/* Commitments */}
       <div className="space-y-3">
-        {personCommitments.map((c) => {
+        {personCommitments.map((c, i) => {
           const reconStatus = c.reconciliationStatus ? RECON_STATUS[c.reconciliationStatus] : null;
+          const chessCat = c.chessCategoryName?.toLowerCase() as 'strategic' | 'operational' | 'defensive' | 'capability' | undefined;
           return (
-            <div key={c.id} className="bg-gray-900 border border-gray-800 rounded-lg p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-gray-800 flex items-center justify-center text-[10px] font-bold text-gray-400">{c.priorityRank}</span>
-                    <h3 className="text-sm font-semibold text-gray-100 truncate">{c.title}</h3>
+            <Card
+              key={c.id}
+              padding="normal"
+              className="animate-fade-up"
+            >
+              <div style={{ animationDelay: `${(i + 2) * 40}ms` }}>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-surface-container flex items-center justify-center text-[10px] font-bold text-muted">{c.priorityRank}</span>
+                      <h3 className="text-body font-medium text-on-surface truncate">{c.title}</h3>
+                    </div>
+
+                    {/* RCDO breadcrumb */}
+                    {c.rcdoLink.rallyCryTitle && (
+                      <p className="mt-1 text-small text-muted ml-7">
+                        {c.rcdoLink.rallyCryTitle}
+                        {c.rcdoLink.definingObjectiveTitle && ` \u203A ${c.rcdoLink.definingObjectiveTitle}`}
+                        {c.rcdoLink.outcomeTitle && ` \u203A ${c.rcdoLink.outcomeTitle}`}
+                      </p>
+                    )}
+
+                    {/* Badges */}
+                    <div className="mt-2 ml-7 flex flex-wrap gap-1.5">
+                      {chessCat && <Badge variant="category" color={chessCat}>{c.chessCategoryName}</Badge>}
+                      {c.isUnplanned && <Badge>Unplanned</Badge>}
+                      {c.carriedFromCommitmentId && <Badge variant="category" color="strategic">Carried Forward</Badge>}
+                    </div>
+
+                    {/* Task bullets */}
+                    {c.bullets.length > 0 && (
+                      <ul className="mt-2 ml-7 space-y-0.5">
+                        {c.bullets.map((b) => (
+                          <li key={b.id} className="flex items-center gap-2 text-small text-on-surface-variant">
+                            <span className={b.isCompleted ? 'text-accent' : 'text-muted'}>{b.isCompleted ? '\u2713' : '\u25CB'}</span>
+                            <span className={b.isCompleted ? 'line-through opacity-60' : ''}>{b.body}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
 
-                  {/* RCDO breadcrumb */}
-                  {c.rcdoLink.rallyCryTitle && (
-                    <p className="mt-1 text-xs text-gray-500 ml-7">
-                      {c.rcdoLink.rallyCryTitle}
-                      {c.rcdoLink.definingObjectiveTitle && ` \u203A ${c.rcdoLink.definingObjectiveTitle}`}
-                      {c.rcdoLink.outcomeTitle && ` \u203A ${c.rcdoLink.outcomeTitle}`}
-                    </p>
-                  )}
-
-                  {/* Badges */}
-                  <div className="mt-2 ml-7 flex flex-wrap gap-1.5">
-                    {c.chessCategoryName && <Badge variant={c.chessCategoryName === 'Strategic' ? 'blue' : 'gray'}>{c.chessCategoryName}</Badge>}
-                    {c.isUnplanned && <Badge variant="gray">Unplanned</Badge>}
-                    {c.carriedFromCommitmentId && <Badge variant="blue">Carried Forward</Badge>}
-                  </div>
-
-                  {/* Task bullets */}
-                  {c.bullets.length > 0 && (
-                    <ul className="mt-2 ml-7 space-y-0.5">
-                      {c.bullets.map((b) => (
-                        <li key={b.id} className="flex items-center gap-2 text-xs text-gray-400">
-                          <span className={b.isCompleted ? 'text-green-500' : 'text-gray-600'}>{b.isCompleted ? '\u2713' : '\u25CB'}</span>
-                          <span className={b.isCompleted ? 'line-through opacity-60' : ''}>{b.body}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  {/* Reconciliation status */}
+                  {reconStatus && (
+                    <span className={`text-small font-medium whitespace-nowrap ${reconStatus.className}`}>
+                      {reconStatus.label}
+                    </span>
                   )}
                 </div>
-
-                {/* Reconciliation status */}
-                {reconStatus && (
-                  <span className={`text-xs font-medium whitespace-nowrap ${reconStatus.color}`}>
-                    {reconStatus.label}
-                  </span>
-                )}
               </div>
-            </div>
+            </Card>
           );
         })}
 
         {personCommitments.length === 0 && (
-          <p className="text-sm text-gray-500 text-center py-8">No commitments found for this person.</p>
+          <p className="text-body text-muted text-center py-8">No commitments found for this person.</p>
         )}
       </div>
     </div>
