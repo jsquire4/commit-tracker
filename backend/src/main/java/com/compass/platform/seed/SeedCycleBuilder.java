@@ -144,6 +144,8 @@ public class SeedCycleBuilder {
                     .org(org).commitment(commitment).cycle(cycle)
                     .status(status)
                     .plannedHorizon(commitment.getCompletionHorizon())
+                    .plannedDay(commitment.getCompletionDay())
+                    .plannedTimeBlock(commitment.getCompletionTimeBlock())
                     .reconciledAt(reconciledAt)
                     .reconciledBy(reconciledBy)
                     .notes(pickNote());
@@ -198,6 +200,8 @@ public class SeedCycleBuilder {
                         .org(org).commitment(clone).cycle(targetCycleFinal)
                         .status(status)
                         .plannedHorizon(clone.getCompletionHorizon())
+                        .plannedDay(clone.getCompletionDay())
+                        .plannedTimeBlock(clone.getCompletionTimeBlock())
                         .reconciledAt(reconciledAt)
                         .reconciledBy(clone.getUser())
                         .notes(pickNote());

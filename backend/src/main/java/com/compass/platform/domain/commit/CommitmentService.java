@@ -1,7 +1,9 @@
 package com.compass.platform.domain.commit;
 
 import com.compass.platform.audit.AuditService;
+import com.compass.platform.domain.CompletionDay;
 import com.compass.platform.domain.CompletionHorizon;
+import com.compass.platform.domain.CompletionTimeBlock;
 import com.compass.platform.domain.CycleState;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.UserRole;
@@ -211,7 +213,18 @@ public class CommitmentService {
 
         commitment.setTitle(request.title());
         commitment.setDescription(request.description());
-        commitment.setCompletionHorizon(request.completionHorizon());
+
+        // Dual-write: sync day+timeBlock <-> legacy horizon
+        if (request.completionDay() != null || request.completionTimeBlock() != null) {
+            commitment.setCompletionDay(request.completionDay());
+            commitment.setCompletionTimeBlock(request.completionTimeBlock());
+            commitment.setCompletionHorizon(computeLegacyHorizon(request.completionDay(), request.completionTimeBlock()));
+        } else {
+            commitment.setCompletionHorizon(request.completionHorizon());
+            commitment.setCompletionDay(computeDayFromHorizon(request.completionHorizon()));
+            commitment.setCompletionTimeBlock(computeTimeBlockFromHorizon(request.completionHorizon()));
+        }
+
         commitment.setChessCategory(chessCategory);
         commitment.setRallyCry(request.rallyCryId() != null ? rallyCryRepository.getReferenceById(request.rallyCryId()) : null);
         commitment.setDefiningObjective(request.definingObjectiveId() != null ? definingObjectiveRepository.getReferenceById(request.definingObjectiveId()) : null);
@@ -373,6 +386,8 @@ public class CommitmentService {
                 .title(source.getTitle())
                 .description(source.getDescription())
                 .completionHorizon(source.getCompletionHorizon())
+                .completionDay(source.getCompletionDay())
+                .completionTimeBlock(source.getCompletionTimeBlock())
                 .chessCategory(source.getChessCategory())
                 .rallyCry(source.getRallyCry())
                 .definingObjective(source.getDefiningObjective())
@@ -419,6 +434,7 @@ public class CommitmentService {
             boolean isUnplanned) {
         return buildAndSaveCommitmentCore(
                 request.title(), request.description(), request.completionHorizon(),
+                request.completionDay(), request.completionTimeBlock(),
                 request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
                 request.outcomeId(), request.bullets(), request.estimatedHours(),
                 actor, cycle, assignedBy, isUnplanned);
@@ -432,6 +448,7 @@ public class CommitmentService {
             boolean isUnplanned) {
         return buildAndSaveCommitmentCore(
                 request.title(), request.description(), request.completionHorizon(),
+                null, null,
                 request.chessCategoryId(), request.rallyCryId(), request.definingObjectiveId(),
                 request.outcomeId(), request.bullets(), request.estimatedHours(),
                 actor, cycle, assignedBy, isUnplanned);
@@ -441,6 +458,8 @@ public class CommitmentService {
             String title,
             String description,
             CompletionHorizon completionHorizon,
+            CompletionDay completionDay,
+            CompletionTimeBlock completionTimeBlock,
             UUID chessCategoryId,
             UUID rallyCryId,
             UUID definingObjectiveId,
@@ -459,13 +478,27 @@ public class CommitmentService {
 
         int rank = computeNextRank(actor.getId(), cycle.getId());
 
+        // Dual-write: sync day+timeBlock <-> legacy horizon
+        CompletionHorizon resolvedHorizon = completionHorizon;
+        CompletionDay resolvedDay = completionDay;
+        CompletionTimeBlock resolvedTimeBlock = completionTimeBlock;
+
+        if (completionDay != null || completionTimeBlock != null) {
+            resolvedHorizon = computeLegacyHorizon(completionDay, completionTimeBlock);
+        } else {
+            resolvedDay = computeDayFromHorizon(completionHorizon);
+            resolvedTimeBlock = computeTimeBlockFromHorizon(completionHorizon);
+        }
+
         Commitment commitment = Commitment.builder()
                 .org(actor.getOrg())
                 .user(actor)
                 .cycle(cycle)
                 .title(title)
                 .description(description)
-                .completionHorizon(completionHorizon)
+                .completionHorizon(resolvedHorizon)
+                .completionDay(resolvedDay)
+                .completionTimeBlock(resolvedTimeBlock)
                 .chessCategory(chessCategory)
                 .rallyCry(rallyCryId != null ? rallyCryRepository.getReferenceById(rallyCryId) : null)
                 .definingObjective(definingObjectiveId != null ? definingObjectiveRepository.getReferenceById(definingObjectiveId) : null)
@@ -564,5 +597,47 @@ public class CommitmentService {
         if (definingObjectiveId != null) return "do:" + definingObjectiveId;
         if (rallyCryId != null) return "rc:" + rallyCryId;
         return "none";
+    }
+
+    // -------------------------------------------------------------------------
+    // Horizon dual-write helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Compute legacy CompletionHorizon from day + timeBlock.
+     * If day is FRIDAY and timeBlock is EOD, legacy = EOW.
+     * Otherwise, legacy = the timeBlock value (MORNING/MIDDAY/AFTERNOON/EOD).
+     */
+    static CompletionHorizon computeLegacyHorizon(CompletionDay day, CompletionTimeBlock timeBlock) {
+        if (day == CompletionDay.FRIDAY && timeBlock == CompletionTimeBlock.EOD) {
+            return CompletionHorizon.EOW;
+        }
+        if (timeBlock != null) {
+            return CompletionHorizon.valueOf(timeBlock.name());
+        }
+        // Fallback: if only day provided without timeBlock, default to EOD
+        return CompletionHorizon.EOD;
+    }
+
+    /**
+     * Compute CompletionDay from a legacy horizon.
+     * EOW -> FRIDAY, time-of-day horizons -> null (implies today / current day).
+     */
+    static CompletionDay computeDayFromHorizon(CompletionHorizon horizon) {
+        if (horizon == CompletionHorizon.EOW) {
+            return CompletionDay.FRIDAY;
+        }
+        return null;
+    }
+
+    /**
+     * Compute CompletionTimeBlock from a legacy horizon.
+     * EOW -> EOD, others map directly by name.
+     */
+    static CompletionTimeBlock computeTimeBlockFromHorizon(CompletionHorizon horizon) {
+        if (horizon == CompletionHorizon.EOW) {
+            return CompletionTimeBlock.EOD;
+        }
+        return CompletionTimeBlock.valueOf(horizon.name());
     }
 }

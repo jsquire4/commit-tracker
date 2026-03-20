@@ -1,6 +1,8 @@
 package com.compass.platform.domain.reconciliation;
 
+import com.compass.platform.domain.CompletionDay;
 import com.compass.platform.domain.CompletionHorizon;
+import com.compass.platform.domain.CompletionTimeBlock;
 import com.compass.platform.domain.DisplacementCategory;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.commit.Commitment;
@@ -57,6 +59,14 @@ public class ReconciliationRecord {
     @Column(name = "planned_horizon")
     private CompletionHorizon plannedHorizon;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "planned_day")
+    private CompletionDay plannedDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "planned_time_block")
+    private CompletionTimeBlock plannedTimeBlock;
+
     @Column(name = "reconciled_at", nullable = false)
     private Instant reconciledAt;
 
@@ -112,6 +122,12 @@ public class ReconciliationRecord {
     public CompletionHorizon getPlannedHorizon() { return plannedHorizon; }
     public void setPlannedHorizon(CompletionHorizon plannedHorizon) { this.plannedHorizon = plannedHorizon; }
 
+    public CompletionDay getPlannedDay() { return plannedDay; }
+    public void setPlannedDay(CompletionDay plannedDay) { this.plannedDay = plannedDay; }
+
+    public CompletionTimeBlock getPlannedTimeBlock() { return plannedTimeBlock; }
+    public void setPlannedTimeBlock(CompletionTimeBlock plannedTimeBlock) { this.plannedTimeBlock = plannedTimeBlock; }
+
     public Instant getReconciledAt() { return reconciledAt; }
     public void setReconciledAt(Instant reconciledAt) { this.reconciledAt = reconciledAt; }
 
@@ -160,6 +176,8 @@ public class ReconciliationRecord {
         private ReconciliationStatus status;
         private String notes;
         private CompletionHorizon plannedHorizon;
+        private CompletionDay plannedDay;
+        private CompletionTimeBlock plannedTimeBlock;
         private Instant reconciledAt;
         private AppUser reconciledBy;
         private DisplacementCategory displacementCategory;
@@ -172,6 +190,8 @@ public class ReconciliationRecord {
         public Builder status(ReconciliationStatus status) { this.status = status; return this; }
         public Builder notes(String notes) { this.notes = notes; return this; }
         public Builder plannedHorizon(CompletionHorizon plannedHorizon) { this.plannedHorizon = plannedHorizon; return this; }
+        public Builder plannedDay(CompletionDay plannedDay) { this.plannedDay = plannedDay; return this; }
+        public Builder plannedTimeBlock(CompletionTimeBlock plannedTimeBlock) { this.plannedTimeBlock = plannedTimeBlock; return this; }
         public Builder reconciledAt(Instant reconciledAt) { this.reconciledAt = reconciledAt; return this; }
         public Builder reconciledBy(AppUser reconciledBy) { this.reconciledBy = reconciledBy; return this; }
         public Builder displacementCategory(DisplacementCategory displacementCategory) { this.displacementCategory = displacementCategory; return this; }
@@ -182,6 +202,8 @@ public class ReconciliationRecord {
             ReconciliationRecord r = new ReconciliationRecord(org, commitment, cycle, status, reconciledAt, reconciledBy);
             r.notes = notes;
             r.plannedHorizon = plannedHorizon;
+            r.plannedDay = plannedDay;
+            r.plannedTimeBlock = plannedTimeBlock;
             r.displacementCategory = displacementCategory;
             r.displacementDetail = displacementDetail;
             r.displacingCommitment = displacingCommitment;

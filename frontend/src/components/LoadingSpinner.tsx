@@ -14,9 +14,9 @@ export function LoadingSpinner({ size = 'md', fullPage = false, label }: Loading
   const spinner = (
     <div className="flex flex-col items-center gap-3" role="status" aria-label={label ?? 'Loading'}>
       <div
-        className={`${sizeClasses[size]} rounded-full border-gray-200 dark:border-gray-700 border-t-blue-600 animate-spin`}
+        className={`${sizeClasses[size]} rounded-full border-surface-container border-t-accent animate-spin`}
       />
-      {label && <span className="text-sm text-gray-500 dark:text-gray-400">{label}</span>}
+      {label && <span className="text-body text-on-surface-variant">{label}</span>}
     </div>
   );
 

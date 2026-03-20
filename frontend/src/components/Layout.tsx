@@ -1,58 +1,101 @@
-import { useContext, type ReactNode } from 'react';
+import { useContext, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { AuthContext } from '@/hooks/useAuth';
+import { useCurrentCycle } from '@/hooks/useCycle';
 
 interface LayoutProps {
   children: ReactNode;
 }
 
-const LEADERSHIP_ROLES = new Set(['DIRECTOR', 'VP', 'EXECUTIVE']);
+const VP_ROLES = new Set(['VP', 'EXECUTIVE']);
+const DIRECTOR_ROLES = new Set(['DIRECTOR', 'VP', 'EXECUTIVE']);
 const MANAGER_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
+
+function getInitials(displayName?: string): string {
+  if (!displayName) return '??';
+  const parts = displayName.trim().split(/\s+/);
+  if (parts.length >= 2) {
+    return ((parts[0]?.[0] ?? '') + (parts[parts.length - 1]?.[0] ?? '')).toUpperCase();
+  }
+  return displayName.slice(0, 2).toUpperCase();
+}
+
+function formatCycleWeek(cycle: { label: string; startsAt: string; endsAt: string }): string {
+  const weekMatch = cycle.label.match(/\d+/);
+  const weekNum = weekMatch ? weekMatch[0] : '?';
+  const start = new Date(cycle.startsAt);
+  const end = new Date(cycle.endsAt);
+  const fmt = (d: Date) =>
+    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  return `Week ${weekNum} \u00b7 ${fmt(start)}\u2013${fmt(end)}`;
+}
+
+const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
+  [
+    'px-3 py-2 text-body font-medium whitespace-nowrap transition-colors',
+    'border-b-2',
+    isActive
+      ? 'border-accent text-accent'
+      : 'border-transparent text-on-surface-variant hover:text-on-surface',
+  ].join(' ');
 
 export function Layout({ children }: LayoutProps) {
   const auth = useContext(AuthContext);
-  const isLeader = auth?.role != null && LEADERSHIP_ROLES.has(auth.role);
-  const isManager = auth?.role != null && MANAGER_ROLES.has(auth.role);
+  const { data: cycle } = useCurrentCycle();
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const navItems = [
-    { to: '/', label: 'My Week' },
-    ...(isManager ? [{ to: '/team', label: 'My Team' }] : []),
-    ...(isLeader ? [{ to: '/briefing', label: 'Briefing' }] : []),
-  ];
+  const role = auth?.role ?? null;
+  const isManager = role != null && MANAGER_ROLES.has(role);
+  const isDirector = role != null && DIRECTOR_ROLES.has(role);
+  const isVP = role != null && VP_ROLES.has(role);
+
+  const initials = getInitials(auth?.displayName);
+
+  const tabs = [
+    { to: '/', label: 'My Week', show: true },
+    { to: '/team', label: 'My Team', show: isManager },
+    { to: '/briefing', label: 'The Briefing', show: isDirector },
+    { to: '/strategy', label: 'Strategy', show: isDirector },
+    { to: '/portfolio', label: 'Portfolio', show: isVP },
+  ].filter((t) => t.show);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <nav className="bg-white/90 dark:bg-gray-900/90 backdrop-blur-md shadow-sm sticky top-0 z-30 relative">
+    <div className="min-h-screen bg-surface">
+      <nav
+        className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15"
+      >
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <h1 className="text-xl font-bold shrink-0 text-gradient from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-400">Compass</h1>
-            <div className="flex items-center gap-1">
-              {navItems.map(({ to, label }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/'}
-                  className={({ isActive }) =>
-                    [
-                      'px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap transition-all duration-200',
-                      isActive
-                        ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-gray-100',
-                    ].join(' ')
-                  }
-                >
-                  {label}
-                </NavLink>
-              ))}
-              {/* Settings gear icon */}
+          {/* Top row: brand — cycle — avatar + gear */}
+          <div className="flex items-center justify-between h-12">
+            <span className="font-serif text-sm tracking-widest uppercase text-on-surface select-none">
+              compass
+            </span>
+
+            {/* Cycle display (centered) */}
+            {cycle && (
+              <span className="hidden sm:block text-small text-on-surface-variant">
+                {formatCycleWeek(cycle)}
+              </span>
+            )}
+
+            {/* Right: avatar + gear */}
+            <div className="flex items-center gap-2">
+              {/* Avatar initials */}
+              <div
+                className="flex items-center justify-center w-8 h-8 rounded-sm bg-accent text-white text-label font-medium select-none"
+                title={auth?.displayName ?? 'User'}
+              >
+                {initials}
+              </div>
+              {/* Gear icon */}
               <NavLink
                 to="/settings"
                 className={({ isActive }) =>
                   [
-                    'ml-2 p-2 rounded-md transition-all duration-200',
+                    'p-1.5 rounded-sm transition-colors',
                     isActive
-                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                      : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300',
+                      ? 'text-accent'
+                      : 'text-on-surface-variant hover:text-on-surface',
                   ].join(' ')
                 }
                 title="Settings"
@@ -62,12 +105,61 @@ export function Layout({ children }: LayoutProps) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </NavLink>
+
+              {/* Hamburger (< 900px) */}
+              <button
+                className="p-1.5 rounded-sm text-on-surface-variant hover:text-on-surface transition-colors min-[900px]:hidden"
+                onClick={() => setMenuOpen((v) => !v)}
+                aria-label="Toggle menu"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  {menuOpen ? (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                  ) : (
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3.75 6.75h16.5M3.75 12h16.5M3.75 17.25h16.5" />
+                  )}
+                </svg>
+              </button>
             </div>
           </div>
+
+          {/* Bottom row: tab bar (desktop) */}
+          <div className="hidden min-[900px]:flex items-center gap-1 -mb-px overflow-x-auto scrollbar-thin">
+            {tabs.map(({ to, label }) => (
+              <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
+                {label}
+              </NavLink>
+            ))}
+          </div>
         </div>
-        {/* Gradient border bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-200 dark:via-gray-700 to-transparent" />
+
+        {/* Mobile menu dropdown */}
+        {menuOpen && (
+          <div className="min-[900px]:hidden border-t border-outline-variant/15 bg-surface/95 backdrop-blur-[20px]">
+            <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1">
+              {tabs.map(({ to, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/'}
+                  className={({ isActive }) =>
+                    [
+                      'px-3 py-2 text-body font-medium rounded-sm transition-colors',
+                      isActive
+                        ? 'text-accent bg-surface-container'
+                        : 'text-on-surface-variant hover:text-on-surface',
+                    ].join(' ')
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
+
       <main className="max-w-7xl mx-auto px-4 py-6">
         {children}
       </main>

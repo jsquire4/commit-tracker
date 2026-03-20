@@ -14,6 +14,12 @@ const MyTeamPage = lazy(() => import('./features/my-team/MyTeamPage').then(m => 
 const BriefingView = lazy(() => import('./features/briefing/BriefingView').then(m => ({ default: m.BriefingView })));
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
+// New pages
+const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
+const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const LandingPage = lazy(() => import('./features/landing/LandingPage').then(m => ({ default: m.LandingPage })));
+const ArchitecturePage = lazy(() => import('./features/architecture/ArchitecturePage').then(m => ({ default: m.ArchitecturePage })));
+
 export interface AuthContext {
   token: string;
   userId: string;
@@ -53,28 +59,38 @@ export default function App({ basename, authContext }: AppProps) {
       <AuthCtx.Provider value={authValue}>
         <BrowserRouter basename={basename}>
           <QueryClientProvider client={queryClient}>
-            <Layout>
-              <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
-                <Routes>
-                  {/* 3-view architecture */}
-                  <Route path="/" element={<MyWeekPage />} />
-                  <Route path="/team" element={<MyTeamPage />} />
-                  <Route path="/briefing" element={<BriefingView />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+            <Suspense fallback={<LoadingSpinner size="lg" fullPage />}>
+              <Routes>
+                {/* Standalone pages — outside Layout (no nav shell) */}
+                <Route path="/landing" element={<LandingPage />} />
+                <Route path="/architecture" element={<ArchitecturePage />} />
 
-                  {/* Backward-compat redirects */}
-                  <Route path="/cycle" element={<Navigate to="/" replace />} />
-                  <Route path="/reconciliation" element={<Navigate to="/" replace />} />
-                  <Route path="/reconciliation/:cycleId" element={<Navigate to="/" replace />} />
-                  <Route path="/dashboard" element={<Navigate to="/team" replace />} />
-                  <Route path="/observatory" element={<Navigate to="/briefing" replace />} />
-                  <Route path="/observatory/team/:managerId" element={<Navigate to="/briefing" replace />} />
-                  <Route path="/observatory/config" element={<Navigate to="/briefing?mode=config" replace />} />
-                  <Route path="/observatory/portfolio" element={<Navigate to="/briefing" replace />} />
-                  <Route path="/strategy" element={<Navigate to="/briefing?mode=strategy" replace />} />
-                </Routes>
-              </Suspense>
-            </Layout>
+                {/* App pages — inside Layout */}
+                <Route path="/*" element={
+                  <Layout>
+                    <Routes>
+                      {/* Core views */}
+                      <Route path="/" element={<MyWeekPage />} />
+                      <Route path="/team" element={<MyTeamPage />} />
+                      <Route path="/briefing" element={<BriefingView />} />
+                      <Route path="/settings" element={<SettingsPage />} />
+                      <Route path="/strategy" element={<StrategyPage />} />
+                      <Route path="/portfolio" element={<PortfolioPage />} />
+
+                      {/* Backward-compat redirects */}
+                      <Route path="/cycle" element={<Navigate to="/" replace />} />
+                      <Route path="/reconciliation" element={<Navigate to="/" replace />} />
+                      <Route path="/reconciliation/:cycleId" element={<Navigate to="/" replace />} />
+                      <Route path="/dashboard" element={<Navigate to="/team" replace />} />
+                      <Route path="/observatory" element={<Navigate to="/briefing" replace />} />
+                      <Route path="/observatory/team/:managerId" element={<Navigate to="/briefing" replace />} />
+                      <Route path="/observatory/config" element={<Navigate to="/briefing?mode=config" replace />} />
+                      <Route path="/observatory/portfolio" element={<Navigate to="/portfolio" replace />} />
+                    </Routes>
+                  </Layout>
+                } />
+              </Routes>
+            </Suspense>
           </QueryClientProvider>
         </BrowserRouter>
       </AuthCtx.Provider>

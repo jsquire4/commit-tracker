@@ -1,6 +1,8 @@
 package com.compass.platform.domain.commit;
 
+import com.compass.platform.domain.CompletionDay;
 import com.compass.platform.domain.CompletionHorizon;
+import com.compass.platform.domain.CompletionTimeBlock;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.rcdo.DefiningObjective;
 import com.compass.platform.domain.rcdo.Outcome;
@@ -80,6 +82,14 @@ public class Commitment {
     @Column(name = "completion_horizon", nullable = false)
     private CompletionHorizon completionHorizon;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "completion_day")
+    private CompletionDay completionDay;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "completion_time_block")
+    private CompletionTimeBlock completionTimeBlock;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "assigned_by")
     private AppUser assignedBy;
@@ -152,6 +162,12 @@ public class Commitment {
     public CompletionHorizon getCompletionHorizon() { return completionHorizon; }
     public void setCompletionHorizon(CompletionHorizon completionHorizon) { this.completionHorizon = completionHorizon; }
 
+    public CompletionDay getCompletionDay() { return completionDay; }
+    public void setCompletionDay(CompletionDay completionDay) { this.completionDay = completionDay; }
+
+    public CompletionTimeBlock getCompletionTimeBlock() { return completionTimeBlock; }
+    public void setCompletionTimeBlock(CompletionTimeBlock completionTimeBlock) { this.completionTimeBlock = completionTimeBlock; }
+
     public AppUser getAssignedBy() { return assignedBy; }
     public void setAssignedBy(AppUser assignedBy) { this.assignedBy = assignedBy; }
 
@@ -205,6 +221,8 @@ public class Commitment {
         private String title;
         private String description;
         private CompletionHorizon completionHorizon;
+        private CompletionDay completionDay;
+        private CompletionTimeBlock completionTimeBlock;
         private AppUser assignedBy;
         private Commitment carriedFrom;
         private boolean isUnplanned = false;
@@ -221,6 +239,8 @@ public class Commitment {
         public Builder title(String title) { this.title = title; return this; }
         public Builder description(String description) { this.description = description; return this; }
         public Builder completionHorizon(CompletionHorizon completionHorizon) { this.completionHorizon = completionHorizon; return this; }
+        public Builder completionDay(CompletionDay completionDay) { this.completionDay = completionDay; return this; }
+        public Builder completionTimeBlock(CompletionTimeBlock completionTimeBlock) { this.completionTimeBlock = completionTimeBlock; return this; }
         public Builder assignedBy(AppUser assignedBy) { this.assignedBy = assignedBy; return this; }
         public Builder carriedFrom(Commitment carriedFrom) { this.carriedFrom = carriedFrom; return this; }
         public Builder isUnplanned(boolean isUnplanned) { this.isUnplanned = isUnplanned; return this; }
@@ -234,6 +254,8 @@ public class Commitment {
             c.chessCategory = chessCategory;
             c.priorityRank = priorityRank;
             c.description = description;
+            c.completionDay = completionDay;
+            c.completionTimeBlock = completionTimeBlock;
             c.assignedBy = assignedBy;
             c.carriedFrom = carriedFrom;
             c.isUnplanned = isUnplanned;

@@ -1,6 +1,8 @@
 package com.compass.platform.domain.commit.dto;
 
+import com.compass.platform.domain.CompletionDay;
 import com.compass.platform.domain.CompletionHorizon;
+import com.compass.platform.domain.CompletionTimeBlock;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotBlank;
@@ -16,6 +18,8 @@ public record CreateCommitmentRequest(
     @NotBlank @Size(max = 500) String title,
     @Size(max = 2000) String description,
     @NotNull CompletionHorizon completionHorizon,
+    CompletionDay completionDay,
+    CompletionTimeBlock completionTimeBlock,
     UUID chessCategoryId,
     UUID rallyCryId,
     UUID definingObjectiveId,

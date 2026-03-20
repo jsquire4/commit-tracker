@@ -51,6 +51,8 @@ public class CommitmentMapper {
             entity.getTitle(),
             entity.getDescription(),
             entity.getCompletionHorizon(),
+            entity.getCompletionDay(),
+            entity.getCompletionTimeBlock(),
             entity.getPriorityRank(),
             entity.getChessCategory() != null ? entity.getChessCategory().getId() : null,
             entity.getChessCategory() != null ? entity.getChessCategory().getName() : null,

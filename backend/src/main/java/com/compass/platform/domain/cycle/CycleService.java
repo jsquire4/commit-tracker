@@ -10,6 +10,7 @@ import com.compass.platform.domain.commit.CommitmentService;
 import com.compass.platform.domain.cycle.CycleStateMachine.TransitionContext;
 import com.compass.platform.domain.cycle.CycleStateMachine.TransitionResult;
 import com.compass.platform.domain.cycle.dto.CycleFilters;
+import com.compass.platform.domain.cycle.dto.CycleHistoryResponse;
 import com.compass.platform.domain.cycle.dto.TransitionRequest;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
@@ -245,6 +246,24 @@ public class CycleService {
         List<Cycle> page = start >= filtered.size() ? List.of() : filtered.subList(start, end);
 
         return new PageImpl<>(page, pageable, filtered.size());
+    }
+
+    /**
+     * Get cycle history for an org, ordered by startsAt descending, limited to 12 entries.
+     * Returns lightweight DTOs suitable for cycle selector UIs.
+     */
+    public List<CycleHistoryResponse> getCycleHistory(UUID orgId) {
+        List<Cycle> cycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+        return cycles.stream()
+                .limit(12)
+                .map(c -> new CycleHistoryResponse(
+                        c.getId(),
+                        c.getLabel(),
+                        c.getState(),
+                        c.getStartsAt(),
+                        c.getEndsAt()
+                ))
+                .toList();
     }
 
     // === Internal helpers ===

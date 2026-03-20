@@ -2,6 +2,7 @@ package com.compass.platform.domain.cycle;
 
 import com.compass.platform.domain.CycleState;
 import com.compass.platform.domain.cycle.dto.CycleFilters;
+import com.compass.platform.domain.cycle.dto.CycleHistoryResponse;
 import com.compass.platform.domain.cycle.dto.CycleResponse;
 import com.compass.platform.domain.cycle.dto.TransitionRequest;
 import com.compass.platform.domain.user.AppUser;
@@ -54,6 +55,14 @@ public class CycleController {
         Cycle cycle = cycleService.getCycle(id, actor);
         int count = cycleService.getCommitmentCount(actor.getOrg().getId(), id);
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(cycle, count)));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<ApiResponse<List<CycleHistoryResponse>>> getCycleHistory() {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        UUID orgId = actor.getOrg().getId();
+        List<CycleHistoryResponse> history = cycleService.getCycleHistory(orgId);
+        return ResponseEntity.ok(ApiResponse.of(history));
     }
 
     @GetMapping

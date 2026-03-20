@@ -274,6 +274,86 @@ public class RcdoService {
         return new RcdoTreeResponse(rallyCryNodes);
     }
 
+    /**
+     * Returns a filtered RCDO tree where rally cries, defining objectives, or outcomes
+     * match the search query (case-insensitive title contains).
+     * If an outcome matches, its parent DO and RC are included.
+     * If a DO matches, its parent RC is included along with all its outcomes.
+     * If an RC matches, it is included with all its children.
+     */
+    @Transactional(readOnly = true)
+    public RcdoTreeResponse searchTree(UUID orgId, String query) {
+        String lowerQuery = query.toLowerCase();
+
+        List<RallyCry> rallyCries = rallyCryRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+
+        List<DefiningObjective> allDos = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+
+        List<Outcome> allOutcomes = outcomeRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+
+        Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
+                .collect(Collectors.groupingBy(d -> d.getRallyCry().getId()));
+
+        Map<UUID, List<Outcome>> outcomesByDoId = allOutcomes.stream()
+                .collect(Collectors.groupingBy(o -> o.getDefiningObjective().getId()));
+
+        List<RcdoTreeResponse.RallyCryNode> matchingNodes = new java.util.ArrayList<>();
+
+        for (RallyCry rc : rallyCries) {
+            boolean rcMatches = rc.getTitle().toLowerCase().contains(lowerQuery);
+
+            List<DefiningObjective> dos = dosByRallyCryId.getOrDefault(rc.getId(), List.of());
+            List<RcdoTreeResponse.DefiningObjectiveNode> matchingDoNodes = new java.util.ArrayList<>();
+
+            for (DefiningObjective doObj : dos) {
+                boolean doMatches = doObj.getTitle().toLowerCase().contains(lowerQuery);
+
+                List<Outcome> outcomes = outcomesByDoId.getOrDefault(doObj.getId(), List.of());
+                List<RcdoTreeResponse.OutcomeNode> matchingOutcomeNodes;
+
+                if (rcMatches || doMatches) {
+                    // Include all outcomes under a matching RC or DO
+                    matchingOutcomeNodes = outcomes.stream()
+                            .map(this::toOutcomeNode)
+                            .toList();
+                } else {
+                    // Only include outcomes that match
+                    matchingOutcomeNodes = outcomes.stream()
+                            .filter(o -> o.getTitle().toLowerCase().contains(lowerQuery))
+                            .map(this::toOutcomeNode)
+                            .toList();
+                }
+
+                if (rcMatches || doMatches || !matchingOutcomeNodes.isEmpty()) {
+                    matchingDoNodes.add(new RcdoTreeResponse.DefiningObjectiveNode(
+                            doObj.getId(), doObj.getTitle(), doObj.getDescription(),
+                            doObj.getOwner() != null ? doObj.getOwner().getId() : null,
+                            doObj.getOwner() != null ? doObj.getOwner().getDisplayName() : null,
+                            doObj.getSortOrder(), matchingOutcomeNodes));
+                }
+            }
+
+            if (rcMatches || !matchingDoNodes.isEmpty()) {
+                matchingNodes.add(new RcdoTreeResponse.RallyCryNode(
+                        rc.getId(), rc.getTitle(), rc.getDescription(),
+                        rc.getSortOrder(), matchingDoNodes));
+            }
+        }
+
+        return new RcdoTreeResponse(matchingNodes);
+    }
+
+    private RcdoTreeResponse.OutcomeNode toOutcomeNode(Outcome o) {
+        return new RcdoTreeResponse.OutcomeNode(
+                o.getId(), o.getTitle(), o.getDescription(),
+                o.getOwner() != null ? o.getOwner().getId() : null,
+                o.getOwner() != null ? o.getOwner().getDisplayName() : null,
+                o.getSortOrder());
+    }
+
     // === Internal helpers ===
 
     /**

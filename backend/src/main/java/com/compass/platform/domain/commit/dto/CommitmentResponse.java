@@ -1,6 +1,8 @@
 package com.compass.platform.domain.commit.dto;
 
+import com.compass.platform.domain.CompletionDay;
 import com.compass.platform.domain.CompletionHorizon;
+import com.compass.platform.domain.CompletionTimeBlock;
 import com.compass.platform.domain.ReconciliationStatus;
 
 import java.math.BigDecimal;
@@ -16,6 +18,8 @@ public record CommitmentResponse(
     String title,
     String description,
     CompletionHorizon completionHorizon,
+    CompletionDay completionDay,
+    CompletionTimeBlock completionTimeBlock,
     int priorityRank,
     UUID chessCategoryId,
     String chessCategoryName,

@@ -231,7 +231,7 @@ class ReconciliationServiceTest {
 
         assertThat(bullet1.isCompleted()).isTrue();
         assertThat(bullet2.isCompleted()).isFalse();
-        verify(taskBulletRepository, times(2)).save(any(TaskBullet.class));
+        verify(taskBulletRepository).saveAll(any());
     }
 
     // --------------- carry forward ---------------

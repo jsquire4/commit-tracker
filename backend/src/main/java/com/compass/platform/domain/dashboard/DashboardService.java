@@ -274,10 +274,16 @@ public class DashboardService {
                 .map(c -> c.getDefiningObjective().getId())
                 .collect(Collectors.toSet());
 
+        // Batch-fetch all DOs for the org once, then filter in memory (avoids N+1 per rally cry)
+        List<DefiningObjective> allOrgDos = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(actor.getOrg().getId());
+
+        Map<UUID, List<DefiningObjective>> dosByRcId = allOrgDos.stream()
+                .collect(Collectors.groupingBy(d -> d.getRallyCry().getId()));
+
         List<RcdoCoverageResponse.UncoveredObjective> uncoveredObjectives = new ArrayList<>();
         for (RallyCry rc : rallyCryById.values()) {
-            List<DefiningObjective> dos = definingObjectiveRepository
-                    .findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId());
+            List<DefiningObjective> dos = dosByRcId.getOrDefault(rc.getId(), List.of());
             for (DefiningObjective doObj : dos) {
                 if (!coveredDoIds.contains(doObj.getId())) {
                     uncoveredObjectives.add(new RcdoCoverageResponse.UncoveredObjective(

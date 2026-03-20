@@ -119,6 +119,8 @@ public class ReconciliationService {
             record.setStatus(effectiveStatus);
             record.setNotes(request.completionNotes());
             record.setPlannedHorizon(commitment.getCompletionHorizon());
+            record.setPlannedDay(commitment.getCompletionDay());
+            record.setPlannedTimeBlock(commitment.getCompletionTimeBlock());
             record.setReconciledAt(Instant.now());
             record.setReconciledBy(actor);
         } else {
@@ -129,6 +131,8 @@ public class ReconciliationService {
                     .status(effectiveStatus)
                     .notes(request.completionNotes())
                     .plannedHorizon(commitment.getCompletionHorizon())
+                    .plannedDay(commitment.getCompletionDay())
+                    .plannedTimeBlock(commitment.getCompletionTimeBlock())
                     .reconciledAt(Instant.now())
                     .reconciledBy(actor)
                     .build();
@@ -164,12 +168,16 @@ public class ReconciliationService {
             Map<UUID, TaskBullet> bulletMap = bullets.stream()
                     .collect(Collectors.toMap(TaskBullet::getId, b -> b));
 
+            List<TaskBullet> modified = new ArrayList<>();
             for (ReconcileRequest.BulletStatusUpdate update : request.bulletStatuses()) {
                 TaskBullet bullet = bulletMap.get(update.bulletId());
                 if (bullet != null) {
                     bullet.setCompleted(update.done());
-                    taskBulletRepository.save(bullet);
+                    modified.add(bullet);
                 }
+            }
+            if (!modified.isEmpty()) {
+                taskBulletRepository.saveAll(modified);
             }
 
             totalBullets = bullets.size();

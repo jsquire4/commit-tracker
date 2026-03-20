@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -39,9 +40,12 @@ public class RcdoController {
     }
 
     @GetMapping("/tree")
-    public ResponseEntity<ApiResponse<RcdoTreeResponse>> getTree() {
+    public ResponseEntity<ApiResponse<RcdoTreeResponse>> getTree(
+            @RequestParam(required = false) String q) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
-        RcdoTreeResponse tree = rcdoService.getTree(actor.getOrg().getId());
+        RcdoTreeResponse tree = (q != null && !q.isBlank())
+                ? rcdoService.searchTree(actor.getOrg().getId(), q.trim())
+                : rcdoService.getTree(actor.getOrg().getId());
         return ResponseEntity.ok(ApiResponse.of(tree));
     }
 

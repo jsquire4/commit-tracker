@@ -386,7 +386,7 @@ class DashboardServiceTest {
         Commitment unlinked = commitment(report1, catA);
         when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(linked, unlinked));
-        when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId()))
+        when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(org.getId()))
                 .thenReturn(List.of());
 
         RcdoCoverageResponse response = dashboardService.getRcdoCoverage(manager, filters);
@@ -434,7 +434,7 @@ class DashboardServiceTest {
         Commitment linked = commitmentWithRallyCryAndDo(report1, catA, rc, coveredDo);
         when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(activeCycle.getId())))
                 .thenReturn(List.of(linked));
-        when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rc.getId()))
+        when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(org.getId()))
                 .thenReturn(List.of(coveredDo, uncoveredDo));
 
         RcdoCoverageResponse response = dashboardService.getRcdoCoverage(manager, filters);
