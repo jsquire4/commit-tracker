@@ -10,8 +10,7 @@ interface CategoryOption {
   value: ChessCategoryType;
   label: string;
   description: string;
-  colorClass: string;
-  dotClass: string;
+  borderColor: string;
 }
 
 const CATEGORIES: CategoryOption[] = [
@@ -19,29 +18,25 @@ const CATEGORIES: CategoryOption[] = [
     value: 'STRATEGIC',
     label: 'Strategic',
     description: 'Drives long-term objectives',
-    colorClass: 'border-purple-300 bg-purple-50',
-    dotClass: 'bg-purple-500',
+    borderColor: 'border-l-navy',
   },
   {
     value: 'OPERATIONAL',
     label: 'Operational',
     description: 'Day-to-day execution',
-    colorClass: 'border-blue-300 bg-blue-50',
-    dotClass: 'bg-blue-500',
+    borderColor: 'border-l-muted',
   },
   {
     value: 'DEFENSIVE',
     label: 'Defensive',
-    description: 'Risk mitigation and maintenance',
-    colorClass: 'border-red-300 bg-red-50',
-    dotClass: 'bg-red-500',
+    description: 'Risk mitigation & maintenance',
+    borderColor: 'border-l-error',
   },
   {
     value: 'CAPABILITY_BUILDING',
     label: 'Capability Building',
-    description: 'Growing skills and capacity',
-    colorClass: 'border-green-300 bg-green-50',
-    dotClass: 'bg-green-500',
+    description: 'Growing skills & capacity',
+    borderColor: 'border-l-capability',
   },
 ];
 
@@ -60,24 +55,33 @@ export function CategorySelector({ value, onChange, disabled = false }: Category
             disabled={disabled}
             onClick={() => { onChange(category.value); }}
             className={[
-              'relative flex items-start p-3 rounded-md border-2 text-left transition-all focus:outline-none focus:ring-2 focus:ring-blue-500',
-              isSelected ? category.colorClass + ' border-opacity-100' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600',
-              disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
+              'relative flex flex-col p-3 rounded-sm border border-outline-variant border-l-[3px] text-left',
+              'bg-surface-lowest transition-all duration-[200ms] ease-[var(--ease-standard)]',
+              category.borderColor,
+              isSelected
+                ? 'border-accent border-l-accent bg-accent/[0.04]'
+                : 'hover:bg-surface-container-low',
+              disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer active:translate-y-px',
             ]
               .filter(Boolean)
               .join(' ')}
           >
-            <div className="flex items-center gap-2">
-              <div
-                className={`w-3 h-3 rounded-full flex-shrink-0 mt-0.5 ${isSelected ? category.dotClass : 'bg-gray-300 dark:bg-gray-600'}`}
-              />
-              <div>
-                <p className={`text-sm font-medium ${isSelected ? 'text-gray-900 dark:text-gray-100' : 'text-gray-700 dark:text-gray-300'}`}>
-                  {category.label}
-                </p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{category.description}</p>
-              </div>
+            {/* Checkmark */}
+            <div
+              className={[
+                'absolute top-2 right-2 w-[18px] h-[18px] rounded-full bg-accent',
+                'flex items-center justify-center',
+                'transition-opacity duration-[150ms]',
+                isSelected ? 'opacity-100' : 'opacity-0',
+              ].join(' ')}
+            >
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none">
+                <path d="M2 6.5L4.5 9L10 3" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
             </div>
+
+            <span className="text-[0.8125rem] font-medium text-on-surface">{category.label}</span>
+            <span className="text-small text-on-surface-variant mt-0.5">{category.description}</span>
           </button>
         );
       })}

@@ -1,9 +1,13 @@
-import { useState, useMemo, Fragment } from 'react';
+import { useState, useMemo, useRef, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserList, useCostBands, useCreateUser, useUpdateUser, useArchiveUser, useRestoreUser, useCreateOrg } from '@/hooks/useUsers';
+import { useStagger } from '@/hooks/useMotion';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import Button from '@/components/Button';
+import Input from '@/components/Input';
+import { Badge } from '@/components/Badge';
 import type { User, UserRole } from '@/types';
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -55,6 +59,9 @@ export function AdminTab() {
   const { data: users, isLoading: usersLoading } = useUserList();
   const { data: costBands } = useCostBands();
 
+  // Stagger ref for table rows
+  const tbodyRef = useRef<HTMLTableSectionElement>(null);
+
   // Filters
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('');
@@ -102,6 +109,9 @@ export function AdminTab() {
       return true;
     }).sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [users, search, roleFilter, statusFilter]);
+
+  // Apply stagger to table rows
+  useStagger(tbodyRef);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -179,29 +189,30 @@ export function AdminTab() {
       {/* Executive: Create Org */}
       {isExecutive && (
         <div className="flex justify-end">
-          <button
-            type="button"
-            onClick={() => { setOrgFormOpen(true); }}
-            className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 transition-colors"
-          >
+          <Button variant="dashed" onClick={() => { setOrgFormOpen(true); }}>
             + Create Organization
-          </button>
+          </Button>
         </div>
       )}
 
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-4">
         <input
           type="text"
           value={search}
           onChange={(e) => { setSearch(e.target.value); }}
           placeholder="Search by name or email..."
-          className="flex-1 min-w-[200px] rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="flex-1 min-w-[200px] bg-transparent border-0 border-b border-outline-variant px-0 py-2 text-body text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[150ms]"
         />
         <select
           value={roleFilter}
           onChange={(e) => { setRoleFilter(e.target.value); }}
-          className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-surface-lowest border-0 border-b border-outline-variant px-0 py-2 pr-6 text-[0.8125rem] text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[150ms]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 0 center',
+          }}
         >
           <option value="">All Roles</option>
           {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
@@ -209,59 +220,73 @@ export function AdminTab() {
         <select
           value={statusFilter}
           onChange={(e) => { setStatusFilter(e.target.value as 'active' | 'all'); }}
-          className="rounded-md border border-gray-700 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="bg-surface-lowest border-0 border-b border-outline-variant px-0 py-2 pr-6 text-[0.8125rem] text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[150ms]"
+          style={{
+            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+            backgroundRepeat: 'no-repeat',
+            backgroundPosition: 'right 0 center',
+          }}
         >
-          <option value="active">Active Only</option>
-          <option value="all">All Users</option>
+          <option value="active">Active</option>
+          <option value="all">All</option>
         </select>
-        <button
-          type="button"
-          onClick={openAddUser}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors flex-shrink-0"
-        >
+        <Button variant="primary" onClick={openAddUser}>
           + Add User
-        </button>
+        </Button>
       </div>
 
       {/* User Table */}
-      <div className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
-        <table className="w-full text-sm text-left">
-          <thead className="text-xs text-gray-500 uppercase tracking-wider bg-gray-900/50 border-b border-gray-800">
-            <tr>
-              <th className="px-4 py-3">Name</th>
-              <th className="px-4 py-3">Email</th>
-              <th className="px-4 py-3">Role</th>
-              <th className="px-4 py-3">Reports To</th>
-              <th className="px-4 py-3">Level</th>
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3 text-right">Actions</th>
+      <div className="bg-surface-lowest rounded-sm overflow-hidden">
+        <table className="w-full text-[0.8125rem]">
+          <thead>
+            <tr className="bg-surface-container-low">
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Name</th>
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Email</th>
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Role</th>
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Reports To</th>
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Cost Band</th>
+              <th className="px-4 py-3 text-left text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Status</th>
+              <th className="px-4 py-3 text-right text-[0.6875rem] font-medium uppercase tracking-[0.05rem] text-muted">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-800">
+          <tbody ref={tbodyRef}>
             {filtered.map((user) => (
-              <tr key={user.id} className={`hover:bg-gray-800/50 transition-colors ${!user.isActive ? 'opacity-50' : ''}`}>
-                <td className="px-4 py-3 font-medium text-gray-100">{user.displayName}</td>
-                <td className="px-4 py-3 text-gray-400">{user.email}</td>
+              <tr
+                key={user.id}
+                className={[
+                  'border-b border-outline-variant/15',
+                  'animate-fade-up',
+                  'transition-colors duration-[150ms] hover:bg-surface',
+                  !user.isActive ? 'text-muted' : '',
+                ].join(' ')}
+                style={{ animationDelay: `calc(var(--stagger-index, 0) * 40ms)` }}
+              >
+                <td className="px-4 py-3 font-medium text-on-surface">{user.displayName}</td>
+                <td className="px-4 py-3 text-on-surface-variant">{user.email}</td>
                 <td className="px-4 py-3">
-                  <span className="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-300">
-                    {ROLE_LABEL[user.role] ?? user.role}
-                  </span>
+                  <Badge size="sm">{ROLE_LABEL[user.role] ?? user.role}</Badge>
                 </td>
-                <td className="px-4 py-3 text-gray-400">{user.reportsToDisplayName ?? '—'}</td>
-                <td className="px-4 py-3 text-gray-400">{user.costBandName ?? '—'}</td>
+                <td className="px-4 py-3 text-on-surface-variant">{user.reportsToDisplayName ?? '\u2014'}</td>
+                <td className="px-4 py-3 text-on-surface-variant">{user.costBandName ?? '\u2014'}</td>
                 <td className="px-4 py-3">
                   {user.isActive ? (
-                    <span className="text-xs text-green-400">Active</span>
+                    <span className="inline-flex items-center gap-1.5 text-[0.75rem]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent" />
+                      <span className="text-on-surface-variant">Active</span>
+                    </span>
                   ) : (
-                    <span className="text-xs text-red-400">Inactive</span>
+                    <span className="inline-flex items-center gap-1.5 text-[0.75rem]">
+                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted" />
+                      <span className="text-muted">Inactive</span>
+                    </span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-right">
-                  <div className="flex items-center justify-end gap-2">
+                <td className="px-4 py-3">
+                  <div className="flex items-center justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => { openEditUser(user); }}
-                      className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                      className="text-[0.75rem] font-medium text-navy bg-transparent border-0 cursor-pointer relative transition-colors duration-[150ms] hover:text-accent-dark after:content-[''] after:absolute after:bottom-[-1px] after:left-0 after:w-0 after:h-px after:bg-current after:transition-[width] after:duration-[200ms] hover:after:w-full"
                     >
                       Edit
                     </button>
@@ -269,7 +294,7 @@ export function AdminTab() {
                       <button
                         type="button"
                         onClick={() => { setArchiveTarget(user); }}
-                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                        className="text-[0.75rem] font-medium text-error bg-transparent border-0 cursor-pointer relative transition-colors duration-[150ms] hover:text-[#8A3634] after:content-[''] after:absolute after:bottom-[-1px] after:left-0 after:w-0 after:h-px after:bg-current after:transition-[width] after:duration-[200ms] hover:after:w-full"
                       >
                         Deactivate
                       </button>
@@ -277,7 +302,7 @@ export function AdminTab() {
                       <button
                         type="button"
                         onClick={() => { void handleRestore(user.id); }}
-                        className="text-xs text-green-400 hover:text-green-300 transition-colors"
+                        className="text-[0.75rem] font-medium text-accent bg-transparent border-0 cursor-pointer relative transition-colors duration-[150ms] hover:text-accent-dark after:content-[''] after:absolute after:bottom-[-1px] after:left-0 after:w-0 after:h-px after:bg-current after:transition-[width] after:duration-[200ms] hover:after:w-full"
                       >
                         Reactivate
                       </button>
@@ -288,14 +313,14 @@ export function AdminTab() {
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={7} className="px-4 py-8 text-center text-gray-500">
+                <td colSpan={7} className="px-4 py-8 text-center text-muted">
                   {search || roleFilter ? 'No users match your filters.' : 'No users found.'}
                 </td>
               </tr>
             )}
           </tbody>
         </table>
-        <div className="px-4 py-2 border-t border-gray-800 text-xs text-gray-500">
+        <div className="px-4 py-2.5 border-t border-outline-variant text-[0.75rem] text-muted tabular-nums">
           {filtered.length} user{filtered.length !== 1 ? 's' : ''}
         </div>
       </div>
@@ -303,64 +328,152 @@ export function AdminTab() {
       {/* ─── User Form Slide-Over ──────────────────────────────────────────── */}
       <Transition appear show={formOpen} as={Fragment}>
         <Dialog as="div" className="relative z-40" onClose={() => { if (!isPending) setFormOpen(false); }}>
-          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-            <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+          {/* Backdrop */}
+          <Transition.Child
+            as={Fragment}
+            enter="duration-[200ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-on-surface/30" aria-hidden="true" />
           </Transition.Child>
+
           <div className="fixed inset-0 flex items-start justify-end">
-            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 translate-x-full" enterTo="opacity-100 translate-x-0" leave="ease-in duration-200" leaveFrom="opacity-100 translate-x-0" leaveTo="opacity-0 translate-x-full">
-              <Dialog.Panel className="relative h-full w-full max-w-lg bg-gray-900 shadow-xl flex flex-col">
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-700">
-                  <Dialog.Title className="text-lg font-semibold text-gray-100">
+            {/* Panel */}
+            <Transition.Child
+              as={Fragment}
+              enter="duration-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+              enterFrom="translate-x-full"
+              enterTo="translate-x-0"
+              leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
+              leaveFrom="translate-x-0"
+              leaveTo="translate-x-full"
+            >
+              <Dialog.Panel className="relative h-full w-full max-w-[440px] bg-surface-lowest shadow-whisper flex flex-col">
+                {/* Header */}
+                <div className="flex items-center justify-between px-6 py-5 border-b border-outline-variant">
+                  <Dialog.Title className="font-serif text-[1.125rem] font-normal text-on-surface">
                     {editingUserId ? 'Edit User' : 'Add User'}
                   </Dialog.Title>
-                  <button type="button" onClick={() => { if (!isPending) setFormOpen(false); }} disabled={isPending} className="text-gray-500 hover:text-gray-300 disabled:opacity-50" aria-label="Close">
-                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                  <button
+                    type="button"
+                    onClick={() => { if (!isPending) setFormOpen(false); }}
+                    disabled={isPending}
+                    className="text-muted hover:text-on-surface transition-colors duration-[150ms] p-1 disabled:opacity-50"
+                    aria-label="Close"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
                   </button>
                 </div>
 
-                <form id="user-form" onSubmit={(e) => { void handleSaveUser(e); }} className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
-                  <div>
-                    <label htmlFor="uf-name" className="block text-sm font-medium text-gray-300 mb-1">Display Name <span className="text-red-500">*</span></label>
-                    <input id="uf-name" type="text" value={form.displayName} onChange={(e) => { setForm({ ...form, displayName: e.target.value }); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label htmlFor="uf-email" className="block text-sm font-medium text-gray-300 mb-1">Email <span className="text-red-500">*</span></label>
-                    <input id="uf-email" type="email" value={form.email} onChange={(e) => { setForm({ ...form, email: e.target.value }); }} disabled={Boolean(editingUserId)} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed" />
-                  </div>
-                  <div>
-                    <label htmlFor="uf-role" className="block text-sm font-medium text-gray-300 mb-1">Role <span className="text-red-500">*</span></label>
-                    <select id="uf-role" value={form.role} onChange={(e) => { setForm({ ...form, role: e.target.value as UserRole }); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                {/* Body */}
+                <form id="user-form" onSubmit={(e) => { void handleSaveUser(e); }} className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
+                  <Input
+                    label="Display Name"
+                    required
+                    value={form.displayName}
+                    onChange={(e) => { setForm({ ...form, displayName: e.target.value }); }}
+                    placeholder="Full name"
+                  />
+                  <Input
+                    label="Email"
+                    required
+                    type="email"
+                    value={form.email}
+                    onChange={(e) => { setForm({ ...form, email: e.target.value }); }}
+                    placeholder="name@company.com"
+                    disabled={Boolean(editingUserId)}
+                  />
+
+                  {/* Role select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
+                      Role <span className="text-error ml-0.5">*</span>
+                    </label>
+                    <select
+                      value={form.role}
+                      onChange={(e) => { setForm({ ...form, role: e.target.value as UserRole }); }}
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0 center',
+                      }}
+                    >
                       {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label htmlFor="uf-reports" className="block text-sm font-medium text-gray-300 mb-1">Reports To</label>
-                    <select id="uf-reports" value={form.reportsToId} onChange={(e) => { setForm({ ...form, reportsToId: e.target.value }); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                  {/* Reports To select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
+                      Reports To
+                    </label>
+                    <select
+                      value={form.reportsToId}
+                      onChange={(e) => { setForm({ ...form, reportsToId: e.target.value }); }}
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0 center',
+                      }}
+                    >
                       <option value="">None (top-level)</option>
                       {managers.map((m) => <option key={m.id} value={m.id}>{m.displayName} ({ROLE_LABEL[m.role]})</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label htmlFor="uf-band" className="block text-sm font-medium text-gray-300 mb-1">Level / Cost Band</label>
-                    <select id="uf-band" value={form.costBandId} onChange={(e) => { setForm({ ...form, costBandId: e.target.value }); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+
+                  {/* Cost Band select */}
+                  <div className="flex flex-col gap-1">
+                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
+                      Level / Cost Band
+                    </label>
+                    <select
+                      value={form.costBandId}
+                      onChange={(e) => { setForm({ ...form, costBandId: e.target.value }); }}
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0 center',
+                      }}
+                    >
                       <option value="">Not assigned</option>
                       {(costBands ?? []).map((b) => <option key={b.id} value={b.id}>{b.name} (Tier {b.tier})</option>)}
                     </select>
                   </div>
-                  <div>
-                    <label htmlFor="uf-hours" className="block text-sm font-medium text-gray-300 mb-1">Weekly Capacity (hours)</label>
-                    <input id="uf-hours" type="number" step="0.5" min="0" max="168" value={form.weeklyCapacityHours} onChange={(e) => { setForm({ ...form, weeklyCapacityHours: e.target.value }); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
 
-                  {formError && <div className="rounded-md bg-red-900/30 border border-red-800 px-4 py-3"><p className="text-sm text-red-300">{formError}</p></div>}
+                  {formError && (
+                    <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">
+                      <p className="text-body text-error">{formError}</p>
+                    </div>
+                  )}
                 </form>
 
-                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-700">
-                  <button type="button" onClick={() => { if (!isPending) setFormOpen(false); }} disabled={isPending} className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 rounded-md hover:bg-gray-700 disabled:opacity-50">Cancel</button>
-                  <button type="submit" form="user-form" disabled={isPending} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
-                    {isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                {/* Footer */}
+                <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-outline-variant">
+                  <Button
+                    variant="secondary"
+                    onClick={() => { if (!isPending) setFormOpen(false); }}
+                    disabled={isPending}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    variant="primary"
+                    type="submit"
+                    form="user-form"
+                    disabled={isPending}
+                    loading={isPending}
+                  >
                     {editingUserId ? 'Save Changes' : 'Add User'}
-                  </button>
+                  </Button>
                 </div>
               </Dialog.Panel>
             </Transition.Child>
@@ -384,21 +497,53 @@ export function AdminTab() {
       {/* ─── Create Org Dialog ─────────────────────────────────────────────── */}
       <Transition appear show={orgFormOpen} as={Fragment}>
         <Dialog as="div" className="relative z-40" onClose={() => { setOrgFormOpen(false); }}>
-          <Transition.Child as={Fragment} enter="ease-out duration-200" enterFrom="opacity-0" enterTo="opacity-100" leave="ease-in duration-150" leaveFrom="opacity-100" leaveTo="opacity-0">
-            <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+          <Transition.Child
+            as={Fragment}
+            enter="duration-[200ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-on-surface/40" aria-hidden="true" />
           </Transition.Child>
           <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Transition.Child as={Fragment} enter="ease-out duration-300" enterFrom="opacity-0 scale-95" enterTo="opacity-100 scale-100" leave="ease-in duration-200" leaveFrom="opacity-100 scale-100" leaveTo="opacity-0 scale-95">
-              <Dialog.Panel className="w-full max-w-md bg-gray-900 border border-gray-700 rounded-xl shadow-xl p-6">
-                <Dialog.Title className="text-lg font-semibold text-gray-100 mb-4">Create Organization</Dialog.Title>
-                <form onSubmit={(e) => { void handleCreateOrg(e); }} className="space-y-4">
-                  <div>
-                    <label htmlFor="org-name" className="block text-sm font-medium text-gray-300 mb-1">Organization Name <span className="text-red-500">*</span></label>
-                    <input id="org-name" type="text" value={orgName} onChange={(e) => { setOrgName(e.target.value); }} placeholder="Acme Manufacturing Inc." className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label htmlFor="org-tz" className="block text-sm font-medium text-gray-300 mb-1">Timezone</label>
-                    <select id="org-tz" value={orgTimezone} onChange={(e) => { setOrgTimezone(e.target.value); }} className="w-full rounded-md border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <Transition.Child
+              as={Fragment}
+              enter="duration-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+              enterFrom="opacity-0 translate-y-2"
+              enterTo="opacity-100 translate-y-0"
+              leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
+              leaveFrom="opacity-100 translate-y-0"
+              leaveTo="opacity-0 translate-y-2"
+            >
+              <Dialog.Panel className="w-full max-w-[440px] bg-surface-lowest rounded-sm p-8 shadow-whisper">
+                <Dialog.Title className="font-serif text-[1.125rem] font-normal text-on-surface mb-6">
+                  Create Organization
+                </Dialog.Title>
+                <form onSubmit={(e) => { void handleCreateOrg(e); }} className="space-y-5">
+                  <Input
+                    label="Organization Name"
+                    required
+                    value={orgName}
+                    onChange={(e) => { setOrgName(e.target.value); }}
+                    placeholder="Acme Manufacturing Inc."
+                  />
+                  <div className="flex flex-col gap-1">
+                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
+                      Timezone
+                    </label>
+                    <select
+                      value={orgTimezone}
+                      onChange={(e) => { setOrgTimezone(e.target.value); }}
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
+                      style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'right 0 center',
+                      }}
+                    >
                       <option value="America/New_York">Eastern (America/New_York)</option>
                       <option value="America/Chicago">Central (America/Chicago)</option>
                       <option value="America/Denver">Mountain (America/Denver)</option>
@@ -410,16 +555,22 @@ export function AdminTab() {
                     </select>
                   </div>
                   {createOrgMutation.isError && (
-                    <div className="rounded-md bg-red-900/30 border border-red-800 px-4 py-3">
-                      <p className="text-sm text-red-300">{createOrgMutation.error instanceof Error ? createOrgMutation.error.message : 'Failed to create organization'}</p>
+                    <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">
+                      <p className="text-body text-error">{createOrgMutation.error instanceof Error ? createOrgMutation.error.message : 'Failed to create organization'}</p>
                     </div>
                   )}
                   <div className="flex justify-end gap-3 pt-2">
-                    <button type="button" onClick={() => { setOrgFormOpen(false); }} className="px-4 py-2 text-sm font-medium text-gray-300 bg-gray-800 border border-gray-600 rounded-md hover:bg-gray-700">Cancel</button>
-                    <button type="submit" disabled={createOrgMutation.isPending || !orgName.trim()} className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 disabled:opacity-50 flex items-center gap-2">
-                      {createOrgMutation.isPending && <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />}
+                    <Button variant="secondary" onClick={() => { setOrgFormOpen(false); }}>
+                      Cancel
+                    </Button>
+                    <Button
+                      variant="primary"
+                      type="submit"
+                      disabled={createOrgMutation.isPending || !orgName.trim()}
+                      loading={createOrgMutation.isPending}
+                    >
                       Create
-                    </button>
+                    </Button>
                   </div>
                 </form>
               </Dialog.Panel>

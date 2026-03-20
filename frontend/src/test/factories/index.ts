@@ -31,6 +31,8 @@ export function commitmentFactory(overrides: Partial<Commitment> = {}): Commitme
     chessCategoryId: null,
     chessCategoryName: null,
     completionHorizon: 'EOD',
+    completionDay: null,
+    completionTimeBlock: null,
     priorityRank: 1,
     bullets: [
       { id: uid('b'), body: 'First task', sortOrder: 1, isCompleted: false },

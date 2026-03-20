@@ -42,14 +42,18 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
           type="button"
           {...attributes}
           {...listeners}
-          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
+          className="flex-shrink-0 text-muted hover:text-on-surface cursor-grab active:cursor-grabbing touch-none focus:outline-none transition-colors duration-[150ms]"
           aria-label={`Drag to reorder bullet ${String(index + 1)}`}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
+          <span className="text-base leading-none select-none" aria-hidden="true">&#10303;</span>
         </button>
       )}
+
+      {/* Numbered indicator */}
+      <span className="flex-shrink-0 w-5 h-5 rounded-full bg-surface-container text-on-surface-variant text-small flex items-center justify-center font-medium tabular-nums">
+        {index + 1}
+      </span>
+
       <input
         type="text"
         value={value}
@@ -57,17 +61,18 @@ function BulletItem({ id, value, index, canRemove, disabled, onChange, onRemove 
         disabled={disabled}
         placeholder="What's involved?"
         aria-label={`Task bullet ${String(index + 1)}`}
-        className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400"
+        className="flex-1 border-0 border-b border-b-outline-variant bg-transparent px-0 py-1.5 text-body text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[200ms] disabled:opacity-50 disabled:cursor-not-allowed"
       />
+
       {!disabled && (
         <button
           type="button"
           onClick={onRemove}
           disabled={!canRemove}
           aria-label={`Remove bullet ${String(index + 1)}`}
-          className="flex-shrink-0 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none transition-colors"
+          className="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded-sm text-muted hover:text-error hover:bg-error/[0.08] disabled:opacity-30 disabled:cursor-not-allowed focus:outline-none transition-colors duration-[150ms]"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -91,7 +96,6 @@ export function TaskBulletEditor({
   min = 2,
   max = 5,
 }: TaskBulletEditorProps) {
-  // Each bullet needs a stable id for dnd-kit
   const ids = bullets.map((_, i) => `bullet-${String(i)}`);
 
   const sensors = useSensors(
@@ -128,7 +132,7 @@ export function TaskBulletEditor({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={ids} strategy={verticalListSortingStrategy}>
           {bullets.map((bullet, index) => (
@@ -151,12 +155,10 @@ export function TaskBulletEditor({
           type="button"
           onClick={handleAdd}
           disabled={bullets.length >= max}
-          className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none transition-colors"
+          className="inline-flex items-center gap-1 text-[0.8125rem] font-medium text-accent hover:text-accent-dark disabled:opacity-40 disabled:cursor-not-allowed focus:outline-none transition-colors duration-[150ms] mt-1"
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          Add bullet
+          <span aria-hidden="true">+</span>
+          Add subtask
         </button>
       )}
     </div>

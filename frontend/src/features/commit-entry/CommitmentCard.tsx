@@ -9,6 +9,7 @@ interface CommitmentCardProps {
   cycleState: CycleState;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  isAssigned?: boolean;
 }
 
 const HORIZON_LABELS: Record<string, string> = {
@@ -33,35 +34,7 @@ const CATEGORY_LABELS: Record<ChessCategoryType, string> = {
   CAPABILITY_BUILDING: 'Capability Building',
 };
 
-interface ExpandButtonProps {
-  expanded: boolean;
-  onToggle: () => void;
-  className?: string;
-}
-
-function ExpandButton({ expanded, onToggle, className = '' }: ExpandButtonProps) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={`p-1 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none rounded transition-colors ${className}`}
-      aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
-      aria-expanded={expanded}
-    >
-      <svg
-        className={`w-4 h-4 transition-transform ${expanded ? 'rotate-180' : ''}`}
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-        aria-hidden="true"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
-    </button>
-  );
-}
-
-export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: CommitmentCardProps) {
+export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDelete, isAssigned }: CommitmentCardProps) {
   const [expanded, setExpanded] = useState(false);
   const isDraft = cycleState === 'DRAFT';
 
@@ -80,131 +53,153 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete }: Com
   };
 
   const categoryKey = commitment.chessCategoryName as ChessCategoryType | null;
+  const hasAssignedBy = commitment.attribution.kind === 'ASSIGNED_BY';
+  const showAccent = isAssigned || hasAssignedBy;
 
   return (
     <div
       ref={setNodeRef}
       style={style}
       className={[
-        'bg-white dark:bg-gray-900 rounded-lg border shadow-sm transition-shadow',
-        isDragging ? 'shadow-lg opacity-70 border-blue-300' : 'border-gray-200 dark:border-gray-700 hover:shadow-md',
+        'bg-surface-lowest rounded-sm relative group',
+        'transition-colors duration-[var(--duration-fast)] ease-[var(--ease-standard)]',
+        'hover:bg-surface',
+        showAccent ? 'border-l-[3px] border-l-accent' : '',
+        isDragging ? 'opacity-70 shadow-whisper' : '',
       ].join(' ')}
     >
       <div className="p-4">
         <div className="flex items-start gap-3">
-          {/* Drag handle */}
+          {/* Drag handle — braille dots */}
           {isDraft && (
             <button
               type="button"
               {...attributes}
               {...listeners}
-              className="flex-shrink-0 mt-0.5 text-gray-300 dark:text-gray-600 hover:text-gray-500 dark:hover:text-gray-400 cursor-grab active:cursor-grabbing touch-none focus:outline-none"
+              className="flex-shrink-0 mt-0.5 text-muted opacity-50 group-hover:opacity-100 cursor-grab active:cursor-grabbing touch-none focus:outline-none transition-opacity duration-[var(--duration-fast)]"
               aria-label="Drag to reorder"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
+              <span className="text-base leading-none select-none">&#10303;</span>
             </button>
           )}
 
-          {/* Priority rank */}
-          <div className="flex-shrink-0 w-6 h-6 rounded-full bg-gray-100 dark:bg-gray-800 flex items-center justify-center">
-            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400">{commitment.priorityRank}</span>
+          {/* Priority rank circle */}
+          <div className={[
+            'flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center',
+            showAccent
+              ? 'bg-accent text-white'
+              : 'bg-surface-container',
+          ].join(' ')}>
+            <span className={[
+              'text-small font-semibold',
+              showAccent ? 'text-white' : 'text-on-surface-variant',
+            ].join(' ')}>
+              {showAccent ? 'A' : `#${commitment.priorityRank}`}
+            </span>
           </div>
 
           {/* Main content */}
           <div className="flex-1 min-w-0">
-            {/* Title row */}
-            <button
-              type="button"
-              onClick={() => { setExpanded((prev) => !prev); }}
-              className="w-full text-left focus:outline-none"
-            >
-              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">{commitment.title}</h3>
-            </button>
-
-            {/* RCDO breadcrumb */}
-            {commitment.rcdoLink.rallyCryId && (
-              <p className="mt-0.5 text-xs text-gray-400 dark:text-gray-500 truncate">
-                {commitment.rcdoLink.rallyCryTitle ?? commitment.rcdoLink.rallyCryId}
-                {commitment.rcdoLink.definingObjectiveId && ` › ${commitment.rcdoLink.definingObjectiveTitle ?? commitment.rcdoLink.definingObjectiveId}`}
-                {commitment.rcdoLink.outcomeId && ` › ${commitment.rcdoLink.outcomeTitle ?? commitment.rcdoLink.outcomeId}`}
-              </p>
+            {/* Assigned by label */}
+            {hasAssignedBy && (
+              <div className="flex items-center gap-1 text-small text-accent font-medium mb-0.5">
+                <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
+                </svg>
+                Assigned by {commitment.attribution.kind === 'ASSIGNED_BY' ? commitment.attribution.assignedByName : ''}
+              </div>
             )}
 
-            {/* Badges row */}
-            <div className="mt-2 flex flex-wrap items-center gap-1.5">
+            {/* Title */}
+            <h3 className="text-title font-medium text-on-surface leading-snug">{commitment.title}</h3>
+
+            {/* Meta pills */}
+            <div className="flex flex-wrap items-center gap-2 mt-2">
+              <Badge variant="default" size="sm">
+                {HORIZON_LABELS[commitment.completionHorizon] ?? commitment.completionHorizon}
+              </Badge>
+
               {categoryKey && (
-                <Badge variant={CATEGORY_VARIANTS[categoryKey]}>
+                <Badge variant="category" color={CATEGORY_VARIANTS[categoryKey]} size="sm">
                   {CATEGORY_LABELS[categoryKey]}
                 </Badge>
               )}
-              <Badge variant="blue">{HORIZON_LABELS[commitment.completionHorizon] ?? commitment.completionHorizon}</Badge>
-              {commitment.attribution.kind === 'ASSIGNED_BY' && (
-                <Badge variant="yellow">
-                  Assigned by {commitment.attribution.assignedByName}
-                </Badge>
+
+              {commitment.rcdoLink.rallyCryId ? (
+                <a
+                  href="#"
+                  className="text-small text-accent font-medium hover:text-accent-dark transition-colors duration-[var(--duration-fast)]"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  &rarr; {commitment.rcdoLink.rallyCryTitle}
+                </a>
+              ) : (
+                <span className="text-small text-muted italic">Unlinked</span>
               )}
+
               {commitment.isUnplanned && (
-                <Badge variant="gray">Unplanned</Badge>
+                <Badge variant="default" size="sm">Unplanned</Badge>
               )}
             </div>
 
-            {/* Expanded bullets */}
+            {/* Expandable task bullets */}
             {expanded && commitment.bullets.length > 0 && (
-              <ul className="mt-3 space-y-1 border-t border-gray-100 dark:border-gray-800 pt-3">
+              <div className="mt-3 pt-3 border-t border-outline-variant flex flex-col gap-2">
                 {commitment.bullets.map((bullet) => (
-                  <li key={bullet.id} className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
-                    <span
-                      className={`flex-shrink-0 mt-0.5 w-3 h-3 rounded-full border ${bullet.isCompleted ? 'bg-green-500 border-green-500' : 'border-gray-300 dark:border-gray-600'}`}
+                  <label key={bullet.id} className="flex items-start gap-2 text-[0.8125rem] text-on-surface-variant cursor-default">
+                    <input
+                      type="checkbox"
+                      checked={bullet.isCompleted}
+                      readOnly
+                      className="flex-shrink-0 w-4 h-4 rounded-sm border-[1.5px] border-outline-variant bg-surface-lowest mt-0.5 accent-accent"
                     />
-                    <span className={bullet.isCompleted ? 'line-through text-gray-400 dark:text-gray-500' : ''}>
+                    <span className={bullet.isCompleted ? 'line-through text-muted' : ''}>
                       {bullet.body}
                     </span>
-                  </li>
+                  </label>
                 ))}
-              </ul>
+              </div>
             )}
           </div>
 
-          {/* Actions (DRAFT only) */}
-          {isDraft && (
-            <div className="flex-shrink-0 flex items-center gap-1 ml-1">
+          {/* Right side: edit pencil + chevron */}
+          <div className="flex-shrink-0 flex items-center gap-1">
+            {/* Edit pencil — visible on hover */}
+            {isDraft && (
               <button
                 type="button"
                 onClick={() => { onEdit(commitment.id); }}
-                className="p-1 text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 focus:outline-none rounded transition-colors"
+                className="opacity-0 group-hover:opacity-100 p-1 text-muted hover:text-accent focus:outline-none transition-opacity duration-[var(--duration-fast)]"
                 aria-label="Edit commitment"
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </button>
+            )}
+
+            {/* Expand chevron */}
+            {commitment.bullets.length > 0 && (
               <button
                 type="button"
-                onClick={() => { onDelete(commitment.id); }}
-                className="p-1 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 focus:outline-none rounded transition-colors"
-                aria-label="Delete commitment"
+                onClick={() => { setExpanded((prev) => !prev); }}
+                className="p-1 text-muted hover:text-on-surface-variant focus:outline-none transition-colors duration-[var(--duration-fast)]"
+                aria-label={expanded ? 'Collapse bullets' : 'Expand bullets'}
+                aria-expanded={expanded}
               >
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                <svg
+                  className={`w-4 h-4 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth={2}
+                  aria-hidden="true"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                 </svg>
               </button>
-              {/* Expand toggle */}
-              {commitment.bullets.length > 0 && (
-                <ExpandButton expanded={expanded} onToggle={() => { setExpanded((prev) => !prev); }} />
-              )}
-            </div>
-          )}
-
-          {/* Non-draft: just expand toggle */}
-          {!isDraft && commitment.bullets.length > 0 && (
-            <ExpandButton
-              expanded={expanded}
-              onToggle={() => { setExpanded((prev) => !prev); }}
-              className="flex-shrink-0"
-            />
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>

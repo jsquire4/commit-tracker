@@ -37,6 +37,14 @@ interface DisplacementCaptureProps {
   disabled: boolean;
 }
 
+const selectClass = [
+  'w-full bg-transparent border-0 border-b-[1.5px] border-b-outline-variant',
+  'px-0 py-2 text-[13px] text-on-surface',
+  'transition-colors duration-[150ms] ease-[var(--ease-standard)]',
+  'focus:outline-none focus:border-b-accent',
+  'appearance-none cursor-pointer',
+].join(' ');
+
 export function DisplacementCapture({
   value,
   onChange,
@@ -50,29 +58,20 @@ export function DisplacementCapture({
   // Filter to commitments created after current or marked unplanned, sorted newest first
   const candidateCommitments = cycleCommitments
     .filter(
-      (c) =>
-        c.isUnplanned || c.createdAt > currentCommitmentCreatedAt
+      (c) => c.isUnplanned || c.createdAt > currentCommitmentCreatedAt,
     )
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-  const selectClass = [
-    'w-full rounded border px-3 py-2 text-sm',
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-    disabled
-      ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400'
-      : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-gray-300 dark:border-gray-600',
-  ].join(' ');
-
   return (
-    <div className="flex flex-col gap-3 pt-2 border-t border-gray-100 dark:border-gray-800">
-      <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
-        Displacement Details
+    <div className="flex flex-col gap-3 pt-3 mt-3 border-t border-surface-container-low">
+      <p className="text-[0.625rem] font-bold tracking-widest uppercase text-on-surface-variant opacity-60">
+        Displacement Category
       </p>
 
       {/* What displaced this? */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          What displaced this?
+        <label className="text-sm font-medium text-on-surface-variant">
+          What type of disruption?
         </label>
         <select
           value={value.category ?? ''}
@@ -83,9 +82,9 @@ export function DisplacementCapture({
             })
           }
           disabled={disabled}
-          className={selectClass}
+          className={`${selectClass} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <option value="">— Select a reason —</option>
+          <option value="">&mdash; Select a reason &mdash;</option>
           {DISPLACEMENT_CATEGORIES.map((cat) => (
             <option key={cat} value={cat}>
               {CATEGORY_LABELS[cat]}
@@ -96,9 +95,9 @@ export function DisplacementCapture({
 
       {/* Which commitment took its place? */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="text-sm font-medium text-on-surface-variant">
           Which commitment took its place?{' '}
-          <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+          <span className="font-normal text-muted">(optional)</span>
         </label>
         <select
           value={value.displacingCommitmentId ?? ''}
@@ -109,12 +108,12 @@ export function DisplacementCapture({
             })
           }
           disabled={disabled}
-          className={selectClass}
+          className={`${selectClass} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
-          <option value="">— None selected —</option>
+          <option value="">&mdash; None selected &mdash;</option>
           {candidateCommitments.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.title.length > 60 ? c.title.slice(0, 60) + '…' : c.title}
+              {c.title.length > 60 ? c.title.slice(0, 60) + '\u2026' : c.title}
             </option>
           ))}
         </select>
@@ -122,9 +121,9 @@ export function DisplacementCapture({
 
       {/* Details */}
       <div className="flex flex-col gap-1">
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label className="text-sm font-medium text-on-surface-variant">
           Details{' '}
-          <span className="font-normal text-gray-500 dark:text-gray-400">(optional)</span>
+          <span className="font-normal text-muted">(optional)</span>
         </label>
         <textarea
           value={value.detail}
@@ -132,22 +131,22 @@ export function DisplacementCapture({
           disabled={disabled}
           maxLength={MAX_DETAIL_CHARS}
           rows={2}
-          placeholder="Any additional context about what happened…"
+          placeholder="Any additional context about what happened\u2026"
           className={[
-            'w-full rounded border px-3 py-2 text-sm resize-y',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-            disabled
-              ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400'
-              : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:border-gray-600',
-            isOverLimit ? 'border-red-400 dark:border-red-500' : 'border-gray-300',
+            'w-full bg-transparent border-0 border-b-[1.5px] px-0 py-2 text-[13px] text-on-surface resize-y',
+            'placeholder:text-muted',
+            'transition-colors duration-[150ms] ease-[var(--ease-standard)]',
+            'focus:outline-none',
+            disabled ? 'opacity-50 cursor-not-allowed' : '',
+            isOverLimit
+              ? 'border-b-error focus:border-b-error'
+              : 'border-b-outline-variant focus:border-b-accent',
           ].join(' ')}
         />
         <p
           className={[
-            'text-xs text-right',
-            isOverLimit
-              ? 'text-red-500 dark:text-red-400 font-medium'
-              : 'text-gray-500 dark:text-gray-400',
+            'text-[11px] text-right tabular-nums',
+            isOverLimit ? 'text-error font-medium' : 'text-muted',
           ].join(' ')}
         >
           {remaining} characters remaining

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { Cycle } from '@/types';
 import { useTransitionCycle } from '@/hooks/useCycle';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import Button from '@/components/Button';
+import Tooltip from '@/components/Tooltip';
 
 interface TransitionActionsProps {
   cycle: Cycle;
@@ -19,7 +20,7 @@ interface TransitionConfig {
 
 function getTransitionConfig(
   cycle: Cycle,
-  commitmentCount: number
+  commitmentCount: number,
 ): TransitionConfig | null {
   switch (cycle.state) {
     case 'DRAFT': {
@@ -31,7 +32,7 @@ function getTransitionConfig(
         targetState: 'LOCKED' as const,
       };
       return commitmentCount === 0
-        ? { ...base, disabledReason: 'Add at least one commitment' }
+        ? { ...base, disabledReason: 'Add at least one commitment first' }
         : base;
     }
     case 'LOCKED':
@@ -43,7 +44,6 @@ function getTransitionConfig(
         targetState: 'RECONCILING',
       };
     case 'RECONCILING':
-      // Handled in ReconciliationPage, not here
       return null;
     case 'RECONCILED':
       return null;
@@ -59,30 +59,7 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
   const config = getTransitionConfig(cycle, commitmentCount);
 
   if (cycle.state === 'RECONCILED') {
-    return (
-      <div className="rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/30 px-5 py-4">
-        <div className="flex items-center gap-2">
-          <svg
-            className="h-5 w-5 text-green-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-            aria-hidden="true"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-          <p className="text-sm font-medium text-green-800 dark:text-green-300">Cycle complete</p>
-        </div>
-        <p className="mt-1 pl-7 text-xs text-green-600 dark:text-green-400">
-          All commitments have been reconciled for this cycle.
-        </p>
-      </div>
-    );
+    return null;
   }
 
   if (!config) {
@@ -95,42 +72,35 @@ export function TransitionActions({ cycle, commitmentCount }: TransitionActionsP
     if (!config) return;
     transitionCycle(
       { id: cycle.id, req: { targetState: config.targetState } },
-      { onSuccess: () => { setDialogOpen(false); } }
+      { onSuccess: () => { setDialogOpen(false); } },
     );
   }
 
+  const button = (
+    <Button
+      variant="primary"
+      disabled={isDisabled}
+      loading={isPending}
+      onClick={() => { setDialogOpen(true); }}
+      icon={
+        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
+        </svg>
+      }
+    >
+      {config.label}
+    </Button>
+  );
+
   return (
     <>
-      <div className="flex items-center gap-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-4">
-        <div className="flex-1">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            {cycle.state === 'DRAFT'
-              ? 'Ready to lock in commitments for this cycle?'
-              : 'Ready to start reconciling commitments?'}
-          </p>
-          {config.disabledReason && (
-            <p className="mt-0.5 text-xs text-amber-600">{config.disabledReason}</p>
-          )}
-        </div>
-
-        <div className="relative">
-          <button
-            type="button"
-            disabled={isDisabled}
-            onClick={() => { setDialogOpen(true); }}
-            title={config.disabledReason}
-            className={[
-              'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-medium text-white shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
-              isDisabled
-                ? 'cursor-not-allowed bg-blue-300 focus:ring-blue-300'
-                : 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500',
-            ].join(' ')}
-          >
-            {isPending && <LoadingSpinner size="sm" />}
-            {config.label}
-          </button>
-        </div>
-      </div>
+      {config.disabledReason ? (
+        <Tooltip content={config.disabledReason} side="top">
+          {button}
+        </Tooltip>
+      ) : (
+        button
+      )}
 
       <ConfirmDialog
         open={dialogOpen}

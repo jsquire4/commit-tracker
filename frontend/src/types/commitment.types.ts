@@ -1,4 +1,4 @@
-import type { CompletionHorizon, ReconciliationStatus } from './enums';
+import type { CompletionHorizon, CompletionDay, CompletionTimeBlock, ReconciliationStatus } from './enums';
 
 export interface TaskBullet {
   id: string;
@@ -31,6 +31,8 @@ export interface Commitment {
   chessCategoryId: string | null;
   chessCategoryName: string | null;
   completionHorizon: CompletionHorizon;
+  completionDay: CompletionDay | null;
+  completionTimeBlock: CompletionTimeBlock | null;
   priorityRank: number;
   bullets: TaskBullet[];
   attribution: AssignmentAttribution;
@@ -49,6 +51,8 @@ export interface CreateCommitmentRequest {
   description?: string;
   bullets: string[];
   completionHorizon: CompletionHorizon;
+  completionDay?: CompletionDay;
+  completionTimeBlock?: CompletionTimeBlock;
   chessCategoryId?: string;
   rallyCryId?: string;
   definingObjectiveId?: string;

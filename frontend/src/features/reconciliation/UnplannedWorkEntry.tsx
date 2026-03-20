@@ -3,6 +3,7 @@ import { useCreateUnplannedCommitment } from '@/hooks/useCommitments';
 import { useQuery } from '@tanstack/react-query';
 import { getRcdoTree } from '@/api/rcdo.api';
 import { CommitmentStatusMarker } from './CommitmentStatusMarker';
+import Button from '@/components/Button';
 import type { ReconciliationStatus } from '@/types/enums';
 import type { CompletionHorizon } from '@/types/enums';
 
@@ -17,6 +18,7 @@ interface UnplannedFormState {
   completionHorizon: CompletionHorizon;
   rallyCryId: string;
   reconciliationStatus: ReconciliationStatus | null;
+  requestedBy: string;
 }
 
 const HORIZON_OPTIONS: { value: CompletionHorizon; label: string }[] = [
@@ -33,7 +35,23 @@ const EMPTY_FORM: UnplannedFormState = {
   completionHorizon: 'EOW',
   rallyCryId: '',
   reconciliationStatus: null,
+  requestedBy: '',
 };
+
+const selectClass = [
+  'w-full bg-transparent border-0 border-b-[1.5px] border-b-outline-variant',
+  'px-0 py-2 text-[13px] text-on-surface',
+  'transition-colors duration-[150ms] ease-[var(--ease-standard)]',
+  'focus:outline-none focus:border-b-accent',
+  'appearance-none cursor-pointer',
+].join(' ');
+
+const inputClass = [
+  'w-full bg-transparent border-0 border-b-[1.5px] border-b-outline-variant',
+  'px-0 py-2 text-[13px] text-on-surface placeholder:text-muted',
+  'transition-colors duration-[150ms] ease-[var(--ease-standard)]',
+  'focus:outline-none focus:border-b-accent',
+].join(' ');
 
 export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) {
   const [open, setOpen] = useState(false);
@@ -114,155 +132,223 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
     setOpen(false);
   }
 
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => { setOpen(true); }}
-        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-      >
-        <span aria-hidden="true">+</span>
-        Add unplanned work
-      </button>
-    );
-  }
-
   return (
-    <div className="rounded-lg border border-blue-200 dark:border-blue-700 bg-blue-50 dark:bg-blue-900/30 p-4">
-      <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-3">Add Unplanned Work</h3>
-
-      <form onSubmit={(e) => { void handleSubmit(e); }} className="flex flex-col gap-4" noValidate>
-        {/* Title */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-title" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Title <span className="text-red-500">*</span>
-          </label>
-          <input
-            id="unplanned-title"
-            type="text"
-            value={form.title}
-            onChange={(e) => { setForm((prev) => ({ ...prev, title: e.target.value })); }}
-            placeholder="What did you work on?"
-            maxLength={500}
-            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+    <div className="flex flex-col gap-4">
+      {/* ── Prominent CTA Banner ── */}
+      <div className="bg-surface-container-low border-l-4 border-l-accent rounded-sm px-6 py-5 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-sm font-medium text-on-surface">
+            Did anything unplanned come up this week?
+          </p>
+          <p className="text-xs text-on-surface-variant mt-0.5">
+            Capture unplanned work so it counts toward your effort.
+          </p>
         </div>
+        <Button
+          variant="primary"
+          size="md"
+          onClick={() => {
+            setOpen(true);
+            // Scroll form into view after state update
+            setTimeout(() => {
+              document.getElementById('unplanned-form')?.scrollIntoView({ behavior: 'smooth' });
+            }, 50);
+          }}
+          icon={
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          }
+        >
+          Add unplanned work
+        </Button>
+      </div>
 
-        {/* Bullets */}
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Bullet items <span className="text-red-500">*</span>{' '}
-            <span className="text-gray-400 dark:text-gray-500 font-normal">(min 2, max 5)</span>
-          </span>
-          {form.bullets.map((bullet, idx) => (
-            <div key={idx} className="flex gap-2 items-center">
+      {/* ── Inline Add Form ── */}
+      {open && (
+        <div
+          id="unplanned-form"
+          className="bg-surface-lowest rounded-sm p-5 border-[1.5px] border-dashed border-accent/40"
+        >
+          <h3 className="text-sm font-semibold text-on-surface mb-4">Add Unplanned Work</h3>
+
+          <form
+            onSubmit={(e) => {
+              void handleSubmit(e);
+            }}
+            className="flex flex-col gap-4"
+            noValidate
+          >
+            {/* Title */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="unplanned-title" className="text-sm font-medium text-on-surface-variant">
+                Title <span className="text-error">*</span>
+              </label>
               <input
+                id="unplanned-title"
                 type="text"
-                value={bullet}
-                onChange={(e) => { handleBulletChange(idx, e.target.value); }}
-                placeholder={`Bullet ${String(idx + 1)}`}
-                className="flex-1 rounded border border-gray-300 dark:border-gray-600 px-3 py-1.5 text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={form.title}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, title: e.target.value }));
+                }}
+                placeholder="What did you work on?"
+                maxLength={500}
+                className={inputClass}
               />
-              {form.bullets.length > 2 && (
+            </div>
+
+            {/* Bullets */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-on-surface-variant">
+                Bullet items <span className="text-error">*</span>{' '}
+                <span className="text-muted font-normal">(min 2, max 5)</span>
+              </span>
+              <div className="flex flex-col gap-2">
+                {form.bullets.map((bullet, idx) => (
+                  <div key={idx} className="flex gap-2 items-center">
+                    <input
+                      type="text"
+                      value={bullet}
+                      onChange={(e) => {
+                        handleBulletChange(idx, e.target.value);
+                      }}
+                      placeholder={`Bullet ${String(idx + 1)}`}
+                      className={`${inputClass} flex-1`}
+                    />
+                    {form.bullets.length > 2 && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          removeBullet(idx);
+                        }}
+                        aria-label={`Remove bullet ${String(idx + 1)}`}
+                        className="text-muted hover:text-error text-lg leading-none px-1 transition-colors duration-[150ms]"
+                      >
+                        &times;
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+              {form.bullets.length < 5 && (
                 <button
                   type="button"
-                  onClick={() => { removeBullet(idx); }}
-                  aria-label={`Remove bullet ${String(idx + 1)}`}
-                  className="text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 text-lg leading-none px-1"
+                  onClick={addBullet}
+                  className="self-start text-xs font-medium text-accent hover:underline mt-1"
                 >
-                  ×
+                  + Add bullet
                 </button>
               )}
             </div>
-          ))}
-          {form.bullets.length < 5 && (
-            <button
-              type="button"
-              onClick={addBullet}
-              className="self-start text-xs text-blue-600 dark:text-blue-400 hover:underline mt-1"
-            >
-              + Add bullet
-            </button>
-          )}
-        </div>
 
-        {/* Completion Horizon */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-horizon" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Completion Horizon
-          </label>
-          <select
-            id="unplanned-horizon"
-            value={form.completionHorizon}
-            onChange={(e) =>
-              { setForm((prev) => ({ ...prev, completionHorizon: e.target.value as CompletionHorizon })); }
-            }
-            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            {HORIZON_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Completion Horizon */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="unplanned-horizon" className="text-sm font-medium text-on-surface-variant">
+                Completion Horizon
+              </label>
+              <select
+                id="unplanned-horizon"
+                value={form.completionHorizon}
+                onChange={(e) => {
+                  setForm((prev) => ({
+                    ...prev,
+                    completionHorizon: e.target.value as CompletionHorizon,
+                  }));
+                }}
+                className={selectClass}
+              >
+                {HORIZON_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* RCDO Linking */}
-        <div className="flex flex-col gap-1">
-          <label htmlFor="unplanned-rcdo" className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Rally Cry <span className="text-red-500">*</span>
-          </label>
-          <select
-            id="unplanned-rcdo"
-            value={form.rallyCryId}
-            onChange={(e) => { setForm((prev) => ({ ...prev, rallyCryId: e.target.value })); }}
-            className="rounded border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-          >
-            <option value="">— Select Rally Cry —</option>
-            {rcdoTree?.rallyCries.map((rc) => (
-              <option key={rc.id} value={rc.id}>
-                {rc.title}
-              </option>
-            ))}
-          </select>
-        </div>
+            {/* Rally Cry */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="unplanned-rcdo" className="text-sm font-medium text-on-surface-variant">
+                Rally Cry <span className="text-error">*</span>
+              </label>
+              <select
+                id="unplanned-rcdo"
+                value={form.rallyCryId}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, rallyCryId: e.target.value }));
+                }}
+                className={selectClass}
+              >
+                <option value="">&mdash; Select Rally Cry &mdash;</option>
+                {rcdoTree?.rallyCries.map((rc) => (
+                  <option key={rc.id} value={rc.id}>
+                    {rc.title}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        {/* Reconciliation Status */}
-        <div className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-            Reconciliation Status <span className="text-red-500">*</span>
-          </span>
-          <CommitmentStatusMarker
-            value={form.reconciliationStatus}
-            onChange={(s) => { setForm((prev) => ({ ...prev, reconciliationStatus: s })); }}
-          />
-        </div>
+            {/* Who requested this? */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="unplanned-requested-by" className="text-sm font-medium text-on-surface-variant">
+                Who requested this? <span className="text-error">*</span>
+              </label>
+              <select
+                id="unplanned-requested-by"
+                value={form.requestedBy}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, requestedBy: e.target.value }));
+                }}
+                className={selectClass}
+              >
+                <option value="">&mdash; Select &mdash;</option>
+                <option value="self">Self-initiated</option>
+                <option value="manager">Manager</option>
+                <option value="director">Director</option>
+                <option value="external">External stakeholder</option>
+              </select>
+              <p className="text-[11px] text-muted mt-1">
+                Tracks where unplanned work originates to identify patterns.
+              </p>
+            </div>
 
-        {/* Error */}
-        {error && (
-          <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-            {error}
-          </p>
-        )}
+            {/* Reconciliation Status */}
+            <div className="flex flex-col gap-1">
+              <span className="text-sm font-medium text-on-surface-variant">
+                What happened? <span className="text-error">*</span>
+              </span>
+              <CommitmentStatusMarker
+                value={form.reconciliationStatus}
+                onChange={(s) => {
+                  setForm((prev) => ({ ...prev, reconciliationStatus: s }));
+                }}
+              />
+            </div>
 
-        {/* Actions */}
-        <div className="flex gap-2 pt-1">
-          <button
-            type="submit"
-            disabled={createMutation.isPending}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded hover:bg-blue-700 disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-          >
-            {createMutation.isPending ? 'Saving…' : 'Add Work'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors"
-          >
-            Cancel
-          </button>
+            {/* Error */}
+            {error && (
+              <p role="alert" className="text-sm text-error">
+                {error}
+              </p>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-2">
+              <Button
+                type="submit"
+                variant="primary"
+                disabled={createMutation.isPending}
+                loading={createMutation.isPending}
+              >
+                Add Work
+              </Button>
+              <Button type="button" variant="secondary" onClick={handleCancel}>
+                Cancel
+              </Button>
+            </div>
+          </form>
         </div>
-      </form>
+      )}
     </div>
   );
 }

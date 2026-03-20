@@ -5,60 +5,46 @@ interface CoverageStripProps {
 }
 
 export function CoverageStrip({ coverage }: CoverageStripProps) {
-  if (!coverage || coverage.byRallyCry.length === 0) return null;
+  if (!coverage) return null;
 
-  const totalLinked = coverage.linkedCount;
-  const total = coverage.totalCommitments;
-  const uncoveredCount = coverage.uncoveredObjectives.length;
+  const unlinkedCount = coverage.unlinkedCount;
+
+  if (unlinkedCount === 0) {
+    return (
+      <div className="bg-surface-lowest rounded-sm p-4">
+        <div className="text-body font-medium text-on-surface mb-1">Your Coverage</div>
+        <p className="text-[0.8125rem] text-on-surface-variant">
+          All commitments are linked to a rally cry.
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-          Your team&rsquo;s rally cry coverage
-        </h3>
-        <span className="text-xs text-gray-400 dark:text-gray-500 tabular-nums">
-          {Math.round(coverage.linkedPercentage)}% linked ({totalLinked} of {total})
-        </span>
-      </div>
-
-      {/* Rally cry bars */}
-      <div className="flex gap-2 flex-wrap">
-        {coverage.byRallyCry.map((rc) => {
-          const barWidth = total > 0 ? Math.round((rc.commitmentCount / total) * 100) : 0;
-          return (
-            <div key={rc.rallyCryId} className="flex-1 min-w-[120px]">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">
-                  {rc.title}
-                </span>
-                <span className="text-[10px] text-gray-500 tabular-nums ml-1">
-                  {rc.commitmentCount}
-                </span>
-              </div>
-              <div className="h-1.5 bg-gray-200 dark:bg-gray-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all duration-500 bg-blue-500"
-                  style={{ width: `${Math.max(barWidth, rc.commitmentCount > 0 ? 8 : 0)}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Uncovered objectives */}
-      {uncoveredCount > 0 && (
-        <div className="mt-3 flex items-start gap-2">
-          <span className="text-amber-500 text-xs mt-0.5">&#9888;</span>
-          <p className="text-xs text-gray-500 dark:text-gray-400">
-            <span className="font-medium text-gray-600 dark:text-gray-300">
-              {uncoveredCount} uncovered objective{uncoveredCount !== 1 ? 's' : ''}:{' '}
-            </span>
-            {coverage.uncoveredObjectives.map((o) => o.title).join(', ')}
-          </p>
+    <div className="bg-surface-lowest rounded-sm p-4">
+      <div className="text-body font-medium text-on-surface mb-2">Your Coverage</div>
+      <div className="flex items-start gap-2 p-2.5 bg-surface-container-low rounded-sm mb-2">
+        <svg
+          className="flex-shrink-0 w-4 h-4 text-warning mt-0.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"
+          />
+        </svg>
+        <div className="text-[0.8125rem] text-on-surface-variant">
+          You have <strong className="font-medium text-on-surface">{unlinkedCount} unlinked commitment{unlinkedCount !== 1 ? 's' : ''}</strong>
         </div>
-      )}
+      </div>
+      <p className="text-small text-muted leading-relaxed">
+        Link to a rally cry if this work relates to one.
+      </p>
     </div>
   );
 }

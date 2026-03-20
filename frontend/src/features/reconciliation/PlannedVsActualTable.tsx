@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { CommitmentReconciliationDetail, ReconcileCommitmentRequest } from '@/types/reconciliation.types';
 import type { ReconciliationStatus } from '@/types/enums';
 import type { BulletStatus } from '@/types/reconciliation.types';
@@ -6,23 +6,50 @@ import type { Commitment } from '@/types/commitment.types';
 import { CommitmentStatusMarker } from './CommitmentStatusMarker';
 import { ChangeReasonCapture } from './ChangeReasonCapture';
 import { DisplacementCapture, type DisplacementValue } from './DisplacementCapture';
+import { DisplacementQuickSignal } from './DisplacementQuickSignal';
 import { useReconcileCommitment } from '@/hooks/useReconciliation';
+
+/* ─── Constants ────────────────────────────────────────────────────────────── */
 
 const DISPLACEMENT_STATUSES: ReconciliationStatus[] = [
   'NOT_STARTED',
   'PARTIALLY_COMPLETED',
-  'CARRIED_FORWARD',
 ] as const;
+
+const HORIZON_LABELS: Record<string, string> = {
+  MORNING: 'Morning',
+  MIDDAY: 'Midday',
+  AFTERNOON: 'Afternoon',
+  EOD: 'End of Day',
+  EOW: 'End of Week',
+};
+
+const CHESS_BAR_COLORS: Record<string, string> = {
+  Strategic: '#036A6A',
+  Operational: '#DCD9D4',
+  Defensive: '#C2860B',
+  'Capability Building': '#455F87',
+};
+
+const STATUS_PILL: Record<ReconciliationStatus, { bg: string; text: string; label: string; icon: string }> = {
+  COMPLETED: { bg: 'bg-[#E0F2F1]', text: 'text-accent', label: 'Completed', icon: '\u2713' },
+  PARTIALLY_COMPLETED: { bg: 'bg-[#FFF8E1]', text: 'text-[#92650A]', label: 'Partial', icon: '\u00BD' },
+  NOT_STARTED: { bg: 'bg-[#FFF0EF]', text: 'text-error', label: 'Not Started', icon: '\u00D7' },
+  CARRIED_FORWARD: { bg: 'bg-[#EEF2F8]', text: 'text-navy', label: 'Carried Fwd', icon: '\u2192' },
+};
+
+/* ─── Helpers ──────────────────────────────────────────────────────────────── */
 
 function buildReconcileRequest(
   status: ReconciliationStatus,
   notes: string,
   bulletStatuses: BulletStatus[],
-  displacement: DisplacementValue
+  displacement: DisplacementValue,
+  carryForward: boolean,
 ): ReconcileCommitmentRequest {
   const base: ReconcileCommitmentRequest = {
     status,
-    carryForward: status === 'CARRIED_FORWARD',
+    carryForward,
     bulletStatuses,
   };
   if (notes.trim().length > 0) {
@@ -40,26 +67,19 @@ function buildReconcileRequest(
   return base;
 }
 
-interface PlannedVsActualTableProps {
-  commitments: CommitmentReconciliationDetail[];
-  cycleId: string;
-}
-
-const HORIZON_LABELS: Record<string, string> = {
-  MORNING: 'Morning',
-  MIDDAY: 'Midday',
-  AFTERNOON: 'Afternoon',
-  EOD: 'End of Day',
-  EOW: 'End of Week',
-};
+/* ─── Row State ────────────────────────────────────────────────────────────── */
 
 interface RowState {
   status: ReconciliationStatus | null;
   notes: string;
   bulletStatuses: Record<string, boolean>;
   displacement: DisplacementValue;
+  carryForward: boolean;
   saving: boolean;
   saveError: string | null;
+  /** Quick signal: unplanned work displaced this */
+  displacementFlagged: boolean;
+  displacementSelectedIds: string[];
 }
 
 function buildInitialRowState(detail: CommitmentReconciliationDetail): RowState {
@@ -76,20 +96,36 @@ function buildInitialRowState(detail: CommitmentReconciliationDetail): RowState 
       detail: detail.reconciliation?.displacementDetail ?? '',
       displacingCommitmentId: detail.reconciliation?.displacingCommitmentId ?? null,
     },
+    carryForward: detail.reconciliation?.status === 'CARRIED_FORWARD',
     saving: false,
     saveError: null,
+    displacementFlagged: false,
+    displacementSelectedIds: [],
   };
 }
+
+/* ─── CommitmentRow ────────────────────────────────────────────────────────── */
 
 interface CommitmentRowProps {
   detail: CommitmentReconciliationDetail;
   cycleId: string;
   allCommitments: Commitment[];
+  expanded: boolean;
+  onToggle: () => void;
+  staggerIndex: number;
 }
 
-function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) {
+function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, staggerIndex }: CommitmentRowProps) {
   const { commitment, reconciliation } = detail;
   const [row, setRow] = useState<RowState>(() => buildInitialRowState(detail));
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+
+  // Staggered fade-in
+  useEffect(() => {
+    const timer = setTimeout(() => { setVisible(true); }, staggerIndex * 40);
+    return () => { clearTimeout(timer); };
+  }, [staggerIndex]);
 
   const reconcileMutation = useReconcileCommitment(cycleId);
 
@@ -99,7 +135,8 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
       notes: string,
       bulletStatuses: Record<string, boolean>,
       displacement: DisplacementValue,
-      onError?: () => void
+      carryForward: boolean,
+      onError?: () => void,
     ) => {
       const bulletStatusArray: BulletStatus[] = commitment.bullets.map((b) => ({
         bulletId: b.id,
@@ -108,7 +145,7 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
       try {
         await reconcileMutation.mutateAsync({
           id: commitment.id,
-          req: buildReconcileRequest(status, notes, bulletStatusArray, displacement),
+          req: buildReconcileRequest(status, notes, bulletStatusArray, displacement, carryForward),
         });
         setRow((prev) => ({ ...prev, saving: false }));
       } catch {
@@ -116,20 +153,19 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
         onError?.();
       }
     },
-    [commitment, reconcileMutation]
+    [commitment, reconcileMutation],
   );
 
   const handleStatusChange = useCallback(
     async (status: ReconciliationStatus) => {
       setRow((prev) => ({ ...prev, status, saveError: null }));
-      // Auto-save if notes aren't required, or if notes are already filled in
       const notesRequired = status !== 'COMPLETED';
       if (!notesRequired || row.notes.trim().length > 0) {
         setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
-        await buildAndSave(status, row.notes, row.bulletStatuses, row.displacement);
+        await buildAndSave(status, row.notes, row.bulletStatuses, row.displacement, row.carryForward);
       }
     },
-    [row, buildAndSave]
+    [row, buildAndSave],
   );
 
   const handleNotesChange = useCallback((notes: string) => {
@@ -138,163 +174,277 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
 
   const handleNotesBlur = useCallback(async () => {
     if (!row.status) return;
-    // Don't save if notes unchanged
     if (row.notes === (reconciliation?.notes ?? '') && row.status === reconciliation?.status) return;
-    // Don't save if notes required but empty
     const notesRequired = row.status !== 'COMPLETED';
     if (notesRequired && row.notes.trim().length === 0) return;
-
     setRow((prev) => ({ ...prev, saving: true, saveError: null }));
-    await buildAndSave(row.status, row.notes, row.bulletStatuses, row.displacement);
+    await buildAndSave(row.status, row.notes, row.bulletStatuses, row.displacement, row.carryForward);
   }, [row, reconciliation, buildAndSave]);
 
   const handleDisplacementChange = useCallback((displacement: DisplacementValue) => {
     setRow((prev) => ({ ...prev, displacement }));
   }, []);
 
+  const handleCarryForwardChange = useCallback((carry: boolean) => {
+    setRow((prev) => ({ ...prev, carryForward: carry }));
+  }, []);
+
   const handleBulletToggle = useCallback(
     async (bulletId: string, done: boolean) => {
       const nextBulletStatuses = { ...row.bulletStatuses, [bulletId]: done };
       setRow((prev) => ({ ...prev, bulletStatuses: nextBulletStatuses, saving: true, saveError: null }));
-
       if (!row.status) {
         setRow((prev) => ({ ...prev, saving: false }));
         return;
       }
-
-      await buildAndSave(row.status, row.notes, nextBulletStatuses, row.displacement, () => {
+      await buildAndSave(row.status, row.notes, nextBulletStatuses, row.displacement, row.carryForward, () => {
         setRow((prev) => ({
           ...prev,
           bulletStatuses: { ...nextBulletStatuses, [bulletId]: !done },
         }));
       });
     },
-    [row, buildAndSave]
+    [row, buildAndSave],
   );
 
   const isReasonRequired = row.status !== null && row.status !== 'COMPLETED';
   const isDisplacementApplicable = row.status !== null && DISPLACEMENT_STATUSES.includes(row.status);
 
-  return (
-    <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      {/* Two-column grid: stacks vertically below 768px */}
-      <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-gray-200 dark:divide-gray-700">
-        {/* LEFT — Planned (read-only) */}
-        <div className="p-4 bg-gray-50 dark:bg-gray-900">
-          <div className="flex items-start justify-between gap-2 mb-2">
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 leading-snug">
-              {commitment.title}
-              {commitment.isUnplanned && (
-                <span className="ml-2 text-xs font-normal text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded px-1.5 py-0.5">
-                  Unplanned
-                </span>
-              )}
-            </h4>
-            <span className="shrink-0 text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded px-2 py-0.5">
-              {HORIZON_LABELS[commitment.completionHorizon] ?? commitment.completionHorizon}
-            </span>
-          </div>
+  // CHESS bar color
+  const chessColor = commitment.chessCategoryName
+    ? CHESS_BAR_COLORS[commitment.chessCategoryName] ?? '#DCD9D4'
+    : '#DCD9D4';
 
-          {/* RCDO */}
-          {commitment.rcdoLink.rallyCryId && (
-            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-              RC: <span className="text-gray-700 dark:text-gray-300">{commitment.rcdoLink.rallyCryId}</span>
-            </p>
+  // Status pill for collapsed view
+  const statusPill = row.status ? STATUS_PILL[row.status] : null;
+
+  // Other commitments for displacement quick signal
+  const otherCommitments = allCommitments.filter((c) => c.id !== commitment.id);
+
+  return (
+    <div
+      ref={cardRef}
+      className={[
+        'bg-surface-lowest rounded-sm overflow-hidden border border-outline-variant',
+        'transition-all duration-[300ms] ease-[var(--ease-entrance)]',
+        visible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-3',
+      ].join(' ')}
+    >
+      {/* Collapsed header row */}
+      <div
+        role="button"
+        tabIndex={0}
+        onClick={onToggle}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
+        className="flex items-center px-5 py-3.5 gap-3 cursor-pointer select-none transition-colors duration-[150ms] ease-[var(--ease-standard)] hover:bg-surface"
+      >
+        {/* Chevron */}
+        <svg
+          className={[
+            'w-5 h-5 flex-shrink-0 text-muted transition-transform duration-[200ms] ease-[var(--ease-standard)]',
+            expanded ? 'rotate-180' : '',
+          ].join(' ')}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden="true"
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+
+        {/* Rank */}
+        <span className="text-[11px] font-bold tracking-widest uppercase text-on-surface-variant opacity-60 min-w-[20px]">
+          #{commitment.priorityRank}
+        </span>
+
+        {/* Title */}
+        <h3 className="text-[14px] font-medium text-on-surface leading-snug flex-1 truncate">
+          {commitment.title}
+        </h3>
+
+        {/* Pills */}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {/* Horizon pill */}
+          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-[0.08em] uppercase bg-surface-container text-on-surface-variant">
+            {HORIZON_LABELS[commitment.completionHorizon] ?? commitment.completionHorizon}
+          </span>
+
+          {/* CHESS pill */}
+          {commitment.chessCategoryName && (
+            <span className="inline-flex items-center gap-1 text-[10px] font-bold tracking-[0.08em] uppercase text-on-surface-variant">
+              <span
+                className="w-[3px] h-3 rounded-sm"
+                style={{ background: chessColor }}
+                aria-hidden="true"
+              />
+              {commitment.chessCategoryName}
+            </span>
           )}
 
-          {/* Bullets (planned) */}
-          {commitment.bullets.length > 0 && (
-            <ul className="space-y-1 mt-2">
-              {commitment.bullets.map((bullet) => (
-                <li key={bullet.id} className="flex items-start gap-2 text-sm text-gray-700 dark:text-gray-300">
-                  <span className="mt-0.5 shrink-0 w-4 h-4 rounded-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800" aria-hidden="true" />
-                  {bullet.body}
-                </li>
-              ))}
-            </ul>
+          {/* Rally cry link */}
+          {commitment.rcdoLink.rallyCryTitle ? (
+            <span className="text-[10px] font-bold tracking-[0.08em] uppercase text-accent">
+              &rarr; {commitment.rcdoLink.rallyCryTitle}
+            </span>
+          ) : (
+            <span className="text-[10px] font-semibold tracking-[0.05em] text-muted italic">
+              Unlinked
+            </span>
+          )}
+
+          {/* Status pill */}
+          {statusPill && (
+            <span
+              className={[
+                'inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-[0.06em] uppercase whitespace-nowrap',
+                statusPill.bg,
+                statusPill.text,
+              ].join(' ')}
+            >
+              {statusPill.icon} {statusPill.label}
+            </span>
           )}
         </div>
+      </div>
 
-        {/* RIGHT — Actual */}
-        <div className="p-4 bg-white dark:bg-gray-900">
-          <div className="flex flex-col gap-3">
-            {/* Status marker */}
-            <div>
-              <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                Reconciliation Status
-              </p>
-              <CommitmentStatusMarker
-                value={row.status}
-                onChange={(s) => { void handleStatusChange(s); }}
-                disabled={row.saving}
-              />
-            </div>
-
-            {/* Bullet checkboxes */}
-            {commitment.bullets.length > 0 && (
-              <div>
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1.5">
-                  Bullet Status
-                </p>
-                <ul className="space-y-1.5">
+      {/* Expandable body */}
+      <div
+        className="overflow-hidden transition-[max-height] duration-[300ms] ease-[var(--ease-entrance)]"
+        style={{ maxHeight: expanded ? '2000px' : '0px' }}
+      >
+        <div className="border-t border-surface-container-low">
+          <div className="grid grid-cols-1 md:grid-cols-2">
+            {/* LEFT — Planned (read-only) */}
+            <div className="p-5 bg-surface border-r border-surface-container-low">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant opacity-40">
+                PLANNED
+              </span>
+              {commitment.bullets.length > 0 && (
+                <ul className="space-y-2 mt-3">
                   {commitment.bullets.map((bullet) => (
-                    <li key={bullet.id} className="flex items-start gap-2">
-                      <input
-                        type="checkbox"
-                        id={`bullet-${bullet.id}`}
-                        checked={row.bulletStatuses[bullet.id] ?? bullet.isCompleted}
-                        onChange={(e) => { void handleBulletToggle(bullet.id, e.target.checked); }}
-                        disabled={row.saving}
-                        className="mt-0.5 h-4 w-4 rounded border-gray-300 text-green-600 focus:ring-green-500"
+                    <li key={bullet.id} className="flex items-start gap-2 text-sm text-on-surface-variant">
+                      <span
+                        className="mt-0.5 w-4 h-4 rounded-sm border-[1.5px] border-outline-variant bg-surface flex-shrink-0"
+                        aria-hidden="true"
                       />
-                      <label
-                        htmlFor={`bullet-${bullet.id}`}
-                        className="text-sm text-gray-700 dark:text-gray-300 cursor-pointer leading-snug"
-                      >
-                        {bullet.body}
-                      </label>
+                      {bullet.body}
                     </li>
                   ))}
                 </ul>
+              )}
+            </div>
+
+            {/* RIGHT — Actual */}
+            <div className="p-5 bg-surface-lowest">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant opacity-40 block mb-3">
+                ACTUAL
+              </span>
+
+              <div className="flex flex-col gap-4">
+                {/* Status marker */}
+                <CommitmentStatusMarker
+                  value={row.status}
+                  onChange={(s) => { void handleStatusChange(s); }}
+                  disabled={row.saving}
+                  onCarryForwardChange={handleCarryForwardChange}
+                  carryForward={row.carryForward}
+                />
+
+                {/* Displacement Quick Signal — for Partial / Not Started */}
+                {isDisplacementApplicable && (
+                  <DisplacementQuickSignal
+                    flagged={row.displacementFlagged}
+                    onFlagChange={(f) => { setRow((prev) => ({ ...prev, displacementFlagged: f })); }}
+                    otherCommitments={otherCommitments}
+                    selectedIds={row.displacementSelectedIds}
+                    onSelectedChange={(ids) => { setRow((prev) => ({ ...prev, displacementSelectedIds: ids })); }}
+                    disabled={row.saving}
+                  />
+                )}
+
+                {/* Bullet checkboxes */}
+                {commitment.bullets.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant opacity-60 mb-2">
+                      Bullet Status
+                    </p>
+                    <ul className="space-y-2">
+                      {commitment.bullets.map((bullet) => (
+                        <li key={bullet.id} className="flex items-start gap-2">
+                          <input
+                            type="checkbox"
+                            id={`bullet-${bullet.id}`}
+                            checked={row.bulletStatuses[bullet.id] ?? bullet.isCompleted}
+                            onChange={(e) => {
+                              void handleBulletToggle(bullet.id, e.target.checked);
+                            }}
+                            disabled={row.saving}
+                            className="mt-0.5 h-4 w-4 rounded-sm border-[1.5px] border-outline-variant text-accent focus:ring-accent accent-accent"
+                          />
+                          <label
+                            htmlFor={`bullet-${bullet.id}`}
+                            className="text-sm text-on-surface cursor-pointer leading-snug"
+                          >
+                            {bullet.body}
+                          </label>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Notes */}
+                {row.status !== null && (
+                  <ChangeReasonCapture
+                    value={row.notes}
+                    onChange={handleNotesChange}
+                    onBlur={() => { void handleNotesBlur(); }}
+                    required={isReasonRequired}
+                    disabled={row.saving}
+                    {...(row.status === 'PARTIALLY_COMPLETED' || row.status === 'NOT_STARTED'
+                      ? { placeholder: "Why didn't this complete? This information helps leadership understand blockers." }
+                      : {})}
+                  />
+                )}
+
+                {/* Displacement details */}
+                {isDisplacementApplicable && (
+                  <DisplacementCapture
+                    value={row.displacement}
+                    onChange={handleDisplacementChange}
+                    cycleCommitments={allCommitments}
+                    currentCommitmentCreatedAt={commitment.createdAt}
+                    disabled={row.saving}
+                  />
+                )}
+
+                {/* Completed — success message */}
+                {row.status === 'COMPLETED' && !row.saving && !row.saveError && (
+                  <p className="text-xs text-accent flex items-center gap-1.5 mt-1">
+                    <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M22 11.08V12a10 10 0 11-5.93-9.14" />
+                      <polyline points="22 4 12 14.01 9 11.01" />
+                    </svg>
+                    All bullets complete. No notes required.
+                  </p>
+                )}
+
+                {/* Error */}
+                {row.saveError && (
+                  <p role="alert" className="text-xs text-error">
+                    {row.saveError}
+                  </p>
+                )}
+
+                {/* Saving indicator */}
+                {row.saving && !row.saveError && (
+                  <p className="text-xs text-muted italic">Saving&hellip;</p>
+                )}
               </div>
-            )}
-
-            {/* Notes — always visible when a status is selected, auto-saves on blur */}
-            {row.status !== null && (
-              <ChangeReasonCapture
-                value={row.notes}
-                onChange={handleNotesChange}
-                onBlur={() => { void handleNotesBlur(); }}
-                required={isReasonRequired}
-                disabled={row.saving}
-                {...(row.status === 'PARTIALLY_COMPLETED' || row.status === 'NOT_STARTED'
-                  ? { placeholder: "Why didn't this complete? This information helps leadership understand blockers." }
-                  : {})}
-              />
-            )}
-
-            {/* Displacement — only for NOT_STARTED, PARTIALLY_COMPLETED, CARRIED_FORWARD */}
-            {isDisplacementApplicable && (
-              <DisplacementCapture
-                value={row.displacement}
-                onChange={handleDisplacementChange}
-                cycleCommitments={allCommitments}
-                currentCommitmentCreatedAt={commitment.createdAt}
-                disabled={row.saving}
-              />
-            )}
-
-            {/* Error */}
-            {row.saveError && (
-              <p role="alert" className="text-xs text-red-600 dark:text-red-400">
-                {row.saveError}
-              </p>
-            )}
-
-            {/* Saving indicator */}
-            {row.saving && !row.saveError && (
-              <p className="text-xs text-gray-400 dark:text-gray-500 italic">Saving…</p>
-            )}
+            </div>
           </div>
         </div>
       </div>
@@ -302,23 +452,43 @@ function CommitmentRow({ detail, cycleId, allCommitments }: CommitmentRowProps) 
   );
 }
 
+/* ─── PlannedVsActualTable ─────────────────────────────────────────────────── */
+
+interface PlannedVsActualTableProps {
+  commitments: CommitmentReconciliationDetail[];
+  cycleId: string;
+}
+
 export function PlannedVsActualTable({ commitments, cycleId }: PlannedVsActualTableProps) {
+  // First card expanded by default
+  const firstCommitment = commitments.length > 0 ? commitments[0] : undefined;
+  const [expandedId, setExpandedId] = useState<string | null>(
+    firstCommitment?.commitment.id ?? null,
+  );
+
   if (commitments.length === 0) {
     return (
-      <p className="text-sm text-gray-500 dark:text-gray-400 py-4">No commitments to reconcile.</p>
+      <p className="text-sm text-muted py-4">No commitments to reconcile.</p>
     );
   }
 
   const allCommitments = commitments.map((d) => d.commitment);
 
   return (
-    <div className="flex flex-col gap-4">
-      {commitments.map((detail) => (
+    <div className="flex flex-col gap-3">
+      {commitments.map((detail, idx) => (
         <CommitmentRow
           key={detail.commitment.id}
           detail={detail}
           cycleId={cycleId}
           allCommitments={allCommitments}
+          expanded={expandedId === detail.commitment.id}
+          onToggle={() => {
+            setExpandedId((prev) =>
+              prev === detail.commitment.id ? null : detail.commitment.id,
+            );
+          }}
+          staggerIndex={idx + 1}
         />
       ))}
     </div>

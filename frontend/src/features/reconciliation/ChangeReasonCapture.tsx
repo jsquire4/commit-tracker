@@ -15,43 +15,49 @@ export function ChangeReasonCapture({
   onBlur,
   required,
   disabled = false,
-  placeholder = 'Describe what happened and the reason for any deviation from plan…',
+  placeholder = 'Describe what happened and the reason for any deviation from plan\u2026',
 }: ChangeReasonCaptureProps) {
   const remaining = MAX_CHARS - value.length;
   const isOverLimit = remaining < 0;
 
   return (
     <div className="flex flex-col gap-1">
-      <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+      <label className="text-sm font-medium text-on-surface-variant">
         What changed and why?
         {required && (
-          <span className="ml-1 text-red-500" aria-label="required">
+          <span className="ml-1 text-error" aria-label="required">
             *
           </span>
         )}
       </label>
       <textarea
         value={value}
-        onChange={(e) => { onChange(e.target.value); }}
+        onChange={(e) => {
+          onChange(e.target.value);
+        }}
         onBlur={onBlur}
         disabled={disabled}
         required={required}
         maxLength={MAX_CHARS}
-        rows={3}
+        rows={2}
         placeholder={placeholder}
         className={[
-          'w-full rounded border px-3 py-2 text-sm resize-y',
-          'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
-          disabled ? 'bg-gray-100 dark:bg-gray-800 cursor-not-allowed text-gray-500 dark:text-gray-400' : 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 dark:border-gray-600',
-          isOverLimit ? 'border-red-400 dark:border-red-500' : 'border-gray-300',
+          'w-full bg-transparent border-0 border-b-[1.5px] px-0 py-2 text-[13px] text-on-surface resize-y',
+          'placeholder:text-muted',
+          'transition-colors duration-[150ms] ease-[var(--ease-standard)]',
+          'focus:outline-none',
+          disabled ? 'opacity-50 cursor-not-allowed' : '',
+          isOverLimit
+            ? 'border-b-error focus:border-b-error'
+            : 'border-b-outline-variant focus:border-b-accent',
         ].join(' ')}
         aria-describedby="change-reason-counter"
       />
       <p
         id="change-reason-counter"
         className={[
-          'text-xs text-right',
-          isOverLimit ? 'text-red-500 dark:text-red-400 font-medium' : 'text-gray-500 dark:text-gray-400',
+          'text-[11px] text-right tabular-nums',
+          isOverLimit ? 'text-error font-medium' : 'text-muted',
         ].join(' ')}
       >
         {remaining} characters remaining

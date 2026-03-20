@@ -1,49 +1,11 @@
 import { useState } from 'react';
 import type { Commitment } from '@/types';
-import { Badge } from '@/components/Badge';
+import Card from '@/components/Card';
 import { useDeleteCommitment } from '@/hooks/useCommitments';
 
 interface CarryForwardPanelProps {
   carriedItems: Commitment[];
   cycleId: string;
-}
-
-interface DeclineState {
-  commitmentId: string;
-  reason: string;
-}
-
-function RcdoBreadcrumb({ commitment }: { commitment: Commitment }) {
-  const { rallyCryId, definingObjectiveId, outcomeId } = commitment.rcdoLink;
-  const parts: string[] = [];
-
-  if (rallyCryId) parts.push('Rally Cry');
-  if (definingObjectiveId) parts.push('Objective');
-  if (outcomeId) parts.push('Outcome');
-
-  if (parts.length === 0) {
-    return <span className="text-xs text-gray-400 dark:text-gray-500 italic">No RCDO link</span>;
-  }
-
-  return (
-    <span className="flex flex-wrap items-center gap-1 text-xs text-gray-500 dark:text-gray-400">
-      {parts.map((part, i) => (
-        <span key={part} className="flex items-center gap-1">
-          {i > 0 && <span className="text-gray-300 dark:text-gray-600">›</span>}
-          {part}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-function CarryCount({ count }: { count: number }) {
-  if (count <= 0) return null;
-  return (
-    <Badge variant="yellow">
-      Carried {count} {count === 1 ? 'time' : 'times'}
-    </Badge>
-  );
 }
 
 interface CarriedItemRowProps {
@@ -53,20 +15,18 @@ interface CarriedItemRowProps {
 
 function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
   const [declining, setDeclining] = useState(false);
-  const [declineState, setDeclineState] = useState<DeclineState>({
-    commitmentId: commitment.id,
-    reason: '',
-  });
+  const [declineReason, setDeclineReason] = useState('');
   const { mutate: deleteCommitment, isPending } = useDeleteCommitment(cycleId);
 
-  // Estimate carry count by checking if carriedFromCommitmentId exists
-  // (The actual count would come from the API; we surface it when available via description heuristic)
-  const carryCountMatch = commitment.description?.match(/carried (\d+) time/i);
-  const carryCount = carryCountMatch ? parseInt(carryCountMatch[1] ?? '0', 10) : 1;
+  // Reconciliation status from the carried commitment
+  const reconStatus = commitment.reconciliationStatus;
+  const statusLabel =
+    reconStatus === 'PARTIALLY_COMPLETED' ? 'Partially Completed' :
+    reconStatus === 'NOT_STARTED' ? 'Not Started' :
+    reconStatus === 'CARRIED_FORWARD' ? 'Carried Forward' : 'Carried';
 
   function handleAccept() {
-    // "Accept" is a no-op — the item already exists in the current cycle.
-    // Nothing to do; the item stays.
+    // Accept is a no-op -- the item already exists in the current cycle
   }
 
   function handleDeclineSubmit() {
@@ -75,62 +35,84 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
   }
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-900 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-medium text-gray-900 dark:text-gray-100">
-            {commitment.title}
-          </p>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
-            <RcdoBreadcrumb commitment={commitment} />
-            <CarryCount count={carryCount} />
-          </div>
-        </div>
-
-        {!declining && (
-          <div className="flex shrink-0 items-center gap-2">
-            <button
-              type="button"
-              onClick={handleAccept}
-              className="rounded-md border border-green-300 dark:border-green-700 bg-green-50 dark:bg-green-900/30 px-3 py-1 text-xs font-medium text-green-700 dark:text-green-400 hover:bg-green-100 dark:hover:bg-green-900/40 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-1"
-            >
-              Accept
-            </button>
-            <button
-              type="button"
-              onClick={() => { setDeclining(true); }}
-              disabled={isPending}
-              className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 px-3 py-1 text-xs font-medium text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-1 disabled:opacity-50"
-            >
-              Decline
-            </button>
-          </div>
-        )}
+    <div className="bg-surface-container-low rounded-sm p-3 flex flex-col gap-2">
+      {/* Top: title + status pill */}
+      <div className="flex items-center justify-between gap-3">
+        <span className="text-body text-on-surface font-medium truncate">
+          {commitment.title}
+        </span>
+        <span className="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-small font-medium bg-[#FEF3C7] text-[#92400E] whitespace-nowrap">
+          {statusLabel}
+        </span>
       </div>
 
-      {declining && (
-        <div className="rounded-md border border-red-100 dark:border-red-900/40 bg-red-50 dark:bg-red-900/30 p-3">
+      {/* Task bullets with checkboxes */}
+      {commitment.bullets.length > 0 && (
+        <div className="flex flex-col gap-1 pl-1">
+          {commitment.bullets.map((bullet) => (
+            <label key={bullet.id} className="flex items-center gap-2 text-[0.8125rem] text-on-surface-variant">
+              <input
+                type="checkbox"
+                checked={bullet.isCompleted}
+                readOnly
+                className="flex-shrink-0 w-3.5 h-3.5 rounded-sm border-[1.5px] border-outline-variant bg-surface-lowest accent-accent pointer-events-none"
+              />
+              <span className={bullet.isCompleted ? 'line-through text-muted' : ''}>
+                {bullet.body}
+              </span>
+            </label>
+          ))}
+        </div>
+      )}
+
+      {/* Reconciliation notes / why carried */}
+      {commitment.reconciliationNote && (
+        <div className="text-[0.8125rem] text-on-surface-variant italic p-2 bg-surface-container rounded-sm leading-snug">
+          <strong className="font-medium text-on-surface not-italic">Why carried:</strong>{' '}
+          {commitment.reconciliationNote}
+        </div>
+      )}
+
+      {/* Actions */}
+      {!declining ? (
+        <div className="flex gap-2 justify-end">
+          <button
+            type="button"
+            onClick={handleAccept}
+            className="px-3 py-1 text-small font-medium text-accent border border-accent rounded-sm bg-transparent hover:bg-accent/[0.08] transition-colors duration-[var(--duration-fast)]"
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            onClick={() => { setDeclining(true); }}
+            disabled={isPending}
+            className="px-3 py-1 text-small font-medium text-error border border-error rounded-sm bg-transparent hover:bg-error/[0.08] transition-colors duration-[var(--duration-fast)] disabled:opacity-50"
+          >
+            Decline
+          </button>
+        </div>
+      ) : (
+        <div className="bg-surface-container-low rounded-sm p-3 border border-outline-variant">
           <label
             htmlFor={`decline-reason-${commitment.id}`}
-            className="mb-1 block text-xs font-medium text-red-700 dark:text-red-400"
+            className="mb-1 block text-small font-medium text-on-surface-variant"
           >
             Reason for declining (optional)
           </label>
           <input
             id={`decline-reason-${commitment.id}`}
             type="text"
-            value={declineState.reason}
-            onChange={(e) =>
-              { setDeclineState((prev) => ({ ...prev, reason: e.target.value })); }
-            }
+            value={declineReason}
+            onChange={(e) => { setDeclineReason(e.target.value); }}
             placeholder="e.g. no longer relevant"
-            className="w-full rounded border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs text-gray-800 dark:text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-400"
+            className="w-full border-b border-outline-variant bg-transparent px-1 py-1.5 text-small text-on-surface placeholder-muted focus:outline-none focus:border-accent"
           />
           <div className="mt-2 flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => { setDeclining(false); }}
-              className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              className="text-small text-on-surface-variant hover:text-on-surface transition-colors"
             >
               Cancel
             </button>
@@ -138,36 +120,25 @@ function CarriedItemRow({ commitment, cycleId }: CarriedItemRowProps) {
               type="button"
               onClick={handleDeclineSubmit}
               disabled={isPending}
-              className="rounded-md bg-red-600 px-3 py-1 text-xs font-medium text-white hover:bg-red-700 disabled:opacity-50"
+              className="px-3 py-1 text-small font-medium bg-error text-white rounded-sm hover:bg-error/90 disabled:opacity-50 transition-colors"
             >
-              {isPending ? 'Removing…' : 'Confirm Decline'}
+              {isPending ? 'Removing\u2026' : 'Confirm Decline'}
             </button>
           </div>
         </div>
       )}
-    </li>
+    </div>
   );
 }
 
 export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelProps) {
-  if (carriedItems.length === 0) {
-    return (
-      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-5">
-        <h2 className="mb-1 text-sm font-semibold text-gray-700 dark:text-gray-300">
-          Carried Forward
-        </h2>
-        <p className="text-sm text-gray-400 dark:text-gray-500">
-          No items carried forward from previous cycle.
-        </p>
-      </div>
-    );
-  }
+  if (carriedItems.length === 0) return null;
 
   return (
-    <section className="rounded-lg border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/30 p-5">
-      <div className="mb-4 flex items-center gap-2">
+    <Card accent="amber" padding="compact" className="!p-4">
+      <div className="flex items-center gap-2 mb-3">
         <svg
-          className="h-5 w-5 text-amber-500"
+          className="h-4 w-4 text-warning"
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -180,16 +151,16 @@ export function CarryForwardPanel({ carriedItems, cycleId }: CarryForwardPanelPr
             d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
           />
         </svg>
-        <h2 className="text-sm font-semibold text-amber-800 dark:text-amber-300">
-          Carried Forward ({carriedItems.length})
-        </h2>
+        <span className="text-[0.8125rem] font-medium text-on-surface">
+          {carriedItems.length} item{carriedItems.length !== 1 ? 's' : ''} carried from last week
+        </span>
       </div>
 
-      <ul className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2">
         {carriedItems.map((item) => (
           <CarriedItemRow key={item.id} commitment={item} cycleId={cycleId} />
         ))}
-      </ul>
-    </section>
+      </div>
+    </Card>
   );
 }

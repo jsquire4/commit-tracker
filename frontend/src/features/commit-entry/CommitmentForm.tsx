@@ -14,7 +14,8 @@ import { CategorySelector } from './CategorySelector';
 import { AssignmentAttribution } from './AssignmentAttribution';
 import { TaskBulletEditor } from './TaskBulletEditor';
 import { StrategyLinker } from '@/features/shared/StrategyLinker';
-import type { CompletionHorizon, ChessCategoryType } from '@/types';
+import Button from '@/components/Button';
+import type { CompletionHorizon, CompletionDay, CompletionTimeBlock, ChessCategoryType } from '@/types';
 
 type FormValues = z.infer<typeof CreateCommitmentFormSchema>;
 
@@ -53,6 +54,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
       description: '',
       bullets: DEFAULT_BULLETS,
       completionHorizon: 'EOD' as CompletionHorizon,
+      completionDay: undefined,
+      completionTimeBlock: undefined,
       chessCategoryId: undefined,
       rallyCryId: undefined,
       definingObjectiveId: undefined,
@@ -69,6 +72,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
         description: existingCommitment.description ?? '',
         bullets: existingCommitment.bullets.map((b) => b.body),
         completionHorizon: existingCommitment.completionHorizon,
+        completionDay: existingCommitment.completionDay ?? undefined,
+        completionTimeBlock: existingCommitment.completionTimeBlock ?? undefined,
         chessCategoryId: existingCommitment.chessCategoryId ?? undefined,
         rallyCryId: existingCommitment.rcdoLink.rallyCryId ?? undefined,
         definingObjectiveId: existingCommitment.rcdoLink.definingObjectiveId ?? undefined,
@@ -84,6 +89,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
         description: '',
         bullets: DEFAULT_BULLETS,
         completionHorizon: 'EOD',
+        completionDay: undefined,
+        completionTimeBlock: undefined,
         chessCategoryId: undefined,
         rallyCryId: undefined,
         definingObjectiveId: undefined,
@@ -101,12 +108,13 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
 
   async function onSubmit(data: FormValues) {
     try {
-      // Build payload, omitting undefined optional fields to satisfy exactOptionalPropertyTypes
       const payload = {
         cycleId,
         title: data.title,
         bullets: data.bullets,
         completionHorizon: data.completionHorizon,
+        ...(data.completionDay !== undefined && { completionDay: data.completionDay }),
+        ...(data.completionTimeBlock !== undefined && { completionTimeBlock: data.completionTimeBlock }),
         ...(data.description !== undefined && { description: data.description }),
         ...(data.chessCategoryId !== undefined && { chessCategoryId: data.chessCategoryId }),
         ...(data.rallyCryId !== undefined && { rallyCryId: data.rallyCryId }),
@@ -149,44 +157,44 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="relative z-40" onClose={handleClose}>
+        {/* Overlay */}
         <Transition.Child
           as={Fragment}
-          enter="ease-out duration-200"
+          enter="duration-[200ms] ease-[var(--ease-standard)]"
           enterFrom="opacity-0"
           enterTo="opacity-100"
-          leave="ease-in duration-150"
+          leave="duration-[200ms] ease-[var(--ease-exit)]"
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-black/40" aria-hidden="true" />
+          <div className="fixed inset-0 bg-[rgba(45,52,50,0.4)]" aria-hidden="true" />
         </Transition.Child>
 
         <div className="fixed inset-0 flex items-start justify-end">
+          {/* Slide-over panel */}
           <Transition.Child
             as={Fragment}
-            enter="ease-out duration-300"
-            enterFrom="opacity-0 translate-x-full"
-            enterTo="opacity-100 translate-x-0"
-            leave="ease-in duration-200"
-            leaveFrom="opacity-100 translate-x-0"
-            leaveTo="opacity-0 translate-x-full"
+            enter="duration-[300ms] ease-[var(--ease-entrance)]"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="duration-[200ms] ease-[var(--ease-exit)]"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
           >
-            <Dialog.Panel className="relative h-full w-full max-w-lg bg-white dark:bg-gray-900 shadow-xl flex flex-col">
+            <Dialog.Panel className="relative h-full w-full max-w-[440px] bg-surface-lowest shadow-whisper flex flex-col">
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                <Dialog.Title className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  {isEdit ? 'Edit Commitment' : 'Add Commitment'}
+              <div className="flex items-center justify-between px-7 pt-5 pb-4 border-b border-outline-variant">
+                <Dialog.Title className="font-serif text-headline text-on-surface tracking-[-0.01em]">
+                  {isEdit ? 'Edit Commitment' : 'New Commitment'}
                 </Dialog.Title>
                 <button
                   type="button"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none disabled:opacity-50"
+                  className="w-8 h-8 flex items-center justify-center rounded-sm text-on-surface-variant hover:bg-surface-container transition-colors duration-[150ms] focus:outline-none disabled:opacity-50"
                   aria-label="Close"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
+                  <span className="text-xl leading-none">&times;</span>
                 </button>
               </div>
 
@@ -194,169 +202,176 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
               <form
                 id="commitment-form"
                 onSubmit={(e) => { void handleSubmit(onSubmit)(e); }}
-                className="flex-1 overflow-y-auto px-6 py-5 space-y-6"
+                className="flex-1 overflow-y-auto px-7 py-6 scrollbar-thin"
               >
-                {/* Title */}
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Title <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    id="title"
-                    type="text"
-                    {...register('title')}
-                    placeholder="What do you commit to this week?"
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  />
-                  {errors.title && (
-                    <p className="mt-1 text-xs text-red-500">{errors.title.message}</p>
-                  )}
-                </div>
-
-                {/* RCDO Link */}
-                <div className="relative">
-                  <StrategyLinker
-                    value={rcdoLink}
-                    onChange={(link) => {
-                      setValue('rallyCryId', link.rallyCryId ?? undefined);
-                      setValue('definingObjectiveId', link.definingObjectiveId ?? undefined);
-                      setValue('outcomeId', link.outcomeId ?? undefined);
-                    }}
-                  />
-                </div>
-
-                {/* Category */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Category <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    name="chessCategoryId"
-                    control={control}
-                    render={({ field }) => (
-                      <CategorySelector
-                        value={(field.value ?? null) as ChessCategoryType | null}
-                        onChange={(c) => { field.onChange(c); }}
-                      />
+                <div className="space-y-7">
+                  {/* Title */}
+                  <div className="field-section">
+                    <label htmlFor="title" className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                      What are you working on?
+                    </label>
+                    <input
+                      id="title"
+                      type="text"
+                      {...register('title')}
+                      placeholder="Describe your commitment..."
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[200ms]"
+                    />
+                    {errors.title && (
+                      <p className="mt-1 text-small text-error">{errors.title.message}</p>
                     )}
-                  />
-                  {errors.chessCategoryId && (
-                    <p className="mt-1 text-xs text-red-500">{errors.chessCategoryId.message}</p>
-                  )}
-                </div>
-
-                {/* Horizon */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Completion Horizon <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    name="completionHorizon"
-                    control={control}
-                    render={({ field }) => (
-                      <HorizonSelector
-                        value={field.value as CompletionHorizon}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                  {errors.completionHorizon && (
-                    <p className="mt-1 text-xs text-red-500">{errors.completionHorizon.message}</p>
-                  )}
-                </div>
-
-                {/* Task Bullets */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Task Bullets <span className="text-red-500">*</span>
-                  </label>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Minimum 2, maximum 5 bullets</p>
-                  <Controller
-                    name="bullets"
-                    control={control}
-                    render={({ field }) => (
-                      <TaskBulletEditor
-                        bullets={field.value}
-                        onChange={field.onChange}
-                      />
-                    )}
-                  />
-                  {errors.bullets && (
-                    <p className="mt-1 text-xs text-red-500">
-                      {typeof errors.bullets.message === 'string'
-                        ? errors.bullets.message
-                        : 'At least 2 bullets required'}
-                    </p>
-                  )}
-                </div>
-
-                {/* Assignment */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Attribution
-                  </label>
-                  <Controller
-                    name="assignedBy"
-                    control={control}
-                    render={({ field }) => (
-                      <AssignmentAttribution
-                        value={
-                          field.value
-                            ? { kind: 'ASSIGNED_BY', assignedById: field.value, assignedByName: '' }
-                            : { kind: 'SELF_DIRECTED' }
-                        }
-                        onChange={(a) => {
-                          field.onChange(a.kind === 'ASSIGNED_BY' ? a.assignedById : undefined);
-                        }}
-                      />
-                    )}
-                  />
-                </div>
-
-                {/* Description (optional) */}
-                <div>
-                  <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Notes <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
-                  </label>
-                  <textarea
-                    id="description"
-                    {...register('description')}
-                    rows={3}
-                    placeholder="Additional context..."
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
-                  />
-                  {errors.description && (
-                    <p className="mt-1 text-xs text-red-500">{errors.description.message}</p>
-                  )}
-                </div>
-
-                {apiError && (
-                  <div className="rounded-md bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 px-4 py-3">
-                    <p className="text-sm text-red-700 dark:text-red-300">{apiError}</p>
                   </div>
-                )}
+
+                  {/* Task Bullets */}
+                  <div className="field-section">
+                    <Controller
+                      name="bullets"
+                      control={control}
+                      render={({ field }) => (
+                        <>
+                          <label className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                            Break it down <span className="normal-case font-normal tracking-normal text-muted">({field.value.length} of 5)</span>
+                          </label>
+                          <TaskBulletEditor
+                            bullets={field.value}
+                            onChange={field.onChange}
+                          />
+                        </>
+                      )}
+                    />
+                    {errors.bullets && (
+                      <p className="mt-1 text-small text-error">
+                        {typeof errors.bullets.message === 'string'
+                          ? errors.bullets.message
+                          : 'At least 2 bullets required'}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Category */}
+                  <div className="field-section">
+                    <label className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                      Category
+                    </label>
+                    <Controller
+                      name="chessCategoryId"
+                      control={control}
+                      render={({ field }) => (
+                        <CategorySelector
+                          value={(field.value ?? null) as ChessCategoryType | null}
+                          onChange={(c) => { field.onChange(c); }}
+                        />
+                      )}
+                    />
+                    {errors.chessCategoryId && (
+                      <p className="mt-1 text-small text-error">{errors.chessCategoryId.message}</p>
+                    )}
+                  </div>
+
+                  {/* Horizon */}
+                  <div className="field-section">
+                    <label className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                      When will this be done?
+                    </label>
+                    <Controller
+                      name="completionHorizon"
+                      control={control}
+                      render={({ field }) => (
+                        <HorizonSelector
+                          value={field.value as CompletionHorizon}
+                          onChange={field.onChange}
+                          onDayTimeChange={(v) => {
+                            setValue('completionDay', v.day as CompletionDay | undefined);
+                            setValue('completionTimeBlock', v.timeBlock as CompletionTimeBlock | undefined);
+                          }}
+                        />
+                      )}
+                    />
+                    {errors.completionHorizon && (
+                      <p className="mt-1 text-small text-error">{errors.completionHorizon.message}</p>
+                    )}
+                  </div>
+
+                  {/* RCDO Link */}
+                  <div className="field-section relative">
+                    <StrategyLinker
+                      value={rcdoLink}
+                      onChange={(link) => {
+                        setValue('rallyCryId', link.rallyCryId ?? undefined);
+                        setValue('definingObjectiveId', link.definingObjectiveId ?? undefined);
+                        setValue('outcomeId', link.outcomeId ?? undefined);
+                      }}
+                    />
+                  </div>
+
+                  {/* Attribution */}
+                  <div className="field-section">
+                    <label className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                      Who assigned this?
+                    </label>
+                    <Controller
+                      name="assignedBy"
+                      control={control}
+                      render={({ field }) => (
+                        <AssignmentAttribution
+                          value={
+                            field.value
+                              ? { kind: 'ASSIGNED_BY', assignedById: field.value, assignedByName: '' }
+                              : { kind: 'SELF_DIRECTED' }
+                          }
+                          onChange={(a) => {
+                            field.onChange(a.kind === 'ASSIGNED_BY' ? a.assignedById : undefined);
+                          }}
+                        />
+                      )}
+                    />
+                  </div>
+
+                  {/* Notes */}
+                  <div className="field-section">
+                    <label htmlFor="description" className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-2">
+                      Notes <span className="normal-case font-normal tracking-normal text-muted">(optional)</span>
+                    </label>
+                    <textarea
+                      id="description"
+                      {...register('description')}
+                      rows={3}
+                      placeholder="Any additional context..."
+                      className="w-full bg-surface-container-low rounded-sm p-3 text-body text-on-surface placeholder:text-muted resize-none focus:outline-none focus:shadow-[0_0_0_2px_var(--color-accent)] transition-shadow duration-[200ms]"
+                    />
+                    {errors.description && (
+                      <p className="mt-1 text-small text-error">{errors.description.message}</p>
+                    )}
+                  </div>
+
+                  {apiError && (
+                    <div className="rounded-sm bg-error/[0.06] border border-error/20 px-4 py-3">
+                      <p className="text-body text-error">{apiError}</p>
+                    </div>
+                  )}
+                </div>
               </form>
 
               {/* Footer */}
-              <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col items-center gap-2.5 px-7 py-4 border-t border-outline-variant bg-surface-lowest">
+                <Button
+                  type="submit"
+                  form="commitment-form"
+                  variant="primary"
+                  size="lg"
+                  loading={isPending}
+                  disabled={isPending}
+                  className="w-full"
+                >
+                  {isEdit ? 'Save Changes' : 'Save Commitment'}
+                </Button>
                 <button
                   type="button"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-300 dark:ring-gray-600 disabled:opacity-50"
+                  className="text-[0.8125rem] text-muted hover:text-on-surface-variant transition-colors duration-[150ms] disabled:opacity-50"
                 >
                   Cancel
-                </button>
-                <button
-                  type="submit"
-                  form="commitment-form"
-                  disabled={isPending}
-                  className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 flex items-center gap-2"
-                >
-                  {isPending && (
-                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  )}
-                  {isEdit ? 'Save Changes' : 'Add Commitment'}
                 </button>
               </div>
             </Dialog.Panel>

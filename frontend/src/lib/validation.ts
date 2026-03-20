@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 // Enum schemas — shared by form validation
 export const CompletionHorizonSchema = z.enum(['MORNING', 'MIDDAY', 'AFTERNOON', 'EOD', 'EOW']);
+export const CompletionDaySchema = z.enum(['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY']);
+export const CompletionTimeBlockSchema = z.enum(['MORNING', 'MIDDAY', 'AFTERNOON', 'EOD']);
 export const ReconciliationStatusSchema = z.enum(['COMPLETED', 'PARTIALLY_COMPLETED', 'NOT_STARTED', 'CARRIED_FORWARD']);
 
 // Form validation schemas (for react-hook-form)
@@ -10,6 +12,8 @@ export const CreateCommitmentFormSchema = z.object({
   description: z.string().max(2000).optional(),
   bullets: z.array(z.string().min(1)).min(2, 'At least 2 bullets required').max(5, 'Maximum 5 bullets'),
   completionHorizon: CompletionHorizonSchema,
+  completionDay: CompletionDaySchema.optional(),
+  completionTimeBlock: CompletionTimeBlockSchema.optional(),
   chessCategoryId: z.string().uuid().optional(),
   rallyCryId: z.string().uuid().optional(),
   definingObjectiveId: z.string().uuid().optional(),

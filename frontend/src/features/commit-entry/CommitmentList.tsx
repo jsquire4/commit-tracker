@@ -1,3 +1,4 @@
+import { useMemo, useRef } from 'react';
 import {
   DndContext,
   closestCenter,
@@ -9,6 +10,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CommitmentCard } from './CommitmentCard';
 import { useDragPriority } from '@/hooks/useDragPriority';
+import { useStagger } from '@/hooks/useMotion';
 import type { Commitment, CycleState } from '@/types';
 
 interface CommitmentListProps {
@@ -27,6 +29,8 @@ export function CommitmentList({
   onDelete,
 }: CommitmentListProps) {
   const isDraft = cycleState === 'DRAFT';
+  const containerRef = useRef<HTMLDivElement>(null);
+  useStagger(containerRef);
 
   const { sensors, handleDragStart, handleDragEnd, activeId } = useDragPriority({
     cycleId,
@@ -37,21 +41,60 @@ export function CommitmentList({
     ? commitments.find((c) => c.id === activeId)
     : null;
 
+  // Separate assigned vs own commitments
+  const assignedItems = useMemo(
+    () => commitments.filter((c) => c.attribution.kind === 'ASSIGNED_BY'),
+    [commitments],
+  );
+  const ownItems = useMemo(
+    () => commitments.filter((c) => c.attribution.kind !== 'ASSIGNED_BY'),
+    [commitments],
+  );
+
   const items = commitments.map((c) => c.id);
 
+  const renderCards = (list: Commitment[], isAssigned: boolean) =>
+    list.map((commitment, i) => (
+      <div
+        key={commitment.id}
+        role="listitem"
+        className="animate-fade-up"
+        style={{ animationDelay: `${i * 40}ms` }}
+      >
+        <CommitmentCard
+          commitment={commitment}
+          cycleState={cycleState}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          isAssigned={isAssigned}
+        />
+      </div>
+    ));
+
   if (!isDraft) {
-    // Non-draft: no drag, just render cards
     return (
-      <div className="space-y-3" aria-label="Commitment list">
-        {commitments.map((commitment) => (
-          <CommitmentCard
-            key={commitment.id}
-            commitment={commitment}
-            cycleState={cycleState}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        ))}
+      <div ref={containerRef}>
+        {assignedItems.length > 0 && (
+          <>
+            <h3 className="font-serif text-[1.125rem] font-normal text-on-surface mb-2">
+              Assigned to You
+            </h3>
+            <div className="flex flex-col gap-3 mb-6" aria-label="Assigned commitments">
+              {renderCards(assignedItems, true)}
+            </div>
+          </>
+        )}
+
+        {ownItems.length > 0 && (
+          <>
+            <h3 className="font-serif text-[1.125rem] font-normal text-on-surface mb-2">
+              My Commitments
+            </h3>
+            <div className="flex flex-col gap-3" aria-label="Own commitments">
+              {renderCards(ownItems, false)}
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -64,17 +107,28 @@ export function CommitmentList({
       onDragEnd={handleDragEnd}
     >
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        <div className="space-y-3" aria-label="Commitment list" role="list">
-          {commitments.map((commitment) => (
-            <div key={commitment.id} role="listitem">
-              <CommitmentCard
-                commitment={commitment}
-                cycleState={cycleState}
-                onEdit={onEdit}
-                onDelete={onDelete}
-              />
-            </div>
-          ))}
+        <div ref={containerRef}>
+          {assignedItems.length > 0 && (
+            <>
+              <h3 className="font-serif text-[1.125rem] font-normal text-on-surface mb-2">
+                Assigned to You
+              </h3>
+              <div className="flex flex-col gap-3 mb-6" aria-label="Assigned commitments" role="list">
+                {renderCards(assignedItems, true)}
+              </div>
+            </>
+          )}
+
+          {ownItems.length > 0 && (
+            <>
+              <h3 className="font-serif text-[1.125rem] font-normal text-on-surface mb-2">
+                My Commitments
+              </h3>
+              <div className="flex flex-col gap-3" aria-label="Own commitments" role="list">
+                {renderCards(ownItems, false)}
+              </div>
+            </>
+          )}
         </div>
       </SortableContext>
 

@@ -79,26 +79,26 @@ function RcdoCombobox({
 }: RcdoComboboxProps) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{label}</label>
+      <label className="block text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium mb-1">{label}</label>
       <Combobox value={value} onChange={(item) => { if (item) onChange(item); }} disabled={disabled}>
         <div className="relative">
           <Combobox.Input
-            className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 dark:bg-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 dark:disabled:bg-gray-700 disabled:text-gray-500 dark:disabled:text-gray-400"
+            className="w-full border-0 border-b-2 border-b-outline-variant bg-transparent px-0 py-2 text-body text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[200ms] disabled:opacity-50 disabled:cursor-not-allowed"
             displayValue={(item: RcdoNode | null) => (item)?.title ?? ''}
             onChange={(e) => { onQueryChange(e.target.value); }}
             placeholder={placeholder}
           />
           <Transition
             as={Fragment}
-            leave="transition ease-in duration-100"
+            leave="transition-opacity duration-100 ease-[var(--ease-exit)]"
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-md bg-white dark:bg-gray-800 py-1 shadow-lg ring-1 ring-black/5 dark:ring-gray-700 focus:outline-none text-sm">
+            <Combobox.Options className="absolute z-30 mt-1 max-h-48 w-full overflow-auto rounded-sm bg-surface-lowest py-1 shadow-whisper border border-outline-variant focus:outline-none text-[0.8125rem]">
               <Combobox.Option
                 value={NO_LINK_VALUE}
                 className={({ active }) =>
-                  `cursor-pointer select-none py-2 px-3 italic ${active ? 'bg-gray-100 dark:bg-gray-700' : 'text-gray-400 dark:text-gray-500'}`
+                  `cursor-pointer select-none py-2 px-3 italic transition-colors duration-[120ms] ${active ? 'bg-surface-container-low text-on-surface-variant' : 'text-muted'}`
                 }
               >
                 {noLinkLabel}
@@ -108,7 +108,7 @@ function RcdoCombobox({
                   key={item.id}
                   value={item}
                   className={({ active }) =>
-                    `cursor-pointer select-none py-2 px-3 ${active ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-gray-100'}`
+                    `cursor-pointer select-none py-2 px-3 transition-colors duration-[120ms] ${active ? 'bg-surface-container-low text-on-surface' : 'text-on-surface'}`
                   }
                 >
                   {item.title}
@@ -212,7 +212,7 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
     <div className="space-y-3">
       {recent.length > 0 && !isLinked && (
         <div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1 font-medium">Recent</p>
+          <p className="text-label text-muted mb-1 font-medium uppercase tracking-[0.05rem]">Recent</p>
           <div className="flex flex-wrap gap-1">
             {recent.slice(0, 3).map((r, i) => (
               <button
@@ -229,11 +229,11 @@ export function RcdoAutocomplete({ value, onChange, disabled = false }: RcdoAuto
                     outcomeTitle: r.outcomeTitle,
                   });
                 }}
-                className="text-xs bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 px-2 py-1 rounded-full transition-colors disabled:opacity-50"
+                className="text-small bg-surface-container hover:bg-surface-container-high text-on-surface-variant px-2 py-1 rounded-pill transition-colors duration-[150ms] disabled:opacity-50"
               >
                 {r.rallyCryTitle ?? 'Unknown'}
-                {r.definingObjectiveTitle ? ` › ${r.definingObjectiveTitle}` : ''}
-                {r.outcomeTitle ? ` › ${r.outcomeTitle}` : ''}
+                {r.definingObjectiveTitle ? ` \u203A ${r.definingObjectiveTitle}` : ''}
+                {r.outcomeTitle ? ` \u203A ${r.outcomeTitle}` : ''}
               </button>
             ))}
           </div>
