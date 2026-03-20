@@ -1,35 +1,48 @@
 package com.st6.committracker.domain.user;
 
 import com.st6.committracker.domain.UserRole;
+import com.st6.committracker.domain.observatory.CostBand;
+import com.st6.committracker.domain.observatory.CostBandRepository;
+import com.st6.committracker.domain.user.dto.CreateOrgRequest;
+import com.st6.committracker.domain.user.dto.CreateUserRequest;
+import com.st6.committracker.domain.user.dto.UpdateUserRequest;
 import com.st6.committracker.security.SecurityContextHelper;
 import com.st6.committracker.security.VisibilityEnforcer;
 import com.st6.committracker.shared.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
-@org.springframework.transaction.annotation.Transactional(readOnly = true)
+@Transactional(readOnly = true)
 public class UserController {
 
     private final AppUserRepository userRepository;
     private final VisibilityEnforcer visibilityEnforcer;
     private final TeamActivationService teamActivationService;
+    private final UserManagementService userManagementService;
+    private final CostBandRepository costBandRepository;
 
     public UserController(AppUserRepository userRepository, VisibilityEnforcer visibilityEnforcer,
-                          TeamActivationService teamActivationService) {
+                          TeamActivationService teamActivationService,
+                          UserManagementService userManagementService,
+                          CostBandRepository costBandRepository) {
         this.userRepository = userRepository;
         this.visibilityEnforcer = visibilityEnforcer;
         this.teamActivationService = teamActivationService;
+        this.userManagementService = userManagementService;
+        this.costBandRepository = costBandRepository;
     }
+
+    // ─── Read Endpoints (existing) ────────────────────────────────────────────
 
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
@@ -63,27 +76,112 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(responses));
     }
 
-    /**
-     * Activate the commit module for the target user and their subtree.
-     * Requires DIRECTOR+ role.
-     */
+    // ─── User CRUD (new) ─────────────────────────────────────────────────────
+
+    /** List users in org. MANAGER/DIRECTOR see subtree; VP/EXECUTIVE see all. */
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<UserResponse>>> listUsers() {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        List<AppUser> users = userManagementService.listUsers(actor);
+        List<UserResponse> responses = users.stream().map(this::toResponse).toList();
+        return ResponseEntity.ok(ApiResponse.of(responses));
+    }
+
+    /** Create a new user. MANAGER+ required. */
+    @PostMapping
+    @Transactional
+    public ResponseEntity<ApiResponse<UserResponse>> createUser(
+            @Valid @RequestBody CreateUserRequest request) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        AppUser created = userManagementService.createUser(request, actor);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(ApiResponse.of(toResponse(created)));
+    }
+
+    /** Update an existing user. MANAGER+ with subtree access. */
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<ApiResponse<UserResponse>> updateUser(
+            @PathVariable UUID id,
+            @Valid @RequestBody UpdateUserRequest request) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        AppUser updated = userManagementService.updateUser(id, request, actor);
+        return ResponseEntity.ok(ApiResponse.of(toResponse(updated)));
+    }
+
+    /** Deactivate (soft-delete) a user. MANAGER+ with subtree access. */
+    @PostMapping("/{id}/archive")
+    @Transactional
+    public ResponseEntity<Void> archiveUser(@PathVariable UUID id) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        userManagementService.archiveUser(id, actor);
+        return ResponseEntity.noContent().build();
+    }
+
+    /** Reactivate a user. MANAGER+ with subtree access. */
+    @PostMapping("/{id}/restore")
+    @Transactional
+    public ResponseEntity<Void> restoreUser(@PathVariable UUID id) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        userManagementService.restoreUser(id, actor);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ─── Cost Bands ──────────────────────────────────────────────────────────
+
+    /** List all cost bands for the current org. */
+    @GetMapping("/cost-bands")
+    public ResponseEntity<ApiResponse<List<CostBandResponse>>> listCostBands() {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        List<CostBand> bands = costBandRepository.findByOrgIdOrderByTierAsc(actor.getOrg().getId());
+        List<CostBandResponse> responses = bands.stream()
+                .map(b -> new CostBandResponse(b.getId(), b.getName(), b.getTier()))
+                .toList();
+        return ResponseEntity.ok(ApiResponse.of(responses));
+    }
+
+    // ─── Team Activation (existing) ───────────────────────────────────────────
+
     @PostMapping("/{userId}/activate")
+    @Transactional
     public ResponseEntity<Void> activateTeam(@PathVariable UUID userId) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         teamActivationService.activateTeam(userId, actor);
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Deactivate the commit module for the target user.
-     * Requires DIRECTOR+ role.
-     */
     @PostMapping("/{userId}/deactivate")
+    @Transactional
     public ResponseEntity<Void> deactivateTeam(@PathVariable UUID userId) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         teamActivationService.deactivateTeam(userId, actor);
         return ResponseEntity.noContent().build();
     }
+
+    // ─── Org Creation ─────────────────────────────────────────────────────────
+
+    @PostMapping("/orgs")
+    @Transactional
+    public ResponseEntity<ApiResponse<OrgResponse>> createOrg(
+            @Valid @RequestBody CreateOrgRequest request) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        Org created = userManagementService.createOrg(request, actor);
+
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/users/orgs/{id}")
+                .buildAndExpand(created.getId())
+                .toUri();
+
+        return ResponseEntity.created(location).body(ApiResponse.of(
+                new OrgResponse(created.getId(), created.getName(), created.getSlug(), created.getTimezone())));
+    }
+
+    // ─── Response DTOs ────────────────────────────────────────────────────────
 
     private UserResponse toResponse(AppUser user) {
         return new UserResponse(
@@ -93,7 +191,11 @@ public class UserController {
                 user.getRole(),
                 user.getReportsTo() != null ? user.getReportsTo().getId() : null,
                 user.getReportsTo() != null ? user.getReportsTo().getDisplayName() : null,
-                user.isActive()
+                user.isActive(),
+                user.getCostBand() != null ? user.getCostBand().getId() : null,
+                user.getCostBand() != null ? user.getCostBand().getName() : null,
+                user.getCostBand() != null ? user.getCostBand().getTier() : null,
+                user.getWeeklyCapacityHours()
         );
     }
 
@@ -104,6 +206,14 @@ public class UserController {
         UserRole role,
         UUID reportsTo,
         String reportsToDisplayName,
-        boolean isActive
+        boolean isActive,
+        UUID costBandId,
+        String costBandName,
+        Integer costBandTier,
+        java.math.BigDecimal weeklyCapacityHours
     ) {}
+
+    public record CostBandResponse(UUID id, String name, int tier) {}
+
+    public record OrgResponse(UUID id, String name, String slug, String timezone) {}
 }

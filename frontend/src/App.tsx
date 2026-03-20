@@ -12,6 +12,7 @@ import type { AuthContextValue } from './hooks/useAuth';
 const MyWeekPage = lazy(() => import('./features/my-week/MyWeekPage').then(m => ({ default: m.MyWeekPage })));
 const MyTeamPage = lazy(() => import('./features/my-team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
 const BriefingView = lazy(() => import('./features/briefing/BriefingView').then(m => ({ default: m.BriefingView })));
+const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 export interface AuthContext {
   token: string;
@@ -59,6 +60,7 @@ export default function App({ basename, authContext }: AppProps) {
                   <Route path="/" element={<MyWeekPage />} />
                   <Route path="/team" element={<MyTeamPage />} />
                   <Route path="/briefing" element={<BriefingView />} />
+                  <Route path="/settings" element={<SettingsPage />} />
 
                   {/* Backward-compat redirects */}
                   <Route path="/cycle" element={<Navigate to="/" replace />} />

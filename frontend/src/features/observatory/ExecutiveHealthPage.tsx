@@ -188,8 +188,8 @@ function buildVPGroups(
       if (visited.has(current.id)) break;
       visited.add(current.id);
       if (current.role === 'VP') return current;
-      if (!current.reportsToId) break;
-      current = userMap.get(current.reportsToId);
+      if (!current.reportsTo) break;
+      current = userMap.get(current.reportsTo);
     }
     return null;
   }

@@ -116,11 +116,11 @@ export function userFactory(overrides: Partial<User> = {}): User {
   const id = uid('user');
   return {
     id,
-    orgId: 'org-1',
     email: `user-${id}@example.com`,
     displayName: `User ${id}`,
     role: 'EMPLOYEE',
-    reportsToId: null,
+    reportsTo: null,
+    reportsToDisplayName: null,
     isActive: true,
     costBandId: null,
     costBandName: null,

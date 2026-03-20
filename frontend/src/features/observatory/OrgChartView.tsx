@@ -41,10 +41,10 @@ function buildTree(users: User[]): OrgTreeNode[] {
 
   // Wire up parent–child relationships
   for (const node of nodeMap.values()) {
-    if (node.reportsToId === null || !nodeMap.has(node.reportsToId)) {
+    if (node.reportsTo === null || !nodeMap.has(node.reportsTo)) {
       roots.push(node);
     } else {
-      nodeMap.get(node.reportsToId)!.children.push(node);
+      nodeMap.get(node.reportsTo)!.children.push(node);
     }
   }
 
