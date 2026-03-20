@@ -68,11 +68,14 @@ export function MyTeamPage() {
   const carryPct = totalCommitments > 0 ? Math.round((carriedCount / totalCommitments) * 100) : 0;
   const unlinkedCount = rcdoCoverage?.unlinkedCount ?? 0;
 
-  const commitmentsByUser: Record<string, Commitment[]> = {};
-  for (const c of allCommitments) {
-    if (!commitmentsByUser[c.userId]) commitmentsByUser[c.userId] = [];
-    commitmentsByUser[c.userId]!.push(c);
-  }
+  const commitmentsByUser = useMemo(() => {
+    const map: Record<string, Commitment[]> = {};
+    for (const c of allCommitments) {
+      if (!map[c.userId]) map[c.userId] = [];
+      map[c.userId]!.push(c);
+    }
+    return map;
+  }, [allCommitments]);
 
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => {

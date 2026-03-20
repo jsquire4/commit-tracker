@@ -56,7 +56,9 @@ export async function exportBriefingToPdf(
   // Remove any animations that might affect rendering
   clone.style.animation = 'none';
   clone.querySelectorAll('*').forEach((el) => {
-    (el as HTMLElement).style.animation = 'none';
+    if (el instanceof HTMLElement) {
+      el.style.animation = 'none';
+    }
   });
   wrapper.appendChild(clone);
 

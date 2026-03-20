@@ -49,44 +49,14 @@ const ConfigContent = lazy(() =>
 
 const ALLOWED_ROLES: UserRole[] = ['DIRECTOR', 'VP', 'EXECUTIVE'];
 
-/** Seed conversation for the AI sidebar */
-const BRIEFING_INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'briefing-seed-1',
-    role: 'user',
-    text: 'Why did strategic alignment drop this week?',
-    timestamp: new Date(Date.now() - 120_000).toISOString(),
-  },
-  {
-    id: 'briefing-seed-2',
-    role: 'ai',
-    text: 'Strategic alignment fell 7 points because 3 commitments were reassigned by managers from strategic to operational work mid-cycle. Sarah Chen\u2019s team accounted for 2 of those reassignments, both related to a production incident on Tuesday. The remaining reassignment came from Marcus Thorne\u2019s team where a scope change shifted an Enterprise Tier commitment to defensive work.',
-    timestamp: new Date(Date.now() - 100_000).toISOString(),
-  },
-  {
-    id: 'briefing-seed-3',
-    role: 'user',
-    text: 'Which rally cries have the worst coverage?',
-    timestamp: new Date(Date.now() - 60_000).toISOString(),
-  },
-  {
-    id: 'briefing-seed-4',
-    role: 'ai',
-    text: 'Reduce Churn to <2% has the weakest coverage at just 1 commitment from 1 person. Two of its three objectives\u2009\u2014\u2009Customer Success Playbook and Risk Scoring Model\u2009\u2014\u2009have zero linked commitments. This is a significant gap given that churn reduction was identified as a top-3 priority this quarter.',
-    timestamp: new Date(Date.now() - 40_000).toISOString(),
-  },
-  {
-    id: 'briefing-seed-5',
-    role: 'user',
-    text: 'What should I focus on in my 1:1 with Marcus?',
-    timestamp: new Date(Date.now() - 20_000).toISOString(),
-  },
-  {
-    id: 'briefing-seed-6',
-    role: 'ai',
-    text: 'Marcus\u2019s team has the highest carry-forward rate at 28% and a sustained alignment drift signal. Three areas to probe: (1) his 4 unlinked commitments\u2009\u2014\u2009are they strategic work that just hasn\u2019t been tagged, or genuinely off-strategy? (2) The external dependency blocking 2 carried-forward items\u2009\u2014\u2009can you unblock it? (3) His team has zero coverage on Churn Reduction despite having relevant skills.',
-    timestamp: new Date(Date.now() - 10_000).toISOString(),
-  },
+/** Seed conversation message content (timestamps computed at render time via useMemo) */
+const BRIEFING_SEED_CONTENT: { id: string; role: 'user' | 'ai'; text: string; ageMs: number }[] = [
+  { id: 'briefing-seed-1', role: 'user', text: 'Why did strategic alignment drop this week?', ageMs: 120_000 },
+  { id: 'briefing-seed-2', role: 'ai', text: 'Strategic alignment fell 7 points because 3 commitments were reassigned by managers from strategic to operational work mid-cycle. Sarah Chen\u2019s team accounted for 2 of those reassignments, both related to a production incident on Tuesday. The remaining reassignment came from Marcus Thorne\u2019s team where a scope change shifted an Enterprise Tier commitment to defensive work.', ageMs: 100_000 },
+  { id: 'briefing-seed-3', role: 'user', text: 'Which rally cries have the worst coverage?', ageMs: 60_000 },
+  { id: 'briefing-seed-4', role: 'ai', text: 'Reduce Churn to <2% has the weakest coverage at just 1 commitment from 1 person. Two of its three objectives\u2009\u2014\u2009Customer Success Playbook and Risk Scoring Model\u2009\u2014\u2009have zero linked commitments. This is a significant gap given that churn reduction was identified as a top-3 priority this quarter.', ageMs: 40_000 },
+  { id: 'briefing-seed-5', role: 'user', text: 'What should I focus on in my 1:1 with Marcus?', ageMs: 20_000 },
+  { id: 'briefing-seed-6', role: 'ai', text: 'Marcus\u2019s team has the highest carry-forward rate at 28% and a sustained alignment drift signal. Three areas to probe: (1) his 4 unlinked commitments\u2009\u2014\u2009are they strategic work that just hasn\u2019t been tagged, or genuinely off-strategy? (2) The external dependency blocking 2 carried-forward items\u2009\u2014\u2009can you unblock it? (3) His team has zero coverage on Churn Reduction despite having relevant skills.', ageMs: 10_000 },
 ];
 
 const MODE_TABS: { mode: BriefingMode; label: string }[] = [
@@ -104,31 +74,19 @@ export function BriefingView() {
   const mainColumnRef = useRef<HTMLDivElement>(null);
   const { toast, toasts, dismiss } = useToast();
 
+  // All hooks must be called before any conditional returns (Rules of Hooks)
+  const { data: rcdoTree } = useRcdoTree();
+  const { data: health } = useExecutiveHealth();
+  const { data: cycle } = useCurrentCycle();
+  const { data: commitments } = useCommitments(cycle?.id ?? '');
+  const { data: briefing } = useBriefing(cycle?.id);
+
   const handleExportPdf = useCallback(() => {
     if (!mainColumnRef.current) return;
     exportBriefingToPdf(mainColumnRef.current)
       .then(() => { toast.success('Briefing exported as PDF'); })
       .catch(() => { toast.error('Export failed'); });
   }, [toast]);
-
-  // Role guard
-  if (!role || !ALLOWED_ROLES.includes(role)) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
-        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
-        <p className="text-body text-on-surface-variant max-w-sm">
-          The Briefing is only accessible to Directors, VPs, and Executives.
-        </p>
-      </div>
-    );
-  }
-
-  // Resolve display names for breadcrumb from cached data
-  const { data: rcdoTree } = useRcdoTree();
-  const { data: health } = useExecutiveHealth();
-  const { data: cycle } = useCurrentCycle();
-  const { data: commitments } = useCommitments(cycle?.id ?? '');
-  const { data: briefing } = useBriefing(cycle?.id);
 
   const breadcrumbNames = useMemo(() => {
     const names: { rallyCry?: string; team?: string; person?: string } = {};
@@ -151,6 +109,29 @@ export function BriefingView() {
     }
     return names;
   }, [drill.rallyCryId, drill.teamId, drill.personId, rcdoTree, health, commitments]);
+
+  // Compute seed timestamps at render time so they stay fresh
+  const briefingInitialMessages: ChatMessage[] = useMemo(() =>
+    BRIEFING_SEED_CONTENT.map((s) => ({
+      id: s.id,
+      role: s.role,
+      text: s.text,
+      timestamp: new Date(Date.now() - s.ageMs).toISOString(),
+    })),
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  []);
+
+  // Role guard — after all hooks
+  if (!role || !ALLOWED_ROLES.includes(role)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
+        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
+        <p className="text-body text-on-surface-variant max-w-sm">
+          The Briefing is only accessible to Directors, VPs, and Executives.
+        </p>
+      </div>
+    );
+  }
 
   const isInDrillMode = drill.mode === 'briefing' && drill.depth > 0;
   const showModeTabs = drill.depth === 0;
@@ -222,8 +203,8 @@ export function BriefingView() {
               <AIChatSidebar
                 context="briefing"
                 placeholder="Ask about this week..."
-                footerText="Powered by AI &middot; Based on current cycle data"
-                initialMessages={BRIEFING_INITIAL_MESSAGES}
+                footerText="Powered by AI · Based on current cycle data"
+                initialMessages={briefingInitialMessages}
               />
             </div>
           </div>

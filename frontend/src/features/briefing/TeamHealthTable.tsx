@@ -56,6 +56,9 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
               <tr
                 key={unit.managerId}
                 onClick={() => onSelectTeam(unit.managerId)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelectTeam(unit.managerId); } }}
+                tabIndex={0}
+                role="button"
                 className={[
                   'cursor-pointer transition-colors group',
                   'hover:bg-surface-container-low',

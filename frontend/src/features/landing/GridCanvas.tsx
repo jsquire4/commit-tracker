@@ -22,6 +22,7 @@ const OPACITY_KEYS = [
 ];
 
 function positionMultiplier(col: number, cols: number): number {
+  if (cols <= 1) return 0.5;
   const t = col / (cols - 1);
   for (let i = 0; i < OPACITY_KEYS.length - 1; i++) {
     const cur = OPACITY_KEYS[i]!;
@@ -244,7 +245,61 @@ export function GridCanvas() {
 
     animId = requestAnimationFrame(render);
 
-    return () => cancelAnimationFrame(animId);
+    // Resize handler — reinitialize canvas on window resize
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    function handleResize() {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (!canvas) return;
+        cancelAnimationFrame(animId);
+        const newW = window.innerWidth;
+        const newCols = Math.ceil(newW / STRIDE) + 2;
+        const newTotalW = newCols * STRIDE - GAP;
+        const newTotalH = ROWS * STRIDE - GAP;
+        const newDpr = window.devicePixelRatio || 1;
+        canvas.width = newTotalW * newDpr;
+        canvas.height = newTotalH * newDpr;
+        canvas.style.width = `${newTotalW}px`;
+        canvas.style.height = `${newTotalH}px`;
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.scale(newDpr, newDpr);
+
+        // Rebuild cells for new column count
+        const newHotX = newCols * 0.72;
+        const newHotY = ROWS * 0.45;
+        const newMaxDist = Math.sqrt(newHotX * newHotX + newHotY * newHotY);
+        cells.length = 0;
+        for (let r = 0; r < ROWS; r++) {
+          for (let c = 0; c < newCols; c++) {
+            const dx = c - newHotX;
+            const dy = r - newHotY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const base = Math.max(0.03, 0.7 * Math.pow(1 - dist / newMaxDist, 2));
+            cells.push({
+              col: c,
+              row: r,
+              baseOpacity: base,
+              currentOpacity: base,
+              breathPhase: Math.random() * Math.PI * 2,
+              breathSpeed: 0.3 + Math.random() * 0.4,
+              breathAmp: 0.02 + Math.random() * 0.04,
+              signalTimer: 0,
+              signalBrightness: 0,
+            });
+          }
+        }
+        activeConnections.length = 0;
+        lastFrame = 0;
+        animId = requestAnimationFrame(render);
+      }, 150);
+    }
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      cancelAnimationFrame(animId);
+      clearTimeout(resizeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

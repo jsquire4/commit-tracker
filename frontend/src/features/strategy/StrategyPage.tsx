@@ -26,7 +26,7 @@ import type {
   OutcomeNode,
 } from '@/types';
 import { RallyCryColumn } from './RallyCryColumn';
-import { StrategyModal, type StrategyModalMode } from './StrategyModal';
+import { StrategyModal, type StrategyModalMode, type BreadcrumbPart } from './StrategyModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 
 // ── Constants ───────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ interface ModalState {
   rallyCryId: string | null;
   objectiveId: string | null;
   /** Breadcrumb parts */
-  breadcrumb: string[];
+  breadcrumb: BreadcrumbPart[];
   /** Pre-filled values for edit */
   initialTitle: string;
   initialDescription: string;
@@ -151,7 +151,7 @@ export function StrategyPage() {
       open: true,
       mode: 'objective',
       rallyCryId: rc.id,
-      breadcrumb: [`Rally Cry: <strong class="text-accent">${rc.title}</strong>`],
+      breadcrumb: [{ label: 'Rally Cry', value: rc.title }],
     });
   }, []);
 
@@ -163,8 +163,8 @@ export function StrategyPage() {
       rallyCryId: rc.id,
       objectiveId: obj.id,
       breadcrumb: [
-        `Rally Cry: <strong class="text-accent">${rc.title}</strong>`,
-        `Objective: <strong class="text-accent">${obj.title}</strong>`,
+        { label: 'Rally Cry', value: rc.title },
+        { label: 'Objective', value: obj.title },
       ],
     });
   }, []);
@@ -189,7 +189,7 @@ export function StrategyPage() {
       editId: obj.id,
       editType: 'defining-objectives',
       rallyCryId: rc.id,
-      breadcrumb: [`Rally Cry: <strong class="text-accent">${rc.title}</strong>`],
+      breadcrumb: [{ label: 'Rally Cry', value: rc.title }],
       initialTitle: obj.title,
       initialDescription: obj.description ?? '',
       initialOwnerUserId: obj.ownerUserId ?? '',
@@ -206,8 +206,8 @@ export function StrategyPage() {
       rallyCryId: rc.id,
       objectiveId: obj.id,
       breadcrumb: [
-        `Rally Cry: <strong class="text-accent">${rc.title}</strong>`,
-        `Objective: <strong class="text-accent">${obj.title}</strong>`,
+        { label: 'Rally Cry', value: rc.title },
+        { label: 'Objective', value: obj.title },
       ],
       initialTitle: oc.title,
       initialDescription: oc.description ?? '',
@@ -377,6 +377,7 @@ export function StrategyPage() {
         breadcrumb={modal.breadcrumb}
         members={orgMembers}
         isPending={isPending}
+        isEdit={modal.editId !== null}
         initialTitle={modal.initialTitle}
         initialDescription={modal.initialDescription}
         initialOwnerUserId={modal.initialOwnerUserId}

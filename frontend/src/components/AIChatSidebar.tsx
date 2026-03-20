@@ -64,7 +64,7 @@ export function AIChatSidebar({
     <div className="bg-surface-lowest rounded-sm h-full flex flex-col overflow-hidden">
       {/* Header */}
       <div className="flex items-center gap-2 px-5 py-4 border-b border-outline-variant">
-        <svg className="w-[18px] h-[18px] text-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+        <svg className="w-[18px] h-[18px] text-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-.75.75h-2a.75.75 0 010-1.5h1.25V7.25z" />
         </svg>
         <span className="text-body font-medium text-on-surface">Compass Intelligence</span>

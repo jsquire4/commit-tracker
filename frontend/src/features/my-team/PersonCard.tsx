@@ -52,7 +52,7 @@ const statusDotClass: Record<string, string> = {
   rose: 'bg-error',
 };
 
-export function PersonCard({ member, commitments, index, onAssign: _onAssign }: PersonCardProps) {
+export function PersonCard({ member, commitments, index, onAssign }: PersonCardProps) {
   const [expanded, setExpanded] = useState(false);
   const linked = commitments.filter((c) => c.rcdoLink?.rallyCryTitle).length;
   const carried = commitments.filter((c) => c.carriedFromCommitmentId).length;
@@ -78,9 +78,11 @@ export function PersonCard({ member, commitments, index, onAssign: _onAssign }: 
       style={{ animationDelay: `${index * 40}ms` }}
     >
       {/* Header */}
-      <div
-        className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none"
+      <button
+        type="button"
+        className="flex items-center gap-4 px-5 py-4 cursor-pointer select-none w-full text-left bg-transparent border-0 p-0"
         onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
       >
         <span className="text-[0.9375rem] font-medium text-on-surface whitespace-nowrap">{member.displayName}</span>
         <span className="text-label text-muted whitespace-nowrap">
@@ -101,7 +103,7 @@ export function PersonCard({ member, commitments, index, onAssign: _onAssign }: 
           </span>
         )}
         {hasDrift && (
-          <span className="text-small text-muted whitespace-nowrap">Alignment &darr; Sustained</span>
+          <span className="text-small text-muted whitespace-nowrap">At Risk</span>
         )}
         <span className="flex-1" />
         <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusDotClass[status]}`} />
@@ -116,7 +118,7 @@ export function PersonCard({ member, commitments, index, onAssign: _onAssign }: 
         >
           <polyline points="6 9 12 15 18 9" />
         </svg>
-      </div>
+      </button>
 
       {/* Expandable content */}
       <div
@@ -158,6 +160,18 @@ export function PersonCard({ member, commitments, index, onAssign: _onAssign }: 
               </li>
             ))}
           </ul>
+
+          {/* Assign work button */}
+          <div className="mt-3 pt-3 border-t border-outline-variant">
+            <button
+              type="button"
+              className="text-[0.8125rem] font-medium text-accent bg-transparent border-0 cursor-pointer p-0 hover:text-accent-dark transition-colors"
+              style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
+              onClick={() => onAssign(member)}
+            >
+              Assign work &rarr;
+            </button>
+          </div>
 
           {/* Coverage summary */}
           <div className="mt-3 pt-3 border-t border-outline-variant">

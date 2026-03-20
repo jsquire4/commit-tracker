@@ -30,25 +30,37 @@ async function initMermaid() {
   mermaidInitialized = true;
 }
 
-let diagramCounter = 0;
-
 export function MermaidDiagram({ definition, title }: MermaidDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const idRef = useRef(`mermaid-diagram-${++diagramCounter}`);
+  const diagramCounterRef = useRef(0);
+  const idRef = useRef(`mermaid-diagram-${++diagramCounterRef.current}`);
 
   useEffect(() => {
     let cancelled = false;
 
     async function render() {
       try {
+        // Clean up any prior SVG in the container from a previous render
+        if (containerRef.current) {
+          const existingSvg = containerRef.current.querySelector('svg');
+          if (existingSvg) existingSvg.remove();
+        }
+
         await initMermaid();
         const { default: mermaid } = await import('mermaid');
-        const { svg: rendered } = await mermaid.render(idRef.current, definition);
-        if (!cancelled) {
-          setSvg(rendered);
-          setError(null);
+
+        try {
+          const { svg: rendered } = await mermaid.render(idRef.current, definition);
+          if (!cancelled) {
+            setSvg(rendered);
+            setError(null);
+          }
+        } catch (renderErr) {
+          if (!cancelled) {
+            setError(renderErr instanceof Error ? renderErr.message : 'Failed to render diagram');
+          }
         }
       } catch (err) {
         if (!cancelled) {

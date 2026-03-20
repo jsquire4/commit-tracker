@@ -83,13 +83,12 @@ export function BriefingNarrativeCard({ briefing, onExportPdf }: BriefingNarrati
                   <span>{c.label}</span>
                   <span className="text-[0.75rem] font-mono text-muted">&mdash; {c.detail}</span>
                   {c.linkText && (
-                    <a
-                      href="#"
-                      className="text-[0.75rem] text-accent ml-auto whitespace-nowrap hover:text-accent-dark hover:underline transition-colors"
-                      onClick={(e) => e.preventDefault()}
+                    <button
+                      type="button"
+                      className="text-[0.75rem] text-accent ml-auto whitespace-nowrap hover:text-accent-dark hover:underline transition-colors bg-transparent border-0 cursor-pointer p-0"
                     >
                       {c.linkText} &rarr;
-                    </a>
+                    </button>
                   )}
                 </li>
               ))}

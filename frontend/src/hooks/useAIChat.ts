@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 export interface ChatMessage {
   id: string;
@@ -42,15 +42,21 @@ function generateStubResponse(message: string): string {
   return 'I can help you analyze portfolio performance, alignment trends, coverage gaps, drift signals, and carry-forward patterns. Try asking about a specific company or metric for detailed insights.';
 }
 
-let nextId = 1;
-
 export function useAIChat(context?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const nextIdRef = useRef(1);
+  const cancelledRef = useRef(false);
+
+  // Reset cancelled flag on mount, set on unmount
+  useEffect(() => {
+    cancelledRef.current = false;
+    return () => { cancelledRef.current = true; };
+  }, []);
 
   const sendMessage = useCallback(async (text: string): Promise<string> => {
     const userMsg: ChatMessage = {
-      id: `msg-${nextId++}`,
+      id: `msg-${nextIdRef.current++}`,
       role: 'user',
       text,
       timestamp: new Date().toISOString(),
@@ -62,13 +68,17 @@ export function useAIChat(context?: string) {
     // Simulate network delay
     await new Promise((resolve) => setTimeout(resolve, 600 + Math.random() * 400));
 
+    if (cancelledRef.current) return '';
+
     const responseText = generateStubResponse(text);
     const aiMsg: ChatMessage = {
-      id: `msg-${nextId++}`,
+      id: `msg-${nextIdRef.current++}`,
       role: 'ai',
       text: responseText,
       timestamp: new Date().toISOString(),
     };
+
+    if (cancelledRef.current) return responseText;
 
     setMessages((prev) => [...prev, aiMsg]);
     setIsLoading(false);

@@ -13,6 +13,8 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import Button from '@/components/Button';
+import Card from '@/components/Card';
 import { PortfolioNarrativeCard } from './PortfolioNarrativeCard';
 import { PortfolioMetricsStrip } from './PortfolioMetricsStrip';
 import { CompanyCard } from './CompanyCard';
@@ -51,10 +53,24 @@ export function PortfolioPage() {
   const { data: cycle } = useCurrentCycle();
   const [selectedCycleId, setSelectedCycleId] = useState<string | undefined>(undefined);
   const activeCycleId = selectedCycleId ?? cycle?.id;
-  const { data: portfolio, isLoading } = usePortfolio(activeCycleId);
+  const { data: portfolio, isLoading, isError, error } = usePortfolio(activeCycleId);
 
   if (isLoading) {
     return <LoadingSpinner size="lg" fullPage label="Loading portfolio..." />;
+  }
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <Card padding="spacious" className="max-w-md">
+          <h1 className="font-serif text-headline text-on-surface mb-2">Failed to Load Portfolio</h1>
+          <p className="text-body text-on-surface-variant mb-4">
+            {error instanceof Error ? error.message : 'An unexpected error occurred while loading portfolio data.'}
+          </p>
+          <Button variant="primary" onClick={() => { window.location.reload(); }}>Retry</Button>
+        </Card>
+      </div>
+    );
   }
 
   if (!portfolio) {
@@ -124,7 +140,7 @@ export function PortfolioPage() {
           <AIChatSidebar
             context="portfolio"
             placeholder="Ask about the portfolio..."
-            footerText="Powered by AI &middot; Portfolio-wide analysis"
+            footerText="Powered by AI · Portfolio-wide analysis"
             initialMessages={INITIAL_MESSAGES}
           />
         </div>

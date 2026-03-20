@@ -5,13 +5,19 @@ import type { User } from '@/types';
 
 export type StrategyModalMode = 'rallycry' | 'objective' | 'outcome';
 
+export interface BreadcrumbPart {
+  label: string;
+  value: string;
+}
+
 interface StrategyModalProps {
   open: boolean;
   mode: StrategyModalMode;
-  /** Breadcrumb parts, e.g. ["Rally Cry: Launch Enterprise"] */
-  breadcrumb: string[];
+  /** Breadcrumb parts rendered as structured label/value pairs */
+  breadcrumb: BreadcrumbPart[];
   members: User[];
   isPending: boolean;
+  isEdit?: boolean;
   initialTitle?: string;
   initialDescription?: string;
   initialOwnerUserId?: string;
@@ -43,6 +49,7 @@ export function StrategyModal({
   breadcrumb,
   members,
   isPending,
+  isEdit = false,
   initialTitle = '',
   initialDescription = '',
   initialOwnerUserId = '',
@@ -66,8 +73,7 @@ export function StrategyModal({
   }, [open, initialTitle, initialDescription, initialOwnerUserId]);
 
   const labels = MODE_LABELS[mode];
-  const isEditing = Boolean(initialTitle);
-  const heading = isEditing
+  const heading = isEdit
     ? `Edit ${mode === 'rallycry' ? 'Rally Cry' : mode === 'objective' ? 'Objective' : 'Outcome'}`
     : labels.heading;
 
@@ -114,7 +120,8 @@ export function StrategyModal({
                   {breadcrumb.map((part, i) => (
                     <span key={i}>
                       {i > 0 && <span className="mx-1 text-muted">&rsaquo;</span>}
-                      <span dangerouslySetInnerHTML={{ __html: part }} />
+                      <span className="text-muted">{part.label}: </span>
+                      <strong className="text-accent">{part.value}</strong>
                     </span>
                   ))}
                 </p>
