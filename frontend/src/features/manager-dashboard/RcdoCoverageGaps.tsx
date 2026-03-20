@@ -9,12 +9,12 @@ export function RcdoCoverageGaps({ coverage }: RcdoCoverageGapsProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">RCDO Coverage Gaps</h2>
+      <h2 className="text-lg font-semibold text-on-surface">RCDO Coverage Gaps</h2>
 
       {uncoveredObjectives.length === 0 ? (
-        <div className="flex items-center gap-3 rounded-lg border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 p-4">
+        <div className="flex items-center gap-3 rounded-lg border border-accent/20 bg-accent/5 p-4">
           <svg
-            className="w-5 h-5 text-green-600 dark:text-green-400 flex-shrink-0"
+            className="w-5 h-5 text-accent flex-shrink-0"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -27,7 +27,7 @@ export function RcdoCoverageGaps({ coverage }: RcdoCoverageGapsProps) {
               d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <p className="text-sm font-medium text-green-800 dark:text-green-300">
+          <p className="text-sm font-medium text-accent">
             All objectives covered
           </p>
         </div>
@@ -36,10 +36,10 @@ export function RcdoCoverageGaps({ coverage }: RcdoCoverageGapsProps) {
           {uncoveredObjectives.map((obj) => (
             <li
               key={obj.definingObjectiveId}
-              className="flex items-start gap-3 rounded-lg border border-amber-200 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 p-4"
+              className="flex items-start gap-3 rounded-lg border border-warning/20 bg-warning/5 p-4"
             >
               <svg
-                className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                className="w-5 h-5 text-warning flex-shrink-0 mt-0.5"
                 fill="currentColor"
                 viewBox="0 0 20 20"
                 aria-hidden="true"
@@ -51,10 +51,10 @@ export function RcdoCoverageGaps({ coverage }: RcdoCoverageGapsProps) {
                 />
               </svg>
               <div className="flex flex-col gap-0.5 min-w-0">
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200 truncate">
+                <p className="text-sm font-medium text-warning truncate">
                   {obj.title}
                 </p>
-                <p className="text-xs text-amber-600 dark:text-amber-400 truncate">
+                <p className="text-xs text-warning/70 truncate">
                   Under: {obj.rallyCryTitle}
                 </p>
               </div>

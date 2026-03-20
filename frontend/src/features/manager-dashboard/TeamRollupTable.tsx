@@ -28,10 +28,10 @@ const CYCLE_STATE_LABELS: Record<string, string> = {
 };
 
 const CYCLE_STATE_COLORS: Record<string, string> = {
-  DRAFT: 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300',
-  LOCKED: 'bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-300',
-  RECONCILING: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300',
-  RECONCILED: 'bg-green-100 dark:bg-green-900/40 text-green-800 dark:text-green-300',
+  DRAFT: 'bg-surface-container text-on-surface-variant',
+  LOCKED: 'bg-navy/10 text-navy',
+  RECONCILING: 'bg-warning/10 text-warning',
+  RECONCILED: 'bg-accent/10 text-accent',
 };
 
 
@@ -125,20 +125,20 @@ export function TeamRollupTable({
 
   if (sorted.length === 0) {
     return (
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
+      <div className="bg-surface-lowest border border-outline-variant rounded-lg p-8 text-center text-muted text-sm">
         No team members found.
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg overflow-hidden">
+      <h2 className="text-lg font-semibold text-on-surface px-6 py-4 border-b border-outline-variant">
         Team Rollup
       </h2>
       <div className="overflow-x-auto">
         <table className="w-full min-w-[720px] text-sm">
-          <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+          <thead className="bg-surface-container-low border-b border-outline-variant">
             <tr>
               <SortableHeader
                 label="Name"
@@ -192,23 +192,23 @@ export function TeamRollupTable({
               />
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+          <tbody className="divide-y divide-outline-variant/15">
             {sorted.map(({ raw, strategicPct, operationalPct, completionRate, topRcdo }) => {
               const isExpanded = expandedUserId === raw.userId;
               const stateLabel = CYCLE_STATE_LABELS[raw.cycleState] ?? raw.cycleState;
-              const stateColor = CYCLE_STATE_COLORS[raw.cycleState] ?? 'bg-gray-100 text-gray-700';
+              const stateColor = CYCLE_STATE_COLORS[raw.cycleState] ?? 'bg-surface-container text-on-surface-variant';
 
               return (
                 <Fragment key={raw.userId}>
                   <tr
-                    className={`hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors ${isExpanded ? 'bg-blue-50 dark:bg-blue-900/30' : ''}`}
+                    className={`hover:bg-surface-container-high cursor-pointer transition-colors duration-[var(--duration-fast)] ${isExpanded ? 'bg-accent/5' : ''}`}
                     onClick={() => { handleRowClick(raw.userId); }}
                     aria-expanded={isExpanded}
                   >
-                    <td className="sticky left-0 px-4 py-3 font-medium text-gray-900 dark:text-gray-100 bg-inherit whitespace-nowrap">
+                    <td className="sticky left-0 px-4 py-3 font-medium text-on-surface bg-inherit whitespace-nowrap">
                       <span className="flex items-center gap-2">
                         <span
-                          className={`transition-transform duration-200 text-gray-400 dark:text-gray-500 ${isExpanded ? 'rotate-90' : ''}`}
+                          className={`transition-transform duration-200 text-muted ${isExpanded ? 'rotate-90' : ''}`}
                           aria-hidden="true"
                         >
                           ▶
@@ -221,37 +221,37 @@ export function TeamRollupTable({
                         {stateLabel}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300 text-right tabular-nums">
+                    <td className="px-4 py-3 text-on-surface-variant text-right tabular-nums">
                       {raw.totalCommitments}
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
-                      <span className={strategicPct >= 50 ? 'text-blue-700 dark:text-blue-400 font-semibold' : 'text-gray-700 dark:text-gray-300'}>
+                      <span className={strategicPct >= 50 ? 'text-accent font-semibold' : 'text-on-surface-variant'}>
                         {strategicPct}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-3 text-right tabular-nums text-on-surface-variant">
                       {operationalPct}%
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">
                       <span
                         className={
                           completionRate >= 80
-                            ? 'text-green-700 dark:text-green-400 font-semibold'
+                            ? 'text-accent font-semibold'
                             : completionRate >= 50
-                            ? 'text-yellow-700 dark:text-yellow-400'
-                            : 'text-red-600 dark:text-red-400'
+                            ? 'text-warning'
+                            : 'text-error'
                         }
                       >
                         {completionRate}%
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">{topRcdo}</td>
+                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">{topRcdo}</td>
                   </tr>
                   {isExpanded && (
                     <tr>
                       <td
                         colSpan={7}
-                        className="bg-blue-50 dark:bg-blue-900/30 border-t border-blue-100 dark:border-blue-900/40"
+                        className="bg-accent/5 border-t border-accent/10"
                       >
                         <MemberCommitmentDetail userId={raw.userId} cycleId={cycleId} />
                       </td>

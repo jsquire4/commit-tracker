@@ -7,7 +7,9 @@
  * Drill-down levels still work via URL params — when drilled in, the two-column
  * layout collapses to a single column showing the detail level.
  */
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useCallback } from 'react';
+import { exportBriefingToPdf } from '@/lib/pdfExport';
+import { useToast, ToastContainer } from '@/hooks/useToast';
 import { useDrillDown, type BriefingMode } from '@/hooks/useDrillDown';
 import { useAuth } from '@/hooks/useAuth';
 import { useRcdoTree } from '@/hooks/useRcdo';
@@ -99,6 +101,15 @@ export function BriefingView() {
   const drill = useDrillDown();
   const directionRef = useRef(drill.direction);
   directionRef.current = drill.direction;
+  const mainColumnRef = useRef<HTMLDivElement>(null);
+  const { toast, toasts, dismiss } = useToast();
+
+  const handleExportPdf = useCallback(() => {
+    if (!mainColumnRef.current) return;
+    exportBriefingToPdf(mainColumnRef.current)
+      .then(() => { toast.success('Briefing exported as PDF'); })
+      .catch(() => { toast.error('Export failed'); });
+  }, [toast]);
 
   // Role guard
   if (!role || !ALLOWED_ROLES.includes(role)) {
@@ -176,10 +187,10 @@ export function BriefingView() {
       {showBriefingHome && (
         <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-start">
           {/* Main column */}
-          <div className="flex flex-col gap-8">
+          <div ref={mainColumnRef} className="flex flex-col gap-8">
             {/* Narrative card */}
             {briefing && (
-              <BriefingNarrativeCard briefing={briefing} onExportPdf={() => { /* TODO: Wire PDF export in Wave 5 */ }} />
+              <BriefingNarrativeCard briefing={briefing} onExportPdf={handleExportPdf} />
             )}
 
             {/* Metrics strip */}
@@ -258,6 +269,8 @@ export function BriefingView() {
           <ConfigContent />
         </Suspense>
       )}
+
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   );
 }

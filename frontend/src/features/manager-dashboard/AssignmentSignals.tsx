@@ -14,25 +14,25 @@ interface SignalCardProps {
 function SignalCard({ label, value, isAmber = false, sublabel }: SignalCardProps) {
   return (
     <div
-      className={`flex flex-col gap-1 rounded-lg border p-4 flex-1 min-w-[200px] transition-colors ${
+      className={`flex flex-col gap-1 rounded-lg border p-4 flex-1 min-w-[200px] transition-colors duration-[var(--duration-fast)] ${
         isAmber
-          ? 'bg-amber-50 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700'
-          : 'bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700'
+          ? 'bg-warning/5 border-warning/30'
+          : 'bg-surface-lowest border-outline-variant'
       }`}
     >
-      <p className={`text-xs font-medium uppercase tracking-wide ${isAmber ? 'text-amber-700 dark:text-amber-300' : 'text-gray-500 dark:text-gray-400'}`}>
+      <p className={`text-xs font-medium uppercase tracking-wide ${isAmber ? 'text-warning' : 'text-muted'}`}>
         {label}
       </p>
-      <p className={`text-2xl font-bold ${isAmber ? 'text-amber-800 dark:text-amber-300' : 'text-gray-900 dark:text-gray-100'}`}>
+      <p className={`text-2xl font-bold ${isAmber ? 'text-warning' : 'text-on-surface'}`}>
         {value}
       </p>
       {sublabel && (
-        <p className={`text-xs ${isAmber ? 'text-amber-600 dark:text-amber-400' : 'text-gray-400 dark:text-gray-500'}`}>
+        <p className={`text-xs ${isAmber ? 'text-warning/70' : 'text-muted'}`}>
           {sublabel}
         </p>
       )}
       {isAmber && (
-        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-amber-700 dark:text-amber-300">
+        <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-warning">
           <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
             <path
               fillRule="evenodd"
@@ -54,7 +54,7 @@ export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Assignment Signals</h2>
+      <h2 className="text-lg font-semibold text-on-surface">Assignment Signals</h2>
       <div className="flex flex-wrap gap-4">
         <SignalCard
           label="Manager-assigned work"

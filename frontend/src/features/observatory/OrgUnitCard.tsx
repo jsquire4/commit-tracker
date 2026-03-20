@@ -9,32 +9,32 @@ interface OrgUnitCardProps {
 }
 
 const gradeColors: Record<HealthGrade, string> = {
-  GREEN: 'bg-green-500',
-  YELLOW: 'bg-amber-500',
-  RED: 'bg-red-500',
+  GREEN: 'bg-accent',
+  YELLOW: 'bg-warning',
+  RED: 'bg-error',
 };
 
 const gradeBorderAccent: Record<HealthGrade, string> = {
-  GREEN: 'border-l-green-500',
-  YELLOW: 'border-l-amber-500',
-  RED: 'border-l-red-500',
+  GREEN: 'border-l-accent',
+  YELLOW: 'border-l-warning',
+  RED: 'border-l-error',
 };
 
 function TrendArrow({ direction }: { direction: string }) {
   if (direction === 'IMPROVING') {
-    return <span className="text-green-600 dark:text-green-400 font-bold text-base">↑</span>;
+    return <span className="text-accent font-bold text-base">{'\u2191'}</span>;
   }
   if (direction === 'DECLINING') {
-    return <span className="text-red-600 dark:text-red-400 font-bold text-base">↓</span>;
+    return <span className="text-error font-bold text-base">{'\u2193'}</span>;
   }
-  return <span className="text-gray-400 dark:text-gray-500 font-bold text-base">→</span>;
+  return <span className="text-muted font-bold text-base">{'\u2192'}</span>;
 }
 
 function Sparkline({ managerId }: { managerId: string }) {
   const { data } = useAlignmentTrend(8, managerId);
 
   if (!data || data.length === 0) {
-    return <div className="w-20 h-8 bg-gray-100 dark:bg-gray-800 rounded" />;
+    return <div className="w-20 h-8 bg-surface-container-low rounded" />;
   }
 
   return (
@@ -43,7 +43,7 @@ function Sparkline({ managerId }: { managerId: string }) {
         <Line
           type="monotone"
           dataKey="strategicPct"
-          stroke="#3b82f6"
+          stroke="#036A6A"
           strokeWidth={1.5}
           dot={false}
         />
@@ -53,20 +53,20 @@ function Sparkline({ managerId }: { managerId: string }) {
 }
 
 export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
-  const gradeDot = gradeColors[unit.grade as HealthGrade] ?? 'bg-gray-400';
-  const borderAccent = gradeBorderAccent[unit.grade as HealthGrade] ?? 'border-l-gray-400';
+  const gradeDot = gradeColors[unit.grade as HealthGrade] ?? 'bg-muted';
+  const borderAccent = gradeBorderAccent[unit.grade as HealthGrade] ?? 'border-l-muted';
 
   return (
     <div
       role="button"
       tabIndex={0}
       className={[
-        'cursor-pointer rounded-lg border border-gray-200 dark:border-gray-700 border-l-4',
+        'cursor-pointer rounded-lg border border-outline-variant border-l-4',
         borderAccent,
-        'bg-white dark:bg-gray-900 p-4 space-y-3',
+        'bg-surface-lowest p-4 space-y-3',
         'animate-fade-in',
-        'transition-all duration-200',
-        'hover:shadow-premium-lg hover:-translate-y-0.5',
+        'transition-colors duration-[var(--duration-fast)]',
+        'hover:bg-surface hover:shadow-whisper',
       ].join(' ')}
       onClick={onClick}
       onKeyDown={(e) => {
@@ -79,10 +79,10 @@ export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
       {/* Header row: name + role badge */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+          <p className="text-sm font-semibold text-on-surface truncate">
             {unit.managerName}
           </p>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+          <p className="text-xs text-muted mt-0.5">
             {unit.headcount} members
           </p>
         </div>
@@ -95,7 +95,7 @@ export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
           className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${gradeDot}`}
           aria-label={`Grade: ${unit.grade}`}
         />
-        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+        <span className="text-sm font-medium text-on-surface">
           {String(Math.round(unit.strategicAlignmentPct))}% strategic
         </span>
       </div>
@@ -105,7 +105,7 @@ export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
         <Sparkline managerId={unit.managerId} />
         <div className="flex flex-col items-end gap-0.5">
           <TrendArrow direction={unit.trendDirection} />
-          <span className="text-xs text-gray-400 dark:text-gray-500">
+          <span className="text-xs text-muted">
             {unit.weeksTrending}w
           </span>
         </div>

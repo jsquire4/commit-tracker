@@ -203,6 +203,37 @@
     to   { opacity: 1; transform: translateY(0); }
   }
 
+  /* Focus ring fade-in — per DESIGN.md, never a harsh snap-on.
+     Applied as a utility so components can opt in without breaking
+     their own focus-visible overrides. */
+  .focus-ring-fade:focus-visible,
+  button:focus-visible,
+  a:focus-visible,
+  select:focus-visible,
+  input:focus-visible {
+    animation: focusRingIn var(--duration-fast) var(--ease-standard) both;
+  }
+
+  @keyframes focusRingIn {
+    from { outline-color: transparent; }
+    to   { outline-color: currentColor; }
+  }
+
+  /* Fade-slide-in — used by ExecutiveHealthPage VP sections */
+  .animate-fade-slide-in {
+    animation: fadeUp 300ms var(--ease-entrance) both;
+  }
+
+  /* Pulse subtle — for critical health cards */
+  .animate-pulse-subtle {
+    animation: pulseSubtle 2s ease-in-out infinite;
+  }
+
+  @keyframes pulseSubtle {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+
   /* ── Scrollbar (light-mode) ──────────────────────────────────────── */
 
   .scrollbar-thin {

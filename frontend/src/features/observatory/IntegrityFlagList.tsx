@@ -39,9 +39,9 @@ const flagTypeLabel: Record<IntegrityFlagType, string> = {
 export function IntegrityFlagList({ flags }: IntegrityFlagListProps) {
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <h2 className="text-lg font-semibold text-on-surface">
         Data Integrity Concerns
-        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+        <span className="ml-2 text-sm font-normal text-muted">
           ({flags.length})
         </span>
       </h2>
@@ -50,12 +50,12 @@ export function IntegrityFlagList({ flags }: IntegrityFlagListProps) {
           <div
             // eslint-disable-next-line react/no-array-index-key
             key={`${flag.userId}-${flag.type}-${idx}`}
-            className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 flex items-start gap-3"
+            className="rounded-lg border border-outline-variant bg-surface-lowest px-4 py-3 flex items-start gap-3"
           >
             {/* Warning icon */}
             <div className="flex-shrink-0 mt-0.5">
               <svg
-                className="w-4 h-4 text-yellow-500 dark:text-yellow-400"
+                className="w-4 h-4 text-warning"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -73,11 +73,11 @@ export function IntegrityFlagList({ flags }: IntegrityFlagListProps) {
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <Badge variant="gray">{flagTypeLabel[flag.type] ?? flag.type}</Badge>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-xs text-muted">
                   User: {flag.userId}
                 </span>
               </div>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-sm text-on-surface-variant">
                 {getFlagDescription(flag)}
               </p>
             </div>

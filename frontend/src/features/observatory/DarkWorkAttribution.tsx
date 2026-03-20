@@ -14,10 +14,10 @@ interface DarkWorkAttributionProps {
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  STRATEGIC: '#2563EB',
-  OPERATIONAL: '#6B7280',
-  DEFENSIVE: '#DC2626',
-  CAPABILITY_BUILDING: '#059669',
+  STRATEGIC: '#036A6A',
+  OPERATIONAL: '#455F87',
+  DEFENSIVE: '#9F403D',
+  CAPABILITY_BUILDING: '#94A3B8',
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -86,11 +86,11 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
   const data = buildAttributionData(commitments);
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-1">
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6">
+      <h2 className="text-lg font-semibold text-on-surface mb-1">
         Dark Work Attribution
       </h2>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+      <p className="text-sm text-muted mb-4">
         Manager-assigned vs self-directed commitments by chess category
       </p>
 
@@ -101,7 +101,7 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
               className="inline-block w-3 h-3 rounded-sm"
               style={{ backgroundColor: CATEGORY_COLORS[key] }}
             />
-            <span className="text-xs text-gray-600 dark:text-gray-400">{CATEGORY_LABELS[key]}</span>
+            <span className="text-xs text-on-surface-variant">{CATEGORY_LABELS[key]}</span>
           </div>
         ))}
       </div>
@@ -117,7 +117,7 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
             type="number"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: '#6B7280' }}
+            tick={{ fontSize: 11, fill: '#5A605E' }}
           />
           <YAxis
             type="category"
@@ -125,7 +125,7 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
             width={104}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 12, fill: '#6B7280' }}
+            tick={{ fontSize: 12, fill: '#5A605E' }}
           />
           <Tooltip
             formatter={(value: number, name: string) => {
@@ -133,12 +133,12 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
               return [value, CATEGORY_LABELS[label] ?? label];
             }}
             contentStyle={{
-              backgroundColor: 'var(--color-gray-900, #111827)',
-              border: '1px solid #374151',
-              borderRadius: '8px',
+              backgroundColor: '#FFFFFF',
+              border: '1px solid #E8E5E0',
+              borderRadius: '4px',
             }}
-            labelStyle={{ color: '#F9FAFB', fontWeight: 600 }}
-            itemStyle={{ color: '#D1D5DB' }}
+            labelStyle={{ color: '#2D3432', fontWeight: 600 }}
+            itemStyle={{ color: '#5A605E' }}
           />
           <Legend wrapperStyle={{ display: 'none' }} />
           {/* Manager-Assigned bars */}

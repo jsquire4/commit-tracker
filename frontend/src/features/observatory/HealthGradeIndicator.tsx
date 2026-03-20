@@ -14,27 +14,27 @@ const gradeConfig: Record<HealthGrade, {
   pulse: boolean;
 }> = {
   GREEN: {
-    bg: 'bg-green-500',
-    text: 'text-green-600 dark:text-green-400',
+    bg: 'bg-accent',
+    text: 'text-accent',
     label: 'Healthy',
     shadow: 'shadow-glow-green',
-    ring: 'ring-4 ring-green-500/20',
+    ring: 'ring-4 ring-accent/20',
     pulse: false,
   },
   YELLOW: {
-    bg: 'bg-amber-500',
-    text: 'text-amber-600 dark:text-amber-400',
+    bg: 'bg-warning',
+    text: 'text-warning',
     label: 'At Risk',
     shadow: 'shadow-glow-amber',
-    ring: 'ring-4 ring-amber-500/20',
+    ring: 'ring-4 ring-warning/20',
     pulse: false,
   },
   RED: {
-    bg: 'bg-red-500',
-    text: 'text-red-600 dark:text-red-400',
+    bg: 'bg-error',
+    text: 'text-error',
     label: 'Critical',
     shadow: 'shadow-glow-red',
-    ring: 'ring-4 ring-red-500/20',
+    ring: 'ring-4 ring-error/20',
     pulse: true,
   },
 };

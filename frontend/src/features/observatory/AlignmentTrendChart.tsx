@@ -16,10 +16,10 @@ const WEEK_OPTIONS = [4, 8, 12, 26, 52] as const;
 type WeekOption = (typeof WEEK_OPTIONS)[number];
 
 const AREA_CONFIG = [
-  { key: 'strategicPct', label: 'Strategic', color: '#2563EB' },
-  { key: 'operationalPct', label: 'Operational', color: '#6B7280' },
-  { key: 'defensivePct', label: 'Defensive', color: '#DC2626' },
-  { key: 'capabilityBuildingPct', label: 'Capability Building', color: '#059669' },
+  { key: 'strategicPct', label: 'Strategic', color: '#036A6A' },
+  { key: 'operationalPct', label: 'Operational', color: '#455F87' },
+  { key: 'defensivePct', label: 'Defensive', color: '#9F403D' },
+  { key: 'capabilityBuildingPct', label: 'Capability Building', color: '#94A3B8' },
 ] as const;
 
 interface ChartDataPoint {
@@ -56,8 +56,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-3 min-w-[200px]">
-      <p className="font-semibold text-gray-900 dark:text-gray-100 mb-2 text-sm">{label}</p>
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg shadow-whisper p-3 min-w-[200px]">
+      <p className="font-semibold text-on-surface mb-2 text-sm">{label}</p>
       {payload.map((entry) => {
         const config = AREA_CONFIG.find((c) => c.key === entry.dataKey);
         return (
@@ -66,7 +66,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
               className="inline-block w-3 h-3 rounded-sm flex-shrink-0"
               style={{ backgroundColor: entry.color }}
             />
-            <span className="text-gray-700 dark:text-gray-300">
+            <span className="text-on-surface-variant">
               {config?.label ?? entry.dataKey}: {entry.value.toFixed(1)}%
             </span>
           </div>
@@ -109,17 +109,17 @@ export function AlignmentTrendChart({
   const chartData = trendData ? mapToChartData(trendData) : [];
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <h2 className="text-lg font-semibold text-on-surface">
           Alignment Trend
         </h2>
         {showWeekSelector && (
           <select
             value={selectedWeeks}
             onChange={(e) => setSelectedWeeks(Number(e.target.value) as WeekOption)}
-            className="text-sm border border-gray-300 dark:border-gray-600 rounded-md px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="text-sm border border-outline-variant rounded-md px-2 py-1 bg-surface-lowest text-on-surface-variant focus:outline-none focus:ring-2 focus:ring-accent"
           >
             {WEEK_OPTIONS.map((w) => (
               <option key={w} value={w}>
@@ -138,13 +138,13 @@ export function AlignmentTrendChart({
               className="inline-block w-3 h-3 rounded-sm"
               style={{ backgroundColor: color }}
             />
-            <span className="text-xs text-gray-600 dark:text-gray-400">{label}</span>
+            <span className="text-xs text-on-surface-variant">{label}</span>
           </div>
         ))}
         {targetPct !== null && !isNaN(targetPct) && (
           <div className="flex items-center gap-1.5">
-            <span className="inline-block w-6 border-t-2 border-dashed border-blue-500" />
-            <span className="text-xs text-gray-600 dark:text-gray-400">Target</span>
+            <span className="inline-block w-6 border-t-2 border-dashed border-accent" />
+            <span className="text-xs text-on-surface-variant">Target</span>
           </div>
         )}
       </div>
@@ -156,13 +156,13 @@ export function AlignmentTrendChart({
         </div>
       ) : trendError ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-sm text-red-600 dark:text-red-400">
+          <p className="text-sm text-error">
             Failed to load alignment trend data.
           </p>
         </div>
       ) : chartData.length === 0 ? (
         <div className="flex items-center justify-center h-64">
-          <p className="text-sm text-gray-500 dark:text-gray-400">No data available</p>
+          <p className="text-sm text-muted">No data available</p>
         </div>
       ) : (
         <ResponsiveContainer width="100%" height={280}>
@@ -174,14 +174,14 @@ export function AlignmentTrendChart({
               dataKey="cycleLabel"
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#6B7280' }}
+              tick={{ fontSize: 11, fill: '#5A605E' }}
               interval="preserveStartEnd"
             />
             <YAxis
               domain={[0, 100]}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 11, fill: '#6B7280' }}
+              tick={{ fontSize: 11, fill: '#5A605E' }}
               tickFormatter={(v: number) => `${v}%`}
               width={40}
             />
@@ -189,7 +189,7 @@ export function AlignmentTrendChart({
             {targetPct !== null && !isNaN(targetPct) && (
               <ReferenceLine
                 y={targetPct}
-                stroke="#2563EB"
+                stroke="#036A6A"
                 strokeDasharray="6 3"
                 strokeWidth={1.5}
               />

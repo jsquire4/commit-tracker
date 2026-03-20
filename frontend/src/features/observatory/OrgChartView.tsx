@@ -15,13 +15,13 @@ const DEFAULT_EXPAND_DEPTH = 2;
 function healthDotClass(grade: HealthGrade): string {
   switch (grade) {
     case 'GREEN':
-      return 'bg-green-500';
+      return 'bg-accent';
     case 'YELLOW':
-      return 'bg-yellow-400';
+      return 'bg-warning';
     case 'RED':
-      return 'bg-red-500';
+      return 'bg-error';
     default:
-      return 'bg-gray-400';
+      return 'bg-muted';
   }
 }
 
@@ -39,7 +39,7 @@ function buildTree(users: User[]): OrgTreeNode[] {
 
   const roots: OrgTreeNode[] = [];
 
-  // Wire up parent–child relationships
+  // Wire up parent-child relationships
   for (const node of nodeMap.values()) {
     if (node.reportsTo === null || !nodeMap.has(node.reportsTo)) {
       roots.push(node);
@@ -107,7 +107,7 @@ function OrgNode({ node, depth, expanded, onToggle, healthMap }: OrgNodeProps) {
         className={[
           'flex items-center gap-2 py-1.5 px-2 rounded-md group',
           isManager
-            ? 'cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors'
+            ? 'cursor-pointer hover:bg-surface-container-high transition-colors duration-[var(--duration-fast)]'
             : '',
         ].join(' ')}
         style={{ paddingLeft: `${(depth * 24) + 8}px` }}
@@ -122,14 +122,14 @@ function OrgNode({ node, depth, expanded, onToggle, healthMap }: OrgNodeProps) {
           type="button"
           aria-label={isExpanded ? 'Collapse' : 'Expand'}
           className={[
-            'w-4 h-4 flex items-center justify-center flex-shrink-0 text-gray-400 dark:text-gray-500',
-            hasChildren ? 'hover:text-gray-700 dark:hover:text-gray-300' : 'invisible',
+            'w-4 h-4 flex items-center justify-center flex-shrink-0 text-muted',
+            hasChildren ? 'hover:text-on-surface transition-colors duration-[var(--duration-fast)]' : 'invisible',
           ].join(' ')}
           onClick={hasChildren ? handleChevronClick : undefined}
           tabIndex={hasChildren ? 0 : -1}
         >
           <svg
-            className={`w-3 h-3 transition-transform ${isExpanded ? 'rotate-90' : ''}`}
+            className={`w-3 h-3 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -144,8 +144,8 @@ function OrgNode({ node, depth, expanded, onToggle, healthMap }: OrgNodeProps) {
           className={[
             'text-sm font-medium flex-1 min-w-0 truncate',
             isManager
-              ? 'text-blue-700 dark:text-blue-400 group-hover:underline'
-              : 'text-gray-800 dark:text-gray-200',
+              ? 'text-navy group-hover:underline'
+              : 'text-on-surface',
           ].join(' ')}
         >
           {node.displayName}
@@ -161,7 +161,7 @@ function OrgNode({ node, depth, expanded, onToggle, healthMap }: OrgNodeProps) {
           <span
             className={[
               'w-2.5 h-2.5 rounded-full flex-shrink-0',
-              healthGrade ? healthDotClass(healthGrade) : 'bg-gray-300 dark:bg-gray-600',
+              healthGrade ? healthDotClass(healthGrade) : 'bg-surface-container-high',
             ].join(' ')}
             title={healthGrade ? `Health: ${healthGrade}` : 'No health data'}
             aria-label={healthGrade ? `Health grade: ${healthGrade}` : 'No health data'}
@@ -206,7 +206,7 @@ export function OrgChartView() {
     ? getDefaultExpanded(roots, 0, DEFAULT_EXPAND_DEPTH)
     : new Set<string>());
 
-  // Build a managerId → HealthGrade lookup from executive health
+  // Build a managerId -> HealthGrade lookup from executive health
   const healthMap = new Map<string, HealthGrade>();
   if (healthQuery.data) {
     for (const unit of healthQuery.data.units) {
@@ -229,14 +229,14 @@ export function OrgChartView() {
   if (orgTreeQuery.isLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <LoadingSpinner size="lg" label="Loading org chart…" />
+        <LoadingSpinner size="lg" label="Loading org chart\u2026" />
       </div>
     );
   }
 
   if (orgTreeQuery.isError || !orgTreeQuery.data) {
     return (
-      <div className="rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 p-6 text-sm text-red-700 dark:text-red-400">
+      <div className="rounded-lg border border-error/20 bg-error/5 p-6 text-sm text-error">
         Failed to load org chart. Please refresh and try again.
       </div>
     );
@@ -244,37 +244,37 @@ export function OrgChartView() {
 
   if (roots.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-6 text-sm text-gray-500 dark:text-gray-400 text-center">
+      <div className="rounded-lg border border-outline-variant bg-surface-container-low p-6 text-sm text-muted text-center">
         No users found in this organisation.
       </div>
     );
   }
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6">
       <div className="mb-4 flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Org Chart</h2>
-        <p className="text-xs text-gray-500 dark:text-gray-400">
+        <h2 className="text-lg font-semibold text-on-surface">Org Chart</h2>
+        <p className="text-xs text-muted">
           Click a manager to view their team&apos;s health
         </p>
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-4 mb-4 text-xs text-gray-500 dark:text-gray-400">
+      <div className="flex flex-wrap gap-4 mb-4 text-xs text-muted">
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-green-500" aria-hidden="true" />
+          <span className="w-2.5 h-2.5 rounded-full bg-accent" aria-hidden="true" />
           Green health
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-yellow-400" aria-hidden="true" />
+          <span className="w-2.5 h-2.5 rounded-full bg-warning" aria-hidden="true" />
           Yellow health
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-red-500" aria-hidden="true" />
+          <span className="w-2.5 h-2.5 rounded-full bg-error" aria-hidden="true" />
           Red health
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-gray-300 dark:bg-gray-600" aria-hidden="true" />
+          <span className="w-2.5 h-2.5 rounded-full bg-surface-container-high" aria-hidden="true" />
           No data
         </div>
       </div>

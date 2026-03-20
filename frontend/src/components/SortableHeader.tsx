@@ -20,8 +20,8 @@ export function SortableHeader<T extends string>({
   const isActive = currentSort === sortKey;
   return (
     <th
-      className={`px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-gray-900 dark:hover:text-gray-100 ${
-        sticky ? 'sticky left-0 bg-gray-50 dark:bg-gray-900 z-10' : ''
+      className={`px-4 py-3 text-left text-xs font-semibold text-on-surface-variant uppercase tracking-wide whitespace-nowrap select-none cursor-pointer hover:text-on-surface transition-colors duration-[var(--duration-fast)] ${
+        sticky ? 'sticky left-0 bg-surface-container-low z-10' : ''
       }`}
       onClick={() => { onSort(sortKey); }}
       scope="col"

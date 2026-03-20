@@ -126,13 +126,13 @@ export function ObservatoryConfigPage() {
   if (role !== 'EXECUTIVE') {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <div className="w-12 h-12 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center">
-          <svg className="w-6 h-6 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="w-12 h-12 bg-surface-container rounded-full flex items-center justify-center">
+          <svg className="w-6 h-6 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Access Restricted</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm">
+        <h1 className="text-xl font-semibold text-on-surface">Access Restricted</h1>
+        <p className="text-sm text-muted max-w-sm">
           Observatory configuration is restricted to executives. Contact your administrator to update these settings.
         </p>
       </div>
@@ -150,10 +150,10 @@ export function ObservatoryConfigPage() {
   if (isError || !formValues) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <p className="text-sm text-gray-500 dark:text-gray-400">Failed to load observatory configuration.</p>
+        <p className="text-sm text-muted">Failed to load observatory configuration.</p>
         <button
           type="button"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent-dark transition-colors active:translate-y-px"
           onClick={() => { window.location.reload(); }}
         >
           Retry
@@ -199,16 +199,16 @@ export function ObservatoryConfigPage() {
         subtitle="Adjust drift detection and alignment thresholds for your organization."
       />
 
-      <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-6 space-y-6">
+      <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6 space-y-6">
         {FIELD_META.map((field) => (
           <div key={field.key} className="space-y-1">
             <label
               htmlFor={`config-${field.key}`}
-              className="block text-sm font-medium text-gray-900 dark:text-gray-100"
+              className="block text-sm font-medium text-on-surface"
             >
               {field.label}
             </label>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{field.description}</p>
+            <p className="text-xs text-muted">{field.description}</p>
             <input
               id={`config-${field.key}`}
               type="number"
@@ -218,20 +218,20 @@ export function ObservatoryConfigPage() {
               value={String(formValues[field.key])}
               onChange={(e) => { handleFieldChange(field.key, e.target.value); }}
               disabled={isPending}
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-1 block w-full rounded-md border border-outline-variant bg-surface-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-accent disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         ))}
 
         {/* Status messages */}
         {saveStatus === 'success' && (
-          <div className="rounded-md bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 px-4 py-3">
-            <p className="text-sm text-green-700 dark:text-green-400">Configuration saved successfully.</p>
+          <div className="rounded-md bg-accent/5 border border-accent/20 px-4 py-3">
+            <p className="text-sm text-accent">Configuration saved successfully.</p>
           </div>
         )}
         {saveStatus === 'error' && (
-          <div className="rounded-md bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 px-4 py-3">
-            <p className="text-sm text-red-700 dark:text-red-400">{errorMessage || 'Failed to save configuration.'}</p>
+          <div className="rounded-md bg-error/5 border border-error/20 px-4 py-3">
+            <p className="text-sm text-error">{errorMessage || 'Failed to save configuration.'}</p>
           </div>
         )}
 
@@ -241,9 +241,9 @@ export function ObservatoryConfigPage() {
             type="button"
             onClick={() => { void handleSave(); }}
             disabled={isPending}
-            className="px-5 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-5 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent-dark focus:outline-none focus:ring-2 focus:ring-accent transition-colors duration-[var(--duration-fast)] active:translate-y-px disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isPending ? 'Saving…' : 'Save Configuration'}
+            {isPending ? 'Saving\u2026' : 'Save Configuration'}
           </button>
         </div>
       </div>

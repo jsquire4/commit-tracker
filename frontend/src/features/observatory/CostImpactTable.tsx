@@ -86,19 +86,19 @@ export function CostImpactTable({ signals }: CostImpactTableProps) {
   const sorted = sortSignals(signals, sortKey, sortDir);
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="bg-surface-lowest border border-outline-variant rounded-lg overflow-hidden">
+      <h2 className="text-lg font-semibold text-on-surface px-6 py-4 border-b border-outline-variant">
         Cost Impact
       </h2>
 
       {signals.length === 0 ? (
-        <div className="p-8 text-center text-gray-400 dark:text-gray-500 text-sm">
+        <div className="p-8 text-center text-muted text-sm">
           No cost signals for this cycle.
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[760px] text-sm">
-            <thead className="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+            <thead className="bg-surface-container-low border-b border-outline-variant">
               <tr>
                 <SortableHeader<SortKey>
                   label="Name"
@@ -152,36 +152,36 @@ export function CostImpactTable({ signals }: CostImpactTableProps) {
                 />
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            <tbody className="divide-y divide-outline-variant/15">
               {sorted.map((signal) => {
                 const cost = parseNum(signal.misalignmentCost);
                 const costClass =
                   cost > 10000
-                    ? 'text-red-600 dark:text-red-400 font-semibold'
+                    ? 'text-error font-semibold'
                     : cost > 5000
-                    ? 'text-amber-600 dark:text-amber-400'
-                    : 'text-gray-700 dark:text-gray-300';
+                    ? 'text-warning'
+                    : 'text-on-surface-variant';
                 return (
                   <tr
                     key={signal.userId}
-                    className="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                    className="hover:bg-surface-container-high transition-colors duration-[var(--duration-fast)]"
                   >
-                    <td className="sticky left-0 px-4 py-3 font-medium text-gray-900 dark:text-gray-100 bg-inherit whitespace-nowrap">
+                    <td className="sticky left-0 px-4 py-3 font-medium text-on-surface bg-inherit whitespace-nowrap">
                       {signal.displayName}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">
                       {signal.role}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-on-surface-variant whitespace-nowrap">
                       {signal.costBandName}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-700 dark:text-gray-300">
+                    <td className="px-4 py-3 text-right tabular-nums text-on-surface-variant">
                       {formatHours(signal.totalHours)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-blue-700 dark:text-blue-400">
+                    <td className="px-4 py-3 text-right tabular-nums text-accent">
                       {formatHours(signal.strategicHours)}
                     </td>
-                    <td className="px-4 py-3 text-right tabular-nums text-gray-600 dark:text-gray-400">
+                    <td className="px-4 py-3 text-right tabular-nums text-on-surface-variant">
                       {formatHours(signal.nonStrategicHours)}
                     </td>
                     <td className={`px-4 py-3 text-right tabular-nums ${costClass}`}>

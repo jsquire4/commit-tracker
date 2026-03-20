@@ -18,9 +18,9 @@ const severityVariant: Record<DriftSeverity, 'red' | 'yellow'> = {
 };
 
 const severityBorderColor: Record<DriftSeverity, string> = {
-  STRUCTURAL: 'border-l-red-500',
-  SUSTAINED: 'border-l-amber-500',
-  EMERGING: 'border-l-yellow-400',
+  STRUCTURAL: 'border-l-error',
+  SUSTAINED: 'border-l-warning',
+  EMERGING: 'border-l-warning/60',
 };
 
 const metricVariant: Record<DriftMetric, 'blue' | 'green' | 'gray'> = {
@@ -30,15 +30,15 @@ const metricVariant: Record<DriftMetric, 'blue' | 'green' | 'gray'> = {
 };
 
 const trendLabel: Record<string, string> = {
-  IMPROVING: '↑ Improving',
-  FLAT: '→ Flat',
-  DECLINING: '↓ Declining',
+  IMPROVING: '\u2191 Improving',
+  FLAT: '\u2192 Flat',
+  DECLINING: '\u2193 Declining',
 };
 
 const trendColor: Record<string, string> = {
-  IMPROVING: 'text-green-600 dark:text-green-400',
-  FLAT: 'text-gray-500 dark:text-gray-400',
-  DECLINING: 'text-red-600 dark:text-red-400',
+  IMPROVING: 'text-accent',
+  FLAT: 'text-muted',
+  DECLINING: 'text-error',
 };
 
 export function DriftSignalList({ signals }: DriftSignalListProps) {
@@ -48,9 +48,9 @@ export function DriftSignalList({ signals }: DriftSignalListProps) {
 
   return (
     <div className="space-y-3">
-      <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+      <h2 className="text-lg font-semibold text-on-surface">
         Active Drift Signals
-        <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+        <span className="ml-2 text-sm font-normal text-muted">
           ({signals.length})
         </span>
       </h2>
@@ -59,32 +59,32 @@ export function DriftSignalList({ signals }: DriftSignalListProps) {
           <div
             // eslint-disable-next-line react/no-array-index-key
             key={`${signal.unitId}-${signal.metric}-${idx}`}
-            className={`rounded-lg border border-gray-200 dark:border-gray-700 border-l-4 ${severityBorderColor[signal.severity]} bg-white dark:bg-gray-900 px-4 py-3`}
+            className={`rounded-lg border border-outline-variant border-l-4 ${severityBorderColor[signal.severity]} bg-surface-lowest px-4 py-3`}
           >
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+              <span className="text-sm font-medium text-on-surface">
                 {signal.unitName}
               </span>
               <Badge variant={metricVariant[signal.metric]}>{signal.metric}</Badge>
               <Badge variant={severityVariant[signal.severity]}>{signal.severity}</Badge>
             </div>
-            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted">
               <span>
                 Current:{' '}
-                <span className="font-medium text-gray-700 dark:text-gray-300">
+                <span className="font-medium text-on-surface-variant">
                   {String(Math.round(signal.currentValue))}%
                 </span>
               </span>
               <span>
                 Baseline:{' '}
-                <span className="font-medium text-gray-700 dark:text-gray-300">
+                <span className="font-medium text-on-surface-variant">
                   {String(Math.round(signal.baselineValue))}%
                 </span>
               </span>
               <span>
                 {signal.weekCount}w trending
               </span>
-              <span className={trendColor[signal.trendDirection] ?? 'text-gray-500'}>
+              <span className={trendColor[signal.trendDirection] ?? 'text-muted'}>
                 {trendLabel[signal.trendDirection] ?? signal.trendDirection}
               </span>
             </div>
