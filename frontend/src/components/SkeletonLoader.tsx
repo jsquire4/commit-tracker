@@ -7,7 +7,7 @@ interface SkeletonLoaderProps {
 function SkeletonLine({ className = '' }: { className?: string }) {
   return (
     <div
-      className={`h-4 rounded-sm bg-surface-container animate-shimmer ${className}`}
+      className={`h-4 rounded-sm bg-surface-container shimmer ${className}`}
       style={{
         backgroundImage:
           'linear-gradient(90deg, var(--color-surface-container) 0%, var(--color-surface-container-high) 50%, var(--color-surface-container) 100%)',
@@ -66,8 +66,9 @@ export function SkeletonLoader({
       {Array.from({ length: count }, (_, i) => (
         <div
           key={i}
-          className="animate-fade-in"
+          className="animate-fade-up"
           style={{ animationDelay: `${i * 40}ms` }}
+          aria-hidden="true"
         >
           <Component />
         </div>

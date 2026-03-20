@@ -303,13 +303,13 @@ public class RcdoService {
         List<RcdoTreeResponse.RallyCryNode> matchingNodes = new java.util.ArrayList<>();
 
         for (RallyCry rc : rallyCries) {
-            boolean rcMatches = rc.getTitle().toLowerCase().contains(lowerQuery);
+            boolean rcMatches = titleMatches(rc.getTitle(), lowerQuery);
 
             List<DefiningObjective> dos = dosByRallyCryId.getOrDefault(rc.getId(), List.of());
             List<RcdoTreeResponse.DefiningObjectiveNode> matchingDoNodes = new java.util.ArrayList<>();
 
             for (DefiningObjective doObj : dos) {
-                boolean doMatches = doObj.getTitle().toLowerCase().contains(lowerQuery);
+                boolean doMatches = titleMatches(doObj.getTitle(), lowerQuery);
 
                 List<Outcome> outcomes = outcomesByDoId.getOrDefault(doObj.getId(), List.of());
                 List<RcdoTreeResponse.OutcomeNode> matchingOutcomeNodes;
@@ -322,7 +322,7 @@ public class RcdoService {
                 } else {
                     // Only include outcomes that match
                     matchingOutcomeNodes = outcomes.stream()
-                            .filter(o -> o.getTitle().toLowerCase().contains(lowerQuery))
+                            .filter(o -> titleMatches(o.getTitle(), lowerQuery))
                             .map(this::toOutcomeNode)
                             .toList();
                 }
@@ -355,6 +355,13 @@ public class RcdoService {
     }
 
     // === Internal helpers ===
+
+    /**
+     * Null-safe title match: returns true if the title is non-null and contains the query.
+     */
+    private boolean titleMatches(String title, String query) {
+        return title != null && title.toLowerCase().contains(query);
+    }
 
     /**
      * Validates that a title field is not null or blank.

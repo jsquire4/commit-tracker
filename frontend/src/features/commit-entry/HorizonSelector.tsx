@@ -46,7 +46,9 @@ export function HorizonSelector({
   onDayTimeChange,
   disabled = false,
 }: HorizonSelectorProps) {
-  // Derive initial day/timeBlock from legacy horizon if not provided
+  // Uncontrolled-to-controlled derivation: when the parent (e.g. CommitmentForm) only
+  // passes `value` (legacy CompletionHorizon) without explicit `day`/`timeBlock` props,
+  // we derive sensible defaults so the pill UI stays in sync with the legacy horizon.
   const activeDay = day ?? (value === 'EOW' ? 'FRIDAY' : undefined);
   const activeTimeBlock = timeBlock ?? (value === 'EOW' ? 'EOD' : (value as CompletionTimeBlock));
 

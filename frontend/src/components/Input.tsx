@@ -7,7 +7,7 @@ interface InputProps {
   value?: string;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   placeholder?: string;
-  type?: string;
+  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url' | 'search' | 'date';
   textarea?: boolean;
   rows?: number;
   maxLength?: number;
@@ -34,7 +34,9 @@ export default function Input({
   disabled = false,
 }: InputProps) {
   const id = useId();
+  const descId = `${id}-desc`;
   const charCount = value?.length ?? 0;
+  const hasDescription = Boolean(error || helperText);
 
   const sharedClasses = [
     'w-full bg-transparent border-0 border-b-2 px-0 py-2',
@@ -58,7 +60,7 @@ export default function Input({
           className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium"
         >
           {label}
-          {required && <span className="text-error ml-0.5">*</span>}
+          {required && <span className="text-error ml-0.5" aria-hidden="true">*</span>}
         </label>
       )}
 
@@ -72,6 +74,9 @@ export default function Input({
           rows={rows}
           maxLength={maxLength}
           required={required}
+          aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={hasDescription ? descId : undefined}
           disabled={disabled}
           className={`${sharedClasses} resize-y`}
         />
@@ -85,6 +90,9 @@ export default function Input({
           placeholder={placeholder}
           maxLength={maxLength}
           required={required}
+          aria-required={required || undefined}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={hasDescription ? descId : undefined}
           disabled={disabled}
           className={sharedClasses}
         />
@@ -92,9 +100,9 @@ export default function Input({
 
       <div className="flex justify-between items-center min-h-[1.25rem]">
         {error ? (
-          <span className="text-small text-error">{error}</span>
+          <span id={descId} className="text-small text-error" role="alert">{error}</span>
         ) : helperText ? (
-          <span className="text-small text-muted">{helperText}</span>
+          <span id={descId} className="text-small text-muted">{helperText}</span>
         ) : (
           <span />
         )}

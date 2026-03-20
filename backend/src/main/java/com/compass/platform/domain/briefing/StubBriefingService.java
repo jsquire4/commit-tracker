@@ -5,6 +5,8 @@ import com.compass.platform.domain.briefing.dto.BriefingResponse;
 import com.compass.platform.domain.briefing.dto.BriefingSuggestion;
 import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
 import com.compass.platform.domain.briefing.dto.ChatResponse;
+import com.compass.platform.domain.commit.Commitment;
+import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.AnalyticsService;
@@ -41,13 +43,16 @@ public class StubBriefingService implements BriefingService {
     private final AnalyticsService analyticsService;
     private final DriftDetectionService driftDetectionService;
     private final CycleRepository cycleRepository;
+    private final CommitmentRepository commitmentRepository;
 
     public StubBriefingService(AnalyticsService analyticsService,
                                DriftDetectionService driftDetectionService,
-                               CycleRepository cycleRepository) {
+                               CycleRepository cycleRepository,
+                               CommitmentRepository commitmentRepository) {
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
         this.cycleRepository = cycleRepository;
+        this.commitmentRepository = commitmentRepository;
     }
 
     @Override
@@ -81,12 +86,27 @@ public class StubBriefingService implements BriefingService {
             driftCount = driftReport.signals().size();
         }
 
-        // 4. Compute coverage: % of commitments that are linked (non-zero alignment = has category)
-        // Coverage here means commitments with a CHESS category assigned
-        double coveragePct = totalCommitments > 0 ? (100.0 - computeUncategorizedPct(alignmentTrend)) : 0.0;
-        int unlinkedCount = totalCommitments > 0
-                ? (int) Math.round(totalCommitments * (100.0 - coveragePct) / 100.0)
-                : 0;
+        // 4. Compute rally cry coverage: % of commitments linked to a rally cry
+        // Load commitments for the target cycle (or the most recent cycle if cycleId is null)
+        double rallyCryCoveragePct = 0.0;
+        int unlinkedCount = 0;
+        UUID resolvedCycleId = cycleId;
+        if (resolvedCycleId == null) {
+            List<Cycle> recentCycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+            if (!recentCycles.isEmpty()) {
+                resolvedCycleId = recentCycles.get(0).getId();
+            }
+        }
+        if (resolvedCycleId != null) {
+            List<Commitment> cycleCommitments = commitmentRepository
+                    .findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, resolvedCycleId);
+            int cycleTotal = cycleCommitments.size();
+            long linkedToRallyCry = cycleCommitments.stream()
+                    .filter(c -> c.getRallyCry() != null)
+                    .count();
+            rallyCryCoveragePct = cycleTotal > 0 ? (linkedToRallyCry * 100.0 / cycleTotal) : 0.0;
+            unlinkedCount = cycleTotal - (int) linkedToRallyCry;
+        }
 
         // 5. Determine carry-forward trend
         String carryTrend = describeCarryForwardTrend(completionTrend);
@@ -98,7 +118,7 @@ public class StubBriefingService implements BriefingService {
                 "Carry-forward rate is %.0f%% — %s. " +
                 "%d active drift signal%s detected.",
                 alignmentPct,
-                coveragePct,
+                rallyCryCoveragePct,
                 unlinkedCount,
                 carryForwardRate,
                 carryTrend,
@@ -108,11 +128,11 @@ public class StubBriefingService implements BriefingService {
 
         // 7. Build suggestions from data
         List<BriefingSuggestion> suggestions = buildSuggestions(
-                coveragePct, carryForwardRate, driftCount, driftReport);
+                rallyCryCoveragePct, carryForwardRate, driftCount, driftReport);
 
         // 8. Build citations
         List<BriefingCitation> citations = buildCitations(
-                alignmentPct, coveragePct, carryForwardRate, driftCount);
+                alignmentPct, rallyCryCoveragePct, carryForwardRate, driftCount);
 
         return new BriefingResponse(narrative, suggestions, citations, Instant.now());
     }
@@ -232,8 +252,8 @@ public class StubBriefingService implements BriefingService {
         citations.add(new BriefingCitation(
                 "Rally Cry Coverage",
                 String.format("%.0f%%", coveragePct),
-                "Observatory Analytics — Alignment Trend (categorized %)",
-                "/api/v1/observatory/alignment-trend"
+                "Commitments linked to a Rally Cry / total commitments",
+                "/api/v1/commitments"
         ));
 
         citations.add(new BriefingCitation(

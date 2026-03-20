@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/Badge';
-import type { Commitment, CycleState, ChessCategoryType } from '@/types';
+import type { Commitment, CycleState } from '@/types';
 
 interface CommitmentCardProps {
   commitment: Commitment;
@@ -20,18 +20,12 @@ const HORIZON_LABELS: Record<string, string> = {
   EOW: 'EOW',
 };
 
-const CATEGORY_VARIANTS: Record<ChessCategoryType, 'strategic' | 'operational' | 'defensive' | 'capability'> = {
-  STRATEGIC: 'strategic',
-  OPERATIONAL: 'operational',
-  DEFENSIVE: 'defensive',
-  CAPABILITY_BUILDING: 'capability',
-};
-
-const CATEGORY_LABELS: Record<ChessCategoryType, string> = {
-  STRATEGIC: 'Strategic',
-  OPERATIONAL: 'Operational',
-  DEFENSIVE: 'Defensive',
-  CAPABILITY_BUILDING: 'Capability Building',
+/** Maps display names from the API (chessCategoryName) to Badge category colors */
+const DISPLAY_NAME_TO_VARIANT: Record<string, 'strategic' | 'operational' | 'defensive' | 'capability'> = {
+  Strategic: 'strategic',
+  Operational: 'operational',
+  Defensive: 'defensive',
+  'Capability Building': 'capability',
 };
 
 export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDelete, isAssigned }: CommitmentCardProps) {
@@ -52,7 +46,8 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDe
     transition,
   };
 
-  const categoryKey = commitment.chessCategoryName as ChessCategoryType | null;
+  const categoryName = commitment.chessCategoryName;
+  const categoryVariant = categoryName ? DISPLAY_NAME_TO_VARIANT[categoryName] ?? null : null;
   const hasAssignedBy = commitment.attribution.kind === 'ASSIGNED_BY';
   const showAccent = isAssigned || hasAssignedBy;
 
@@ -119,9 +114,9 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete: _onDe
                 {HORIZON_LABELS[commitment.completionHorizon] ?? commitment.completionHorizon}
               </Badge>
 
-              {categoryKey && (
-                <Badge variant="category" color={CATEGORY_VARIANTS[categoryKey]} size="sm">
-                  {CATEGORY_LABELS[categoryKey]}
+              {categoryVariant && (
+                <Badge variant="category" color={categoryVariant} size="sm">
+                  {categoryName}
                 </Badge>
               )}
 

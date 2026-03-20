@@ -60,7 +60,7 @@ export function DisplacementQuickSignal({
           disabled={disabled}
           onClick={() => {
             onFlagChange(!flagged);
-            if (!flagged) setExpanded(true);
+            setExpanded(!flagged);
           }}
           className={[
             'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full',

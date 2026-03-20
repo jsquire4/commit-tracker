@@ -251,11 +251,12 @@ public class CycleService {
     /**
      * Get cycle history for an org, ordered by startsAt descending, limited to 12 entries.
      * Returns lightweight DTOs suitable for cycle selector UIs.
+     *
+     * TODO: Add test coverage for getCycleHistory — currently untested.
      */
     public List<CycleHistoryResponse> getCycleHistory(UUID orgId) {
-        List<Cycle> cycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+        List<Cycle> cycles = cycleRepository.findTop12ByOrgIdOrderByStartsAtDesc(orgId);
         return cycles.stream()
-                .limit(12)
                 .map(c -> new CycleHistoryResponse(
                         c.getId(),
                         c.getLabel(),

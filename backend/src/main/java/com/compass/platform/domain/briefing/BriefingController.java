@@ -1,13 +1,15 @@
 package com.compass.platform.domain.briefing;
 
+import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.briefing.dto.BriefingResponse;
 import com.compass.platform.domain.briefing.dto.ChatRequest;
 import com.compass.platform.domain.briefing.dto.ChatResponse;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +28,6 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/v1/briefing")
-@Transactional(readOnly = true)
 public class BriefingController {
 
     private final BriefingService briefingService;
@@ -44,6 +45,7 @@ public class BriefingController {
     public ResponseEntity<ApiResponse<BriefingResponse>> getBriefing(
             @RequestParam(required = false) UUID cycleId) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertBriefingAccess(actor);
         UUID orgId = actor.getOrg().getId();
         BriefingResponse briefing = briefingService.generateBriefing(orgId, cycleId);
         return ResponseEntity.ok(ApiResponse.of(briefing));
@@ -55,10 +57,21 @@ public class BriefingController {
      */
     @PostMapping("/chat")
     public ResponseEntity<ApiResponse<ChatResponse>> chat(
-            @RequestBody ChatRequest request) {
+            @Valid @RequestBody ChatRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertBriefingAccess(actor);
         UUID orgId = actor.getOrg().getId();
         ChatResponse response = briefingService.generateChat(orgId, request.messages());
         return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    /**
+     * Enforce briefing access: only MANAGER and above may call briefing endpoints.
+     */
+    private void assertBriefingAccess(AppUser actor) {
+        UserRole role = actor.getRole();
+        if (role == UserRole.ANALYST || role == UserRole.EMPLOYEE) {
+            throw new AccessDeniedException("Briefing access requires MANAGER or above");
+        }
     }
 }

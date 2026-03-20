@@ -1,4 +1,4 @@
-import { type ReactNode, useRef, useState } from 'react';
+import { type ReactNode, useCallback, useId, useRef, useState } from 'react';
 
 type TooltipSide = 'top' | 'bottom' | 'left' | 'right';
 
@@ -25,29 +25,32 @@ const arrowClasses: Record<TooltipSide, string> = {
 const arrowSize = 'border-4';
 
 export default function Tooltip({ content, side = 'top', children }: TooltipProps) {
+  const tooltipId = useId();
   const [visible, setVisible] = useState(false);
   const showTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hideTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  function handleEnter() {
+  const handleEnter = useCallback(() => {
     if (hideTimeout.current) {
       clearTimeout(hideTimeout.current);
       hideTimeout.current = null;
     }
     showTimeout.current = setTimeout(() => setVisible(true), 200);
-  }
+  }, []);
 
-  function handleLeave() {
+  const handleLeave = useCallback(() => {
     if (showTimeout.current) {
       clearTimeout(showTimeout.current);
       showTimeout.current = null;
     }
     hideTimeout.current = setTimeout(() => setVisible(false), 100);
-  }
+  }, []);
 
   return (
     <span
       className="relative inline-flex"
+      tabIndex={0}
+      aria-describedby={visible ? tooltipId : undefined}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onFocus={handleEnter}
@@ -57,6 +60,7 @@ export default function Tooltip({ content, side = 'top', children }: TooltipProp
 
       {visible && (
         <span
+          id={tooltipId}
           className={[
             'absolute z-50 whitespace-nowrap',
             'bg-on-surface text-white text-small px-2.5 py-1.5 rounded-sm shadow-whisper',

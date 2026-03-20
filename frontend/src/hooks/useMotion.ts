@@ -23,7 +23,8 @@ export function useFadeUp(ref: RefObject<HTMLElement | null>): void {
 
     observer.observe(el);
     return () => observer.disconnect();
-  }, [ref]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
 
 /**
@@ -40,7 +41,14 @@ export function useStagger(containerRef: RefObject<HTMLElement | null>): void {
     for (let i = 0; i < children.length; i++) {
       (children[i] as HTMLElement).style.setProperty('--stagger-index', String(i));
     }
-  }, [containerRef]);
+
+    return () => {
+      for (let i = 0; i < children.length; i++) {
+        (children[i] as HTMLElement).style.removeProperty('--stagger-index');
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
 
 /**

@@ -1,19 +1,9 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 import type { ToastData, ToastVariant } from '../components/Toast';
-import { ToastContainer } from '../components/Toast';
-
-let toastCounter = 0;
-
-function createToast(message: string, variant: ToastVariant, duration = 4000): ToastData {
-  return {
-    id: `toast-${++toastCounter}-${Date.now()}`,
-    message,
-    variant,
-    duration,
-  };
-}
+export { ToastContainer } from '../components/Toast';
 
 export function useToast() {
+  const toastCounter = useRef(0);
   const [toasts, setToasts] = useState<ToastData[]>([]);
 
   const dismiss = useCallback((id: string) => {
@@ -21,12 +11,17 @@ export function useToast() {
   }, []);
 
   const addToast = useCallback((message: string, variant: ToastVariant, duration?: number) => {
-    const newToast = createToast(message, variant, duration);
+    const newToast: ToastData = {
+      id: `toast-${++toastCounter.current}-${Date.now()}`,
+      message,
+      variant,
+      duration: duration ?? 4000,
+    };
     setToasts((prev) => {
-      // Keep max 3 + incoming, prune oldest
       const next = [...prev, newToast];
-      return next.length > 5 ? next.slice(-5) : next;
+      return next.length > 3 ? next.slice(-3) : next;
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const toast = useMemo(
@@ -39,10 +34,5 @@ export function useToast() {
     [addToast]
   );
 
-  const ToastContainerComponent = useCallback(
-    () => ToastContainer({ toasts, onDismiss: dismiss }),
-    [toasts, dismiss]
-  );
-
-  return { toast, ToastContainer: ToastContainerComponent };
+  return { toast, toasts, dismiss };
 }

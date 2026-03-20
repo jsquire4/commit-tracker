@@ -6,7 +6,6 @@ type ButtonSize = 'sm' | 'md' | 'lg';
 interface ButtonProps extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {
   variant?: ButtonVariant;
   size?: ButtonSize;
-  disabled?: boolean;
   loading?: boolean;
   icon?: ReactNode;
   children: ReactNode;
@@ -73,9 +72,10 @@ export default function Button({
     <button
       type={type}
       disabled={isDisabled}
+      aria-busy={loading || undefined}
       className={[
         'inline-flex items-center justify-center gap-2 rounded-sm font-medium',
-        'transition-colors duration-[150ms] ease-[var(--ease-standard,cubic-bezier(0.25,0.1,0.25,1))]',
+        'transition-all ease-[var(--ease-standard,cubic-bezier(0.25,0.1,0.25,1))]',
         'active:translate-y-px',
         'focus-visible:outline-2 focus-visible:outline-offset-2',
         sizeClasses[size],
@@ -85,9 +85,15 @@ export default function Button({
       ]
         .filter(Boolean)
         .join(' ')}
+      style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
       {...rest}
     >
-      {loading ? <Spinner /> : icon ? <span className="flex-shrink-0">{icon}</span> : null}
+      {loading ? (
+        <>
+          <Spinner />
+          <span className="sr-only">Loading...</span>
+        </>
+      ) : icon ? <span className="flex-shrink-0">{icon}</span> : null}
       {children}
     </button>
   );

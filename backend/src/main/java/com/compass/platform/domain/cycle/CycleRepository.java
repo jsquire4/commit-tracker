@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface CycleRepository extends JpaRepository<Cycle, UUID> {
     Optional<Cycle> findByOrgIdAndIsActiveTrue(UUID orgId);
     List<Cycle> findByOrgIdOrderByStartsAtDesc(UUID orgId);
+    List<Cycle> findTop12ByOrgIdOrderByStartsAtDesc(UUID orgId);
     List<Cycle> findByOrgIdAndStateOrderByStartsAtDesc(UUID orgId, CycleState state);
     Optional<Cycle> findByOrgIdAndStartsAt(UUID orgId, Instant startsAt);
 }

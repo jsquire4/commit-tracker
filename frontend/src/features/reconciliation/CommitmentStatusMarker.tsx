@@ -60,7 +60,7 @@ export function CommitmentStatusMarker({
 }: CommitmentStatusMarkerProps) {
   const [localCarry, setLocalCarry] = useState<boolean | null>(null);
   const showCarryToggle = value !== null && SHOWS_CARRY_TOGGLE.includes(value);
-  const carry = carryForward ?? localCarry;
+  const carry = carryForward !== undefined ? carryForward : localCarry;
 
   function handleCarry(val: boolean) {
     setLocalCarry(val);

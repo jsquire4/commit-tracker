@@ -191,6 +191,12 @@
     to   { transform: translateX(100%); }
   }
 
+  /* Toast progress bar shrink */
+  @keyframes shrinkProgress {
+    from { width: 100%; }
+    to   { width: 0%; }
+  }
+
   /* Tooltip entrance animation */
   @keyframes tooltipIn {
     from { opacity: 0; transform: translateY(-4px); }

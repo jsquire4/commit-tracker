@@ -46,6 +46,8 @@ function buildReconcileRequest(
   bulletStatuses: BulletStatus[],
   displacement: DisplacementValue,
   carryForward: boolean,
+  displacementFlagged: boolean,
+  displacementSelectedIds: string[],
 ): ReconcileCommitmentRequest {
   const base: ReconcileCommitmentRequest = {
     status,
@@ -63,6 +65,16 @@ function buildReconcileRequest(
   }
   if (displacement.displacingCommitmentId != null) {
     base.displacingCommitmentId = displacement.displacingCommitmentId;
+  }
+  // Wire quick-signal displacement data
+  if (displacementFlagged && displacementSelectedIds.length === 1) {
+    base.displacingCommitmentId = displacementSelectedIds[0]!;
+  }
+  if (displacementFlagged && displacementSelectedIds.length > 0) {
+    base.displacementDetail = [
+      base.displacementDetail ?? '',
+      `Displaced by: ${displacementSelectedIds.join(', ')}`,
+    ].filter(Boolean).join(' | ');
   }
   return base;
 }
@@ -87,8 +99,9 @@ function buildInitialRowState(detail: CommitmentReconciliationDetail): RowState 
   for (const bullet of detail.commitment.bullets) {
     bulletStatuses[bullet.id] = bullet.isCompleted;
   }
+  const isCarriedForward = detail.reconciliation?.status === 'CARRIED_FORWARD';
   return {
-    status: detail.reconciliation?.status ?? null,
+    status: isCarriedForward ? 'PARTIALLY_COMPLETED' : (detail.reconciliation?.status ?? null),
     notes: detail.reconciliation?.notes ?? '',
     bulletStatuses,
     displacement: {
@@ -96,7 +109,7 @@ function buildInitialRowState(detail: CommitmentReconciliationDetail): RowState 
       detail: detail.reconciliation?.displacementDetail ?? '',
       displacingCommitmentId: detail.reconciliation?.displacingCommitmentId ?? null,
     },
-    carryForward: detail.reconciliation?.status === 'CARRIED_FORWARD',
+    carryForward: isCarriedForward,
     saving: false,
     saveError: null,
     displacementFlagged: false,
@@ -137,6 +150,8 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
       displacement: DisplacementValue,
       carryForward: boolean,
       onError?: () => void,
+      flagged?: boolean,
+      selectedIds?: string[],
     ) => {
       const bulletStatusArray: BulletStatus[] = commitment.bullets.map((b) => ({
         bulletId: b.id,
@@ -145,7 +160,7 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
       try {
         await reconcileMutation.mutateAsync({
           id: commitment.id,
-          req: buildReconcileRequest(status, notes, bulletStatusArray, displacement, carryForward),
+          req: buildReconcileRequest(status, notes, bulletStatusArray, displacement, carryForward, flagged ?? false, selectedIds ?? []),
         });
         setRow((prev) => ({ ...prev, saving: false }));
       } catch {
@@ -162,7 +177,7 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
       const notesRequired = status !== 'COMPLETED';
       if (!notesRequired || row.notes.trim().length > 0) {
         setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
-        await buildAndSave(status, row.notes, row.bulletStatuses, row.displacement, row.carryForward);
+        await buildAndSave(status, row.notes, row.bulletStatuses, row.displacement, row.carryForward, undefined, row.displacementFlagged, row.displacementSelectedIds);
       }
     },
     [row, buildAndSave],
@@ -178,7 +193,7 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
     const notesRequired = row.status !== 'COMPLETED';
     if (notesRequired && row.notes.trim().length === 0) return;
     setRow((prev) => ({ ...prev, saving: true, saveError: null }));
-    await buildAndSave(row.status, row.notes, row.bulletStatuses, row.displacement, row.carryForward);
+    await buildAndSave(row.status, row.notes, row.bulletStatuses, row.displacement, row.carryForward, undefined, row.displacementFlagged, row.displacementSelectedIds);
   }, [row, reconciliation, buildAndSave]);
 
   const handleDisplacementChange = useCallback((displacement: DisplacementValue) => {
@@ -202,7 +217,7 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
           ...prev,
           bulletStatuses: { ...nextBulletStatuses, [bulletId]: !done },
         }));
-      });
+      }, row.displacementFlagged, row.displacementSelectedIds);
     },
     [row, buildAndSave],
   );
@@ -231,12 +246,11 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
       ].join(' ')}
     >
       {/* Collapsed header row */}
-      <div
-        role="button"
-        tabIndex={0}
+      <button
+        type="button"
         onClick={onToggle}
-        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle(); } }}
-        className="flex items-center px-5 py-3.5 gap-3 cursor-pointer select-none transition-colors duration-[150ms] ease-[var(--ease-standard)] hover:bg-surface"
+        aria-expanded={expanded}
+        className="flex items-center px-5 py-3.5 gap-3 w-full bg-transparent border-0 cursor-pointer select-none transition-colors duration-[150ms] ease-[var(--ease-standard)] hover:bg-surface text-left"
       >
         {/* Chevron */}
         <svg
@@ -308,12 +322,12 @@ function CommitmentRow({ detail, cycleId, allCommitments, expanded, onToggle, st
             </span>
           )}
         </div>
-      </div>
+      </button>
 
       {/* Expandable body */}
       <div
         className="overflow-hidden transition-[max-height] duration-[300ms] ease-[var(--ease-entrance)]"
-        style={{ maxHeight: expanded ? '2000px' : '0px' }}
+        style={{ maxHeight: expanded ? '999vh' : '0px' }}
       >
         <div className="border-t border-surface-container-low">
           <div className="grid grid-cols-1 md:grid-cols-2">

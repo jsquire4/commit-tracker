@@ -440,6 +440,11 @@ public class CommitmentService {
                 actor, cycle, assignedBy, isUnplanned);
     }
 
+    /**
+     * Overload for unplanned commitments: day and timeBlock are intentionally null
+     * because unplanned work is captured during reconciliation and does not carry
+     * the granular day/timeBlock scheduling that planned commitments have.
+     */
     private Commitment buildAndSaveCommitment(
             CreateUnplannedCommitmentRequest request,
             AppUser actor,
@@ -624,6 +629,9 @@ public class CommitmentService {
      * EOW -> FRIDAY, time-of-day horizons -> null (implies today / current day).
      */
     static CompletionDay computeDayFromHorizon(CompletionHorizon horizon) {
+        if (horizon == null) {
+            return null;
+        }
         if (horizon == CompletionHorizon.EOW) {
             return CompletionDay.FRIDAY;
         }
@@ -635,6 +643,9 @@ public class CommitmentService {
      * EOW -> EOD, others map directly by name.
      */
     static CompletionTimeBlock computeTimeBlockFromHorizon(CompletionHorizon horizon) {
+        if (horizon == null) {
+            return null;
+        }
         if (horizon == CompletionHorizon.EOW) {
             return CompletionTimeBlock.EOD;
         }

@@ -42,17 +42,17 @@ function Root() {
   return (
     <>
       {/* Currently-logged-in banner */}
-      <div className="bg-gray-900/5 dark:bg-gray-100/5 backdrop-blur-sm border-b border-gray-200/50 dark:border-gray-700/50 px-4 py-1.5 flex items-center justify-between text-xs">
-        <span className="text-gray-500 dark:text-gray-400">
-          <span className="font-medium text-gray-600 dark:text-gray-300">Dev</span>
+      <div className="bg-surface-container border-b border-outline-variant px-4 py-1.5 flex items-center justify-between text-xs">
+        <span className="text-muted">
+          <span className="font-medium text-on-surface-variant">Dev</span>
           {' — '}
-          <span className="font-medium text-gray-700 dark:text-gray-200">{auth.displayName}</span>
+          <span className="font-medium text-on-surface">{auth.displayName}</span>
           {' '}
-          <span className="text-gray-400 dark:text-gray-500">({auth.role.charAt(0) + auth.role.slice(1).toLowerCase()}, {auth.orgName})</span>
+          <span className="text-muted">({auth.role.charAt(0) + auth.role.slice(1).toLowerCase()}, {auth.orgName})</span>
         </span>
         <button
           onClick={handleSwitchUser}
-          className="text-gray-400 dark:text-gray-500 underline hover:text-gray-600 dark:hover:text-gray-300 transition-colors duration-150"
+          className="text-muted underline hover:text-on-surface-variant transition-colors duration-[var(--duration-fast)]"
         >
           Switch user
         </button>

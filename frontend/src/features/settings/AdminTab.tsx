@@ -32,11 +32,10 @@ interface UserFormState {
   role: UserRole;
   reportsToId: string;
   costBandId: string;
-  weeklyCapacityHours: string;
 }
 
 function emptyForm(): UserFormState {
-  return { displayName: '', email: '', role: 'EMPLOYEE', reportsToId: '', costBandId: '', weeklyCapacityHours: '40' };
+  return { displayName: '', email: '', role: 'EMPLOYEE', reportsToId: '', costBandId: '' };
 }
 
 function formFromUser(user: User): UserFormState {
@@ -46,7 +45,6 @@ function formFromUser(user: User): UserFormState {
     role: user.role,
     reportsToId: user.reportsTo ?? '',
     costBandId: user.costBandId ?? '',
-    weeklyCapacityHours: String(user.weeklyCapacityHours ?? 40),
   };
 }
 
@@ -88,13 +86,26 @@ export function AdminTab() {
   const restoreMutation = useRestoreUser();
   const createOrgMutation = useCreateOrg();
 
-  // Managers list for the reportsTo dropdown
+  // Managers list for the reportsTo dropdown.
+  // When editing an archived user, include their current manager even if inactive,
+  // so the dropdown reflects the existing assignment.
   const managers = useMemo(() => {
     if (!users) return [];
-    return users.filter((u) =>
+    const activeManagers = users.filter((u) =>
       u.isActive && ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE'].includes(u.role),
-    ).sort((a, b) => a.displayName.localeCompare(b.displayName));
-  }, [users]);
+    );
+    // If editing, ensure the user's current manager appears even if inactive
+    if (editingUserId && form.reportsToId) {
+      const currentManagerIncluded = activeManagers.some((m) => m.id === form.reportsToId);
+      if (!currentManagerIncluded) {
+        const inactiveManager = users.find((u) => u.id === form.reportsToId);
+        if (inactiveManager) {
+          return [...activeManagers, inactiveManager].sort((a, b) => a.displayName.localeCompare(b.displayName));
+        }
+      }
+    }
+    return activeManagers.sort((a, b) => a.displayName.localeCompare(b.displayName));
+  }, [users, editingUserId, form.reportsToId]);
 
   // Filtered user list
   const filtered = useMemo(() => {
@@ -141,7 +152,6 @@ export function AdminTab() {
       role: form.role,
       ...(form.reportsToId ? { reportsToId: form.reportsToId } : {}),
       ...(form.costBandId ? { costBandId: form.costBandId } : {}),
-      ...(form.weeklyCapacityHours ? { weeklyCapacityHours: parseFloat(form.weeklyCapacityHours) } : {}),
     };
 
     try {
@@ -158,12 +168,21 @@ export function AdminTab() {
 
   async function handleArchive() {
     if (!archiveTarget) return;
-    await archiveMutation.mutateAsync(archiveTarget.id);
-    setArchiveTarget(null);
+    try {
+      await archiveMutation.mutateAsync(archiveTarget.id);
+    } catch {
+      // Error is surfaced via mutation state
+    } finally {
+      setArchiveTarget(null);
+    }
   }
 
   async function handleRestore(id: string) {
-    await restoreMutation.mutateAsync(id);
+    try {
+      await restoreMutation.mutateAsync(id);
+    } catch {
+      // Error is surfaced via mutation state
+    }
   }
 
   async function handleCreateOrg(e: React.FormEvent) {

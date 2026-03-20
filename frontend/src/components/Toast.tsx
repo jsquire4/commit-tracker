@@ -52,7 +52,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
   const handleDismiss = useCallback(() => {
     clearTimeout(timerRef.current);
     setExiting(true);
-    setTimeout(() => onDismiss(toast.id), 200);
+    timerRef.current = setTimeout(() => onDismiss(toast.id), 200);
   }, [toast.id, onDismiss]);
 
   return (
@@ -64,7 +64,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         ${entering ? 'opacity-0 -translate-y-3' : exiting ? 'opacity-0 -translate-y-2' : 'opacity-100 translate-y-0'}
       `}
       style={{
-        transitionDuration: exiting ? '200ms' : '300ms',
+        transitionDuration: exiting ? 'var(--duration-standard, 200ms)' : 'var(--duration-entrance, 300ms)',
         transitionTimingFunction: exiting
           ? 'cubic-bezier(0.4, 0, 1, 1)'
           : 'cubic-bezier(0.16, 1, 0.3, 1)',
@@ -76,7 +76,7 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
         <button
           onClick={handleDismiss}
           className="ml-4 text-muted hover:text-on-surface transition-colors duration-[150ms] flex-shrink-0"
-          aria-label="Dismiss"
+          aria-label={`Dismiss: ${toast.message}`}
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -92,12 +92,6 @@ function ToastItem({ toast, onDismiss }: ToastItemProps) {
           }}
         />
       </div>
-      <style>{`
-        @keyframes shrinkProgress {
-          from { width: 100%; }
-          to { width: 0%; }
-        }
-      `}</style>
     </div>
   );
 }
