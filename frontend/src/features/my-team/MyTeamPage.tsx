@@ -36,7 +36,34 @@ export function MyTeamPage() {
   const [assignFormOpen, setAssignFormOpen] = useState(false);
   const [assignFormState, setAssignFormState] = useState<AssignmentFormState>(createEmptyFormState);
 
-  // Role guard
+  // ALL hooks must be above any conditional returns (Rules of Hooks)
+  const allCommitments = commitments ?? [];
+
+  const commitmentsByUser = useMemo(() => {
+    const map: Record<string, Commitment[]> = {};
+    for (const c of allCommitments) {
+      if (!map[c.userId]) map[c.userId] = [];
+      map[c.userId]!.push(c);
+    }
+    return map;
+  }, [allCommitments]);
+
+  const members = dashboard?.teamRollup?.members ?? [];
+
+  const sortedMembers = useMemo(() => {
+    return [...members].sort((a, b) => {
+      const aLinked = (commitmentsByUser[a.userId] ?? []).filter((c) => c.rcdoLink?.rallyCryTitle).length;
+      const bLinked = (commitmentsByUser[b.userId] ?? []).filter((c) => c.rcdoLink?.rallyCryTitle).length;
+      const aTotal = (commitmentsByUser[a.userId] ?? []).length;
+      const bTotal = (commitmentsByUser[b.userId] ?? []).length;
+      const aRisk = aTotal > 0 && aLinked === 0;
+      const bRisk = bTotal > 0 && bLinked === 0;
+      if (aRisk !== bRisk) return aRisk ? -1 : 1;
+      return a.displayName.localeCompare(b.displayName);
+    });
+  }, [members, commitmentsByUser]);
+
+  // Role guard — after all hooks
   if (!role || !ALLOWED_ROLES.includes(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
@@ -60,36 +87,12 @@ export function MyTeamPage() {
     );
   }
 
-  const { teamRollup, rcdoCoverage } = dashboard;
-  const members = teamRollup?.members ?? [];
-  const allCommitments = commitments ?? [];
+  const { rcdoCoverage } = dashboard;
   const carriedCount = allCommitments.filter((c) => c.carriedFromCommitmentId != null).length;
   const totalCommitments = allCommitments.length;
   const linkedPct = Math.round(rcdoCoverage?.linkedPercentage ?? 0);
   const carryPct = totalCommitments > 0 ? Math.round((carriedCount / totalCommitments) * 100) : 0;
   const unlinkedCount = rcdoCoverage?.unlinkedCount ?? 0;
-
-  const commitmentsByUser = useMemo(() => {
-    const map: Record<string, Commitment[]> = {};
-    for (const c of allCommitments) {
-      if (!map[c.userId]) map[c.userId] = [];
-      map[c.userId]!.push(c);
-    }
-    return map;
-  }, [allCommitments]);
-
-  const sortedMembers = useMemo(() => {
-    return [...members].sort((a, b) => {
-      const aLinked = (commitmentsByUser[a.userId] ?? []).filter((c) => c.rcdoLink?.rallyCryTitle).length;
-      const bLinked = (commitmentsByUser[b.userId] ?? []).filter((c) => c.rcdoLink?.rallyCryTitle).length;
-      const aTotal = (commitmentsByUser[a.userId] ?? []).length;
-      const bTotal = (commitmentsByUser[b.userId] ?? []).length;
-      const aRisk = aTotal > 0 && aLinked === 0;
-      const bRisk = bTotal > 0 && bLinked === 0;
-      if (aRisk !== bRisk) return aRisk ? -1 : 1;
-      return a.displayName.localeCompare(b.displayName);
-    });
-  }, [members, commitmentsByUser]);
 
   function openAssignFromPerson(member: TeamMemberSummary) {
     setAssignFormState({ ...createEmptyFormState(), employeeId: member.userId });
