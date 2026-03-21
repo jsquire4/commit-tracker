@@ -2,6 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Headless UI Portal — ensure dialogs render above all content ── */
+#headlessui-portal-root {
+  position: relative;
+  z-index: 9999;
+}
+
 /* ── Compass Design Tokens ─────────────────────────────────────────── */
 
 :root {
