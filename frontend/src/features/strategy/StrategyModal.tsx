@@ -87,17 +87,7 @@ export function StrategyModal({
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => { if (!isPending) onClose(); }}>
         {/* Overlay */}
-        <Transition.Child
-          as={Fragment}
-          enter="duration-[200ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-          enterFrom="opacity-0"
-          enterTo="opacity-100"
-          leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
-          leaveFrom="opacity-100"
-          leaveTo="opacity-0"
-        >
-          <div className="fixed inset-0 bg-on-surface/40" aria-hidden="true" />
-        </Transition.Child>
+        <div className="fixed inset-0 bg-on-surface/40 transition-opacity duration-200" aria-hidden="true" />
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Transition.Child
