@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Hide scrollbars on horizontal-scroll containers ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 /* ── Headless UI Portal — ensure dialogs render above all content ── */
 #headlessui-portal-root {
   position: relative;

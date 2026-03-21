@@ -45,7 +45,8 @@ export function CycleHistorySelector({ currentCycleId, onSelect }: CycleHistoryS
   if (cycles.length <= 1) return null;
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 overflow-x-auto max-w-full scrollbar-hide"
+         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
       {cycles.map((cycle: Cycle) => {
         const isCurrent = cycle.id === currentCycleId;
         return (

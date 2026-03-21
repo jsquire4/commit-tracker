@@ -102,8 +102,8 @@ export function MyTeamPage() {
   return (
     <div className="max-w-[960px] mx-auto px-8 py-8 flex flex-col gap-8">
       {/* Page header with cycle selector */}
-      <div className="flex items-center justify-between">
-        <h1 className="font-serif text-[1.25rem] text-on-surface">My Team</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="font-serif text-[1.25rem] text-on-surface shrink-0">My Team</h1>
         <CycleHistorySelector
           currentCycleId={activeCycleId}
           onSelect={(id) => setSelectedCycleId(id)}
