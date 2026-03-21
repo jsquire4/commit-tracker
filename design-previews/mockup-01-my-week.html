@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compass — My Week</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Compass Design System — "Executive Intelligence"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Surface */
+  --surface:               #F9F9F7;
+  --surface-lowest:        #FFFFFF;
+  --surface-container-low: #F2F4F2;
+  --surface-container:     #EEEEEC;
+  --surface-container-high:#E8E8E6;
+
+  /* Text */
+  --on-surface:            #2D3432;
+  --on-surface-variant:    #5A605E;
+  --text-muted:            #94A3B8;
+
+  /* Accent */
+  --accent:                #036A6A;
+  --accent-dark:           #005050;
+
+  /* Borders */
+  --outline-variant:       #E8E5E0;
+  --ghost-border:          rgba(232, 229, 224, 0.15);
+
+  /* Status */
+  --error:                 #9F403D;
+  --warning:               #C2860B;
+  --navy:                  #455F87;
+
+  /* Whisper shadow */
+  --whisper-shadow:        0 12px 32px -4px rgba(45, 52, 50, 0.06);
+
+  /* CHESS category colors (muted tonal) */
+  --chess-strategic-bg:    #E8F0E8;
+  --chess-strategic-text:  #2D5A2D;
+  --chess-operational-bg:  #E8EDF5;
+  --chess-operational-text:#3A4D6B;
+  --chess-defensive-bg:    #F5ECE8;
+  --chess-defensive-text:  #6B4A3A;
+  --chess-capability-bg:   #EDE8F5;
+  --chess-capability-text: #4A3A6B;
+
+  /* Horizon pill */
+  --horizon-bg:            var(--surface-container);
+  --horizon-text:          var(--on-surface-variant);
+
+  /* Motion */
+  --ease-standard:  cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-entrance:  cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit:      cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast:  150ms;
+  --duration-standard: 200ms;
+  --duration-entrance: 300ms;
+  --duration-slow:  400ms;
+  --stagger-delay:  40ms;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--surface);
+  color: var(--on-surface);
+  line-height: 1.5;
+}
+
+/* ─── Typography ────────────────────────────────────────────────────────── */
+
+.font-serif   { font-family: 'Newsreader', serif; }
+.font-sans    { font-family: 'Inter', sans-serif; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+.label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: var(--text-muted);
+}
+
+/* ─── Nav ───────────────────────────────────────────────────────────────── */
+
+.nav {
+  background: var(--surface-lowest);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.nav-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.nav-brand {
+  font-family: 'Newsreader', serif;
+  font-size: 1.25rem;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  color: var(--on-surface);
+  text-decoration: none;
+}
+
+.nav-cycle {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.gear-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.gear-icon:hover { color: var(--on-surface-variant); }
+
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.nav-tab {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color 0.15s, border-color 0.15s;
+  cursor: pointer;
+}
+.nav-tab:hover {
+  color: var(--on-surface-variant);
+}
+.nav-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ─── Layout ────────────────────────────────────────────────────────────── */
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 65% 35%;
+  gap: 2rem;
+  align-items: start;
+}
+
+.col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.col-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: sticky;
+  top: 120px;
+}
+
+/* ─── Cycle State Banner ────────────────────────────────────────────────── */
+
+.cycle-banner {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.cycle-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.state-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background: var(--surface-container);
+  color: var(--on-surface-variant);
+}
+
+.state-chip .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.btn-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-lock:hover {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-lock .lock-icon {
+  width: 14px;
+  height: 14px;
+}
+
+/* ─── Carry-Forward Panel ───────────────────────────────────────────────── */
+
+.carry-panel {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid var(--warning);
+}
+
+.carry-panel-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.carry-panel-header svg {
+  width: 16px;
+  height: 16px;
+  color: var(--warning);
+}
+
+.carry-panel-header span {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.carry-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-container-low);
+  border-radius: 4px;
+}
+
+.carry-item-title {
+  font-size: 0.875rem;
+  color: var(--on-surface);
+}
+
+.carry-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-accept, .btn-decline {
+  padding: 0.3rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: 4px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.btn-accept {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: transparent;
+}
+.btn-accept:hover {
+  background: rgba(3, 106, 106, 0.08);
+}
+
+.btn-decline {
+  color: var(--error);
+  border-color: var(--error);
+  background: transparent;
+}
+.btn-decline:hover {
+  background: rgba(159, 64, 61, 0.08);
+}
+
+/* ─── Commitment Card ───────────────────────────────────────────────────── */
+
+.commitment-card {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+  transition: background var(--duration-fast, 150ms) var(--ease-standard, ease);
+  position: relative;
+}
+.commitment-card:hover {
+  background: var(--surface);
+}
+.commitment-card:hover .edit-pencil {
+  opacity: 1;
+}
+
+.card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.drag-handle {
+  color: var(--text-muted);
+  font-size: 1rem;
+  cursor: grab;
+  user-select: none;
+  line-height: 1;
+  margin-top: 2px;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+}
+.commitment-card:hover .drag-handle {
+  opacity: 1;
+}
+
+.priority-rank {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--surface-container);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--on-surface-variant);
+}
+
+.card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.card-title {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--on-surface);
+  line-height: 1.4;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.pill-horizon {
+  background: var(--horizon-bg);
+  color: var(--horizon-text);
+}
+
+.pill-strategic {
+  background: var(--chess-strategic-bg);
+  color: var(--chess-strategic-text);
+}
+.pill-operational {
+  background: var(--chess-operational-bg);
+  color: var(--chess-operational-text);
+}
+.pill-defensive {
+  background: var(--chess-defensive-bg);
+  color: var(--chess-defensive-text);
+}
+.pill-capability {
+  background: var(--chess-capability-bg);
+  color: var(--chess-capability-text);
+}
+
+.rally-link {
+  font-size: 0.6875rem;
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.15s;
+}
+.rally-link:hover {
+  color: var(--accent-dark);
+}
+
+.unlinked {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.card-right {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+}
+
+.edit-pencil {
+  opacity: 0;
+  transition: opacity 0.15s;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+.edit-pencil:hover {
+  color: var(--accent);
+}
+
+.chevron-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: var(--text-muted);
+  transition: color 0.15s, transform 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.chevron-btn:hover {
+  color: var(--on-surface-variant);
+}
+.chevron-btn svg {
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s;
+}
+.chevron-btn.expanded svg {
+  transform: rotate(180deg);
+}
+
+/* ─── Task Bullets ──────────────────────────────────────────────────────── */
+
+.task-bullets {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--outline-variant);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.task-bullet {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+}
+
+.task-checkbox {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1.5px solid var(--outline-variant);
+  background: var(--surface-lowest);
+  margin-top: 2px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  transition: background 0.15s, border-color 0.15s;
+}
+.task-checkbox:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.task-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 5px;
+  height: 9px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.task-bullet-text.completed {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+/* ─── Add Commitment Button ─────────────────────────────────────────────── */
+
+.btn-add-commitment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1.5px dashed var(--outline-variant);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.btn-add-commitment:hover {
+  border-color: var(--accent);
+  background: rgba(3, 106, 106, 0.03);
+}
+.btn-add-commitment svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ─── Commitment Summary Strip (compact metrics bar) ───────────────────── */
+
+.commitment-summary-strip {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.75rem;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  letter-spacing: 0.01em;
+}
+
+.commitment-summary-strip .sep {
+  color: var(--outline-variant);
+  font-size: 0.625rem;
+}
+
+.commitment-summary-strip .stat-value {
+  font-weight: 600;
+  color: var(--on-surface);
+}
+
+.commitment-summary-strip .stat-label {
+  color: var(--text-muted);
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────────────────── */
+
+.side-headline {
+  font-family: 'Newsreader', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: var(--on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.rally-cry-card {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+}
+
+.rc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.625rem;
+}
+
+.rc-title {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.rc-link-btn {
+  font-size: 0.6875rem;
+  color: var(--accent);
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.rc-link-btn:hover {
+  color: var(--accent-dark);
+}
+
+.rc-objectives {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.rc-objective {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+  padding: 0.25rem 0;
+}
+
+.rc-objective-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.rc-linked-count {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  background: var(--surface-container-low);
+  padding: 0.125rem 0.5rem;
+  border-radius: 999px;
+}
+
+/* ─── Coverage Section ──────────────────────────────────────────────────── */
+
+.coverage-section {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem 1.25rem;
+}
+
+.coverage-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: 0.625rem;
+}
+
+.coverage-unlinked {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--surface-container-low);
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+
+.coverage-icon {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--warning);
+  margin-top: 1px;
+}
+
+.coverage-detail {
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+}
+
+.coverage-detail strong {
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.coverage-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+  line-height: 1.5;
+}
+
+/* ─── Tooltip for disabled ──────────────────────────────────────────────── */
+
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+}
+
+.tooltip-wrapper .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--on-surface);
+  color: #fff;
+  font-size: 0.6875rem;
+  padding: 0.375rem 0.625rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  pointer-events: none;
+  transition: opacity 0.15s;
+}
+
+.tooltip-wrapper:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ─── Staggered Fade-Up Animation ──────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-up {
+  opacity: 0;
+  animation: fadeUp 300ms var(--ease-entrance) forwards;
+}
+
+.fade-up:nth-child(1) { animation-delay: calc(0 * var(--stagger-delay)); }
+.fade-up:nth-child(2) { animation-delay: calc(1 * var(--stagger-delay)); }
+.fade-up:nth-child(3) { animation-delay: calc(2 * var(--stagger-delay)); }
+.fade-up:nth-child(4) { animation-delay: calc(3 * var(--stagger-delay)); }
+.fade-up:nth-child(5) { animation-delay: calc(4 * var(--stagger-delay)); }
+.fade-up:nth-child(6) { animation-delay: calc(5 * var(--stagger-delay)); }
+.fade-up:nth-child(7) { animation-delay: calc(6 * var(--stagger-delay)); }
+.fade-up:nth-child(8) { animation-delay: calc(7 * var(--stagger-delay)); }
+
+/* ─── Assigned Commitment Card ─────────────────────────────────────────── */
+
+.commitment-card.assigned {
+  border-left: 3px solid var(--accent);
+}
+
+.assigned-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.6875rem;
+  color: var(--accent);
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.assigned-label svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* ─── Section Subheading ───────────────────────────────────────────────── */
+
+.section-heading {
+  font-family: 'Newsreader', serif;
+  font-size: 1.125rem;
+  font-weight: 400;
+  color: var(--on-surface);
+  margin-bottom: 0.25rem;
+}
+
+/* ─── Carry-Forward Enrichments ────────────────────────────────────────── */
+
+.carry-item {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.625rem;
+}
+
+.carry-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.carry-status-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.625rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  white-space: nowrap;
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.carry-tasks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding-left: 0.25rem;
+}
+
+.carry-task {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+}
+
+.carry-task input[type="checkbox"] {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  border: 1.5px solid var(--outline-variant);
+  background: var(--surface-lowest);
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  pointer-events: none;
+}
+
+.carry-task input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.carry-task input[type="checkbox"]:checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 1px;
+  width: 4px;
+  height: 7px;
+  border: solid #fff;
+  border-width: 0 1.5px 1.5px 0;
+  transform: rotate(45deg);
+}
+
+.carry-task .done {
+  text-decoration: line-through;
+  color: var(--text-muted);
+}
+
+.carry-notes {
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+  font-style: italic;
+  padding: 0.5rem 0.625rem;
+  background: var(--surface-container);
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.carry-notes strong {
+  font-style: normal;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+/* ─── Cycle History Selector ───────────────────────────────────────────── */
+
+.cycle-history {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.cycle-history-pill {
+  padding: 0.25rem 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: 999px;
+  border: 1px solid var(--outline-variant);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast), border-color var(--duration-fast);
+  white-space: nowrap;
+}
+
+.cycle-history-pill:hover {
+  background: var(--surface-container-low);
+  color: var(--on-surface-variant);
+}
+
+.cycle-history-pill.current {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ─── Rally Cry Description ────────────────────────────────────────────── */
+
+.rc-description {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.4;
+  margin-bottom: 0.625rem;
+}
+
+/* ─── Reconciliation Hint ──────────────────────────────────────────────── */
+
+.recon-hint {
+  margin-top: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1.5px dashed var(--outline-variant);
+  border-radius: 4px;
+  background: var(--surface-container-low);
+}
+
+.recon-hint-label {
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+  font-style: italic;
+}
+
+.recon-hint-fields {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+}
+
+.recon-hint-field {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.recon-hint-field .field-label {
+  font-weight: 500;
+  color: var(--on-surface);
+  font-size: 0.75rem;
+}
+
+.recon-hint-field .field-placeholder {
+  padding: 0.2rem 0.625rem;
+  border-bottom: 1px solid var(--outline-variant);
+  min-width: 80px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* ─── Responsive ────────────────────────────────────────────────────────── */
+
+@media (max-width: 900px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+  .col-side {
+    position: static;
+  }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAV BAR
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-top">
+      <a class="nav-brand" href="#">compass</a>
+      <span class="nav-cycle">Week 6 &middot; March 16&ndash;20, 2026</span>
+      <div class="nav-right">
+        <div class="avatar">JS</div>
+        <svg class="gear-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 010 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 01-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 01-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 01-1.369-.49l-1.297-2.247a1.125 1.125 0 01.26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 010-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 01-.26-1.43l1.297-2.247a1.125 1.125 0 011.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <a class="nav-tab active">My Week</a>
+      <a class="nav-tab">My Team</a>
+      <a class="nav-tab">The Briefing</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PAGE CONTENT
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<main class="page">
+
+  <!-- ─── LEFT COLUMN ─────────────────────────────────────────────────────── -->
+  <div class="col-main">
+
+    <!-- Cycle State Banner -->
+    <div class="cycle-banner">
+      <div class="cycle-banner-left">
+        <div class="state-chip">
+          <span class="dot"></span>
+          Draft &mdash; ready to plan
+        </div>
+        <div class="cycle-history">
+          <button class="cycle-history-pill current">Week 6</button>
+          <button class="cycle-history-pill">Week 5</button>
+          <button class="cycle-history-pill">Week 4</button>
+          <button class="cycle-history-pill">Week 3</button>
+        </div>
+      </div>
+      <div class="tooltip-wrapper" id="lock-wrapper">
+        <button class="btn-lock" id="btn-lock">
+          <svg class="lock-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"/>
+          </svg>
+          Lock Commitments
+        </button>
+        <span class="tooltip-text" id="lock-tooltip" style="display:none;">Add at least one commitment first</span>
+      </div>
+    </div>
+
+    <!-- Commitment Summary Strip -->
+    <div class="commitment-summary-strip tabular-nums">
+      <span class="stat-value">6</span><span class="stat-label">commitments</span>
+      <span class="sep">&middot;</span>
+      <span class="stat-label">Strategic</span> <span class="stat-value">2</span>
+      <span class="sep">&middot;</span>
+      <span class="stat-label">Operational</span> <span class="stat-value">2</span>
+      <span class="sep">&middot;</span>
+      <span class="stat-label">Defensive</span> <span class="stat-value">2</span>
+      <span class="sep">&middot;</span>
+      <span class="stat-value">5</span><span class="stat-label"> of </span><span class="stat-value">6</span><span class="stat-label"> linked</span>
+      <span class="sep">&middot;</span>
+      <span class="stat-value">2</span><span class="stat-label"> assigned</span>
+    </div>
+
+    <!-- Carry-Forward Panel -->
+    <div class="carry-panel">
+      <div class="carry-panel-header">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
+        </svg>
+        <span>1 item carried from last week</span>
+      </div>
+      <div class="carry-item">
+        <div class="carry-item-top">
+          <span class="carry-item-title">Refactor payment webhook handler</span>
+          <span class="carry-status-pill">Partially Completed</span>
+        </div>
+        <div class="carry-tasks">
+          <label class="carry-task">
+            <input type="checkbox" checked>
+            <span class="done">Audit existing webhook endpoints</span>
+          </label>
+          <label class="carry-task">
+            <input type="checkbox" checked>
+            <span class="done">Write integration tests for Stripe events</span>
+          </label>
+          <label class="carry-task">
+            <input type="checkbox">
+            <span>Migrate handler to async queue pattern</span>
+          </label>
+        </div>
+        <div class="carry-notes">
+          <strong>Why carried:</strong> Blocked on legal review &mdash; pricing terms not approved. Async migration depends on approved payment tiers.
+        </div>
+        <div class="carry-actions" style="align-self:flex-end;">
+          <button class="btn-accept">Accept</button>
+          <button class="btn-decline">Decline</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Assigned to You -->
+    <h3 class="section-heading">Assigned to You</h3>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+
+      <!-- Assigned Card A -->
+      <div class="commitment-card assigned fade-up">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank" style="background:var(--accent);color:#fff;">A</span>
+          <div class="card-content">
+            <div class="assigned-label">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
+              </svg>
+              Assigned by Sarah Chen
+            </div>
+            <div class="card-title">Prepare board deck financial summary</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">EOW</span>
+              <span class="pill pill-strategic">Strategic</span>
+              <a class="rally-link" href="#">&rarr; Launch Enterprise Tier</a>
+            </div>
+            <div class="task-bullets" id="bullets-a1" style="display:none;">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Pull Q1 revenue actuals from finance</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Draft enterprise pipeline slide</span>
+              </label>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn" data-target="bullets-a1" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Assigned Card B -->
+      <div class="commitment-card assigned fade-up">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank" style="background:var(--accent);color:#fff;">A</span>
+          <div class="card-content">
+            <div class="assigned-label">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0"/>
+              </svg>
+              Assigned by Sarah Chen
+            </div>
+            <div class="card-title">Review and approve vendor security questionnaire</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">EOD</span>
+              <span class="pill pill-defensive">Defensive</span>
+              <a class="rally-link" href="#">&rarr; SOC2 Certification</a>
+            </div>
+            <div class="task-bullets" id="bullets-a2" style="display:none;">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Review sections 3-7 of vendor questionnaire</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Confirm data residency answers with infra team</span>
+              </label>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn" data-target="bullets-a2" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- My Commitments -->
+    <h3 class="section-heading">My Commitments</h3>
+    <div style="display:flex;flex-direction:column;gap:0.75rem;">
+
+      <!-- Card #1 — EXPANDED -->
+      <div class="commitment-card fade-up" id="card-1">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank">#1</span>
+          <div class="card-content">
+            <div class="card-title">Finalize enterprise pricing model</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">EOW</span>
+              <span class="pill pill-strategic">Strategic</span>
+              <a class="rally-link" href="#">&rarr; Launch Enterprise Tier</a>
+            </div>
+            <!-- Expanded task bullets -->
+            <div class="task-bullets" id="bullets-1">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox" checked>
+                <span class="task-bullet-text completed">Draft pricing tiers with finance team</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Validate against competitor benchmarks</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Get sign-off from VP Sales</span>
+              </label>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn expanded" data-target="bullets-1" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card #2 -->
+      <div class="commitment-card fade-up" id="card-2">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank">#2</span>
+          <div class="card-content">
+            <div class="card-title">Customer onboarding flow redesign</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">AFTERNOON</span>
+              <span class="pill pill-operational">Operational</span>
+              <a class="rally-link" href="#">&rarr; Reduce Churn to &lt;2%</a>
+            </div>
+            <div class="task-bullets" id="bullets-2" style="display:none;">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Map current onboarding journey</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Prototype new welcome sequence</span>
+              </label>
+            </div>
+            <!-- Reconciliation hint — shows what appears during RECONCILING state -->
+            <div class="recon-hint">
+              <div class="recon-hint-label">Appears during reconciliation</div>
+              <div class="recon-hint-fields">
+                <div class="recon-hint-field">
+                  <span class="field-label">Status:</span>
+                  <span class="field-placeholder">Select&hellip;</span>
+                </div>
+                <div class="recon-hint-field">
+                  <span class="field-label">Notes:</span>
+                  <span class="field-placeholder">What happened?</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn" data-target="bullets-2" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card #3 -->
+      <div class="commitment-card fade-up" id="card-3">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank">#3</span>
+          <div class="card-content">
+            <div class="card-title">SOC2 evidence collection for AWS</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">EOD</span>
+              <span class="pill pill-defensive">Defensive</span>
+              <a class="rally-link" href="#">&rarr; SOC2 Certification</a>
+            </div>
+            <div class="task-bullets" id="bullets-3" style="display:none;">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox" checked>
+                <span class="task-bullet-text completed">Export CloudTrail logs</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Document IAM policy review</span>
+              </label>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn" data-target="bullets-3" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card #4 -->
+      <div class="commitment-card fade-up" id="card-4">
+        <div class="card-top">
+          <span class="drag-handle">&#10303;</span>
+          <span class="priority-rank">#4</span>
+          <div class="card-content">
+            <div class="card-title">Team standup facilitation</div>
+            <div class="card-meta">
+              <span class="pill pill-horizon">MORNING</span>
+              <span class="pill pill-operational">Operational</span>
+              <span class="unlinked">Unlinked</span>
+            </div>
+            <div class="task-bullets" id="bullets-4" style="display:none;">
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Prepare daily agenda</span>
+              </label>
+              <label class="task-bullet">
+                <input type="checkbox" class="task-checkbox">
+                <span class="task-bullet-text">Run standup and capture blockers</span>
+              </label>
+            </div>
+          </div>
+          <div class="card-right">
+            <svg class="edit-pencil" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+            </svg>
+            <button class="chevron-btn" data-target="bullets-4" onclick="toggleBullets(this)">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Add Commitment -->
+    <button class="btn-add-commitment">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+      </svg>
+      Add commitment
+    </button>
+
+
+  </div>
+
+  <!-- ─── RIGHT COLUMN ────────────────────────────────────────────────────── -->
+  <div class="col-side">
+
+    <div>
+      <h2 class="side-headline">This Week's Priorities</h2>
+      <span class="label" style="margin-top:0.25rem;display:block;">Active Rally Cries</span>
+    </div>
+
+    <!-- Rally Cry 1 -->
+    <div class="rally-cry-card">
+      <div class="rc-header">
+        <span class="rc-title">Launch Enterprise Tier</span>
+        <a class="rc-link-btn" href="#">Link &rarr;</a>
+      </div>
+      <div class="rc-description">Deliver enterprise pricing, sales tools, and multi-tenant infrastructure by Week 10.</div>
+      <div class="rc-objectives">
+        <div class="rc-objective">
+          <span class="rc-objective-title">Close 3 enterprise design partners</span>
+          <span class="rc-linked-count">2 linked</span>
+        </div>
+        <div class="rc-objective">
+          <span class="rc-objective-title">Ship self-serve enterprise onboarding</span>
+          <span class="rc-linked-count">1 linked</span>
+        </div>
+        <div class="rc-objective">
+          <span class="rc-objective-title">Enterprise pricing approved by board</span>
+          <span class="rc-linked-count">1 linked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rally Cry 2 -->
+    <div class="rally-cry-card">
+      <div class="rc-header">
+        <span class="rc-title">Reduce Churn to &lt;2%</span>
+        <a class="rc-link-btn" href="#">Link &rarr;</a>
+      </div>
+      <div class="rc-description">Cut monthly churn from 3.1% to under 2% through onboarding improvements and proactive health scoring.</div>
+      <div class="rc-objectives">
+        <div class="rc-objective">
+          <span class="rc-objective-title">Identify top 5 churn drivers</span>
+          <span class="rc-linked-count">1 linked</span>
+        </div>
+        <div class="rc-objective">
+          <span class="rc-objective-title">Redesign onboarding experience</span>
+          <span class="rc-linked-count">1 linked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rally Cry 3 -->
+    <div class="rally-cry-card">
+      <div class="rc-header">
+        <span class="rc-title">SOC2 Certification</span>
+        <a class="rc-link-btn" href="#">Link &rarr;</a>
+      </div>
+      <div class="rc-description">Achieve SOC2 Type II certification by end of Q1 to unblock enterprise sales pipeline.</div>
+      <div class="rc-objectives">
+        <div class="rc-objective">
+          <span class="rc-objective-title">Complete evidence collection by Q1</span>
+          <span class="rc-linked-count">1 linked</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Coverage Section -->
+    <div class="coverage-section">
+      <div class="coverage-title">Your Coverage</div>
+      <div class="coverage-unlinked">
+        <svg class="coverage-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"/>
+        </svg>
+        <div class="coverage-detail">
+          You have <strong>1 unlinked commitment</strong>
+          <br>
+          <span style="color:var(--on-surface);">Team standup facilitation</span>
+        </div>
+      </div>
+      <div class="coverage-note">
+        Link to a rally cry if this work relates to one.
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+function toggleBullets(btn) {
+  var targetId = btn.getAttribute('data-target');
+  var bullets = document.getElementById(targetId);
+  if (!bullets) return;
+
+  var isExpanded = btn.classList.contains('expanded');
+
+  if (isExpanded) {
+    bullets.style.display = 'none';
+    btn.classList.remove('expanded');
+  } else {
+    bullets.style.display = 'flex';
+    btn.classList.add('expanded');
+  }
+}
+</script>
+
+</body>
+</html>

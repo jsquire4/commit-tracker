@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass - My Week | Executive Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-secondary": "#e0fffe",
+                        "surface": "#f9f9f7",
+                        "surface-bright": "#f9f9f7",
+                        "outline": "#767c79",
+                        "surface-dim": "#d4dcd8",
+                        "tertiary-container": "#dbdafb",
+                        "tertiary-fixed-dim": "#cdccec",
+                        "inverse-primary": "#adc8f5",
+                        "on-error": "#fff7f6",
+                        "primary-fixed-dim": "#bed6ff",
+                        "surface-container": "#ebefec",
+                        "inverse-on-surface": "#9c9d9c",
+                        "secondary-fixed": "#a0f0f0",
+                        "on-tertiary-fixed": "#393a53",
+                        "secondary-fixed-dim": "#92e2e1",
+                        "on-tertiary-container": "#4b4c67",
+                        "tertiary-dim": "#50516c",
+                        "primary-container": "#d5e3ff",
+                        "primary-fixed": "#d5e3ff",
+                        "on-tertiary": "#fbf7ff",
+                        "on-surface-variant": "#5a605e",
+                        "tertiary": "#5c5d78",
+                        "secondary": "#036a6a",
+                        "on-secondary-fixed": "#004747",
+                        "primary": "#455f87",
+                        "surface-variant": "#dee4e0",
+                        "primary-dim": "#39537a",
+                        "error-container": "#fe8983",
+                        "on-primary-fixed-variant": "#425c83",
+                        "surface-container-high": "#e5e9e6",
+                        "secondary-dim": "#005d5d",
+                        "error-dim": "#4e0309",
+                        "tertiary-fixed": "#dbdafb",
+                        "on-tertiary-fixed-variant": "#555671",
+                        "outline-variant": "#adb3b0",
+                        "on-surface": "#2d3432",
+                        "on-primary": "#f6f7ff",
+                        "surface-container-low": "#f2f4f2",
+                        "on-error-container": "#752121",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed-variant": "#006666",
+                        "surface-tint": "#455f87",
+                        "on-primary-fixed": "#254065",
+                        "on-secondary-container": "#005c5c",
+                        "surface-container-highest": "#dee4e0",
+                        "on-primary-container": "#385379",
+                        "on-background": "#2d3432",
+                        "background": "#f9f9f7",
+                        "error": "#9f403d",
+                        "inverse-surface": "#0c0f0e",
+                        "secondary-container": "#a0f0f0"
+                    },
+                    fontFamily: {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f7; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24; vertical-align: middle; }
+        .whisper-shadow { box-shadow: 0 12px 32px -4px rgba(45, 52, 50, 0.06); }
+        .serif { font-family: 'Newsreader', serif; }
+        .ghost-border { border-bottom: 1px solid rgba(173, 179, 176, 0.2); }
+    </style>
+</head>
+<body class="text-on-surface antialiased">
+<!-- TopNavBar Execution -->
+<header class="flex justify-between items-center w-full px-8 h-16 bg-[#F9F9F7] dark:bg-slate-900 border-b border-slate-200/50 dark:border-slate-800 sticky top-0 z-50">
+<div class="flex items-center gap-12">
+<span class="text-2xl font-serif italic text-[#1E3A5F] dark:text-blue-400">Compass</span>
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="text-[#1E3A5F] border-b-2 border-[#1E3A5F] pb-1 font-medium font-['Newsreader'] serif tracking-tight" href="#">My Week</a>
+<a class="text-slate-500 hover:text-[#1E3A5F] transition-colors font-['Newsreader'] serif tracking-tight" href="#">My Team</a>
+<a class="text-slate-500 hover:text-[#1E3A5F] transition-colors font-['Newsreader'] serif tracking-tight" href="#">The Briefing</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-outline text-sm">search</span>
+<input class="bg-surface-container-low border-none rounded-sm pl-10 pr-4 py-1.5 text-sm w-64 focus:ring-1 focus:ring-secondary transition-all" placeholder="Search Intel..." type="text"/>
+</div>
+<div class="flex items-center gap-4 text-outline">
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-secondary transition-colors" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-64px)]">
+<!-- SideNavBar Execution -->
+<aside class="fixed left-0 top-16 bottom-0 w-64 flex flex-col p-4 bg-[#F2F4F2] dark:bg-slate-950 border-r border-slate-200/50">
+<div class="mb-8 px-2">
+<h3 class="text-xs uppercase tracking-[0.1em] text-outline font-semibold mb-1">Executive Portal</h3>
+<p class="text-sm text-on-surface-variant italic">Individual Contributor</p>
+</div>
+<nav class="flex flex-col gap-1 flex-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-white/30 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="dashboard">dashboard</span>
+<span class="text-sm">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-[#036A6A] font-semibold bg-white/50 rounded-sm" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="event_note">event_note</span>
+<span class="text-sm">Time Entry</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-white/30 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="analytics">analytics</span>
+<span class="text-sm">Project Status</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-white/30 hover:translate-x-1 transition-all duration-200 rounded-sm" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="menu_book">menu_book</span>
+<span class="text-sm">Internal Intel</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 hover:bg-white/30 hover:translate-x-1 transition-all duration-200 rounded-sm mt-auto" href="#">
+<span class="material-symbols-outlined text-lg" data-icon="settings">settings</span>
+<span class="text-sm">Settings</span>
+</a>
+</nav>
+<button class="mt-6 w-full py-2.5 bg-secondary text-on-secondary rounded-sm font-medium text-sm hover:opacity-90 active:scale-95 transition-all shadow-sm">
+                Submit Week
+            </button>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 flex-1 p-12 max-w-7xl mx-auto grid grid-cols-12 gap-12">
+<!-- LEFT COLUMN: Commitments (65%) -->
+<section class="col-span-8 space-y-8">
+<div class="flex items-end justify-between">
+<div>
+<h1 class="text-4xl serif font-light text-on-surface tracking-tight mb-2">My Commitments</h1>
+<div class="flex items-center gap-2">
+<span class="flex items-center gap-1.5 px-2 py-0.5 bg-surface-container-highest text-on-surface text-[10px] font-bold uppercase tracking-wider rounded-sm">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">lock</span>
+                                Week 6 · Locked
+                            </span>
+</div>
+</div>
+</div>
+<!-- Commitment Stack -->
+<div class="space-y-4">
+<!-- Card 1 -->
+<div class="bg-surface-container-lowest p-5 rounded-sm whisper-shadow flex items-start gap-4 border border-transparent hover:border-outline-variant/30 transition-all group">
+<div class="flex flex-col items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-outline cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" data-icon="drag_indicator">drag_indicator</span>
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container text-outline text-[10px] font-bold">#1</span>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex justify-between">
+<h3 class="text-lg font-medium text-[#1A1A2E]">Finalize enterprise pricing model</h3>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">expand_more</span>
+</div>
+<div class="flex items-center gap-4 text-sm">
+<span class="flex items-center gap-1 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-base">schedule</span> 12h
+                                </span>
+<span class="px-2 py-0.5 bg-[#E8EEF4] text-primary text-[11px] font-semibold rounded-sm uppercase tracking-wide">Strategic</span>
+<a class="text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    → Launch Enterprise Tier
+                                </a>
+</div>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="bg-surface-container-lowest p-5 rounded-sm whisper-shadow flex items-start gap-4 border border-transparent hover:border-outline-variant/30 transition-all group">
+<div class="flex flex-col items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-outline cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" data-icon="drag_indicator">drag_indicator</span>
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container text-outline text-[10px] font-bold">#2</span>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex justify-between">
+<h3 class="text-lg font-medium text-[#1A1A2E]">SOC2 Evidence Collection: Section A-F</h3>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">expand_more</span>
+</div>
+<div class="flex items-center gap-4 text-sm">
+<span class="flex items-center gap-1 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-base">schedule</span> 8h
+                                </span>
+<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[11px] font-semibold rounded-sm uppercase tracking-wide">Operational</span>
+<a class="text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    → SOC2 Certification
+                                </a>
+</div>
+</div>
+</div>
+<!-- Card 3 (Unlinked) -->
+<div class="bg-surface-container-lowest p-5 rounded-sm whisper-shadow flex items-start gap-4 border border-transparent hover:border-outline-variant/30 transition-all group">
+<div class="flex flex-col items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-outline cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" data-icon="drag_indicator">drag_indicator</span>
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container text-outline text-[10px] font-bold">#3</span>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex justify-between">
+<h3 class="text-lg font-medium text-[#1A1A2E]">Internal Team Offsite Planning</h3>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">expand_more</span>
+</div>
+<div class="flex items-center gap-4 text-sm">
+<span class="flex items-center gap-1 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-base">schedule</span> 4h
+                                </span>
+<span class="px-2 py-0.5 bg-surface-container-highest text-on-surface-variant text-[11px] font-semibold rounded-sm uppercase tracking-wide">Culture</span>
+<span class="flex items-center gap-1 text-error text-[11px] font-bold uppercase tracking-wider italic">
+<span class="material-symbols-outlined text-xs">link_off</span> Unlinked
+                                </span>
+</div>
+</div>
+</div>
+<!-- Card 4 -->
+<div class="bg-surface-container-lowest p-5 rounded-sm whisper-shadow flex items-start gap-4 border border-transparent hover:border-outline-variant/30 transition-all group">
+<div class="flex flex-col items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-outline cursor-grab opacity-0 group-hover:opacity-100 transition-opacity" data-icon="drag_indicator">drag_indicator</span>
+<span class="w-6 h-6 flex items-center justify-center rounded-full bg-surface-container text-outline text-[10px] font-bold">#4</span>
+</div>
+<div class="flex-1 space-y-3">
+<div class="flex justify-between">
+<h3 class="text-lg font-medium text-[#1A1A2E]">Sales Enablement Workshop - AWS Provisioning</h3>
+<span class="material-symbols-outlined text-outline cursor-pointer hover:text-on-surface">expand_more</span>
+</div>
+<div class="flex items-center gap-4 text-sm">
+<span class="flex items-center gap-1 text-on-surface-variant font-medium">
+<span class="material-symbols-outlined text-base">schedule</span> 10h
+                                </span>
+<span class="px-2 py-0.5 bg-[#E8EEF4] text-primary text-[11px] font-semibold rounded-sm uppercase tracking-wide">Strategic</span>
+<a class="text-secondary font-medium hover:underline flex items-center gap-1" href="#">
+                                    → Launch Enterprise Tier
+                                </a>
+</div>
+</div>
+</div>
+</div>
+<button class="flex items-center gap-2 text-outline hover:text-secondary transition-colors font-medium text-sm py-2 px-4 border border-dashed border-outline-variant rounded-sm w-full justify-center">
+<span class="material-symbols-outlined text-base">add</span> + Add commitment
+                </button>
+<!-- Weekly Summary -->
+<div class="pt-8 border-t border-outline-variant/20 flex justify-between items-center text-on-surface-variant">
+<div class="space-y-1">
+<span class="text-[10px] font-bold uppercase tracking-widest block">Resource Load</span>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-semibold text-on-surface">34h</span>
+<span class="text-sm pb-1">/ 40h committed</span>
+</div>
+</div>
+<div class="h-10 w-px bg-outline-variant/20"></div>
+<div class="space-y-1">
+<span class="text-[10px] font-bold uppercase tracking-widest block">Portfolio Health</span>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-semibold text-on-surface">70%</span>
+<span class="text-sm pb-1">Strategic Mix</span>
+</div>
+</div>
+<div class="h-10 w-px bg-outline-variant/20"></div>
+<div class="space-y-1">
+<span class="text-[10px] font-bold uppercase tracking-widest block">Alignment Score</span>
+<div class="flex items-end gap-2">
+<span class="text-2xl font-semibold text-on-surface">92%</span>
+<span class="text-sm pb-1">Coverage</span>
+</div>
+</div>
+</div>
+</section>
+<!-- RIGHT COLUMN: Strategic Context (35%) -->
+<section class="col-span-4 space-y-8">
+<div class="bg-surface-container-low p-8 rounded-sm h-full">
+<h2 class="text-2xl serif font-light text-on-surface mb-6">This Week's Priorities</h2>
+<div class="space-y-8">
+<!-- Rally Cry 1 -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h4 class="text-xs font-bold uppercase tracking-wider text-primary">Launch Enterprise Tier</h4>
+<a class="text-secondary text-xs font-semibold flex items-center gap-1 hover:underline" href="#">Link <span class="material-symbols-outlined text-[14px]">arrow_forward</span></a>
+</div>
+<p class="text-sm leading-relaxed text-on-surface-variant">
+                                Sales playbook and AWS provisioning are the focus areas. <span class="font-semibold text-on-surface">Target: Week 8 launch.</span>
+</p>
+<div class="h-0.5 w-12 bg-secondary/30"></div>
+</div>
+<!-- Rally Cry 2 -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h4 class="text-xs font-bold uppercase tracking-wider text-primary">Reduce Churn to &lt;2%</h4>
+<a class="text-secondary text-xs font-semibold flex items-center gap-1 hover:underline" href="#">Link <span class="material-symbols-outlined text-[14px]">arrow_forward</span></a>
+</div>
+<p class="text-sm leading-relaxed text-on-surface-variant">
+                                Risk scoring model needs staffing. NPS survey analysis in progress.
+                            </p>
+<div class="h-0.5 w-12 bg-outline-variant/30"></div>
+</div>
+<!-- Rally Cry 3 -->
+<div class="space-y-3">
+<div class="flex items-center justify-between">
+<h4 class="text-xs font-bold uppercase tracking-wider text-primary">SOC2 Certification</h4>
+<a class="text-secondary text-xs font-semibold flex items-center gap-1 hover:underline" href="#">Link <span class="material-symbols-outlined text-[14px]">arrow_forward</span></a>
+</div>
+<p class="text-sm leading-relaxed text-on-surface-variant">
+                                Evidence collection at <span class="text-secondary font-semibold">70%</span>. On track for audit.
+                            </p>
+<div class="h-0.5 w-12 bg-secondary/30"></div>
+</div>
+</div>
+<!-- Coverage Section -->
+<div class="mt-12 pt-8 border-t border-outline-variant/30">
+<h4 class="text-xs font-bold uppercase tracking-widest text-on-surface mb-4">Your Coverage</h4>
+<div class="bg-surface-container p-4 rounded-sm border border-outline-variant/10">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-error text-xl mt-0.5">warning</span>
+<div class="space-y-1">
+<p class="text-xs text-on-surface-variant font-medium">Gaps Identified</p>
+<p class="text-[11px] leading-snug text-slate-500">
+                                        You have <span class="font-bold text-on-surface italic">0 commitments</span> linked to <span class="underline">Churn Reduction</span>. This priority may be neglected this week.
+                                    </p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+</div>
+<!-- Background Pattern/Texture Description (Data-Alt) -->
+<div class="fixed inset-0 pointer-events-none opacity-[0.03] z-[-1]" data-alt="A subtle texture of high-quality paper parchment." style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUybdU0Dc6hX-dh7woirMd96PeAGwcr5dh38DB4gkPGD34TYcYFxUROLuJBZr0SJP8qa6syThB_M-Lwa8jQ5YdAAOSG2HmBr3XN9J8OQ8L-IrMC91AegEVsNIGI48E9WqgNWqYRMXG8xl1N1PVZ6wmLJ_GEOdQK7V3fpkpIxUpLEpHVwu07yCfcVXW6IvszsVu4If1ycYZMw8FUBYtwCRXnpovOqmodS55pudw_t_l7-EmXMxdDFMrcRVXJYPW2CMqIO5f_djgfbs');">
+</div>
+</body></html>

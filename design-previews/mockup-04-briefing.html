@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compass — The Briefing</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════════════════════
+   Compass Design System — "Executive Intelligence"
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* Surface */
+  --surface:               #F9F9F7;
+  --surface-lowest:        #FFFFFF;
+  --surface-container-low: #F2F4F2;
+  --surface-container:     #EEEEEC;
+  --surface-container-high:#E8E8E6;
+
+  /* Text */
+  --on-surface:            #2D3432;
+  --on-surface-variant:    #5A605E;
+  --text-muted:            #94A3B8;
+
+  /* Accent */
+  --accent:                #036A6A;
+  --accent-dark:           #005050;
+
+  /* Borders */
+  --outline-variant:       #E8E5E0;
+  --ghost-border:          rgba(232, 229, 224, 0.15);
+
+  /* Status */
+  --error:                 #9F403D;
+  --warning:               #C2860B;
+  --navy:                  #455F87;
+
+  /* Whisper shadow */
+  --whisper-shadow:        0 12px 32px -4px rgba(45, 52, 50, 0.06);
+
+  /* Motion */
+  --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+  --duration-fast: 150ms;
+  --duration-standard: 200ms;
+  --duration-entrance: 300ms;
+  --duration-slow: 400ms;
+  --stagger-delay: 40ms;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--surface);
+  color: var(--on-surface);
+  line-height: 1.5;
+}
+
+/* ─── Typography ────────────────────────────────────────────────────────── */
+
+.font-serif   { font-family: 'Newsreader', serif; }
+.font-sans    { font-family: 'Inter', sans-serif; }
+.tabular-nums { font-variant-numeric: tabular-nums; }
+
+.label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: var(--text-muted);
+}
+
+/* ─── Nav ───────────────────────────────────────────────────────────────── */
+
+.nav {
+  background: var(--surface-lowest);
+  position: sticky;
+  top: 0;
+  z-index: 30;
+}
+
+.nav-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.nav-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+}
+
+.nav-brand {
+  font-family: 'Newsreader', serif;
+  font-size: 1.25rem;
+  font-variant: small-caps;
+  letter-spacing: 0.08em;
+  color: var(--on-surface);
+  text-decoration: none;
+}
+
+.nav-cycle {
+  font-size: 0.875rem;
+  color: var(--on-surface-variant);
+}
+
+.nav-right {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.02em;
+}
+
+.gear-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color var(--duration-fast);
+}
+.gear-icon:hover { color: var(--on-surface-variant); }
+
+.nav-tabs {
+  display: flex;
+  gap: 0;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.nav-tab {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  transition: color var(--duration-fast), border-color var(--duration-fast);
+  cursor: pointer;
+}
+.nav-tab:hover {
+  color: var(--on-surface-variant);
+}
+.nav-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ─── Layout ────────────────────────────────────────────────────────────── */
+
+.page {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  display: grid;
+  grid-template-columns: 70% 30%;
+  gap: 2rem;
+  align-items: start;
+}
+
+.col-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.col-side {
+  position: sticky;
+  top: 120px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 140px);
+}
+
+/* ─── Cards ─────────────────────────────────────────────────────────────── */
+
+.card {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1.5rem;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.card:hover {
+  background: var(--surface);
+}
+
+/* ─── AI Briefing Section ───────────────────────────────────────────────── */
+
+.briefing-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.briefing-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: var(--text-muted);
+}
+
+.btn-export-pdf {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0.3rem 0.625rem;
+  cursor: pointer;
+  transition: background var(--duration-fast), color var(--duration-fast);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btn-export-pdf:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.btn-export-pdf:active {
+  transform: translateY(1px);
+}
+
+.briefing-headline {
+  font-family: 'Newsreader', serif;
+  font-size: 1.5rem;
+  color: var(--on-surface);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.briefing-body {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: var(--on-surface);
+  margin-bottom: 1.5rem;
+}
+
+.briefing-subheading {
+  font-family: 'Newsreader', serif;
+  font-size: 1.125rem;
+  color: var(--on-surface);
+  margin-bottom: 0.75rem;
+  font-weight: 400;
+}
+
+.focus-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.focus-list li {
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  color: var(--on-surface);
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.focus-arrow {
+  color: var(--accent);
+  font-weight: 500;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+/* ─── Sources & Validation ─────────────────────────────────────────────── */
+
+.sources-section {
+  margin-top: 1.5rem;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 1rem;
+}
+
+.sources-toggle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--duration-fast);
+}
+
+.sources-toggle:hover {
+  color: var(--on-surface-variant);
+}
+
+.sources-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--duration-entrance) var(--ease-entrance),
+              opacity var(--duration-entrance) var(--ease-entrance);
+}
+
+.sources-content.expanded {
+  max-height: 400px;
+  opacity: 1;
+}
+
+.sources-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  padding-left: 0;
+}
+
+.sources-list li {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--on-surface-variant);
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.sources-list li .source-ref {
+  font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.sources-list li a {
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  margin-left: auto;
+  transition: color var(--duration-fast);
+}
+
+.sources-list li a:hover {
+  color: var(--accent-dark);
+  text-decoration: underline;
+}
+
+.sources-note {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 0.75rem;
+  font-style: italic;
+}
+
+/* ─── Metrics Strip ─────────────────────────────────────────────────────── */
+
+.metrics-strip {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.75rem;
+}
+
+.metric-card {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1rem;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.metric-card:hover {
+  background: var(--surface);
+}
+
+.metric-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: var(--text-muted);
+  margin-bottom: 0.375rem;
+}
+
+.metric-value {
+  font-family: 'Newsreader', serif;
+  font-size: 1.5rem;
+  color: var(--on-surface);
+  font-variant-numeric: tabular-nums;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.metric-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.dot-teal { background: var(--accent); }
+.dot-amber { background: var(--warning); }
+
+/* ─── Rally Cry Coverage ────────────────────────────────────────────────── */
+
+.section-heading {
+  font-family: 'Newsreader', serif;
+  font-size: 1.25rem;
+  color: var(--on-surface);
+  margin-bottom: 1rem;
+  font-weight: 400;
+}
+
+.rally-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.rally-card {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  padding: 1.25rem;
+  border-left: 3px solid transparent;
+  transition: background var(--duration-fast) var(--ease-standard);
+}
+
+.rally-card:hover {
+  background: var(--surface);
+}
+
+.rally-card.gap-warning {
+  border-left-color: var(--warning);
+}
+
+.rally-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: 0.25rem;
+}
+
+.rally-description {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  margin-bottom: 0.625rem;
+}
+
+.rally-meta {
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+  margin-bottom: 0.875rem;
+}
+
+.rally-objectives {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 0.875rem;
+}
+
+.rally-objectives li {
+  font-size: 0.8125rem;
+  color: var(--on-surface-variant);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.rally-objectives li .linked-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.rally-objectives li .linked-count.amber {
+  color: var(--warning);
+}
+
+/* ─── Rally Cry Drill-Down ─────────────────────────────────────────────── */
+
+.rally-drilldown {
+  margin-top: 0.5rem;
+  border-top: 1px solid var(--outline-variant);
+  padding-top: 0.625rem;
+}
+
+.rally-drilldown-toggle {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--duration-fast);
+}
+
+.rally-drilldown-toggle:hover {
+  color: var(--on-surface-variant);
+}
+
+.rally-drilldown-content {
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height var(--duration-entrance) var(--ease-entrance),
+              opacity var(--duration-entrance) var(--ease-entrance);
+}
+
+.rally-drilldown-content.expanded {
+  max-height: 300px;
+  opacity: 1;
+}
+
+.commitment-group {
+  margin-top: 0.5rem;
+}
+
+.commitment-person {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--on-surface);
+  margin-bottom: 0.125rem;
+}
+
+.commitment-items {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.75rem;
+  color: var(--on-surface-variant);
+  line-height: 1.5;
+  padding-left: 0.75rem;
+  margin-bottom: 0.375rem;
+}
+
+/* ─── Team Health Table ─────────────────────────────────────────────────── */
+
+.health-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.health-table thead th {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  padding: 0.75rem 0.75rem;
+  text-align: left;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.health-table thead th:not(:first-child) {
+  text-align: right;
+}
+
+.health-table tbody tr {
+  transition: background var(--duration-fast) var(--ease-standard);
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  position: relative;
+}
+
+.health-table tbody tr:hover {
+  background: var(--surface-container-low);
+}
+
+.health-table tbody tr.drift-row {
+  border-left-color: var(--warning);
+}
+
+.health-table tbody td {
+  font-size: 0.875rem;
+  color: var(--on-surface);
+  padding: 0.75rem 0.75rem;
+  border-bottom: 1px solid var(--ghost-border);
+  font-variant-numeric: tabular-nums;
+}
+
+.health-table tbody td:not(:first-child) {
+  text-align: right;
+}
+
+.health-table tbody td:first-child {
+  font-weight: 500;
+}
+
+.health-table tbody td.td-chevron {
+  width: 2rem;
+  text-align: right;
+  padding-right: 1rem;
+}
+
+.row-chevron {
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--duration-fast) var(--ease-standard);
+  font-size: 0.8125rem;
+}
+
+.health-table tbody tr:hover .row-chevron {
+  opacity: 1;
+}
+
+.drift-signal {
+  font-size: 0.8125rem;
+}
+
+.drift-sustained {
+  color: var(--warning);
+  font-weight: 500;
+}
+
+.drift-emerging {
+  color: var(--warning);
+}
+
+.drift-none {
+  color: var(--text-muted);
+}
+
+/* ─── AI Assistant Sidebar ──────────────────────────────────────────────── */
+
+.ai-sidebar {
+  background: var(--surface-lowest);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.ai-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--outline-variant);
+}
+
+.ai-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+
+.ai-header-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--on-surface);
+}
+
+.ai-conversation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-bubble {
+  max-width: 92%;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.chat-user {
+  align-self: flex-end;
+  background: var(--surface-container-low);
+  color: var(--on-surface);
+}
+
+.chat-ai {
+  align-self: flex-start;
+  background: var(--surface-lowest);
+  color: var(--on-surface-variant);
+  border: 1px solid var(--outline-variant);
+}
+
+.ai-input-area {
+  padding: 1rem 1.25rem;
+  border-top: 1px solid var(--outline-variant);
+}
+
+.ai-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ai-input {
+  flex: 1;
+  border: none;
+  border-bottom: 1px solid var(--ghost-border);
+  background: transparent;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.8125rem;
+  color: var(--on-surface);
+  padding: 0.5rem 0;
+  outline: none;
+  transition: border-color var(--duration-fast);
+}
+
+.ai-input::placeholder {
+  color: var(--text-muted);
+}
+
+.ai-input:focus {
+  border-bottom-color: var(--accent);
+}
+
+.ai-send-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background var(--duration-fast);
+}
+
+.ai-send-btn:hover {
+  background: var(--accent-dark);
+}
+
+.ai-send-btn:active {
+  transform: translateY(1px);
+}
+
+.ai-footer {
+  text-align: center;
+  padding: 0.5rem 1.25rem 0.75rem;
+  font-size: 0.6875rem;
+  color: var(--text-muted);
+}
+
+/* ─── Animations ────────────────────────────────────────────────────────── */
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-up {
+  opacity: 0;
+  animation: fadeUp var(--duration-entrance) var(--ease-entrance) forwards;
+}
+
+.animate-fade-in {
+  opacity: 0;
+  animation: fadeIn var(--duration-entrance) var(--ease-entrance) forwards;
+}
+
+/* Stagger helper — set via inline style */
+.stagger { opacity: 0; animation: fadeUp var(--duration-entrance) var(--ease-entrance) forwards; }
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     NAV
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="nav-top">
+      <a href="#" class="nav-brand">compass</a>
+      <span class="nav-cycle">Week 6 &middot; March 16&ndash;20, 2026</span>
+      <div class="nav-right">
+        <div class="avatar">JS</div>
+        <svg class="gear-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"/>
+        </svg>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <a class="nav-tab" href="#">My Week</a>
+      <a class="nav-tab" href="#">My Team</a>
+      <a class="nav-tab active" href="#">The Briefing</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     PAGE
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<div class="page">
+
+  <!-- ─── LEFT COLUMN ──────────────────────────────────────────────────── -->
+  <div class="col-main">
+
+    <!-- AI Briefing Narrative -->
+    <div class="card stagger" style="animation-delay: 0ms;">
+      <div class="briefing-header">
+        <div class="briefing-label">AI Briefing &middot; Generated Mar 20, 2026 8:00 AM</div>
+        <button class="btn-export-pdf" title="Export briefing as PDF">Export PDF &darr;</button>
+      </div>
+      <h2 class="briefing-headline">Weekly Intelligence Summary</h2>
+      <p class="briefing-body">Strategic alignment is at 41% this week, down from 48% last week. The primary driver is increased operational and defensive work displacing strategic commitments&hairsp;&mdash;&hairsp;3 commitments were marked as Manager Reassigned during reconciliation. Rally cry coverage remains strong at 88%&hairsp;&mdash;&hairsp;most team commitments link to at least one rally cry. However, &ldquo;Reduce Churn to &lt;2%&rdquo; has zero linked commitments from the engineering team, creating a coverage gap. Carry-forward rate rose to 18%, up from 12%, with Production Emergency cited as the top displacement reason.</p>
+
+      <!-- Sources & Validation -->
+      <div class="sources-section">
+        <button class="sources-toggle" onclick="toggleSources(this)" aria-expanded="false">View sources &#9662;</button>
+        <div class="sources-content" id="sources-panel">
+          <ul class="sources-list">
+            <li>
+              <span>Strategic alignment: 41%</span>
+              <span class="source-ref">&mdash; Computed from 98 commitments across 34 team members</span>
+              <a href="#">View breakdown &rarr;</a>
+            </li>
+            <li>
+              <span>3 Manager Reassigned displacements</span>
+              <span class="source-ref">&mdash; From Week 5 reconciliation records</span>
+              <a href="#">View records &rarr;</a>
+            </li>
+            <li>
+              <span>Rally Cry Coverage 88%</span>
+              <span class="source-ref">&mdash; 86 of 98 commitments linked to RCDO</span>
+              <a href="#">View details &rarr;</a>
+            </li>
+            <li>
+              <span>Carry-forward rate 18%</span>
+              <span class="source-ref">&mdash; 18 of 98 commitments carried from Week 5</span>
+              <a href="#">View list &rarr;</a>
+            </li>
+          </ul>
+          <p class="sources-note">All metrics validated against source data. AI narrative generated from verified inputs only.</p>
+        </div>
+      </div>
+
+      <h3 class="briefing-subheading" style="margin-top: 1.5rem;">Suggested Focus Areas</h3>
+      <ul class="focus-list">
+        <li><span class="focus-arrow">&rarr;</span> Churn Reduction coverage gap&hairsp;&mdash;&hairsp;no engineering commitments linked this cycle</li>
+        <li><span class="focus-arrow">&rarr;</span> Rising carry-forward trend (3 consecutive weeks)&hairsp;&mdash;&hairsp;review displacement patterns</li>
+        <li><span class="focus-arrow">&rarr;</span> Strategic alignment below org target of 60%&hairsp;&mdash;&hairsp;defensive work consuming capacity</li>
+      </ul>
+    </div>
+
+    <!-- Key Metrics Strip -->
+    <div class="metrics-strip">
+      <div class="metric-card stagger" style="animation-delay: 40ms;">
+        <div class="metric-label">Strategic Alignment</div>
+        <div class="metric-value">
+          <span class="metric-number" data-target="41">0</span>%
+          <span class="metric-dot dot-amber"></span>
+        </div>
+      </div>
+      <div class="metric-card stagger" style="animation-delay: 80ms;">
+        <div class="metric-label">Rally Cry Coverage</div>
+        <div class="metric-value">
+          <span class="metric-number" data-target="88">0</span>%
+          <span class="metric-dot dot-teal"></span>
+        </div>
+      </div>
+      <div class="metric-card stagger" style="animation-delay: 120ms;">
+        <div class="metric-label">Carry-Forward Rate</div>
+        <div class="metric-value">
+          <span class="metric-number" data-target="18">0</span>%
+        </div>
+      </div>
+      <div class="metric-card stagger" style="animation-delay: 160ms;">
+        <div class="metric-label">Completion Rate</div>
+        <div class="metric-value">
+          <span class="metric-number" data-target="72">0</span>%
+          <span class="metric-dot dot-teal"></span>
+        </div>
+      </div>
+      <div class="metric-card stagger" style="animation-delay: 200ms;">
+        <div class="metric-label">Active Drift Signals</div>
+        <div class="metric-value">
+          <span class="metric-number" data-target="2">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rally Cry Coverage -->
+    <div>
+      <h2 class="section-heading stagger" style="animation-delay: 240ms;">Rally Cry Coverage</h2>
+      <div class="rally-grid">
+
+        <!-- Card 1: Launch Enterprise Tier -->
+        <div class="rally-card stagger" style="animation-delay: 280ms;">
+          <div class="rally-title">Launch Enterprise Tier</div>
+          <div class="rally-description">Deliver enterprise pricing, sales tools, and multi-tenant infrastructure by Week 10</div>
+          <div class="rally-meta">8 commitments linked across 4 people</div>
+          <ul class="rally-objectives">
+            <li>
+              <span>Enterprise Pricing Model</span>
+              <span class="linked-count">3 linked</span>
+            </li>
+            <li>
+              <span>Sales Enablement</span>
+              <span class="linked-count">4 linked</span>
+            </li>
+            <li>
+              <span>AWS Provisioning</span>
+              <span class="linked-count">1 linked</span>
+            </li>
+          </ul>
+          <div class="rally-drilldown">
+            <button class="rally-drilldown-toggle" onclick="toggleDrilldown(this)" aria-expanded="true">Hide linked commitments &#9652;</button>
+            <div class="rally-drilldown-content expanded">
+              <div class="commitment-group">
+                <div class="commitment-person">Sarah Chen</div>
+                <div class="commitment-items">Finalize enterprise pricing model, Competitive analysis</div>
+              </div>
+              <div class="commitment-group">
+                <div class="commitment-person">David Kim</div>
+                <div class="commitment-items">Tenant isolation architecture, Load testing</div>
+              </div>
+              <div class="commitment-group">
+                <div class="commitment-person">Marcus Thorne</div>
+                <div class="commitment-items">Sales playbook draft, Demo environment setup</div>
+              </div>
+              <div class="commitment-group">
+                <div class="commitment-person">Jessica Vane</div>
+                <div class="commitment-items">Enterprise pricing page, Sales collateral design</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 2: Reduce Churn to <2% -->
+        <div class="rally-card gap-warning stagger" style="animation-delay: 320ms;">
+          <div class="rally-title">Reduce Churn to &lt;2%</div>
+          <div class="rally-description">Drive customer retention through proactive risk detection and success frameworks</div>
+          <div class="rally-meta">1 commitment linked across 1 person</div>
+          <ul class="rally-objectives">
+            <li>
+              <span>NPS Survey Analysis</span>
+              <span class="linked-count">1 linked</span>
+            </li>
+            <li>
+              <span>Customer Success Playbook</span>
+              <span class="linked-count amber">0 linked</span>
+            </li>
+            <li>
+              <span>Risk Scoring Model</span>
+              <span class="linked-count amber">0 linked</span>
+            </li>
+          </ul>
+          <div class="rally-drilldown">
+            <button class="rally-drilldown-toggle" onclick="toggleDrilldown(this)" aria-expanded="false">Show linked commitments &#9662;</button>
+            <div class="rally-drilldown-content">
+              <div class="commitment-group">
+                <div class="commitment-person">Elena Rodriguez</div>
+                <div class="commitment-items">NPS survey analysis and report</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Card 3: SOC2 Certification -->
+        <div class="rally-card stagger" style="animation-delay: 360ms;">
+          <div class="rally-title">SOC2 Certification</div>
+          <div class="rally-description">Achieve SOC2 Type II certification to unlock enterprise sales pipeline</div>
+          <div class="rally-meta">5 commitments linked across 3 people</div>
+          <ul class="rally-objectives">
+            <li>
+              <span>Audit Preparation</span>
+              <span class="linked-count">3 linked</span>
+            </li>
+            <li>
+              <span>Evidence Collection</span>
+              <span class="linked-count">2 linked</span>
+            </li>
+          </ul>
+          <div class="rally-drilldown">
+            <button class="rally-drilldown-toggle" onclick="toggleDrilldown(this)" aria-expanded="false">Show linked commitments &#9662;</button>
+            <div class="rally-drilldown-content">
+              <div class="commitment-group">
+                <div class="commitment-person">Robert Frost</div>
+                <div class="commitment-items">Policy documentation, Access control audit</div>
+              </div>
+              <div class="commitment-group">
+                <div class="commitment-person">David Kim</div>
+                <div class="commitment-items">Encryption-at-rest implementation, Logging pipeline</div>
+              </div>
+              <div class="commitment-group">
+                <div class="commitment-person">Elena Rodriguez</div>
+                <div class="commitment-items">Evidence collection tracker</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Team Health -->
+    <div>
+      <h2 class="section-heading stagger" style="animation-delay: 400ms;">Team Health</h2>
+      <div class="card" style="padding: 0; overflow: hidden;">
+        <table class="health-table">
+          <thead>
+            <tr>
+              <th>Team Lead</th>
+              <th>Headcount</th>
+              <th>Strategic %</th>
+              <th>Coverage</th>
+              <th>Drift Signal</th>
+              <th>Carry-Forward</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="drift-row health-row stagger" style="animation-delay: 440ms;" title="View Marcus Thorne's team &rarr;">
+              <td>Marcus Thorne</td>
+              <td>8</td>
+              <td>32%</td>
+              <td>75%</td>
+              <td><span class="drift-signal drift-sustained">Alignment &darr; Sustained</span></td>
+              <td>28%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+            <tr class="drift-row health-row stagger" style="animation-delay: 480ms;" title="View Elena Rodriguez's team &rarr;">
+              <td>Elena Rodriguez</td>
+              <td>6</td>
+              <td>38%</td>
+              <td>82%</td>
+              <td><span class="drift-signal drift-emerging">Alignment &darr; Emerging</span></td>
+              <td>22%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+            <tr class="health-row stagger" style="animation-delay: 520ms;" title="View Sarah Chen's team &rarr;">
+              <td>Sarah Chen</td>
+              <td>12</td>
+              <td>52%</td>
+              <td>95%</td>
+              <td><span class="drift-signal drift-none">&mdash;</span></td>
+              <td>10%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+            <tr class="health-row stagger" style="animation-delay: 560ms;" title="View David Kim's team &rarr;">
+              <td>David Kim</td>
+              <td>5</td>
+              <td>48%</td>
+              <td>90%</td>
+              <td><span class="drift-signal drift-none">&mdash;</span></td>
+              <td>14%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+            <tr class="health-row stagger" style="animation-delay: 600ms;" title="View Jessica Vane's team &rarr;">
+              <td>Jessica Vane</td>
+              <td>4</td>
+              <td>55%</td>
+              <td>88%</td>
+              <td><span class="drift-signal drift-none">&mdash;</span></td>
+              <td>8%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+            <tr class="health-row stagger" style="animation-delay: 640ms;" title="View Robert Frost's team &rarr;">
+              <td>Robert Frost</td>
+              <td>3</td>
+              <td>60%</td>
+              <td>100%</td>
+              <td><span class="drift-signal drift-none">&mdash;</span></td>
+              <td>5%</td>
+              <td class="td-chevron"><span class="row-chevron">&rarr;</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ─── RIGHT COLUMN — AI ASSISTANT ──────────────────────────────────── -->
+  <div class="col-side">
+    <div class="ai-sidebar animate-fade-in" style="animation-delay: 200ms;">
+
+      <!-- Header -->
+      <div class="ai-header">
+        <svg class="ai-icon" viewBox="0 0 20 20" fill="currentColor">
+          <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-.75.75h-2a.75.75 0 010-1.5h1.25V7.25z"/>
+        </svg>
+        <span class="ai-header-label">Compass Intelligence</span>
+      </div>
+
+      <!-- Conversation -->
+      <div class="ai-conversation">
+
+        <!-- Exchange 1 -->
+        <div class="chat-bubble chat-user chat-msg" style="--chat-delay: 300ms;">
+          Why did strategic alignment drop this week?
+        </div>
+        <div class="chat-bubble chat-ai chat-msg" style="--chat-delay: 400ms;">
+          Strategic alignment fell 7 points because 3 commitments were reassigned by managers from strategic to operational work mid-cycle. Sarah Chen's team accounted for 2 of those reassignments, both related to a production incident on Tuesday. The remaining reassignment came from Marcus Thorne's team where a scope change shifted an Enterprise Tier commitment to defensive work.
+        </div>
+
+        <!-- Exchange 2 -->
+        <div class="chat-bubble chat-user chat-msg" style="--chat-delay: 500ms;">
+          Which rally cries have the worst coverage?
+        </div>
+        <div class="chat-bubble chat-ai chat-msg" style="--chat-delay: 600ms;">
+          Reduce Churn to &lt;2% has the weakest coverage at just 1 commitment from 1 person. Two of its three objectives&hairsp;&mdash;&hairsp;Customer Success Playbook and Risk Scoring Model&hairsp;&mdash;&hairsp;have zero linked commitments. This is a significant gap given that churn reduction was identified as a top-3 priority this quarter.
+        </div>
+
+        <!-- Exchange 3 -->
+        <div class="chat-bubble chat-user chat-msg" style="--chat-delay: 700ms;">
+          What should I focus on in my 1:1 with Marcus?
+        </div>
+        <div class="chat-bubble chat-ai chat-msg" style="--chat-delay: 800ms;">
+          Marcus's team has the highest carry-forward rate at 28% and a sustained alignment drift signal. Three areas to probe: (1) his 4 unlinked commitments&hairsp;&mdash;&hairsp;are they strategic work that just hasn't been tagged, or genuinely off-strategy? (2) The external dependency blocking 2 carried-forward items&hairsp;&mdash;&hairsp;can you unblock it? (3) His team has zero coverage on Churn Reduction despite having relevant skills.
+        </div>
+
+      </div>
+
+      <!-- Input -->
+      <div class="ai-input-area">
+        <div class="ai-input-wrapper">
+          <input class="ai-input" type="text" placeholder="Ask about this week...">
+          <button class="ai-send-btn" aria-label="Send">
+            <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M3.105 2.29a1 1 0 011.307-.376l13 6.5a1 1 0 010 1.79l-13 6.5A1 1 0 013 15.882V11l7-1-7-1V4.118a1 1 0 01.105-1.828z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      <div class="ai-footer">Powered by AI &middot; Based on Week 6 data</div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════
+     JAVASCRIPT — Motion & Delight
+     ═══════════════════════════════════════════════════════════════════════════ -->
+<script>
+(function() {
+  'use strict';
+
+  // ─── Metric count-up animation ─────────────────────────────────────────
+  function animateCountUp(el, target, duration) {
+    var start = performance.now();
+    function tick(now) {
+      var elapsed = now - start;
+      var progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      var eased = 1 - Math.pow(1 - progress, 3);
+      el.textContent = Math.round(eased * target);
+      if (progress < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  // Observe metric cards entering viewport
+  var metricObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var el = entry.target;
+        var target = parseInt(el.getAttribute('data-target'), 10);
+        // Delay to sync with the card fade-up animation
+        var card = el.closest('.metric-card');
+        var delay = card ? parseInt(card.style.animationDelay, 10) || 0 : 0;
+        setTimeout(function() {
+          animateCountUp(el, target, 400);
+        }, delay + 100);
+        metricObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.metric-number').forEach(function(el) {
+    metricObserver.observe(el);
+  });
+
+  // ─── Chat message fade-in ──────────────────────────────────────────────
+  var chatMessages = document.querySelectorAll('.chat-msg');
+  chatMessages.forEach(function(msg) {
+    msg.style.opacity = '0';
+    msg.style.transform = 'translateY(8px)';
+    msg.style.transition = 'opacity 300ms var(--ease-entrance), transform 300ms var(--ease-entrance)';
+  });
+
+  var chatObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        var el = entry.target;
+        var delay = parseInt(getComputedStyle(el).getPropertyValue('--chat-delay'), 10) || 0;
+        setTimeout(function() {
+          el.style.opacity = '1';
+          el.style.transform = 'translateY(0)';
+        }, delay);
+        chatObserver.unobserve(el);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  chatMessages.forEach(function(msg) {
+    chatObserver.observe(msg);
+  });
+
+  // ─── Stagger animation for cards/rows via IntersectionObserver ─────────
+  var staggerObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        // The CSS .stagger class handles the animation via animation-delay.
+        // For elements that might load below the fold, ensure they trigger.
+        entry.target.style.animationPlayState = 'running';
+        staggerObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.stagger').forEach(function(el) {
+    staggerObserver.observe(el);
+  });
+
+  // ─── Table row stagger for below-fold rows ─────────────────────────────
+  var rowObserver = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        entry.target.style.transform = 'translateY(0)';
+        rowObserver.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.health-row').forEach(function(row) {
+    rowObserver.observe(row);
+  });
+
+})();
+
+// ─── Toggle helpers (global scope for onclick) ───────────────────────────
+
+function toggleSources(btn) {
+  var panel = document.getElementById('sources-panel');
+  var isExpanded = panel.classList.contains('expanded');
+  if (isExpanded) {
+    panel.classList.remove('expanded');
+    btn.innerHTML = 'View sources &#9662;';
+    btn.setAttribute('aria-expanded', 'false');
+  } else {
+    panel.classList.add('expanded');
+    btn.innerHTML = 'Hide sources &#9652;';
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+
+function toggleDrilldown(btn) {
+  var content = btn.nextElementSibling;
+  var isExpanded = content.classList.contains('expanded');
+  if (isExpanded) {
+    content.classList.remove('expanded');
+    btn.innerHTML = 'Show linked commitments &#9662;';
+    btn.setAttribute('aria-expanded', 'false');
+  } else {
+    content.classList.add('expanded');
+    btn.innerHTML = 'Hide linked commitments &#9652;';
+    btn.setAttribute('aria-expanded', 'true');
+  }
+}
+</script>
+
+</body>
+</html>

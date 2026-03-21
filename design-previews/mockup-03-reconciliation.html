@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html class="light" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass | Reconciliation — Planned vs. Actual</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&family=Inter:wght@100..900&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        "surface-container-lowest": "#ffffff",
+        "surface-container-low": "#f4f4f2",
+        "surface-dim": "#dadad8",
+        "on-secondary-container": "#656464",
+        "background": "#f9f9f7",
+        "outline-variant": "#bec9c8",
+        "on-primary": "#ffffff",
+        "surface": "#f9f9f7",
+        "surface-container-high": "#e8e8e6",
+        "surface-container": "#eeeeec",
+        "primary-container": "#036a6a",
+        "secondary": "#5f5e5e",
+        "secondary-container": "#e4e2e1",
+        "on-surface": "#1a1c1b",
+        "on-surface-variant": "#3e4948",
+        "primary": "#005050",
+      },
+      fontFamily: {
+        "headline": ["Newsreader"],
+        "body": ["Inter"],
+        "label": ["Inter"]
+      },
+      borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+    },
+  },
+}
+</script>
+<style>
+  :root {
+    --ease-standard: cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-entrance: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+    --duration-fast: 150ms;
+    --duration-standard: 200ms;
+    --duration-entrance: 300ms;
+    --duration-slow: 400ms;
+    --stagger-delay: 40ms;
+  }
+
+  .material-symbols-outlined {
+    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    vertical-align: middle;
+  }
+  .text-charcoal { color: #2D3432; }
+  .border-warm { border-color: #E8E5E0; }
+
+  /* Status button styles */
+  .status-btn {
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 4px;
+    border: 1.5px solid;
+    cursor: pointer;
+    transition: all var(--duration-standard) var(--ease-standard);
+    outline: none;
+    font-family: 'Inter', sans-serif;
+  }
+  .status-btn:focus-visible {
+    box-shadow: 0 0 0 2px #036a6a40;
+  }
+
+  /* Completed */
+  .status-completed-active { background: #036A6A; color: #fff; border-color: #036A6A; }
+  .status-completed-inactive { background: #fff; color: #036A6A; border-color: #B2DFDB; }
+  .status-completed-inactive:hover { background: #E0F2F1; }
+
+  /* Partial */
+  .status-partial-active { background: #C2860B; color: #fff; border-color: #C2860B; }
+  .status-partial-inactive { background: #fff; color: #92650A; border-color: #F0D9A8; }
+  .status-partial-inactive:hover { background: #FFF8E1; }
+
+  /* Not Started */
+  .status-notstarted-active { background: #9F403D; color: #fff; border-color: #9F403D; }
+  .status-notstarted-inactive { background: #fff; color: #9F403D; border-color: #E8B4B2; }
+  .status-notstarted-inactive:hover { background: #FFF0EF; }
+
+  /* Disabled state */
+  .status-btn-disabled {
+    background: #E8E8E6;
+    color: #94A3B8;
+    border-color: #E8E8E6;
+    cursor: not-allowed;
+  }
+
+  /* Textarea */
+  textarea.recon-notes {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1.5px solid #E8E5E0;
+    background: transparent;
+    width: 100%;
+    resize: vertical;
+    padding: 8px 0;
+    outline: none;
+    color: #2D3432;
+    transition: border-color var(--duration-fast);
+  }
+  textarea.recon-notes:focus {
+    border-bottom-color: #036A6A;
+  }
+  textarea.recon-notes::placeholder {
+    color: #94A3B8;
+  }
+
+  /* Select */
+  select.recon-select {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1.5px solid #E8E5E0;
+    background: transparent;
+    width: 100%;
+    padding: 8px 0;
+    outline: none;
+    color: #2D3432;
+    cursor: pointer;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 4px center;
+    padding-right: 20px;
+    transition: border-color var(--duration-fast);
+  }
+  select.recon-select:focus {
+    border-bottom-color: #036A6A;
+  }
+
+  /* Input */
+  input.recon-input {
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    border: none;
+    border-bottom: 1.5px solid #E8E5E0;
+    background: transparent;
+    width: 100%;
+    padding: 8px 0;
+    outline: none;
+    color: #2D3432;
+    transition: border-color var(--duration-fast);
+  }
+  input.recon-input:focus {
+    border-bottom-color: #036A6A;
+  }
+  input.recon-input::placeholder {
+    color: #94A3B8;
+  }
+
+  /* Checkbox styling */
+  .recon-checkbox {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid #BEC9C8;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+    flex-shrink: 0;
+    margin-top: 2px;
+    transition: all var(--duration-fast);
+  }
+  .recon-checkbox:checked {
+    background: #036A6A;
+    border-color: #036A6A;
+  }
+  .recon-checkbox:checked::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 5px;
+    height: 9px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .recon-checkbox-display {
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    border: 1.5px solid #DDD;
+    flex-shrink: 0;
+    margin-top: 2px;
+    background: #F9F9F7;
+  }
+
+  /* Pill chips */
+  .pill-horizon {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    background: #EEEEEC;
+    color: #5A605E;
+  }
+  .pill-chess {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    color: #5A605E;
+  }
+  .pill-chess .bar-strategic { width: 3px; height: 12px; background: #036A6A; border-radius: 1px; }
+  .pill-chess .bar-operational { width: 3px; height: 12px; background: #DCD9D4; border-radius: 1px; }
+  .pill-chess .bar-defensive { width: 3px; height: 12px; background: #C2860B; border-radius: 1px; }
+  .pill-chess .bar-capability { width: 3px; height: 12px; background: #455F87; border-radius: 1px; }
+
+  .pill-rally {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    color: #036A6A;
+    cursor: pointer;
+  }
+  .pill-rally:hover { text-decoration: underline; }
+
+  .pill-unlinked {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    font-family: 'Inter', sans-serif;
+    color: #94A3B8;
+    font-style: italic;
+  }
+
+  /* Status pills for collapsed view */
+  .pill-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+  }
+  .pill-status-completed { background: #E0F2F1; color: #036A6A; }
+  .pill-status-partial { background: #FFF8E1; color: #92650A; }
+  .pill-status-notstarted { background: #FFF0EF; color: #9F403D; }
+  .pill-status-carried { background: #EEF2F8; color: #455F87; }
+
+  /* Carry-forward toggle */
+  .carry-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: #F9F9F7;
+    border-radius: 4px;
+    margin-top: 12px;
+    border: 1px solid #E8E5E0;
+    transition: all var(--duration-standard) var(--ease-standard);
+  }
+  .carry-toggle-btn {
+    padding: 4px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 4px;
+    border: 1.5px solid #B8C5D9;
+    background: #fff;
+    color: #455F87;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all var(--duration-fast) var(--ease-standard);
+  }
+  .carry-toggle-btn:hover { background: #EEF2F8; }
+  .carry-toggle-btn.active { background: #455F87; color: #fff; border-color: #455F87; }
+
+  /* Displacement section */
+  .displacement-section {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid #F2F4F2;
+  }
+
+  /* Progress bar */
+  .progress-bar-track {
+    height: 6px;
+    background: #EEEEEC;
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.3s ease;
+  }
+
+  /* Bottom bar */
+  .bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid #E8E5E0;
+    z-index: 50;
+  }
+
+  /* Status indicator dots */
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  /* ═══ Accordion styles ═══ */
+  .commitment-card {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  .commitment-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity var(--duration-entrance) var(--ease-entrance),
+                transform var(--duration-entrance) var(--ease-entrance);
+  }
+
+  .commitment-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    padding: 14px 20px;
+    gap: 12px;
+    transition: background var(--duration-fast) var(--ease-standard);
+  }
+  .commitment-header:hover {
+    background: #F9F9F7;
+  }
+
+  .chevron-icon {
+    transition: transform var(--duration-standard) var(--ease-standard);
+    flex-shrink: 0;
+    color: #94A3B8;
+    font-size: 20px;
+  }
+  .commitment-card.expanded .chevron-icon {
+    transform: rotate(180deg);
+  }
+
+  .commitment-body {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height var(--duration-entrance) var(--ease-entrance);
+  }
+  .commitment-card.expanded .commitment-body {
+    max-height: 2000px;
+  }
+
+  /* Unplanned work section */
+  .unplanned-prompt {
+    background: #F4F4F2;
+    border-left: 4px solid #036A6A;
+    border-radius: 4px;
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .btn-add-unplanned-prominent {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #fff;
+    background: #036A6A;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: background var(--duration-fast) var(--ease-standard);
+    white-space: nowrap;
+  }
+  .btn-add-unplanned-prominent:hover {
+    background: #005050;
+  }
+
+  /* Status helper text */
+  .status-helper {
+    font-size: 11px;
+    color: #94A3B8;
+    font-family: 'Inter', sans-serif;
+    margin-top: 4px;
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body class="bg-background font-body text-on-surface antialiased pb-24">
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- TOP NAVIGATION                                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<nav class="bg-[#FAFAF8] flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+  <div class="flex items-center gap-12">
+    <span class="font-['Newsreader'] font-bold text-2xl text-[#036A6A] tracking-tighter">Compass</span>
+    <div class="hidden md:flex gap-8 items-center">
+      <a class="font-['Newsreader'] font-semibold text-lg tracking-tight text-[#036A6A] border-b-2 border-[#036A6A] pb-2 transition-all" href="#">My Week</a>
+      <a class="font-['Newsreader'] font-semibold text-lg tracking-tight text-[#5F5E5E] pb-2 hover:text-[#036A6A] transition-colors" href="#">My Team</a>
+      <a class="font-['Newsreader'] font-semibold text-lg tracking-tight text-[#5F5E5E] pb-2 hover:text-[#036A6A] transition-colors" href="#">The Briefing</a>
+    </div>
+  </div>
+  <div class="flex items-center gap-6">
+    <span class="text-sm text-secondary font-body">Week 5 &middot; March 10&ndash;14, 2026</span>
+    <button class="p-2 hover:bg-[#F9F9F7] transition-colors duration-200">
+      <span class="material-symbols-outlined text-secondary">notifications</span>
+    </button>
+    <div class="h-8 w-8 rounded-full bg-surface-container-high flex items-center justify-center text-xs font-bold text-secondary">JS</div>
+  </div>
+</nav>
+<div class="bg-[#EEEEEC] h-[1px] w-full"></div>
+
+<main class="max-w-[960px] mx-auto px-8 py-10 flex flex-col gap-8">
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- CYCLE STATE BANNER                                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="flex items-center justify-between bg-surface-container-lowest rounded-lg p-5" style="border-left: 4px solid #C2860B;">
+  <div class="flex items-center gap-3">
+    <span class="status-dot" style="background: #C2860B;"></span>
+    <div>
+      <h2 class="text-base font-medium text-charcoal font-body">Week 5 &middot; Reconciling</h2>
+      <p class="text-xs text-secondary mt-0.5">Time to reconcile &mdash; how did your week go?</p>
+    </div>
+  </div>
+  <button class="status-btn status-btn-disabled" disabled title="Reconcile all commitments first">
+    Complete Reconciliation
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- UNPLANNED WORK SECTION                                                 -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div id="unplanned-section" class="flex flex-col gap-4">
+  <div class="unplanned-prompt commitment-card" data-stagger="1">
+    <div>
+      <p class="text-sm font-medium text-charcoal">Did anything unplanned come up this week?</p>
+      <p class="text-xs text-secondary mt-0.5">Capture unplanned work so it counts toward your effort &mdash; 1 item already recorded.</p>
+    </div>
+    <button class="btn-add-unplanned-prominent" onclick="document.getElementById('unplanned-form').scrollIntoView({behavior:'smooth'})">
+      <span class="material-symbols-outlined text-base">add</span>
+      Add unplanned work
+    </button>
+  </div>
+
+  <!-- Existing unplanned item -->
+  <div class="commitment-card bg-surface-container-lowest rounded-lg overflow-hidden" data-stagger="2" style="border: 1px solid #E8E5E0; border-left: 4px solid #036A6A; background: #F4F4F2;">
+    <div class="p-5">
+      <div class="flex items-start justify-between mb-2">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase rounded" style="background: #EEF2F8; color: #455F87;">Unplanned</span>
+          <h3 class="text-[15px] font-medium text-charcoal">Emergency hotfix for payment webhook</h3>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium rounded" style="background: #F4F4F2; color: #5A605E; border: 1px solid #E8E5E0;">
+            <span class="material-symbols-outlined" style="font-size: 13px;">person</span>
+            Requested by: Sarah Chen
+          </span>
+        </div>
+        <span class="inline-flex items-center gap-1 text-xs font-medium" style="color: #036A6A;">
+          <span class="material-symbols-outlined text-sm">check_circle</span>
+          COMPLETED
+        </span>
+      </div>
+      <div class="flex items-center gap-3 flex-wrap mb-3">
+        <span class="pill-horizon">EOD</span>
+        <span class="pill-chess"><span class="bar-defensive"></span> Defensive</span>
+        <span class="text-[10px] font-bold tracking-widest uppercase" style="color: #9F403D;">PRODUCTION_EMERGENCY</span>
+      </div>
+      <ul class="space-y-1.5">
+        <li class="flex items-start gap-2 text-sm text-charcoal">
+          <input type="checkbox" class="recon-checkbox" checked disabled/>
+          Diagnose Stripe webhook signature failure
+        </li>
+        <li class="flex items-start gap-2 text-sm text-charcoal">
+          <input type="checkbox" class="recon-checkbox" checked disabled/>
+          Deploy hotfix and verify payment processing restored
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Expanded inline form -->
+  <div id="unplanned-form" class="commitment-card bg-surface-container-lowest rounded-lg p-5" data-stagger="3" style="border: 1.5px dashed #036A6A40;">
+    <h3 class="text-sm font-semibold text-charcoal mb-4">Add Unplanned Work</h3>
+
+    <div class="flex flex-col gap-4">
+      <!-- Title -->
+      <div>
+        <label class="text-sm font-medium text-[#5A605E] block mb-1">
+          Title <span class="text-[#9F403D]">*</span>
+        </label>
+        <input type="text" class="recon-input" placeholder="What did you work on?" />
+      </div>
+
+      <!-- Bullets -->
+      <div>
+        <span class="text-sm font-medium text-[#5A605E] block mb-1">
+          Bullet items <span class="text-[#9F403D]">*</span>
+          <span class="text-secondary font-normal"> (min 2, max 5)</span>
+        </span>
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center gap-2">
+            <input type="text" class="recon-input flex-1" placeholder="Bullet 1" />
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="text" class="recon-input flex-1" placeholder="Bullet 2" />
+          </div>
+        </div>
+        <button class="text-xs font-medium mt-2" style="color: #036A6A;">+ Add bullet</button>
+      </div>
+
+      <!-- Completion Horizon -->
+      <div>
+        <label class="text-sm font-medium text-[#5A605E] block mb-1">Completion Horizon</label>
+        <select class="recon-select">
+          <option value="MORNING">Morning</option>
+          <option value="MIDDAY">Midday</option>
+          <option value="AFTERNOON">Afternoon</option>
+          <option value="EOD">End of Day</option>
+          <option value="EOW" selected>End of Week</option>
+        </select>
+      </div>
+
+      <!-- Rally Cry -->
+      <div>
+        <label class="text-sm font-medium text-[#5A605E] block mb-1">
+          Rally Cry <span class="text-[#9F403D]">*</span>
+        </label>
+        <select class="recon-select">
+          <option value="">— Select Rally Cry —</option>
+          <option value="rc1">Enterprise Tier</option>
+          <option value="rc2">Reduce Churn</option>
+          <option value="rc3">SOC2 Certification</option>
+          <option value="rc4">Platform Reliability</option>
+        </select>
+      </div>
+
+      <!-- Who requested this? (Attribution) -->
+      <div>
+        <label class="text-sm font-medium text-[#5A605E] block mb-1">
+          Who requested this? <span class="text-[#9F403D]">*</span>
+        </label>
+        <select class="recon-select">
+          <option value="">— Select —</option>
+          <option value="self">Self-initiated</option>
+          <option value="sarah_chen">Sarah Chen (Director)</option>
+          <option value="marcus_thorne">Marcus Thorne (Manager)</option>
+          <option value="elena_rodriguez">Elena Rodriguez (Manager)</option>
+          <option value="external">External stakeholder</option>
+        </select>
+        <p class="text-[11px] text-secondary mt-1">Tracks where unplanned work originates to identify patterns.</p>
+      </div>
+
+      <!-- Reconciliation Status -->
+      <div>
+        <span class="text-sm font-medium text-[#5A605E] block mb-2">
+          What happened? <span class="text-[#9F403D]">*</span>
+        </span>
+        <div class="flex flex-wrap gap-1.5">
+          <button class="status-btn status-completed-inactive">&check; Completed</button>
+          <button class="status-btn status-partial-inactive">&frac12; Partial</button>
+          <button class="status-btn status-notstarted-inactive">&times; Not Started</button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-3 pt-2">
+        <button class="px-5 py-2 text-sm font-medium text-white rounded" style="background: #036A6A;">Add Work</button>
+        <button class="px-5 py-2 text-sm font-medium text-secondary rounded" style="background: #EEEEEC;">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- SECTION HEADER                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div>
+  <h1 class="font-headline text-3xl tracking-tight text-charcoal" style="font-weight: 400;">Planned vs. Actual</h1>
+  <p class="text-sm text-secondary mt-1">Review each commitment and record what happened this week. Click a card to expand.</p>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- COMMITMENT #1 — PARTIALLY_COMPLETED (EXPANDED)                        -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="commitment-card expanded bg-surface-container-lowest rounded-lg overflow-hidden" data-stagger="4" style="border: 1px solid #E8E5E0;">
+  <!-- Collapsed header row -->
+  <div class="commitment-header" onclick="toggleCard(this.parentElement)">
+    <span class="material-symbols-outlined chevron-icon">expand_more</span>
+    <span class="text-[11px] font-bold tracking-widest uppercase text-secondary opacity-60" style="min-width: 20px;">#1</span>
+    <h3 class="text-[14px] font-medium text-charcoal leading-snug flex-1">Finalize enterprise pricing model</h3>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="pill-horizon">EOW</span>
+      <span class="pill-chess"><span class="bar-strategic"></span> Strategic</span>
+      <span class="pill-rally">&rarr; Enterprise Tier</span>
+      <span class="pill-status pill-status-partial">&frac12; Partial</span>
+    </div>
+  </div>
+
+  <!-- Expandable body -->
+  <div class="commitment-body">
+    <div style="border-top: 1px solid #F2F4F2;">
+      <div class="grid grid-cols-1 md:grid-cols-2">
+        <!-- LEFT: Planned -->
+        <div class="p-5" style="background: #F9F9F7; border-right: 1px solid #F2F4F2;">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">PLANNED</span>
+          </div>
+          <ul class="space-y-2 mt-3">
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Gather competitive pricing data from 5 enterprise vendors
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Draft 3-tier pricing proposal for VP review
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Get sign-off from VP of Sales
+            </li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Actual -->
+        <div class="p-5 bg-surface-container-lowest">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">ACTUAL</span>
+          </div>
+
+          <!-- Status selector -->
+          <div class="mb-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">What happened?</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button class="status-btn status-completed-inactive">&check; Completed</button>
+              <button class="status-btn status-partial-active">&frac12; Partial</button>
+              <button class="status-btn status-notstarted-inactive">&times; Not Started</button>
+            </div>
+            <div class="flex flex-wrap gap-4 mt-3">
+              <span class="status-helper">&check; <strong>Completed</strong> &mdash; Done as planned</span>
+              <span class="status-helper">&frac12; <strong>Partial</strong> &mdash; Some work done, some remains</span>
+              <span class="status-helper">&times; <strong>Not Started</strong> &mdash; Didn't get to it at all</span>
+            </div>
+          </div>
+
+          <!-- Carry-forward toggle (visible for Partial / Not Started) -->
+          <div class="carry-toggle">
+            <span class="material-symbols-outlined text-base" style="color: #455F87;">redo</span>
+            <span class="text-sm font-medium text-charcoal flex-1">Carry to next week?</span>
+            <button class="carry-toggle-btn" onclick="toggleCarry(this, 'yes')">Yes</button>
+            <button class="carry-toggle-btn" onclick="toggleCarry(this, 'no')">No</button>
+          </div>
+
+          <!-- Displacement signal — What took priority instead? -->
+          <div class="mt-4 p-4 rounded-lg" style="background: #FFF8E1; border: 1px solid #F0D9A8;">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="material-symbols-outlined text-base" style="color: #C2860B;">swap_horiz</span>
+              <p class="text-sm font-semibold" style="color: #92650A;">What took priority instead?</p>
+            </div>
+
+            <!-- Quick-signal badge -->
+            <div class="flex flex-wrap gap-2 mb-3">
+              <button class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full cursor-pointer transition-all" style="background: #9F403D; color: #fff; border: 1.5px solid #9F403D;" title="One-click signal: unplanned work displaced this commitment">
+                <span class="material-symbols-outlined" style="font-size: 14px;">warning</span>
+                Unplanned work displaced this
+              </button>
+              <span class="text-[11px] text-secondary self-center">Quick signal — click to flag unplanned disruption</span>
+            </div>
+
+            <!-- Specific displacing commitment(s) selector -->
+            <div>
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Which specific work displaced this?
+              </label>
+              <div class="flex flex-col gap-1.5 mt-1">
+                <label class="flex items-center gap-2 text-sm text-charcoal cursor-pointer px-2 py-1.5 rounded hover:bg-white transition-colors">
+                  <input type="checkbox" class="recon-checkbox" />
+                  <span>#2</span> <span class="text-secondary">Customer onboarding flow redesign</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-charcoal cursor-pointer px-2 py-1.5 rounded hover:bg-white transition-colors">
+                  <input type="checkbox" class="recon-checkbox" />
+                  <span>#3</span> <span class="text-secondary">SOC2 evidence collection for AWS</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-charcoal cursor-pointer px-2 py-1.5 rounded hover:bg-white transition-colors">
+                  <input type="checkbox" class="recon-checkbox" />
+                  <span>#4</span> <span class="text-secondary">Team standup facilitation</span>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-charcoal cursor-pointer px-2 py-1.5 rounded" style="background: #fff; border: 1.5px solid #036A6A;">
+                  <input type="checkbox" class="recon-checkbox" checked />
+                  <span class="inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase rounded" style="background: #EEF2F8; color: #455F87;">Unplanned</span>
+                  <span style="color: #036A6A; font-weight: 500;">Emergency hotfix for payment webhook</span>
+                </label>
+              </div>
+              <p class="text-[11px] text-secondary mt-2">Select the work that took priority over this commitment. Creates a direct displacement link.</p>
+            </div>
+          </div>
+
+          <!-- Bullet checkboxes -->
+          <div class="mb-4 mt-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">Bullet Status</p>
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Gather competitive pricing data from 5 enterprise vendors
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Draft 3-tier pricing proposal for VP review
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox"/>
+                Get sign-off from VP of Sales
+              </li>
+            </ul>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-2">
+            <label class="text-sm font-medium text-[#5A605E]">
+              What changed and why? <span class="text-[#9F403D]">*</span>
+            </label>
+            <textarea class="recon-notes" rows="2" placeholder="Why didn't this complete? This information helps leadership understand blockers.">VP was OOO — sign-off pushed to next week</textarea>
+            <p class="text-[11px] text-secondary text-right mt-1">456 characters remaining</p>
+          </div>
+
+          <!-- Displacement capture (category + details) -->
+          <div class="displacement-section">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-3">Displacement Category</p>
+
+            <div class="mb-3">
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">What type of disruption?</label>
+              <select class="recon-select">
+                <option value="">— Select a reason —</option>
+                <option value="MANAGER_REASSIGNED">Manager reassigned me to other work</option>
+                <option value="PRODUCTION_EMERGENCY">Production emergency</option>
+                <option value="RESOURCE_BLOCKED" selected>Blocked on resources</option>
+                <option value="SCOPE_CHANGE">Scope changed</option>
+                <option value="DEPRIORITIZED">Deprioritized</option>
+                <option value="EXTERNAL_DEPENDENCY">External dependency</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Details <span class="text-secondary font-normal">(optional)</span>
+              </label>
+              <textarea class="recon-notes" rows="2" placeholder="Any additional context about what happened...">Waiting on legal review of pricing terms</textarea>
+              <p class="text-[11px] text-secondary text-right mt-1">461 characters remaining</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- COMMITMENT #2 — COMPLETED (COLLAPSED)                                  -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="commitment-card bg-surface-container-lowest rounded-lg overflow-hidden" data-stagger="5" style="border: 1px solid #E8E5E0;">
+  <!-- Collapsed header row -->
+  <div class="commitment-header" onclick="toggleCard(this.parentElement)">
+    <span class="material-symbols-outlined chevron-icon">expand_more</span>
+    <span class="text-[11px] font-bold tracking-widest uppercase text-secondary opacity-60" style="min-width: 20px;">#2</span>
+    <h3 class="text-[14px] font-medium text-charcoal leading-snug flex-1">Customer onboarding flow redesign</h3>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="pill-horizon">AFTERNOON</span>
+      <span class="pill-chess"><span class="bar-operational"></span> Operational</span>
+      <span class="pill-rally">&rarr; Reduce Churn</span>
+      <span class="pill-status pill-status-completed">&check; Completed</span>
+    </div>
+  </div>
+
+  <!-- Expandable body -->
+  <div class="commitment-body">
+    <div style="border-top: 1px solid #F2F4F2;">
+      <div class="grid grid-cols-1 md:grid-cols-2">
+        <!-- LEFT: Planned -->
+        <div class="p-5" style="background: #F9F9F7; border-right: 1px solid #F2F4F2;">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">PLANNED</span>
+          </div>
+          <ul class="space-y-2 mt-3">
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Audit current onboarding drop-off metrics
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Design new 3-step wizard flow in Figma
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Ship v1 to staging for QA
+            </li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Actual -->
+        <div class="p-5 bg-surface-container-lowest">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">ACTUAL</span>
+          </div>
+
+          <!-- Status selector -->
+          <div class="mb-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">What happened?</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button class="status-btn status-completed-active">&check; Completed</button>
+              <button class="status-btn status-partial-inactive">&frac12; Partial</button>
+              <button class="status-btn status-notstarted-inactive">&times; Not Started</button>
+            </div>
+            <div class="flex flex-wrap gap-4 mt-3">
+              <span class="status-helper">&check; <strong>Completed</strong> &mdash; Done as planned</span>
+              <span class="status-helper">&frac12; <strong>Partial</strong> &mdash; Some work done, some remains</span>
+              <span class="status-helper">&times; <strong>Not Started</strong> &mdash; Didn't get to it at all</span>
+            </div>
+          </div>
+
+          <!-- Bullet checkboxes -->
+          <div class="mb-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">Bullet Status</p>
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Audit current onboarding drop-off metrics
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Design new 3-step wizard flow in Figma
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Ship v1 to staging for QA
+              </li>
+            </ul>
+          </div>
+
+          <!-- No notes needed for COMPLETED -->
+          <p class="text-xs text-[#036A6A] flex items-center gap-1.5 mt-2">
+            <span class="material-symbols-outlined text-sm">check_circle</span>
+            All bullets complete. No notes required.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- COMMITMENT #3 — NOT_STARTED (COLLAPSED)                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="commitment-card bg-surface-container-lowest rounded-lg overflow-hidden" data-stagger="6" style="border: 1px solid #E8E5E0;">
+  <!-- Collapsed header row -->
+  <div class="commitment-header" onclick="toggleCard(this.parentElement)">
+    <span class="material-symbols-outlined chevron-icon">expand_more</span>
+    <span class="text-[11px] font-bold tracking-widest uppercase text-secondary opacity-60" style="min-width: 20px;">#3</span>
+    <h3 class="text-[14px] font-medium text-charcoal leading-snug flex-1">SOC2 evidence collection for AWS</h3>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="pill-horizon">EOD</span>
+      <span class="pill-chess"><span class="bar-defensive"></span> Defensive</span>
+      <span class="pill-rally">&rarr; SOC2 Certification</span>
+      <span class="pill-status pill-status-notstarted">&times; Not Started</span>
+    </div>
+  </div>
+
+  <!-- Expandable body -->
+  <div class="commitment-body">
+    <div style="border-top: 1px solid #F2F4F2;">
+      <div class="grid grid-cols-1 md:grid-cols-2">
+        <!-- LEFT: Planned -->
+        <div class="p-5" style="background: #F9F9F7; border-right: 1px solid #F2F4F2;">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">PLANNED</span>
+          </div>
+          <ul class="space-y-2 mt-3">
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Export CloudTrail logs for audit period
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Compile IAM policy screenshots and access reviews
+            </li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Actual -->
+        <div class="p-5 bg-surface-container-lowest">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">ACTUAL</span>
+          </div>
+
+          <!-- Status selector -->
+          <div class="mb-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">What happened?</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button class="status-btn status-completed-inactive">&check; Completed</button>
+              <button class="status-btn status-partial-inactive">&frac12; Partial</button>
+              <button class="status-btn status-notstarted-active">&times; Not Started</button>
+            </div>
+            <div class="flex flex-wrap gap-4 mt-3">
+              <span class="status-helper">&check; <strong>Completed</strong> &mdash; Done as planned</span>
+              <span class="status-helper">&frac12; <strong>Partial</strong> &mdash; Some work done, some remains</span>
+              <span class="status-helper">&times; <strong>Not Started</strong> &mdash; Didn't get to it at all</span>
+            </div>
+          </div>
+
+          <!-- Carry-forward toggle -->
+          <div class="carry-toggle">
+            <span class="material-symbols-outlined text-base" style="color: #455F87;">redo</span>
+            <span class="text-sm font-medium text-charcoal flex-1">Carry to next week?</span>
+            <button class="carry-toggle-btn active" onclick="toggleCarry(this, 'yes')">Yes</button>
+            <button class="carry-toggle-btn" onclick="toggleCarry(this, 'no')">No</button>
+          </div>
+
+          <!-- Bullet checkboxes -->
+          <div class="mb-4 mt-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">Bullet Status</p>
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox"/>
+                Export CloudTrail logs for audit period
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox"/>
+                Compile IAM policy screenshots and access reviews
+              </li>
+            </ul>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-2">
+            <label class="text-sm font-medium text-[#5A605E]">
+              What changed and why? <span class="text-[#9F403D]">*</span>
+            </label>
+            <textarea class="recon-notes" rows="2" placeholder="Why didn't this complete? This information helps leadership understand blockers.">Critical payment outage took priority all week</textarea>
+            <p class="text-[11px] text-secondary text-right mt-1">454 characters remaining</p>
+          </div>
+
+          <!-- Displacement capture -->
+          <div class="displacement-section">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-3">Displacement Details</p>
+
+            <div class="mb-3">
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">What displaced this?</label>
+              <select class="recon-select">
+                <option value="">— Select a reason —</option>
+                <option value="MANAGER_REASSIGNED">Manager reassigned me to other work</option>
+                <option value="PRODUCTION_EMERGENCY" selected>Production emergency</option>
+                <option value="RESOURCE_BLOCKED">Blocked on resources</option>
+                <option value="SCOPE_CHANGE">Scope changed</option>
+                <option value="DEPRIORITIZED">Deprioritized</option>
+                <option value="EXTERNAL_DEPENDENCY">External dependency</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Which commitment took its place? <span class="text-secondary font-normal">(optional)</span>
+              </label>
+              <select class="recon-select">
+                <option value="">— None selected —</option>
+                <option value="c1">Finalize enterprise pricing model</option>
+                <option value="c2">Customer onboarding flow redesign</option>
+                <option value="c4">Team standup facilitation</option>
+                <option value="unplanned1" selected>Emergency hotfix for payment webhook</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Details <span class="text-secondary font-normal">(optional)</span>
+              </label>
+              <textarea class="recon-notes" rows="2" placeholder="Any additional context about what happened...">Critical payment outage took priority all week</textarea>
+              <p class="text-[11px] text-secondary text-right mt-1">454 characters remaining</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- COMMITMENT #4 — PARTIAL + CARRIED FORWARD (COLLAPSED)                  -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="commitment-card bg-surface-container-lowest rounded-lg overflow-hidden" data-stagger="7" style="border: 1px solid #E8E5E0;">
+  <!-- Collapsed header row -->
+  <div class="commitment-header" onclick="toggleCard(this.parentElement)">
+    <span class="material-symbols-outlined chevron-icon">expand_more</span>
+    <span class="text-[11px] font-bold tracking-widest uppercase text-secondary opacity-60" style="min-width: 20px;">#4</span>
+    <h3 class="text-[14px] font-medium text-charcoal leading-snug flex-1">Team standup facilitation</h3>
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <span class="pill-horizon">MORNING</span>
+      <span class="pill-chess"><span class="bar-operational"></span> Operational</span>
+      <span class="pill-unlinked">Unlinked</span>
+      <span class="pill-status pill-status-carried">&rarr; Carried Fwd</span>
+    </div>
+  </div>
+
+  <!-- Expandable body -->
+  <div class="commitment-body">
+    <div style="border-top: 1px solid #F2F4F2;">
+      <div class="grid grid-cols-1 md:grid-cols-2">
+        <!-- LEFT: Planned -->
+        <div class="p-5" style="background: #F9F9F7; border-right: 1px solid #F2F4F2;">
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">PLANNED</span>
+          </div>
+          <ul class="space-y-2 mt-3">
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Run daily standup Mon&ndash;Fri with structured format
+            </li>
+            <li class="flex items-start gap-2 text-sm text-[#5A605E]">
+              <span class="recon-checkbox-display"></span>
+              Publish weekly standup summary to #eng-updates
+            </li>
+          </ul>
+        </div>
+
+        <!-- RIGHT: Actual -->
+        <div class="p-5 bg-surface-container-lowest">
+          <div class="flex items-center gap-2 mb-3">
+            <span class="text-[10px] font-bold tracking-widest uppercase text-secondary opacity-40">ACTUAL</span>
+          </div>
+
+          <!-- Status selector -->
+          <div class="mb-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">What happened?</p>
+            <div class="flex flex-wrap gap-1.5">
+              <button class="status-btn status-completed-inactive">&check; Completed</button>
+              <button class="status-btn status-partial-active">&frac12; Partial</button>
+              <button class="status-btn status-notstarted-inactive">&times; Not Started</button>
+            </div>
+            <div class="flex flex-wrap gap-4 mt-3">
+              <span class="status-helper">&check; <strong>Completed</strong> &mdash; Done as planned</span>
+              <span class="status-helper">&frac12; <strong>Partial</strong> &mdash; Some work done, some remains</span>
+              <span class="status-helper">&times; <strong>Not Started</strong> &mdash; Didn't get to it at all</span>
+            </div>
+          </div>
+
+          <!-- Carry-forward toggle -->
+          <div class="carry-toggle">
+            <span class="material-symbols-outlined text-base" style="color: #455F87;">redo</span>
+            <span class="text-sm font-medium text-charcoal flex-1">Carry to next week?</span>
+            <button class="carry-toggle-btn active" onclick="toggleCarry(this, 'yes')">Yes</button>
+            <button class="carry-toggle-btn" onclick="toggleCarry(this, 'no')">No</button>
+          </div>
+
+          <!-- Bullet checkboxes -->
+          <div class="mb-4 mt-4">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-2">Bullet Status</p>
+            <ul class="space-y-2">
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox" checked/>
+                Run daily standup Mon&ndash;Fri with structured format
+              </li>
+              <li class="flex items-start gap-2 text-sm text-charcoal">
+                <input type="checkbox" class="recon-checkbox"/>
+                Publish weekly standup summary to #eng-updates
+              </li>
+            </ul>
+          </div>
+
+          <!-- Notes -->
+          <div class="mb-2">
+            <label class="text-sm font-medium text-[#5A605E]">
+              What changed and why? <span class="text-[#9F403D]">*</span>
+            </label>
+            <textarea class="recon-notes" rows="2" placeholder="Describe what happened and the reason for any deviation from plan...">Only ran Monday standup, rest of week consumed by incident</textarea>
+            <p class="text-[11px] text-secondary text-right mt-1">441 characters remaining</p>
+          </div>
+
+          <!-- Displacement capture -->
+          <div class="displacement-section">
+            <p class="text-[10px] font-bold tracking-widest uppercase text-secondary mb-3">Displacement Details</p>
+
+            <div class="mb-3">
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">What displaced this?</label>
+              <select class="recon-select">
+                <option value="">— Select a reason —</option>
+                <option value="MANAGER_REASSIGNED">Manager reassigned me to other work</option>
+                <option value="PRODUCTION_EMERGENCY" selected>Production emergency</option>
+                <option value="RESOURCE_BLOCKED">Blocked on resources</option>
+                <option value="SCOPE_CHANGE">Scope changed</option>
+                <option value="DEPRIORITIZED">Deprioritized</option>
+                <option value="EXTERNAL_DEPENDENCY">External dependency</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Which commitment took its place? <span class="text-secondary font-normal">(optional)</span>
+              </label>
+              <select class="recon-select">
+                <option value="" selected>— None selected —</option>
+                <option value="c1">Finalize enterprise pricing model</option>
+                <option value="c2">Customer onboarding flow redesign</option>
+                <option value="c3">SOC2 evidence collection for AWS</option>
+                <option value="unplanned1">Emergency hotfix for payment webhook</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="text-sm font-medium text-[#5A605E] block mb-1">
+                Details <span class="text-secondary font-normal">(optional)</span>
+              </label>
+              <textarea class="recon-notes" rows="2" placeholder="Any additional context about what happened..."></textarea>
+              <p class="text-[11px] text-secondary text-right mt-1">500 characters remaining</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- RECONCILIATION PROGRESS                                                -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="mt-4 mb-8 p-4 rounded-lg" style="background: #FFF8E1; border: 1px solid #F0D9A8;">
+  <div class="flex items-center justify-between mb-2">
+    <span class="text-sm font-medium" style="color: #92650A;">Reconcile all remaining commitments before submitting.</span>
+    <span class="text-xs font-bold" style="color: #92650A;">3 of 4 reconciled</span>
+  </div>
+  <div class="progress-bar-track">
+    <div class="progress-bar-fill" style="width: 75%; background: #C2860B;"></div>
+  </div>
+</div>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- BOTTOM BAR                                                             -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<div class="bottom-bar">
+  <div class="max-w-[960px] mx-auto px-8 py-3 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="progress-bar-track" style="width: 120px;">
+        <div class="progress-bar-fill" style="width: 75%; background: #C2860B;"></div>
+      </div>
+      <span class="text-sm text-secondary font-medium">3 of 4 reconciled</span>
+    </div>
+    <button class="px-6 py-2.5 text-sm font-semibold rounded transition-colors" style="background: #E8E8E6; color: #94A3B8; cursor: not-allowed;" disabled>
+      Complete Reconciliation
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<!-- INTERACTIVE JS                                                         -->
+<!-- ═══════════════════════════════════════════════════════════════════════ -->
+<script>
+// ─── Accordion toggle ───
+function toggleCard(card) {
+  card.classList.toggle('expanded');
+}
+
+// ─── Carry-forward toggle ───
+function toggleCarry(btn, value) {
+  const container = btn.parentElement;
+  const buttons = container.querySelectorAll('.carry-toggle-btn');
+  buttons.forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── Status buttons ───
+document.querySelectorAll('.commitment-card, .bg-surface-container-lowest').forEach(card => {
+  const statusGroups = card.querySelectorAll('.flex.flex-wrap.gap-1\\.5');
+  statusGroups.forEach(group => {
+    const btns = group.querySelectorAll('.status-btn');
+    if (btns.length !== 3) return;
+
+    const classes = [
+      ['status-completed-active', 'status-completed-inactive'],
+      ['status-partial-active', 'status-partial-inactive'],
+      ['status-notstarted-active', 'status-notstarted-inactive'],
+    ];
+
+    btns.forEach((btn, idx) => {
+      btn.addEventListener('click', () => {
+        btns.forEach((b, j) => {
+          b.classList.remove(classes[j][0]);
+          b.classList.add(classes[j][1]);
+        });
+        btn.classList.remove(classes[idx][1]);
+        btn.classList.add(classes[idx][0]);
+
+        // Show/hide carry-forward toggle based on status
+        const carryToggle = card.querySelector('.carry-toggle');
+        if (carryToggle) {
+          if (idx === 0) {
+            // Completed — hide carry toggle
+            carryToggle.style.display = 'none';
+          } else {
+            // Partial or Not Started — show carry toggle
+            carryToggle.style.display = 'flex';
+          }
+        }
+      });
+    });
+  });
+});
+
+// ─── Staggered fade-in on load ───
+document.addEventListener('DOMContentLoaded', () => {
+  const cards = document.querySelectorAll('.commitment-card');
+  cards.forEach((card, i) => {
+    const stagger = card.getAttribute('data-stagger') || i;
+    setTimeout(() => {
+      card.classList.add('visible');
+    }, stagger * 40);
+  });
+});
+</script>
+
+</body>
+</html>

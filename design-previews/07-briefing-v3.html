@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass Briefing - Executive Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-dim": "#50516c",
+              "surface-container-lowest": "#ffffff",
+              "on-tertiary-fixed": "#393a53",
+              "surface-dim": "#d4dcd8",
+              "background": "#f9f9f7",
+              "primary-fixed": "#d5e3ff",
+              "outline-variant": "#adb3b0",
+              "tertiary-fixed": "#dbdafb",
+              "error-dim": "#4e0309",
+              "on-secondary": "#e0fffe",
+              "inverse-primary": "#adc8f5",
+              "surface-container": "#ebefec",
+              "on-tertiary-fixed-variant": "#555671",
+              "tertiary": "#5c5d78",
+              "on-secondary-fixed-variant": "#006666",
+              "secondary": "#036a6a",
+              "inverse-surface": "#0c0f0e",
+              "outline": "#767c79",
+              "surface-tint": "#455f87",
+              "surface-variant": "#dee4e0",
+              "primary": "#455f87",
+              "secondary-dim": "#005d5d",
+              "primary-container": "#d5e3ff",
+              "on-primary-fixed-variant": "#425c83",
+              "on-surface": "#2d3432",
+              "on-primary-fixed": "#254065",
+              "on-error-container": "#752121",
+              "surface-container-low": "#f2f4f2",
+              "on-secondary-container": "#005c5c",
+              "on-tertiary-container": "#4b4c67",
+              "on-primary": "#f6f7ff",
+              "surface-container-high": "#e5e9e6",
+              "surface": "#f9f9f7",
+              "primary-fixed-dim": "#bed6ff",
+              "on-tertiary": "#fbf7ff",
+              "tertiary-container": "#dbdafb",
+              "tertiary-fixed-dim": "#cdccec",
+              "secondary-container": "#a0f0f0",
+              "error-container": "#fe8983",
+              "error": "#9f403d",
+              "secondary-fixed-dim": "#92e2e1",
+              "surface-bright": "#f9f9f7",
+              "on-background": "#2d3432",
+              "on-secondary-fixed": "#004747",
+              "inverse-on-surface": "#9c9d9c",
+              "secondary-fixed": "#a0f0f0",
+              "surface-container-highest": "#dee4e0",
+              "on-error": "#fff7f6",
+              "on-surface-variant": "#5a605e",
+              "primary-dim": "#39537a",
+              "on-primary-container": "#385379"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .serif-text {
+            font-family: 'Newsreader', serif;
+        }
+    </style>
+</head>
+<body class="bg-[#F9F9F7] text-on-surface">
+<!-- TopAppBar -->
+<header class="bg-[#F9F9F7]/85 backdrop-blur-xl border-b border-[#1E3A5F]/10 fixed top-0 z-50 flex justify-between items-center px-12 py-4 w-full">
+<div class="flex items-center gap-12">
+<span class="font-['Newsreader'] text-2xl italic font-light text-[#1E3A5F]">Compass Briefing</span>
+<nav class="hidden md:flex gap-8">
+<a class="text-[#036A6A] border-b border-[#036A6A] pb-1 uppercase tracking-[0.05rem] text-xs font-medium transition-colors duration-200" href="#">Executive Summary</a>
+<a class="text-stone-500 font-sans uppercase tracking-[0.05rem] text-xs font-medium hover:text-[#036A6A] transition-colors duration-200" href="#">Market Intel</a>
+<a class="text-stone-500 font-sans uppercase tracking-[0.05rem] text-xs font-medium hover:text-[#036A6A] transition-colors duration-200" href="#">Sector Briefs</a>
+<a class="text-stone-500 font-sans uppercase tracking-[0.05rem] text-xs font-medium hover:text-[#036A6A] transition-colors duration-200" href="#">Risk Analysis</a>
+</nav>
+</div>
+<div class="flex items-center gap-6">
+<span class="text-xs uppercase tracking-[0.05rem] font-medium text-stone-500">Oct 24 - Nov 24</span>
+<div class="flex items-center gap-4 text-stone-600">
+<span class="material-symbols-outlined cursor-pointer" data-icon="search">search</span>
+<span class="material-symbols-outlined cursor-pointer" data-icon="notifications">notifications</span>
+<img alt="Executive User Profile" class="w-8 h-8 rounded-full border border-outline-variant" data-alt="Portrait of a professional executive in formal attire" src="https://lh3.googleusercontent.com/aida-public/AB6AXuACfojehpJ9FZ7HIy5QMy0iLel28osqWmjDEFZUG-EZV_JjcT5Hhy7M3wACe2MlwHJUGWyWCsPa-j3voQ4uZDktegSMRrHWx7Rx71dvRsxf_sIfRu6LKnc30J6G4O91Geyi4xpCvCdcI0GnTGWiJCvkCkRLsY5uqI3lCC7LrBpFuFcNR1cbNVWzfFNvKE9816kZUlDUmr9JrEVlpv4z7dTebbhGI_ZXO75_yLv9yCDDEIZK0TLYzhZhaiGZBN9G_WIuIbuQEuyaZE0"/>
+</div>
+</div>
+</header>
+<main class="pt-24 flex min-h-screen">
+<!-- LEFT COLUMN: THE BRIEFING DOCUMENT (70%) -->
+<section class="w-[70%] px-12 pb-20 border-r border-[#1E3A5F]/5">
+<!-- AI Briefing Narrative Card -->
+<div class="bg-surface-container-lowest p-10 mb-8 border border-[#E8E5E0]">
+<div class="mb-6">
+<span class="text-[10px] uppercase tracking-[0.1rem] font-bold text-on-surface-variant bg-surface-container px-2 py-1">AI BRIEFING · GENERATED MAR 20, 2026 8:00 AM</span>
+</div>
+<h1 class="serif-text text-5xl font-light text-on-surface mb-8 leading-tight">Weekly Intelligence Summary</h1>
+<div class="grid grid-cols-1 gap-10">
+<div class="max-w-3xl">
+<p class="text-lg text-on-surface-variant leading-relaxed mb-8">
+                            Strategic alignment is at <span class="text-error font-semibold">41% this week</span>, down from 48% last week. The primary driver is increased operational and defensive work displacing strategic commitments — 3 commitments were marked as <span class="italic">Manager Reassigned</span> during reconciliation. Rally cry coverage remains strong at 88% — most team commitments link to at least one rally cry. However, <span class="underline decoration-[#036A6A] underline-offset-4 font-medium">'Reduce Churn to &lt; 2%'</span> has zero linked commitments from the engineering team, creating a coverage gap. Carry-forward rate rose to 18%, up from 12%, with <span class="italic font-medium">Production Emergency</span> cited as the top displacement reason.
+                        </p>
+<h3 class="serif-text text-2xl text-on-surface mb-4">Suggested Focus Areas</h3>
+<ul class="space-y-3 text-on-surface-variant">
+<li class="flex items-start gap-3">
+<span class="mt-2 w-1.5 h-1.5 bg-secondary rounded-full flex-shrink-0"></span>
+<span>Remediate the <strong class="text-on-surface">Churn Reduction</strong> coverage gap within Engineering.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="mt-2 w-1.5 h-1.5 bg-secondary rounded-full flex-shrink-0"></span>
+<span>Address the <strong class="text-on-surface">Rising carry-forward trend</strong> (now 18%) to prevent backlog bloat.</span>
+</li>
+<li class="flex items-start gap-3">
+<span class="mt-2 w-1.5 h-1.5 bg-secondary rounded-full flex-shrink-0"></span>
+<span>Investigate why <strong class="text-on-surface">Strategic alignment</strong> has dropped below the 45% floor target.</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Key Metrics Strip -->
+<div class="grid grid-cols-5 gap-4 mb-12">
+<div class="bg-surface-container-low p-4 border-l-2 border-error">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium block mb-1">Strategic Alignment</span>
+<span class="text-2xl font-light text-on-surface">41%</span>
+<span class="text-[10px] text-error block mt-1">▼ 7% from LW</span>
+</div>
+<div class="bg-surface-container-low p-4">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium block mb-1">Rally Cry Coverage</span>
+<span class="text-2xl font-light text-on-surface">88%</span>
+<span class="text-[10px] text-secondary block mt-1">Stable</span>
+</div>
+<div class="bg-surface-container-low p-4 border-l-2 border-secondary">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium block mb-1">Carry-Forward Rate</span>
+<span class="text-2xl font-light text-on-surface">18%</span>
+<span class="text-[10px] text-error block mt-1">▲ 6% from LW</span>
+</div>
+<div class="bg-surface-container-low p-4">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium block mb-1">Completion Rate</span>
+<span class="text-2xl font-light text-on-surface">72%</span>
+</div>
+<div class="bg-surface-container-low p-4">
+<span class="text-[10px] uppercase tracking-wider text-on-surface-variant font-medium block mb-1">Active Drift Signals</span>
+<span class="text-2xl font-light text-on-surface">2</span>
+</div>
+</div>
+<!-- Rally Cry Coverage -->
+<div class="mb-12">
+<h3 class="serif-text text-2xl text-on-surface mb-6">Rally Cry Coverage Detail</h3>
+<div class="grid grid-cols-3 gap-6">
+<div class="bg-surface-container-lowest p-6 border border-[#E8E5E0]">
+<span class="text-[10px] uppercase tracking-widest font-bold text-secondary mb-2 block">Operational Excellence</span>
+<h4 class="font-medium text-lg mb-4">Launch Enterprise Tier</h4>
+<div class="flex justify-between items-center text-sm text-on-surface-variant">
+<span>14 commitments</span>
+<span>9 people</span>
+</div>
+<div class="w-full bg-surface-container h-1 mt-4">
+<div class="bg-secondary h-full w-[90%]"></div>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 border border-[#E8E5E0] border-l-4 border-l-error">
+<span class="text-[10px] uppercase tracking-widest font-bold text-error mb-2 block">Customer Retention</span>
+<h4 class="font-medium text-lg mb-4">Reduce Churn to &lt; 2%</h4>
+<div class="text-sm text-error font-medium mb-4">0 engineering commitments</div>
+<div class="flex justify-between items-center text-sm text-on-surface-variant">
+<span>4 commitments</span>
+<span>2 people</span>
+</div>
+</div>
+<div class="bg-surface-container-lowest p-6 border border-[#E8E5E0]">
+<span class="text-[10px] uppercase tracking-widest font-bold text-secondary mb-2 block">Compliance</span>
+<h4 class="font-medium text-lg mb-4">SOC2 Certification</h4>
+<div class="flex justify-between items-center text-sm text-on-surface-variant">
+<span>8 commitments</span>
+<span>5 people</span>
+</div>
+<div class="w-full bg-surface-container h-1 mt-4">
+<div class="bg-secondary h-full w-[65%]"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Team Health Table -->
+<div class="bg-surface-container-lowest border border-[#E8E5E0] overflow-hidden">
+<table class="w-full text-left text-sm">
+<thead>
+<tr class="bg-surface-container-low border-b border-[#E8E5E0]">
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant">Team Lead</th>
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant">Headcount</th>
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant">Strategic %</th>
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant">Coverage</th>
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant">Drift Signal</th>
+<th class="px-6 py-4 uppercase tracking-tighter text-[10px] font-semibold text-on-surface-variant text-right">Carry-Forward</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-surface-container">
+<tr>
+<td class="px-6 py-4 font-medium">Marcus Thorne</td>
+<td class="px-6 py-4">12</td>
+<td class="px-6 py-4 text-error">32%</td>
+<td class="px-6 py-4">85%</td>
+<td class="px-6 py-4"><span class="px-2 py-0.5 bg-error-container text-on-error-container text-[10px] font-bold rounded">SUSTAINED</span></td>
+<td class="px-6 py-4 text-right">28%</td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-medium">Elena Rodriguez</td>
+<td class="px-6 py-4">8</td>
+<td class="px-6 py-4">44%</td>
+<td class="px-6 py-4">92%</td>
+<td class="px-6 py-4"><span class="px-2 py-0.5 bg-primary-container text-on-primary-container text-[10px] font-bold rounded">EMERGING</span></td>
+<td class="px-6 py-4 text-right">22%</td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-medium">Sarah Chen</td>
+<td class="px-6 py-4">15</td>
+<td class="px-6 py-4 text-error">38%</td>
+<td class="px-6 py-4">90%</td>
+<td class="px-6 py-4 text-on-surface-variant">—</td>
+<td class="px-6 py-4 text-right">15%</td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-medium">David Park</td>
+<td class="px-6 py-4">6</td>
+<td class="px-6 py-4">52%</td>
+<td class="px-6 py-4">100%</td>
+<td class="px-6 py-4 text-on-surface-variant">—</td>
+<td class="px-6 py-4 text-right">8%</td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-medium">Aisha Gupta</td>
+<td class="px-6 py-4">10</td>
+<td class="px-6 py-4">48%</td>
+<td class="px-6 py-4">88%</td>
+<td class="px-6 py-4 text-on-surface-variant">—</td>
+<td class="px-6 py-4 text-right">12%</td>
+</tr>
+<tr>
+<td class="px-6 py-4 font-medium">Tomás Miller</td>
+<td class="px-6 py-4">9</td>
+<td class="px-6 py-4">55%</td>
+<td class="px-6 py-4">95%</td>
+<td class="px-6 py-4 text-on-surface-variant">—</td>
+<td class="px-6 py-4 text-right">5%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- RIGHT COLUMN: AI ASSISTANT SIDEBAR (30%) -->
+<aside class="w-[30%] bg-[#F2F4F2] h-[calc(100vh-6rem)] sticky top-24 flex flex-col p-8">
+<div class="flex items-center gap-3 mb-8">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">psychology</span>
+<span class="serif-text text-xl text-[#1E3A5F]">Compass Intelligence</span>
+</div>
+<div class="flex-grow overflow-y-auto space-y-6 mb-8 pr-2">
+<!-- Message Thread -->
+<div class="space-y-4">
+<div class="flex flex-col items-end">
+<div class="bg-surface-container-highest p-4 rounded-lg max-w-[90%] text-sm">
+                            Why did strategic alignment drop?
+                        </div>
+</div>
+<div class="flex flex-col items-start">
+<div class="bg-white p-4 rounded-lg max-w-[90%] text-sm shadow-sm border border-black/5">
+<p class="leading-relaxed">
+                                Strategic alignment fell 7 points because 3 commitments were reassigned by managers from strategic to operational work mid-cycle. <span class="font-semibold">Sarah Chen's team</span> accounted for 2 of those reassignments, both related to a production incident on Tuesday.
+                            </p>
+</div>
+</div>
+</div>
+<div class="space-y-4">
+<div class="flex flex-col items-end">
+<div class="bg-surface-container-highest p-4 rounded-lg max-w-[90%] text-sm">
+                            Which teams have the highest carry-forward?
+                        </div>
+</div>
+<div class="flex flex-col items-start">
+<div class="bg-white p-4 rounded-lg max-w-[90%] text-sm shadow-sm border border-black/5">
+<p class="leading-relaxed">
+<span class="font-semibold">Marcus Thorne's team</span> leads with 28% carry-forward, driven by 2 commitments blocked by external dependencies. <span class="font-semibold">Elena Rodriguez's team</span> is next at 22%.
+                            </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="relative">
+<input class="w-full bg-white border-b-2 border-transparent focus:border-secondary focus:ring-0 px-4 py-3 text-sm transition-all placeholder:text-stone-400" placeholder="Ask about this week..." type="text"/>
+<button class="absolute right-2 top-1/2 -translate-y-1/2 text-secondary p-1 hover:scale-95 transition-transform">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+</button>
+</div>
+<div class="mt-4 text-[10px] text-stone-400 text-center uppercase tracking-widest">
+                System Briefing Mode Active
+            </div>
+</aside>
+</main>
+</body></html>

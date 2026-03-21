@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass - My Team | Executive Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-fixed-dim": "#cdccec",
+              "on-tertiary-container": "#4b4c67",
+              "surface-container-low": "#f2f4f2",
+              "surface-container-highest": "#dee4e0",
+              "surface-container": "#ebefec",
+              "on-primary": "#f6f7ff",
+              "on-primary-fixed": "#254065",
+              "on-secondary": "#e0fffe",
+              "on-background": "#2d3432",
+              "inverse-on-surface": "#9c9d9c",
+              "surface-tint": "#455f87",
+              "primary-fixed": "#d5e3ff",
+              "inverse-surface": "#0c0f0e",
+              "on-tertiary-fixed": "#393a53",
+              "on-error": "#fff7f6",
+              "secondary-fixed": "#a0f0f0",
+              "surface-container-high": "#e5e9e6",
+              "secondary-fixed-dim": "#92e2e1",
+              "on-surface": "#2d3432",
+              "outline": "#767c79",
+              "primary-dim": "#39537a",
+              "tertiary-dim": "#50516c",
+              "on-tertiary": "#fbf7ff",
+              "surface-container-lowest": "#ffffff",
+              "secondary-container": "#a0f0f0",
+              "tertiary-fixed": "#dbdafb",
+              "on-primary-container": "#385379",
+              "surface-dim": "#d4dcd8",
+              "on-secondary-fixed": "#004747",
+              "surface-bright": "#f9f9f7",
+              "error-dim": "#4e0309",
+              "on-surface-variant": "#5a605e",
+              "on-primary-fixed-variant": "#425c83",
+              "error-container": "#fe8983",
+              "primary": "#455f87",
+              "on-secondary-fixed-variant": "#006666",
+              "on-error-container": "#752121",
+              "secondary-dim": "#005d5d",
+              "surface-variant": "#dee4e0",
+              "error": "#9f403d",
+              "background": "#f9f9f7",
+              "primary-container": "#d5e3ff",
+              "tertiary-container": "#dbdafb",
+              "inverse-primary": "#adc8f5",
+              "tertiary": "#5c5d78",
+              "outline-variant": "#adb3b0",
+              "on-secondary-container": "#005c5c",
+              "primary-fixed-dim": "#bed6ff",
+              "on-tertiary-fixed-variant": "#555671",
+              "surface": "#f9f9f7",
+              "secondary": "#036a6a"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        vertical-align: middle;
+      }
+      body {
+        background-color: #F9F9F7;
+        color: #2D3432;
+      }
+    </style>
+</head>
+<body class="font-body antialiased">
+<!-- TopNavBar (Shared Component Execution) -->
+<header class="bg-[#F9F9F7] dark:bg-slate-950 border-b border-slate-300/20 dark:border-slate-800/50">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-[1600px] mx-auto">
+<div class="flex items-center gap-8">
+<span class="font-['Newsreader'] text-2xl font-light tracking-tighter text-slate-900 dark:text-slate-50">Compass</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-sm" href="#">My Week</a>
+<a class="text-[#036A6A] border-b-2 border-[#036A6A] pb-1 font-medium text-sm" href="#">My Team</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors text-sm" href="#">The Briefing</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-slate-500 hover:text-[#036A6A] transition-all duration-300" data-icon="notifications">notifications</button>
+<button class="material-symbols-outlined text-slate-500 hover:text-[#036A6A] transition-all duration-300" data-icon="account_circle">account_circle</button>
+</div>
+</div>
+</header>
+<main class="max-w-[1600px] mx-auto px-8 py-10">
+<div class="grid grid-cols-12 gap-10">
+<!-- Main Content Area -->
+<div class="col-span-12 lg:col-span-8 space-y-10">
+<!-- Team Metrics Strip -->
+<div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15">
+<p class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2">Team Size</p>
+<p class="font-headline text-4xl text-on-surface">8</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15">
+<p class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2">Rally Cry Coverage</p>
+<p class="font-headline text-4xl text-secondary">88%</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15">
+<p class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2">Carry-Forward Rate</p>
+<p class="font-headline text-4xl text-on-surface">22%</p>
+</div>
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15">
+<p class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant mb-2">Unlinked Commitments</p>
+<p class="font-headline text-4xl text-error">6</p>
+</div>
+</div>
+<!-- AI Team Narrative -->
+<section class="bg-surface-container-lowest p-10 rounded-sm border border-outline-variant/15 shadow-sm">
+<div class="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-8">
+<div>
+<span class="text-[10px] font-label uppercase tracking-[0.15em] text-on-surface-variant block mb-2">AI SUMMARY · BASED ON WEEK 6 DATA</span>
+<h2 class="font-headline text-3xl text-on-surface italic">Team Summary</h2>
+</div>
+</div>
+<div class="max-w-2xl">
+<p class="text-on-surface-variant leading-relaxed mb-8 text-lg">
+                            Your team of 8 has 88% of commitments linked to rally cries this cycle. Two coverage gaps need attention: <span class="text-on-surface font-medium">Marcus Thorne</span> has no commitments linked to any rally cry (4 unlinked commitments), and <span class="italic">'Reduce Churn'</span> has no representation from your team. Last cycle's reconciliation showed a 22% carry-forward rate — up from 15% — with Resource Blocked as the primary displacement reason.
+                        </p>
+<div class="space-y-6">
+<h3 class="font-label text-xs font-bold uppercase tracking-widest text-on-surface pb-2 border-b border-outline-variant/20">Suggested Actions</h3>
+<ul class="space-y-4">
+<li class="group">
+<a class="flex items-center justify-between py-1 border-b border-transparent hover:border-secondary transition-all" href="#">
+<span class="text-on-surface-variant group-hover:text-on-surface">Review Marcus Thorne's 4 unlinked commitments — potential to align with Enterprise Tier</span>
+<span class="text-secondary ml-4 transition-transform group-hover:translate-x-1">→</span>
+</a>
+</li>
+<li class="group">
+<a class="flex items-center justify-between py-1 border-b border-transparent hover:border-secondary transition-all" href="#">
+<span class="text-on-surface-variant group-hover:text-on-surface">Churn Reduction has zero team coverage — consider reassigning capacity</span>
+<span class="text-secondary ml-4 transition-transform group-hover:translate-x-1">→</span>
+</a>
+</li>
+<li class="group">
+<a class="flex items-center justify-between py-1 border-b border-transparent hover:border-secondary transition-all" href="#">
+<span class="text-on-surface-variant group-hover:text-on-surface">Carry-forward trending up — investigate resource blocking patterns</span>
+<span class="text-secondary ml-4 transition-transform group-hover:translate-x-1">→</span>
+</a>
+</li>
+</ul>
+</div>
+</div>
+</section>
+<!-- Team Member List -->
+<div class="space-y-4">
+<h3 class="font-headline text-2xl text-on-surface mb-6">Individual Performance &amp; Alignment</h3>
+<!-- Marcus Thorne (Flagged) -->
+<div class="bg-surface-container-lowest p-6 rounded-sm border-l-4 border-[#E8E5E0] shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-headline italic text-on-surface">MT</div>
+<div>
+<h4 class="font-medium text-on-surface">Marcus Thorne</h4>
+<p class="text-xs text-on-surface-variant">Senior Engineer</p>
+</div>
+</div>
+<div class="flex-1 max-w-xs px-4">
+<div class="flex justify-between text-[10px] font-label uppercase tracking-tighter text-on-surface-variant mb-1">
+<span>CHESS Distribution</span>
+<span>Strategic 0%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-primary/20 w-0"></div>
+<div class="h-full bg-secondary/20 w-1/4"></div>
+<div class="h-full bg-tertiary/20 w-1/2"></div>
+<div class="h-full bg-outline-variant w-1/4"></div>
+</div>
+</div>
+<div class="flex items-center gap-8 text-sm">
+<div class="text-center">
+<p class="font-bold text-error">0 linked</p>
+<p class="text-[10px] text-on-surface-variant uppercase">4 unlinked</p>
+</div>
+<div class="text-center">
+<p class="font-medium text-on-surface">0 carried</p>
+<p class="text-[10px] text-on-surface-variant uppercase">forward</p>
+</div>
+<div class="text-right min-w-[100px]">
+<p class="text-error font-medium flex items-center justify-end gap-1">
+                                    Alignment <span class="material-symbols-outlined text-xs">south</span>
+</p>
+<p class="text-[10px] text-on-surface-variant uppercase">Critical Gap</p>
+</div>
+</div>
+</div>
+<!-- Member 2 -->
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15 flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-headline italic text-on-surface">EL</div>
+<div>
+<h4 class="font-medium text-on-surface">Elena L.</h4>
+<p class="text-xs text-on-surface-variant">Product Manager</p>
+</div>
+</div>
+<div class="flex-1 max-w-xs px-4">
+<div class="flex justify-between text-[10px] font-label uppercase tracking-tighter text-on-surface-variant mb-1">
+<span>CHESS Distribution</span>
+<span>Strategic 60%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-3/5"></div>
+<div class="h-full bg-primary/40 w-1/5"></div>
+<div class="h-full bg-tertiary/40 w-1/5"></div>
+</div>
+</div>
+<div class="flex items-center gap-8 text-sm">
+<div class="text-center">
+<p class="font-bold text-on-surface">5 linked</p>
+<p class="text-[10px] text-on-surface-variant uppercase">5 total</p>
+</div>
+<div class="text-center">
+<p class="font-medium text-on-surface">0 carried</p>
+<p class="text-[10px] text-on-surface-variant uppercase">forward</p>
+</div>
+<div class="text-right min-w-[100px]">
+<p class="text-secondary font-medium flex items-center justify-end gap-1">
+                                    Stable <span class="material-symbols-outlined text-xs">horizontal_rule</span>
+</p>
+<p class="text-[10px] text-on-surface-variant uppercase">High Alignment</p>
+</div>
+</div>
+</div>
+<!-- Member 3 -->
+<div class="bg-surface-container-lowest p-6 rounded-sm border border-outline-variant/15 flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-headline italic text-on-surface">JS</div>
+<div>
+<h4 class="font-medium text-on-surface">James S.</h4>
+<p class="text-xs text-on-surface-variant">Engineering Manager</p>
+</div>
+</div>
+<div class="flex-1 max-w-xs px-4">
+<div class="flex justify-between text-[10px] font-label uppercase tracking-tighter text-on-surface-variant mb-1">
+<span>CHESS Distribution</span>
+<span>Strategic 40%</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden flex">
+<div class="h-full bg-secondary w-2/5"></div>
+<div class="h-full bg-primary w-2/5"></div>
+<div class="h-full bg-outline-variant w-1/5"></div>
+</div>
+</div>
+<div class="flex items-center gap-8 text-sm">
+<div class="text-center">
+<p class="font-bold text-on-surface">6 linked</p>
+<p class="text-[10px] text-on-surface-variant uppercase">8 total</p>
+</div>
+<div class="text-center">
+<p class="font-medium text-[#B68E5E]">2 carried</p>
+<p class="text-[10px] text-on-surface-variant uppercase italic">Resource Blocked</p>
+</div>
+<div class="text-right min-w-[100px]">
+<p class="text-secondary font-medium flex items-center justify-end gap-1">
+                                    Alignment ↓
+                                </p>
+<p class="text-[10px] text-on-surface-variant uppercase italic">Emerging Drift</p>
+</div>
+</div>
+</div>
+<!-- Additional members placeholder for visual density -->
+<div class="bg-surface-container-lowest/50 p-6 rounded-sm border border-outline-variant/10 flex flex-col md:flex-row md:items-center justify-between gap-6 opacity-60">
+<div class="flex items-center gap-4 min-w-[200px]">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center font-headline italic text-on-surface">SW</div>
+<div>
+<h4 class="font-medium text-on-surface">Sarah W.</h4>
+<p class="text-xs text-on-surface-variant">UX Architect</p>
+</div>
+</div>
+<div class="text-right flex-1 flex justify-end">
+<span class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant italic">Data view collapsed</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Sidebar -->
+<aside class="col-span-12 lg:col-span-4 space-y-8">
+<!-- Coverage Gap Panel -->
+<div class="bg-surface-container p-8 rounded-sm border border-outline-variant/15">
+<h3 class="font-headline text-2xl text-on-surface italic mb-8">Rally Cry Coverage Gaps</h3>
+<div class="space-y-8">
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-outline-variant/30">
+<h4 class="text-sm font-medium text-on-surface mb-1">Launch Enterprise Tier</h4>
+<p class="text-xs text-on-surface-variant mb-2">4 commitments from 3 people</p>
+<div class="flex gap-1">
+<div class="w-8 h-1 bg-secondary"></div>
+<div class="w-8 h-1 bg-secondary"></div>
+<div class="w-8 h-1 bg-surface-container-highest"></div>
+</div>
+</div>
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-error/30">
+<h4 class="text-sm font-medium text-on-surface mb-1">Reduce Churn to &lt;2%</h4>
+<p class="text-xs text-error font-medium mb-2">0 commitments</p>
+<div class="h-1 bg-[#E8E5E0] w-full max-w-[120px]"></div>
+<p class="text-[10px] mt-2 text-on-surface-variant italic">Critical: No team representation found</p>
+</div>
+<div class="relative pl-6 before:content-[''] before:absolute before:left-0 before:top-0 before:bottom-0 before:w-px before:bg-outline-variant/30">
+<h4 class="text-sm font-medium text-on-surface mb-1">SOC2 Certification</h4>
+<p class="text-xs text-on-surface-variant mb-2">2 commitments from 2 people</p>
+<div class="flex gap-1">
+<div class="w-8 h-1 bg-primary-dim"></div>
+<div class="w-8 h-1 bg-surface-container-highest"></div>
+<div class="w-8 h-1 bg-surface-container-highest"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Strategic Context Card -->
+<div class="bg-surface-container-highest/30 p-8 rounded-sm border border-outline-variant/10">
+<span class="text-[10px] font-label uppercase tracking-widest text-on-surface-variant">Resource Pattern</span>
+<h4 class="font-headline text-xl mt-1 mb-4">Carry-Forward Drift</h4>
+<p class="text-sm text-on-surface-variant leading-relaxed">
+                        The current 22% rate suggests systemic blocking. 4 out of 8 team members cited "Inter-team Dependency" as their primary blocker this week.
+                    </p>
+<button class="mt-6 text-secondary text-xs font-bold uppercase tracking-widest flex items-center gap-2 hover:underline">
+                        View Dependency Map <span class="material-symbols-outlined text-sm">open_in_new</span>
+</button>
+</div>
+<!-- Primary Action -->
+<div class="pt-6">
+<button class="w-full bg-surface-container-lowest border-2 border-secondary text-secondary py-4 px-6 rounded-sm font-bold tracking-widest uppercase text-xs flex items-center justify-center gap-3 transition-all hover:bg-secondary hover:text-on-secondary active:scale-[0.98]">
+                        Assign Work <span class="material-symbols-outlined text-lg">trending_flat</span>
+</button>
+<p class="text-[10px] text-center text-on-surface-variant mt-4 uppercase tracking-tighter italic">Changes will be reflected in next cycle briefing</p>
+</div>
+</aside>
+</div>
+</main>
+<!-- Marginalia Image Placeholder (Visual texture) -->
+<div class="fixed bottom-10 right-10 opacity-5 pointer-events-none select-none">
+<h1 class="font-headline text-[200px] leading-none tracking-tighter">Compass</h1>
+</div>
+</body></html>

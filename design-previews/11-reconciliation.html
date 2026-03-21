@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass Intelligence | Reconciliation View</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "primary-fixed": "#a1f0f0",
+              "inverse-primary": "#85d4d3",
+              "tertiary-fixed-dim": "#ffb691",
+              "background": "#f9f9f7",
+              "on-background": "#1a1c1b",
+              "primary-fixed-dim": "#85d4d3",
+              "on-secondary-fixed-variant": "#304c4b",
+              "primary": "#005050",
+              "surface-bright": "#f9f9f7",
+              "on-secondary": "#ffffff",
+              "secondary-fixed": "#cae8e8",
+              "on-tertiary-fixed": "#341100",
+              "surface-variant": "#e2e3e1",
+              "inverse-on-surface": "#f1f1ef",
+              "outline-variant": "#bec9c8",
+              "surface-dim": "#dadad8",
+              "surface-container-lowest": "#ffffff",
+              "tertiary-container": "#8c4f2e",
+              "surface": "#f9f9f7",
+              "on-primary": "#ffffff",
+              "on-primary-fixed-variant": "#004f50",
+              "on-primary-fixed": "#002020",
+              "on-tertiary-fixed-variant": "#6f3819",
+              "surface-container-high": "#e8e8e6",
+              "on-surface-variant": "#3e4948",
+              "secondary": "#476363",
+              "primary-container": "#036a6a",
+              "tertiary": "#6f3819",
+              "on-tertiary-container": "#ffcfb9",
+              "on-primary-container": "#97e7e6",
+              "inverse-surface": "#2f3130",
+              "secondary-container": "#c7e6e5",
+              "surface-container-low": "#f4f4f2",
+              "surface-container-highest": "#e2e3e1",
+              "surface-tint": "#026a6a",
+              "outline": "#6e7979",
+              "on-surface": "#1a1c1b",
+              "secondary-fixed-dim": "#aecccc",
+              "on-secondary-fixed": "#012020",
+              "on-tertiary": "#ffffff",
+              "surface-container": "#eeeeec",
+              "tertiary-fixed": "#ffdbcb",
+              "error": "#ba1a1a",
+              "error-container": "#ffdad6",
+              "on-error-container": "#93000a",
+              "on-secondary-container": "#4b6867",
+              "on-error": "#ffffff"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Inter", "sans-serif"],
+              "label": ["Inter", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; background-color: #f9f9f7; color: #1a1c1b; }
+        .serif { font-family: 'Newsreader', serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .status-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
+    </style>
+</head>
+<body class="bg-surface text-on-surface min-h-screen pb-32">
+<!-- TopNavBar -->
+<header class="bg-[#f9f9f7] dark:bg-stone-900 sticky top-0 z-40">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="text-xl font-serif italic text-[#036A6A] dark:text-[#048e8e]">Compass Intelligence</div>
+<nav class="hidden md:flex items-center gap-8">
+<a class="text-[#036A6A] dark:text-[#048e8e] font-bold border-b-2 border-[#036A6A] pb-1 font-sans" href="#">My Week</a>
+<a class="text-stone-500 dark:text-stone-400 font-medium hover:text-[#036A6A] transition-colors duration-200 font-sans" href="#">Insights</a>
+<a class="text-stone-500 dark:text-stone-400 font-medium hover:text-[#036A6A] transition-colors duration-200 font-sans" href="#">Strategy</a>
+<a class="text-stone-500 dark:text-stone-400 font-medium hover:text-[#036A6A] transition-colors duration-200 font-sans" href="#">Archives</a>
+</nav>
+<div class="flex items-center gap-4">
+<button class="text-stone-500 hover:text-[#036A6A] transition-colors">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="text-stone-500 hover:text-[#036A6A] transition-colors">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden bg-stone-200">
+<img alt="Executive Profile" class="w-full h-full object-cover" data-alt="Professional portrait of a male executive in a suit" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBnNJw7NsPMiF8eELNsAJysp-nRqKUqdG3lVaZfvxJlXjKpgr78fV4Ls6o9pscr02aoCZSyyfP9w7dDGyl4SELrUzhaIZzGbm5i4Hvju0G15ecoYwEudsf-_8KWKTpbO2R2QvSvuWiftHss_0vA-b9VU4WIWS-EaNszzTHVxOzFSQQtMyuOHe-B2jCPeBRqFUb0XXihonL8_tjg01D_w6B-qcsQ3NYN1HtYkTwWVPiChvCgax0dxEBmekB82CKzgwEzJVD8k7tPpmc"/>
+</div>
+</div>
+</div>
+<div class="bg-[#f4f4f2] dark:bg-stone-800 h-[1px] w-full"></div>
+</header>
+<!-- Status Banner -->
+<div class="max-w-screen-2xl mx-auto px-8 mt-6">
+<div class="flex items-center gap-3 bg-surface-container-low px-4 py-2 rounded-lg w-fit border border-outline-variant/20">
+<span class="w-2 h-2 rounded-full bg-amber-500 status-pulse"></span>
+<span class="text-sm font-semibold tracking-wide uppercase text-on-surface-variant">Week 5 · Reconciling</span>
+</div>
+</div>
+<main class="max-w-screen-2xl mx-auto px-8 mt-12 mb-20">
+<!-- Section Header -->
+<div class="mb-10">
+<h1 class="font-headline text-5xl font-medium tracking-tight mb-2">Planned vs. Actual</h1>
+<p class="font-body text-on-surface-variant/80 text-lg">Review each commitment and record what happened.</p>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+<!-- Commitment Rows -->
+<div class="lg:col-span-8 space-y-6">
+<!-- Card 1: Partial -->
+<article class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/30 transition-all hover:bg-surface-bright">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<div class="flex items-center gap-3 mb-1">
+<span class="bg-amber-50 text-amber-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-amber-200">Partial</span>
+<span class="text-xs font-medium text-stone-400 tracking-wide">Strategic • EOW • → Launch Enterprise Tier</span>
+</div>
+<h2 class="text-2xl font-headline font-semibold text-on-surface">Finalize enterprise pricing model</h2>
+</div>
+</div>
+<!-- Checklist -->
+<div class="space-y-3 mb-8">
+<div class="flex items-center gap-3 group">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface-variant font-body text-sm">Draft pricing tiers for SMB/Enterprise</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+<span class="text-on-surface-variant font-body text-sm">Review with sales team</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-stone-300" data-icon="radio_button_unchecked">radio_button_unchecked</span>
+<span class="text-on-surface-variant font-body text-sm italic">Get VP sign-off</span>
+</div>
+</div>
+<!-- Status Selector -->
+<div class="grid grid-cols-4 gap-3 mb-6">
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined text-stone-400 mb-1" data-icon="check_circle">check_circle</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Completed</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-primary bg-primary/5">
+<span class="material-symbols-outlined text-primary mb-1" data-icon="incomplete_circle" style="font-variation-settings: 'FILL' 1;">incomplete_circle</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter text-primary">Partial</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined text-stone-400 mb-1" data-icon="cancel">cancel</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Not Started</span>
+</button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20 hover:bg-stone-50 transition-colors">
+<span class="material-symbols-outlined text-stone-400 mb-1" data-icon="arrow_forward">arrow_forward</span>
+<span class="text-[10px] font-bold uppercase tracking-tighter">Carry Forward</span>
+</button>
+</div>
+<!-- Notes & Displacement -->
+<div class="p-6 bg-surface-container-low rounded-lg border border-outline-variant/10">
+<label class="text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-2">Reconciliation Notes</label>
+<p class="text-sm text-on-surface-variant font-body leading-relaxed mb-4">Got pricing tiers done but VP was OOO — sign-off pushed to next week</p>
+<div class="pt-4 border-t border-outline-variant/20">
+<div class="flex items-center gap-4">
+<span class="bg-primary text-white text-[10px] font-bold uppercase px-2 py-1 rounded">Resource Blocked</span>
+<span class="text-sm text-on-surface-variant italic">Waiting on legal review of pricing terms</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2: Completed -->
+<article class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/30 transition-all hover:bg-surface-bright opacity-80">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<div class="flex items-center gap-3 mb-1">
+<span class="bg-emerald-50 text-emerald-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-emerald-200">Completed</span>
+<span class="text-xs font-medium text-stone-400 tracking-wide">Operational • Afternoon • → Reduce Churn</span>
+</div>
+<h2 class="text-2xl font-headline font-semibold text-on-surface">Customer onboarding flow redesign</h2>
+</div>
+</div>
+<div class="space-y-3 mb-4">
+<div class="flex items-center gap-3"><span class="material-symbols-outlined text-emerald-600" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span><span class="text-on-surface-variant font-body text-sm">Review current drop-off points</span></div>
+<div class="flex items-center gap-3"><span class="material-symbols-outlined text-emerald-600" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span><span class="text-on-surface-variant font-body text-sm">Design v2 mockups</span></div>
+<div class="flex items-center gap-3"><span class="material-symbols-outlined text-emerald-600" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span><span class="text-on-surface-variant font-body text-sm">Hand off to engineering</span></div>
+</div>
+</article>
+<!-- Card 3: Not Started -->
+<article class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/30 transition-all hover:bg-surface-bright">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<div class="flex items-center gap-3 mb-1">
+<span class="bg-rose-50 text-rose-700 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-rose-200">Not Started</span>
+<span class="text-xs font-medium text-stone-400 tracking-wide">Defensive • EOD • → SOC2 Certification</span>
+</div>
+<h2 class="text-2xl font-headline font-semibold text-on-surface">SOC2 evidence collection for AWS</h2>
+</div>
+</div>
+<div class="p-6 bg-rose-50/30 rounded-lg border border-rose-100 mb-4">
+<div class="flex items-center gap-4">
+<span class="bg-rose-600 text-white text-[10px] font-bold uppercase px-2 py-1 rounded">Production Emergency</span>
+<span class="text-sm text-rose-900 italic font-medium">Dropped to handle critical billing outage</span>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-3">
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20"><span class="material-symbols-outlined text-stone-400 mb-1" data-icon="check_circle">check_circle</span><span class="text-[10px] font-bold uppercase tracking-tighter">Completed</span></button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20"><span class="material-symbols-outlined text-stone-400 mb-1" data-icon="incomplete_circle">incomplete_circle</span><span class="text-[10px] font-bold uppercase tracking-tighter">Partial</span></button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border-2 border-rose-600 bg-rose-50"><span class="material-symbols-outlined text-rose-600 mb-1" data-icon="cancel" style="font-variation-settings: 'FILL' 1;">cancel</span><span class="text-[10px] font-bold uppercase tracking-tighter text-rose-700">Not Started</span></button>
+<button class="flex flex-col items-center justify-center p-3 rounded-lg border border-outline-variant/20"><span class="material-symbols-outlined text-stone-400 mb-1" data-icon="arrow_forward">arrow_forward</span><span class="text-[10px] font-bold uppercase tracking-tighter">Carry Forward</span></button>
+</div>
+</article>
+<!-- Card 4: Carry Forward -->
+<article class="bg-surface-container-lowest p-8 rounded-xl border border-outline-variant/30 transition-all hover:bg-surface-bright">
+<div class="flex justify-between items-start mb-6">
+<div class="space-y-1">
+<div class="flex items-center gap-3 mb-1">
+<span class="bg-stone-100 text-stone-600 text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-stone-200">Carry Forward</span>
+<span class="text-xs font-medium text-stone-400 tracking-wide">Operational • Midday • Unlinked</span>
+</div>
+<h2 class="text-2xl font-headline font-semibold text-on-surface">Refactor payment webhook handler</h2>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3"><span class="material-symbols-outlined text-primary" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span><span class="text-on-surface-variant font-body text-sm">Audit existing handler</span></div>
+<div class="flex items-center gap-3"><span class="material-symbols-outlined text-stone-300" data-icon="radio_button_unchecked">radio_button_unchecked</span><span class="text-on-surface-variant font-body text-sm italic">Implement new logic</span></div>
+</div>
+</article>
+<!-- Unplanned Work Section -->
+<div class="pt-10 border-t border-outline-variant/30">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline text-2xl font-semibold">Unplanned Work</h3>
+<button class="flex items-center gap-2 text-[#036A6A] font-semibold text-sm hover:underline">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                            Add unplanned work
+                        </button>
+</div>
+<div class="bg-surface-container-low/50 border border-dashed border-outline-variant p-6 rounded-lg flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded bg-emerald-100 flex items-center justify-center text-emerald-700">
+<span class="material-symbols-outlined" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+</div>
+<div>
+<h4 class="font-bold text-on-surface">Emergency hotfix for payment webhook</h4>
+<p class="text-xs text-on-surface-variant">Added Wednesday • Resolution: Completed</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-emerald-600" data-icon="check_circle" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+</div>
+<!-- Side Intelligence / Context (Asymmetric Column) -->
+<div class="lg:col-span-4 space-y-8">
+<div class="bg-[#036A6A]/5 p-8 rounded-xl border border-[#036A6A]/10 sticky top-28">
+<h4 class="font-headline text-xl font-bold text-[#036A6A] mb-4 italic">Reconciliation Context</h4>
+<p class="text-sm font-body text-stone-600 leading-relaxed mb-6">
+                        Week 5 has been marked by high volatility in the core payments stack. While strategic initiatives remain partially on track, defensive operations were displaced by production events.
+                    </p>
+<div class="space-y-4">
+<div class="flex justify-between items-center">
+<span class="text-xs font-bold text-stone-400 uppercase tracking-widest">Velocity</span>
+<span class="text-sm font-bold text-on-surface">75%</span>
+</div>
+<div class="w-full bg-stone-200 h-1 rounded-full overflow-hidden">
+<div class="bg-[#036A6A] h-full" style="width: 75%"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<span class="text-xs font-bold text-stone-400 uppercase tracking-widest">Strategic Focus</span>
+<span class="text-sm font-bold text-on-surface">60%</span>
+</div>
+<div class="w-full bg-stone-200 h-1 rounded-full overflow-hidden">
+<div class="bg-amber-500 h-full" style="width: 60%"></div>
+</div>
+</div>
+<div class="mt-8 p-4 bg-white rounded-lg border border-[#036A6A]/10 shadow-sm">
+<p class="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Executive Summary</p>
+<p class="text-xs italic text-stone-500">"Significant progress on Enterprise pricing despite executive absence. Focus for next week: Closing the SOC2 gap created by the payment hotfixes."</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar (Task-Focused Shell) -->
+<footer class="fixed bottom-0 left-0 w-full px-8 py-4 flex justify-between items-center bg-[#f9f9f7]/80 dark:bg-stone-900/80 backdrop-blur-md z-50 border-t border-stone-200 dark:border-stone-800 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+<div class="flex items-center gap-6">
+<div class="flex flex-col">
+<span class="text-[10px] font-sans uppercase tracking-widest font-semibold text-stone-600 dark:text-stone-400 mb-1">Current Progress</span>
+<div class="flex items-center gap-2">
+<div class="flex gap-1">
+<div class="w-8 h-1 bg-[#036A6A] rounded-full"></div>
+<div class="w-8 h-1 bg-[#036A6A] rounded-full"></div>
+<div class="w-8 h-1 bg-[#036A6A] rounded-full"></div>
+<div class="w-8 h-1 bg-stone-200 dark:bg-stone-700 rounded-full"></div>
+</div>
+<span class="text-xs font-bold text-[#036A6A]">3 of 4 reconciled</span>
+</div>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="text-stone-600 dark:text-stone-400 px-6 py-2 flex items-center gap-2 hover:bg-stone-100 dark:hover:bg-stone-800 transition-all rounded-lg font-sans text-xs uppercase tracking-widest font-semibold active:scale-95 duration-150">
+<span class="material-symbols-outlined text-sm" data-icon="save">save</span>
+                Save Draft
+            </button>
+<button class="bg-[#036A6A] text-white rounded-lg px-6 py-2 flex items-center gap-2 transition-all hover:bg-[#005050] font-sans text-xs uppercase tracking-widest font-semibold active:scale-95 duration-150 shadow-lg shadow-[#036A6A]/20">
+<span class="material-symbols-outlined text-sm" data-icon="check_circle">check_circle</span>
+                Complete Reconciliation
+            </button>
+</div>
+</footer>
+</body></html>

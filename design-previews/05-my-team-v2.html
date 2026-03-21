@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Compass - Executive Team Intelligence</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,200;0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "inverse-on-surface": "#9c9d9c",
+                        "primary": "#455f87",
+                        "tertiary-dim": "#50516c",
+                        "on-surface-variant": "#5a605e",
+                        "error": "#9f403d",
+                        "on-secondary-container": "#005c5c",
+                        "on-primary": "#f6f7ff",
+                        "on-error-container": "#752121",
+                        "on-error": "#fff7f6",
+                        "surface-container": "#ebefec",
+                        "secondary": "#036a6a",
+                        "on-tertiary-container": "#4b4c67",
+                        "surface-variant": "#dee4e0",
+                        "on-primary-container": "#385379",
+                        "secondary-container": "#a0f0f0",
+                        "inverse-primary": "#adc8f5",
+                        "on-primary-fixed-variant": "#425c83",
+                        "primary-fixed-dim": "#bed6ff",
+                        "on-tertiary-fixed-variant": "#555671",
+                        "surface": "#f9f9f7",
+                        "on-tertiary-fixed": "#393a53",
+                        "tertiary": "#5c5d78",
+                        "surface-dim": "#d4dcd8",
+                        "on-secondary": "#e0fffe",
+                        "inverse-surface": "#0c0f0e",
+                        "surface-container-low": "#f2f4f2",
+                        "surface-container-highest": "#dee4e0",
+                        "tertiary-fixed-dim": "#cdccec",
+                        "surface-tint": "#455f87",
+                        "background": "#f9f9f7",
+                        "secondary-fixed-dim": "#92e2e1",
+                        "surface-bright": "#f9f9f7",
+                        "tertiary-fixed": "#dbdafb",
+                        "on-secondary-fixed-variant": "#006666",
+                        "primary-dim": "#39537a",
+                        "secondary-fixed": "#a0f0f0",
+                        "secondary-dim": "#005d5d",
+                        "primary-container": "#d5e3ff",
+                        "on-primary-fixed": "#254065",
+                        "tertiary-container": "#dbdafb",
+                        "primary-fixed": "#d5e3ff",
+                        "outline": "#767c79",
+                        "error-dim": "#4e0309",
+                        "surface-container-high": "#e5e9e6",
+                        "error-container": "#fe8983",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary-fixed": "#004747",
+                        "outline-variant": "#adb3b0",
+                        "on-tertiary": "#fbf7ff",
+                        "on-background": "#2d3432",
+                        "on-surface": "#2d3432"
+                    },
+                    fontFamily: {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Inter", "sans-serif"],
+                        "label": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: { "DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem" },
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .serif-text { font-family: 'Newsreader', serif; }
+        .whisper-shadow { box-shadow: 0 12px 32px -4px rgba(45, 52, 50, 0.06); }
+        .editorial-underline { text-underline-offset: 4px; text-decoration-thickness: 1px; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased">
+<!-- TopNavBar - Predictive Component -->
+<header class="bg-[#F9F9F7] dark:bg-slate-950 border-b border-slate-200/50 dark:border-slate-800/50 sticky top-0 z-50">
+<div class="flex justify-between items-center w-full px-8 py-4 max-w-screen-2xl mx-auto">
+<div class="flex items-center gap-12">
+<span class="font-serif text-2xl font-light tracking-tighter text-[#1E3A5F] dark:text-slate-100">Compass</span>
+<nav class="hidden md:flex gap-8 items-center h-full">
+<a class="text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] dark:hover:text-slate-200 transition-colors uppercase tracking-wider text-[10px] font-medium" href="#">My Week</a>
+<a class="text-[#036A6A] dark:text-[#048a8a] border-b-2 border-[#036A6A] pb-4 -mb-[17px] font-semibold uppercase tracking-wider text-[10px]" href="#">My Team</a>
+<a class="text-slate-500 dark:text-slate-400 hover:text-[#1E3A5F] dark:hover:text-slate-200 transition-colors uppercase tracking-wider text-[10px] font-medium" href="#">The Briefing</a>
+</nav>
+</div>
+<div class="flex-1 flex justify-center">
+<span class="font-serif italic text-on-surface-variant text-sm">Week 6 · March 16–20, 2026</span>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-secondary transition-colors" data-icon="calendar_today">calendar_today</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-secondary transition-colors" data-icon="notifications">notifications</span>
+<span class="material-symbols-outlined text-on-surface-variant cursor-pointer hover:text-secondary transition-colors" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</div>
+</header>
+<div class="flex min-h-screen max-w-screen-2xl mx-auto">
+<!-- SideNavBar - Predictive Component -->
+<aside class="hidden lg:flex flex-col h-screen sticky top-[73px] p-4 gap-2 bg-[#F2F4F2] dark:bg-slate-900 w-64 border-r border-slate-200/20">
+<div class="mb-8 px-2">
+<h3 class="font-serif text-lg text-[#1E3A5F] dark:text-slate-100">Executive View</h3>
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant font-medium">Intelligence Briefing</p>
+</div>
+<nav class="flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-sm transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="dashboard">dashboard</span>
+<span class="font-sans text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-white dark:bg-slate-800 text-[#036A6A] dark:text-[#048a8a] rounded-sm shadow-sm transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="group">group</span>
+<span class="font-sans text-sm font-medium">Team Analytics</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-sm transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="account_balance">account_balance</span>
+<span class="font-sans text-sm font-medium">Portfolio</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-sm transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="description">description</span>
+<span class="font-sans text-sm font-medium">Reports</span>
+</a>
+<div class="mt-auto">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-800/50 rounded-sm transition-all duration-200 hover:translate-x-1" href="#">
+<span class="material-symbols-outlined text-sm" data-icon="settings">settings</span>
+<span class="font-sans text-sm font-medium">Settings</span>
+</a>
+</div>
+</nav>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 p-8 lg:p-12 space-y-12">
+<!-- Team Narrative Section -->
+<section class="grid grid-cols-1 xl:grid-cols-3 gap-12">
+<div class="xl:col-span-2 space-y-8">
+<div class="bg-surface-container-lowest p-10 whisper-shadow rounded-sm border-l-4 border-secondary">
+<h2 class="font-serif text-3xl text-on-surface mb-6">Team Status</h2>
+<div class="space-y-6">
+<p class="font-body text-on-surface-variant leading-relaxed text-lg">
+                                Your team of 8 is averaging <span class="text-secondary font-semibold">81% execution</span> this week. Three coverage gaps need attention: <span class="text-on-surface font-medium underline decoration-primary/30">Marcus Thorne</span> has no commitments linked to any rally cry, and <span class="italic">Enterprise Tier</span> and <span class="italic">Churn Reduction</span> are under-allocated. <span class="text-error font-medium">Elena Rodriguez</span> is flagged — her execution dropped 15 points this week.
+                            </p>
+<div class="pt-6 border-t border-outline-variant/10">
+<h3 class="font-label uppercase tracking-widest text-[11px] font-bold text-on-surface-variant mb-4">Suggested Actions</h3>
+<ul class="space-y-4">
+<li class="flex items-start gap-3 group cursor-pointer">
+<span class="text-secondary mt-0.5 group-hover:translate-x-1 transition-transform">→</span>
+<span class="font-body text-sm text-on-surface">Assign <span class="font-semibold">Marcus Thorne</span> to Enterprise Tier — he has 12h unallocated capacity</span>
+</li>
+<li class="flex items-start gap-3 group cursor-pointer">
+<span class="text-secondary mt-0.5 group-hover:translate-x-1 transition-transform">→</span>
+<span class="font-body text-sm text-on-surface">Check in with <span class="font-semibold text-error">Elena Rodriguez</span> — execution dropped from 90% to 75%</span>
+</li>
+<li class="flex items-start gap-3 group cursor-pointer">
+<span class="text-secondary mt-0.5 group-hover:translate-x-1 transition-transform">→</span>
+<span class="font-body text-sm text-on-surface"><span class="italic">Churn Reduction</span> needs 8 more hours of team capacity this week</span>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<!-- Metrics Strip -->
+<div class="flex flex-wrap gap-8 py-6 px-4 bg-surface-container-low/50 rounded-sm">
+<div class="flex flex-col">
+<span class="font-label uppercase tracking-wider text-[10px] text-on-surface-variant">Team Size</span>
+<span class="font-serif text-2xl text-on-surface">8</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/20 self-center"></div>
+<div class="flex flex-col">
+<span class="font-label uppercase tracking-wider text-[10px] text-on-surface-variant">Avg Execution</span>
+<span class="font-serif text-2xl text-secondary">81%</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/20 self-center"></div>
+<div class="flex flex-col">
+<span class="font-label uppercase tracking-wider text-[10px] text-on-surface-variant">Coverage Gaps</span>
+<span class="font-serif text-2xl text-error">3</span>
+</div>
+<div class="w-px h-8 bg-outline-variant/20 self-center"></div>
+<div class="flex flex-col">
+<span class="font-label uppercase tracking-wider text-[10px] text-on-surface-variant">Unlinked Work</span>
+<span class="font-serif text-2xl text-on-surface">14%</span>
+</div>
+</div>
+</div>
+<!-- Coverage Gap Panel -->
+<div class="bg-surface-container-low p-8 rounded-sm self-start">
+<h2 class="font-serif text-xl text-on-surface mb-8">Rally Cry Allocation Gaps</h2>
+<div class="space-y-10">
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-body text-sm font-medium">Enterprise Tier Expansion</span>
+<span class="font-label text-[10px] text-error">-12h</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-2/3"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant">Needed: 40h | Current: 28h</p>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-body text-sm font-medium">Churn Reduction</span>
+<span class="font-label text-[10px] text-error">-8h</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-primary w-4/5"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant">Needed: 32h | Current: 24h</p>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between items-end">
+<span class="font-body text-sm font-medium">API 2.0 Launch</span>
+<span class="font-label text-[10px] text-secondary">Aligned</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container-highest rounded-full overflow-hidden">
+<div class="h-full bg-secondary w-full"></div>
+</div>
+<p class="text-[10px] text-on-surface-variant">Needed: 60h | Current: 62h</p>
+</div>
+</div>
+<button class="mt-12 w-full py-3 border border-secondary text-secondary bg-surface-container-lowest hover:bg-secondary hover:text-white transition-all duration-200 font-label uppercase tracking-widest text-[11px] font-bold rounded-sm">
+                        Assign Work
+                    </button>
+</div>
+</section>
+<!-- Team Member Grid -->
+<section class="space-y-6">
+<div class="flex justify-between items-end border-b border-outline-variant/10 pb-4">
+<h2 class="font-serif text-2xl text-on-surface">Team Directory</h2>
+<span class="font-label text-[11px] uppercase tracking-widest text-on-surface-variant">Sorting by: Execution Risk</span>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+<!-- Member 1: Elena (At Risk) -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow border-l-4 border-error/50 rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">Elena Rodriguez</h4>
+<p class="text-xs text-on-surface-variant">Senior Engineer</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-error/10 text-error rounded-full uppercase font-bold">At Risk</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[40%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[30%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[20%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[10%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg text-error">75%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg">94%</span>
+</div>
+</div>
+</div>
+<!-- Member 2: Marcus (Watch) -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow border-l-4 border-primary/50 rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">Marcus Thorne</h4>
+<p class="text-xs text-on-surface-variant">Product Designer</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-primary/10 text-primary rounded-full uppercase font-bold">Watch</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[10%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[80%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[5%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[5%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg">89%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg text-error">0%</span>
+</div>
+</div>
+</div>
+<!-- Member 3: Sarah -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">Sarah Jenkins</h4>
+<p class="text-xs text-on-surface-variant">Analyst</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded-full uppercase font-bold">On Track</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[60%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[20%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[10%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[10%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg">94%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg">100%</span>
+</div>
+</div>
+</div>
+<!-- Member 4: David -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">David Chen</h4>
+<p class="text-xs text-on-surface-variant">Backend Lead</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded-full uppercase font-bold">On Track</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[25%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[25%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[25%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[25%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg">91%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg">100%</span>
+</div>
+</div>
+</div>
+<!-- Member 5: Maya -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">Maya Patel</h4>
+<p class="text-xs text-on-surface-variant">Marketing Ops</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded-full uppercase font-bold">On Track</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[15%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[15%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[50%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[20%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg text-secondary font-bold">96%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg">98%</span>
+</div>
+</div>
+</div>
+<!-- Member 6: Julian -->
+<div class="bg-surface-container-lowest p-6 whisper-shadow rounded-sm hover:translate-y-[-2px] transition-transform duration-300">
+<div class="flex justify-between items-start mb-4">
+<div>
+<h4 class="font-body font-bold text-on-surface">Julian Voss</h4>
+<p class="text-xs text-on-surface-variant">QA Specialist</p>
+</div>
+<span class="font-label text-[9px] px-2 py-0.5 bg-surface-container-highest text-on-surface-variant rounded-full uppercase font-bold">On Track</span>
+</div>
+<div class="flex gap-1 h-1.5 mb-6">
+<div class="h-full bg-[#455F87] w-[20%] rounded-full"></div>
+<div class="h-full bg-[#ADB3B0] w-[40%] rounded-full"></div>
+<div class="h-full bg-[#E0A09A] w-[20%] rounded-full"></div>
+<div class="h-full bg-[#A3B18A] w-[20%] rounded-full"></div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Execution</span>
+<span class="font-serif text-lg">88%</span>
+</div>
+<div>
+<span class="block font-label text-[9px] text-on-surface-variant uppercase tracking-tighter">Coverage</span>
+<span class="font-serif text-lg">92%</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Bottom Note -->
+<footer class="pt-12 border-t border-outline-variant/10 text-center">
+<p class="font-serif italic text-on-surface-variant text-sm">Intelligence report generated on March 18, 2026. Data refreshes in 4 hours.</p>
+</footer>
+</main>
+</div>
+</body></html>

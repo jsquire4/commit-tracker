@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Compass Mockup — Commitment Form Slide-Over</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet"/>
+<style>
+  /* ── Reset ─────────────────────────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Design Tokens (from DESIGN.md) ────────────────────────────── */
+  :root {
+    --surface:               #F9F9F7;
+    --surface-lowest:        #FFFFFF;
+    --surface-container-low: #F2F4F2;
+    --surface-container:     #EEEEEC;
+    --surface-container-high:#E8E8E6;
+    --on-surface:            #2D3432;
+    --on-surface-variant:    #5A605E;
+    --text-muted:            #94A3B8;
+    --secondary:             #036A6A;
+    --secondary-dark:        #005050;
+    --outline-variant:       #E8E5E0;
+    --ghost-border:          rgba(232,229,224,0.15);
+    --error:                 #9F403D;
+    --warning:               #C2860B;
+    --navy:                  #455F87;
+    --whisper-shadow:        0 12px 32px -4px rgba(45,52,50,0.06);
+
+    /* Category left-border colors */
+    --cat-strategic:         #455F87;  /* muted navy */
+    --cat-operational:       #94A3B8;  /* warm gray */
+    --cat-defensive:         #9F403D;  /* muted rose */
+    --cat-capability:        #6B8F71;  /* muted sage */
+
+    /* Motion tokens (from DESIGN.md) */
+    --ease-standard:  cubic-bezier(0.25, 0.1, 0.25, 1);
+    --ease-entrance:  cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-exit:      cubic-bezier(0.4, 0, 1, 1);
+    --duration-fast:     150ms;
+    --duration-standard: 200ms;
+    --duration-entrance: 300ms;
+    --duration-slow:     400ms;
+    --stagger-delay:     40ms;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--surface);
+    color: var(--on-surface);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Overlay ───────────────────────────────────────────────────── */
+  .overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.38);
+    z-index: 40;
+  }
+
+  /* ── Slide-over Panel ──────────────────────────────────────────── */
+  .panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 440px;
+    background: var(--surface-lowest);
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    box-shadow: var(--whisper-shadow);
+  }
+
+  /* ── Header ────────────────────────────────────────────────────── */
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 28px 16px;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .panel-header h1 {
+    font-family: 'Newsreader', serif;
+    font-size: 1.5rem;
+    font-weight: 400;
+    color: var(--on-surface);
+    letter-spacing: -0.01em;
+  }
+  .close-btn {
+    width: 32px; height: 32px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none;
+    color: var(--on-surface-variant);
+    font-size: 20px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background 0.15s;
+  }
+  .close-btn:hover { background: var(--surface-container); }
+
+  /* ── Scrollable Body ───────────────────────────────────────────── */
+  .panel-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 28px 32px;
+  }
+
+  /* ── Field sections ────────────────────────────────────────────── */
+  .field-section { margin-bottom: 28px; }
+  .field-section:last-child { margin-bottom: 0; }
+
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05rem;
+    color: var(--on-surface-variant);
+    margin-bottom: 8px;
+  }
+  .field-label .optional {
+    text-transform: none;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+  }
+  .field-label .count {
+    text-transform: none;
+    font-weight: 400;
+    color: var(--text-muted);
+    letter-spacing: 0;
+  }
+
+  /* ── Underline Input ───────────────────────────────────────────── */
+  .input-underline {
+    width: 100%;
+    border: none;
+    border-bottom: 2px solid var(--outline-variant);
+    background: transparent;
+    padding: 8px 0;
+    font-size: 16px;
+    font-family: 'Inter', sans-serif;
+    color: var(--on-surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-underline:focus {
+    border-bottom-color: var(--secondary);
+  }
+  .input-underline::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* ── Validation Error ──────────────────────────────────────────── */
+  .field-error {
+    font-size: 0.75rem;
+    color: var(--error);
+    margin-top: 4px;
+  }
+
+  /* ── Task Bullets ──────────────────────────────────────────────── */
+  .bullet-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .bullet-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .drag-handle {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    font-size: 16px;
+    cursor: grab;
+    user-select: none;
+    line-height: 1;
+    letter-spacing: 0;
+  }
+  .bullet-input {
+    flex: 1;
+    border: none;
+    border-bottom: 1px solid var(--outline-variant);
+    background: transparent;
+    padding: 6px 0;
+    font-size: 0.875rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--on-surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .bullet-input:focus { border-bottom-color: var(--secondary); }
+  .bullet-input::placeholder { color: var(--text-muted); }
+
+  .bullet-remove {
+    flex-shrink: 0;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border: none; background: none;
+    color: var(--text-muted);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .bullet-remove:hover { color: var(--error); background: rgba(159,64,61,0.08); }
+
+  .add-subtask {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: none; background: none;
+    color: var(--secondary);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 4px;
+    transition: color 0.15s;
+  }
+  .add-subtask:hover { color: var(--secondary-dark); }
+
+  /* ── Category Cards (2x2) ──────────────────────────────────────── */
+  .category-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .category-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 14px;
+    border: 1px solid var(--outline-variant);
+    border-left: 3px solid var(--outline-variant);
+    border-radius: 4px;
+    background: var(--surface-lowest);
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .category-card:hover { background: var(--surface-container-low); }
+  .category-card.strategic  { border-left-color: var(--cat-strategic); }
+  .category-card.operational { border-left-color: var(--cat-operational); }
+  .category-card.defensive  { border-left-color: var(--cat-defensive); }
+  .category-card.capability { border-left-color: var(--cat-capability); }
+
+  .category-card.selected {
+    border-color: var(--secondary);
+    border-left-color: var(--secondary);
+    background: rgba(3,106,106,0.04);
+  }
+  .category-card .cat-name {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--on-surface);
+  }
+  .category-card .cat-desc {
+    font-size: 0.6875rem;
+    color: var(--on-surface-variant);
+    margin-top: 2px;
+  }
+  .category-card .checkmark {
+    position: absolute;
+    top: 8px; right: 8px;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--secondary);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .category-card.selected .checkmark { opacity: 1; }
+  .checkmark svg { width: 11px; height: 11px; }
+
+  /* ── Horizon Two-Row Picker ───────────────────────────────────── */
+  .horizon-picker { display: flex; flex-direction: column; gap: 12px; }
+  .horizon-row-label {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .horizon-group {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--outline-variant);
+  }
+  .horizon-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    background: var(--surface-container);
+    color: var(--on-surface-variant);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.1s;
+    border-right: 1px solid var(--outline-variant);
+  }
+  .horizon-btn:last-child { border-right: none; }
+  .horizon-btn:hover { background: var(--surface-container-high); }
+  .horizon-btn:active { transform: translateY(1px); }
+  .horizon-btn.active {
+    background: var(--secondary);
+    color: #FFFFFF;
+  }
+
+  /* ── Strategy Link (linked state) ──────────────────────────────── */
+  .strategy-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    border-radius: 4px;
+    background: var(--surface-container-low);
+    border: 1px solid var(--outline-variant);
+  }
+  .strategy-badge .breadcrumb {
+    font-size: 0.8125rem;
+    color: var(--on-surface);
+    flex: 1;
+    min-width: 0;
+  }
+  .breadcrumb .sep { color: var(--text-muted); margin: 0 2px; }
+  .strategy-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 6px;
+  }
+  .strategy-actions a {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .strategy-actions .change-link { color: var(--secondary); }
+  .strategy-actions .change-link:hover { color: var(--secondary-dark); }
+  .strategy-actions .clear-link { color: var(--text-muted); }
+  .strategy-actions .clear-link:hover { color: var(--on-surface-variant); }
+
+  /* ── Strategy Popover ──────────────────────────────────────────── */
+  .strategy-popover-container {
+    position: relative;
+    margin-top: 8px;
+  }
+  .strategy-popover {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: var(--surface-lowest);
+    border: 1px solid var(--outline-variant);
+    border-radius: 4px;
+    box-shadow: var(--whisper-shadow), 0 4px 16px rgba(45,52,50,0.10);
+    max-height: 320px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .popover-search {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--outline-variant);
+  }
+  .popover-search input {
+    width: 100%;
+    border: 1px solid var(--outline-variant);
+    border-radius: 4px;
+    background: var(--surface-container-low);
+    padding: 7px 10px;
+    font-size: 0.8125rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--on-surface);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .popover-search input:focus { border-color: var(--secondary); }
+  .popover-search input::placeholder { color: var(--text-muted); }
+
+  .popover-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px;
+  }
+
+  .rc-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--navy);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.12s;
+  }
+  .rc-header:hover { background: var(--surface-container-low); }
+  .rc-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .do-header {
+    padding: 4px 8px 4px 24px;
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--on-surface-variant);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .outcome-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px 6px 32px;
+    font-size: 0.8125rem;
+    color: var(--on-surface);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.12s;
+  }
+  .outcome-item:hover { background: var(--surface-container-low); }
+  .outcome-dot {
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    opacity: 0.5;
+  }
+
+  .popover-footer {
+    border-top: 1px solid var(--outline-variant);
+    padding: 6px;
+  }
+  .non-strategic-btn {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 8px 10px;
+    border: none;
+    background: none;
+    font-size: 0.8125rem;
+    font-style: italic;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background 0.12s, color 0.15s;
+    font-family: 'Inter', sans-serif;
+  }
+  .non-strategic-btn:hover { background: var(--surface-container-low); color: var(--on-surface-variant); }
+
+  /* ── Attribution Section ──────────────────────────────────────── */
+  .attribution-section {
+    background: var(--surface-container-low);
+    border-radius: 4px;
+    padding: 14px 16px;
+    border: 1px solid var(--outline-variant);
+  }
+  .attr-group {
+    display: flex;
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--outline-variant);
+  }
+  .attr-btn {
+    flex: 1;
+    padding: 8px 0;
+    border: none;
+    background: var(--surface-container);
+    color: var(--on-surface-variant);
+    font-size: 0.8125rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    border-right: 1px solid var(--outline-variant);
+  }
+  .attr-btn:last-child { border-right: none; }
+  .attr-btn:hover { background: var(--surface-container-high); }
+  .attr-btn.active {
+    background: var(--surface-lowest);
+    color: var(--secondary);
+    border-color: var(--secondary);
+    box-shadow: inset 0 -2px 0 var(--secondary);
+  }
+  .attr-dropdown {
+    margin-top: 10px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--outline-variant);
+    border-radius: 4px;
+    background: var(--surface-lowest);
+    font-size: 0.8125rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--on-surface);
+    outline: none;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2394A3B8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+  }
+  .attr-dropdown:focus { border-color: var(--secondary); }
+  .attr-dropdown-wrapper {
+    display: none;
+  }
+  .attr-dropdown-wrapper.visible {
+    display: block;
+  }
+
+  /* ── Notes Textarea ────────────────────────────────────────────── */
+  .notes-textarea {
+    width: 100%;
+    border: none;
+    background: var(--surface-container-low);
+    border-radius: 4px;
+    padding: 10px 12px;
+    font-size: 0.875rem;
+    font-family: 'Inter', sans-serif;
+    color: var(--on-surface);
+    resize: none;
+    outline: none;
+    transition: box-shadow 0.2s;
+    line-height: 1.5;
+  }
+  .notes-textarea:focus {
+    box-shadow: 0 0 0 2px var(--secondary);
+  }
+  .notes-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  /* ── Bottom Action Bar ─────────────────────────────────────────── */
+  .panel-footer {
+    padding: 16px 28px 20px;
+    border-top: 1px solid var(--outline-variant);
+    background: var(--surface-lowest);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn-save {
+    width: 100%;
+    padding: 12px 0;
+    border: none;
+    border-radius: 4px;
+    background: var(--secondary);
+    color: #FFFFFF;
+    font-size: 0.875rem;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.01em;
+  }
+  .btn-save:hover { background: var(--secondary-dark); }
+
+  .btn-cancel {
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+  .btn-cancel:hover { color: var(--on-surface-variant); }
+
+  /* ── My Week Background (faint, behind overlay) ────────────────── */
+  .bg-myweek {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    padding: 40px 48px;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  .bg-myweek h2 {
+    font-family: 'Newsreader', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    color: var(--on-surface);
+    margin-bottom: 8px;
+  }
+  .bg-myweek p {
+    font-size: 0.8125rem;
+    color: var(--on-surface-variant);
+    margin-bottom: 24px;
+  }
+  .bg-card {
+    background: var(--surface-lowest);
+    border-radius: 4px;
+    padding: 20px;
+    margin-bottom: 12px;
+    max-width: 600px;
+  }
+  .bg-card .card-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--on-surface);
+    margin-bottom: 6px;
+  }
+  .bg-card .card-meta {
+    font-size: 0.6875rem;
+    color: var(--text-muted);
+  }
+
+  /* ── Motion: Slide-over entrance ─────────────────────────────── */
+  @keyframes panel-slide-in {
+    from { transform: translateX(100%); }
+    to   { transform: translateX(0); }
+  }
+  @keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .panel {
+    animation: panel-slide-in var(--duration-entrance) var(--ease-entrance) both;
+  }
+  .overlay {
+    animation: overlay-fade-in var(--duration-standard) var(--ease-standard) both;
+  }
+
+  /* ── Motion: Button press ────────────────────────────────────── */
+  .btn-save:active,
+  .btn-cancel:active,
+  .category-card:active,
+  .attr-btn:active {
+    transform: translateY(1px);
+  }
+  .btn-save {
+    transition: background var(--duration-fast), transform 100ms;
+  }
+
+  /* ── Motion: Focus transitions ───────────────────────────────── */
+  .input-underline,
+  .bullet-input,
+  .notes-textarea,
+  .popover-search input {
+    transition: border-color var(--duration-standard) var(--ease-standard),
+                box-shadow var(--duration-standard) var(--ease-standard);
+  }
+
+  /* ── Motion: Panel close (set via JS, defined here) ──────────── */
+  .panel.closing {
+    animation: panel-slide-out var(--duration-standard) var(--ease-exit) both;
+  }
+  .overlay.closing {
+    animation: overlay-fade-out var(--duration-standard) var(--ease-exit) both;
+  }
+  @keyframes panel-slide-out {
+    from { transform: translateX(0); }
+    to   { transform: translateX(100%); }
+  }
+  @keyframes overlay-fade-out {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── Background: Faint My Week view ──────────────────────────── -->
+<div class="bg-myweek">
+  <h2>My Week</h2>
+  <p>March 17 - 21, 2026 &middot; 4 commitments</p>
+  <div class="bg-card">
+    <div class="card-title">Prepare Q2 budget proposal</div>
+    <div class="card-meta">Strategic &middot; EOD &middot; 3 subtasks</div>
+  </div>
+  <div class="bg-card">
+    <div class="card-title">Onboard two new engineers</div>
+    <div class="card-meta">Capability Building &middot; Fri EOD &middot; 4 subtasks</div>
+  </div>
+  <div class="bg-card">
+    <div class="card-title">Incident response runbook update</div>
+    <div class="card-meta">Defensive &middot; Afternoon &middot; 2 subtasks</div>
+  </div>
+</div>
+
+<!-- ── Dark Semi-Transparent Overlay ───────────────────────────── -->
+<div class="overlay"></div>
+
+<!-- ── Slide-Over Panel ────────────────────────────────────────── -->
+<div class="panel">
+
+  <!-- Header -->
+  <div class="panel-header">
+    <h1>New Commitment</h1>
+    <button class="close-btn" aria-label="Close">&times;</button>
+  </div>
+
+  <!-- Scrollable Body -->
+  <div class="panel-body">
+
+    <!-- 1. Title (required) -->
+    <div class="field-section">
+      <label class="field-label">What are you working on?</label>
+      <input class="input-underline" type="text" value="Finalize enterprise pricing model" />
+      <!-- Validation error example (shown as if field were empty) -->
+      <div class="field-error">Title is required</div>
+    </div>
+
+    <!-- 2. Task Bullets (required, min 2, max 5) -->
+    <div class="field-section">
+      <label class="field-label">Break it down <span class="count">(3 of 5)</span></label>
+      <div class="bullet-list">
+        <div class="bullet-row">
+          <span class="drag-handle">&#10303;</span>
+          <input class="bullet-input" type="text" value="Draft pricing tiers for SMB/Enterprise" />
+          <button class="bullet-remove" aria-label="Remove subtask">&times;</button>
+        </div>
+        <div class="bullet-row">
+          <span class="drag-handle">&#10303;</span>
+          <input class="bullet-input" type="text" value="Review with sales team" />
+          <button class="bullet-remove" aria-label="Remove subtask">&times;</button>
+        </div>
+        <div class="bullet-row">
+          <span class="drag-handle">&#10303;</span>
+          <input class="bullet-input" type="text" value="Get VP sign-off" />
+          <button class="bullet-remove" aria-label="Remove subtask">&times;</button>
+        </div>
+      </div>
+      <button class="add-subtask">+ Add subtask</button>
+    </div>
+
+    <!-- 3. CHESS Category (required) -->
+    <div class="field-section">
+      <label class="field-label">Category</label>
+      <div class="category-grid">
+        <div class="category-card strategic selected">
+          <div class="checkmark">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="cat-name">Strategic</span>
+          <span class="cat-desc">Drives long-term objectives</span>
+        </div>
+        <div class="category-card operational">
+          <div class="checkmark">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="cat-name">Operational</span>
+          <span class="cat-desc">Day-to-day execution</span>
+        </div>
+        <div class="category-card defensive">
+          <div class="checkmark">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="cat-name">Defensive</span>
+          <span class="cat-desc">Risk mitigation &amp; maintenance</span>
+        </div>
+        <div class="category-card capability">
+          <div class="checkmark">
+            <svg viewBox="0 0 12 12" fill="none"><path d="M2 6.5L4.5 9L10 3" stroke="#fff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <span class="cat-name">Capability Building</span>
+          <span class="cat-desc">Growing skills &amp; capacity</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Completion Horizon (required) — Day + Time two-step picker -->
+    <div class="field-section">
+      <label class="field-label">When will this be done?</label>
+      <div class="horizon-picker">
+        <div>
+          <div class="horizon-row-label">Day</div>
+          <div class="horizon-group" data-group="day">
+            <button class="horizon-btn">Mon</button>
+            <button class="horizon-btn">Tue</button>
+            <button class="horizon-btn">Wed</button>
+            <button class="horizon-btn">Thu</button>
+            <button class="horizon-btn active">Fri</button>
+          </div>
+        </div>
+        <div>
+          <div class="horizon-row-label">By when</div>
+          <div class="horizon-group" data-group="time">
+            <button class="horizon-btn">Morning</button>
+            <button class="horizon-btn">Midday</button>
+            <button class="horizon-btn">Afternoon</button>
+            <button class="horizon-btn active">EOD</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Strategy Link (optional) — LINKED STATE -->
+    <div class="field-section" style="position: relative;">
+      <label class="field-label">Link to strategy <span class="optional">(optional)</span></label>
+      <div class="strategy-badge">
+        <span class="breadcrumb">Launch Enterprise Tier<span class="sep"> &#8250; </span>Enterprise Pricing<span class="sep"> &#8250; </span>Finalize 3-tier pricing</span>
+      </div>
+      <div class="strategy-actions">
+        <a class="change-link">Change</a>
+        <a class="clear-link">Clear</a>
+      </div>
+
+      <!-- Strategy Popover (partially open, overlaying lower form) -->
+      <div class="strategy-popover-container">
+        <div class="strategy-popover">
+          <div class="popover-search">
+            <input type="text" placeholder="Search outcomes, objectives, rally cries..." />
+          </div>
+          <div class="popover-list">
+            <!-- Rally Cry 1 -->
+            <div class="rc-header">
+              <span class="rc-dot" style="background: #455F87;"></span>
+              Launch Enterprise Tier
+            </div>
+            <div class="do-header">Enterprise Pricing Model</div>
+            <div class="outcome-item">
+              <span class="outcome-dot" style="background: #455F87;"></span>
+              Finalize 3-tier pricing structure
+            </div>
+            <div class="outcome-item">
+              <span class="outcome-dot" style="background: #455F87;"></span>
+              Competitive analysis document
+            </div>
+            <div class="do-header">Sales Enablement</div>
+
+            <!-- Rally Cry 2 -->
+            <div class="rc-header" style="margin-top: 6px;">
+              <span class="rc-dot" style="background: #9F403D;"></span>
+              Reduce Churn to &lt;2%
+            </div>
+          </div>
+          <div class="popover-footer">
+            <button class="non-strategic-btn">Mark as non-strategic</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Spacer to push content below popover visible area -->
+    <div style="height: 200px;"></div>
+
+    <!-- 6. Attribution -->
+    <div class="field-section">
+      <label class="field-label">Who assigned this?</label>
+      <div class="attribution-section">
+        <div class="attr-group">
+          <button class="attr-btn active" data-attr="self">Self-directed</button>
+          <button class="attr-btn" data-attr="assigned">Assigned by...</button>
+        </div>
+        <div class="attr-dropdown-wrapper" id="attr-dropdown-wrapper">
+          <select class="attr-dropdown" id="attr-manager-select">
+            <option value="" disabled selected>Select who assigned this...</option>
+            <option value="sarah-chen">Sarah Chen (VP Engineering)</option>
+            <option value="marcus-riley">Marcus Riley (Director of Product)</option>
+            <option value="elena-vasquez">Elena Vasquez (CTO)</option>
+            <option value="david-park">David Park (Head of Design)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Notes (optional) -->
+    <div class="field-section">
+      <label class="field-label">Notes <span class="optional">(optional)</span></label>
+      <textarea class="notes-textarea" rows="3" placeholder="Any additional context..."></textarea>
+    </div>
+
+  </div>
+
+  <!-- Bottom Action Bar -->
+  <div class="panel-footer">
+    <button class="btn-save">Save Commitment</button>
+    <button class="btn-cancel">Cancel</button>
+  </div>
+
+</div>
+
+<!-- ── Interactive Behavior (minimal JS for category/horizon clicks) ── -->
+<script>
+  // Category selection
+  document.querySelectorAll('.category-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+    });
+  });
+
+  // Horizon selection (scoped per group — day vs time)
+  document.querySelectorAll('.horizon-group').forEach(group => {
+    group.querySelectorAll('.horizon-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        group.querySelectorAll('.horizon-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+  });
+
+  // Attribution toggle with dropdown
+  document.querySelectorAll('.attr-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.attr-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const dropdown = document.getElementById('attr-dropdown-wrapper');
+      if (btn.dataset.attr === 'assigned') {
+        dropdown.classList.add('visible');
+      } else {
+        dropdown.classList.remove('visible');
+      }
+    });
+  });
+
+  // Close button — uses CSS animation classes for smooth exit
+  document.querySelector('.close-btn').addEventListener('click', () => {
+    const panel = document.querySelector('.panel');
+    const overlay = document.querySelector('.overlay');
+    panel.classList.add('closing');
+    overlay.classList.add('closing');
+    setTimeout(() => {
+      panel.style.display = 'none';
+      overlay.style.display = 'none';
+    }, 200);
+  });
+
+  // Overlay click to close
+  document.querySelector('.overlay').addEventListener('click', () => {
+    document.querySelector('.close-btn').click();
+  });
+
+  // Add subtask
+  document.querySelector('.add-subtask').addEventListener('click', () => {
+    const list = document.querySelector('.bullet-list');
+    const count = list.querySelectorAll('.bullet-row').length;
+    if (count >= 5) return;
+
+    const row = document.createElement('div');
+    row.className = 'bullet-row';
+    row.innerHTML = `
+      <span class="drag-handle">&#10303;</span>
+      <input class="bullet-input" type="text" placeholder="What's involved?" />
+      <button class="bullet-remove" aria-label="Remove subtask">&times;</button>
+    `;
+    row.querySelector('.bullet-remove').addEventListener('click', () => {
+      if (list.querySelectorAll('.bullet-row').length > 2) {
+        row.remove();
+        updateBulletCount();
+      }
+    });
+    list.appendChild(row);
+    updateBulletCount();
+    row.querySelector('.bullet-input').focus();
+  });
+
+  // Remove bullet handlers
+  document.querySelectorAll('.bullet-remove').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const list = document.querySelector('.bullet-list');
+      if (list.querySelectorAll('.bullet-row').length > 2) {
+        btn.closest('.bullet-row').remove();
+        updateBulletCount();
+      }
+    });
+  });
+
+  function updateBulletCount() {
+    const count = document.querySelectorAll('.bullet-row').length;
+    const label = document.querySelector('.field-label .count');
+    if (label) label.textContent = `(${count} of 5)`;
+    const addBtn = document.querySelector('.add-subtask');
+    if (addBtn) addBtn.style.opacity = count >= 5 ? '0.4' : '1';
+  }
+
+  // Toggle popover visibility on Change link
+  document.querySelector('.change-link').addEventListener('click', (e) => {
+    e.preventDefault();
+    const popover = document.querySelector('.strategy-popover');
+    popover.style.display = popover.style.display === 'none' ? 'flex' : 'none';
+  });
+</script>
+
+</body>
+</html>
