@@ -23,7 +23,7 @@ const DEFAULT_STYLE = { description: '', borderColor: 'border-l-muted' };
 export function CategorySelector({ value, onChange, categories, disabled = false }: CategorySelectorProps) {
   return (
     <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Category">
-      {categories.filter((c) => c.isActive).map((category) => {
+      {categories.filter((c) => c.isActive !== false).map((category) => {
         const isSelected = value === category.id;
         const style = CATEGORY_STYLES[category.name] ?? DEFAULT_STYLE;
 
