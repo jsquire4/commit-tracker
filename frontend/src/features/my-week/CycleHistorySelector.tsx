@@ -12,11 +12,28 @@ function useCycleHistory() {
     queryKey: ['cycles', 'history'],
     queryFn: async () => {
       const result = await listCycles();
-      // Sort by startsAt descending, take recent 8
+      // Sort by startsAt descending, then by createdAt descending (newest first within same week)
       const sorted = [...result.items].sort((a, b) => {
-        return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
+        const startDiff = new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
+        if (startDiff !== 0) return startDiff;
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       });
-      return sorted.slice(0, 8);
+      // Deduplicate by startsAt: when reconciliation creates a new draft for the same week,
+      // keep only the active cycle (or the most recently created one as a tiebreaker).
+      const seen = new Map<string, typeof sorted[number]>();
+      for (const cycle of sorted) {
+        const key = cycle.startsAt;
+        if (!seen.has(key)) {
+          seen.set(key, cycle);
+        } else {
+          const existing = seen.get(key)!;
+          // Prefer the active cycle over an inactive one
+          if (cycle.isActive && !existing.isActive) {
+            seen.set(key, cycle);
+          }
+        }
+      }
+      return [...seen.values()].slice(0, 8);
     },
     staleTime: 60_000,
   });

@@ -1,13 +1,13 @@
-import type { RcdoCoverageResponse } from '@/types/dashboard.types';
+import type { Commitment } from '@/types';
 
 interface CoverageStripProps {
-  coverage: RcdoCoverageResponse | undefined;
+  commitments: Commitment[];
 }
 
-export function CoverageStrip({ coverage }: CoverageStripProps) {
-  if (!coverage) return null;
+export function CoverageStrip({ commitments }: CoverageStripProps) {
+  if (commitments.length === 0) return null;
 
-  const unlinkedCount = coverage.unlinkedCount;
+  const unlinkedCount = commitments.filter((c) => !c.rcdoLink.rallyCryId).length;
 
   if (unlinkedCount === 0) {
     return (

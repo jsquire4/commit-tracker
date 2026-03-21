@@ -2,7 +2,6 @@ import { useState, useMemo, useCallback } from 'react';
 import { useCurrentCycle, useCycle } from '@/hooks/useCycle';
 import { useCommitments, useDeleteCommitment } from '@/hooks/useCommitments';
 import { useReconciliationView, useCompleteReconciliation } from '@/hooks/useReconciliation';
-import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/ui.store';
 import { CommitmentList } from '@/features/commit-entry/CommitmentList';
@@ -47,8 +46,6 @@ export function MyWeekPage() {
     () => myCommitments.filter((c) => c.carriedFromCommitmentId !== null),
     [myCommitments],
   );
-
-  const { data: dashboard } = useDashboard();
 
   const shouldFetchRecon = cycleState === 'RECONCILING' || cycleState === 'RECONCILED';
   const {
@@ -334,7 +331,7 @@ export function MyWeekPage() {
         <div className="flex flex-col gap-6 sticky top-[120px]">
           <RallyCrySidebar commitments={myCommitments} />
           {(cycleState === 'DRAFT' || cycleState === 'LOCKED') && (
-            <CoverageStrip coverage={dashboard?.rcdoCoverage} />
+            <CoverageStrip commitments={myCommitments} />
           )}
         </div>
       </div>
