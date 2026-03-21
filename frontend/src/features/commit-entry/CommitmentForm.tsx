@@ -180,13 +180,12 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50" onClose={handleClose}>
-        {/* Overlay */}
-        <div className="fixed inset-0 bg-[rgba(45,52,50,0.4)] transition-opacity duration-200" aria-hidden="true" />
-
-        {/* Panel container — fixed right edge */}
+        {/* Overlay + Panel container */}
         <div className="fixed inset-0 overflow-hidden">
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
+          {/* Dark scrim */}
+          <div className="absolute inset-0 bg-[rgba(45,52,50,0.4)]" aria-hidden="true" />
+          {/* Panel aligned right */}
+          <div className="absolute inset-y-0 right-0 flex max-w-full">
               <Transition.Child
                 as={Fragment}
                 enter="duration-[300ms] ease-[var(--ease-entrance)]"
@@ -397,7 +396,6 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
               </div>
             </Dialog.Panel>
           </Transition.Child>
-            </div>
           </div>
         </div>
       </Dialog>
