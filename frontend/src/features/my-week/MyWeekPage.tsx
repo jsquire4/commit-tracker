@@ -118,8 +118,8 @@ export function MyWeekPage() {
         <div className="flex flex-col gap-6 min-w-0">
 
           {/* Cycle state banner */}
-          <div className="bg-surface-lowest rounded-sm p-4 flex items-center justify-between gap-4 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
+          <div className="bg-surface-lowest rounded-sm p-4 flex items-center justify-between gap-4 flex-wrap overflow-hidden">
+            <div className="flex items-center gap-3 min-w-0 overflow-hidden">
               <CycleStateIndicator currentState={cycleState} />
               <CycleHistorySelector
                 currentCycleId={cycleId}
