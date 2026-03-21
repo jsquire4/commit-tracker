@@ -202,8 +202,9 @@ public class CycleService {
         }
 
         // Find or create the next week's DRAFT cycle
-        Instant nextWeekStart = cycle.getEndsAt().plusSeconds(1)
-                .truncatedTo(ChronoUnit.DAYS);
+        // NOTE: Do NOT truncate to UTC midnight — that shifts the timestamp to the previous
+        // evening in US timezones, causing computeWeekStart to snap back to the CURRENT week.
+        Instant nextWeekStart = cycle.getEndsAt().plusSeconds(1);
         // Align to next Monday
         String timezone = actor.getOrg().getTimezone() != null ? actor.getOrg().getTimezone() : "UTC";
         Instant nextWeekAlignedStart = computeWeekStart(nextWeekStart, timezone);
