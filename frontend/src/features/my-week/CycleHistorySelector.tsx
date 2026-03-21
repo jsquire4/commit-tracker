@@ -22,7 +22,7 @@ function useCycleHistory() {
       // keep only the active cycle (or the most recently created one as a tiebreaker).
       const seen = new Map<string, typeof sorted[number]>();
       for (const cycle of sorted) {
-        const key = cycle.startsAt;
+        const key = cycle.startsAt.slice(0, 10); // Compare by date only (YYYY-MM-DD), ignoring time
         if (!seen.has(key)) {
           seen.set(key, cycle);
         } else {
