@@ -181,7 +181,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50" onClose={handleClose}>
         {/* Overlay */}
-        <div className="fixed inset-0 bg-on-surface/40 transition-opacity duration-200" aria-hidden="true" />
+        <div className="fixed inset-0 bg-[rgba(45,52,50,0.4)] transition-opacity duration-200" aria-hidden="true" />
 
         {/* Panel container — fixed right edge */}
         <div className="fixed inset-0 overflow-hidden">

@@ -87,7 +87,7 @@ export function StrategyModal({
     <Transition appear show={open} as={Fragment}>
       <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => { if (!isPending) onClose(); }}>
         {/* Overlay */}
-        <div className="fixed inset-0 bg-on-surface/40 transition-opacity duration-200" aria-hidden="true" />
+        <div className="fixed inset-0 bg-[rgba(45,52,50,0.4)] transition-opacity duration-200" aria-hidden="true" />
 
         <div className="fixed inset-0 flex items-center justify-center p-4">
           <Transition.Child
