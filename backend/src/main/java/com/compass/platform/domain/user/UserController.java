@@ -45,9 +45,12 @@ public class UserController {
     // ─── Read Endpoints (existing) ────────────────────────────────────────────
 
     @GetMapping("/me")
+    @Transactional(readOnly = true)
     public ResponseEntity<ApiResponse<UserResponse>> getCurrentUser() {
         AppUser actor = SecurityContextHelper.getCurrentUser();
-        return ResponseEntity.ok(ApiResponse.of(toResponse(actor)));
+        // Re-fetch within transaction so lazy relations (reportsTo, costBand) can load
+        AppUser user = userRepository.findById(actor.getId()).orElse(actor);
+        return ResponseEntity.ok(ApiResponse.of(toResponse(user)));
     }
 
     @GetMapping("/team")
