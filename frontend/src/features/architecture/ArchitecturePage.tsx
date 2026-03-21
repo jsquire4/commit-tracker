@@ -1,6 +1,4 @@
-import { useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useFadeUp } from '@/hooks/useMotion';
 import { ArchitectureNav } from './ArchitectureNav';
 import { TechStackStrip } from './TechStackStrip';
 import { MermaidDiagram } from './MermaidDiagram';
@@ -83,7 +81,7 @@ const COMMITMENT_TO_INTELLIGENCE = `sequenceDiagram
   App->>AI: Query with org context
   AI-->>Exec: Data-backed answers`;
 
-/* ── Section wrapper with scroll-reveal ──────────────────────────── */
+/* ── Section wrapper ──────────────────────────────────────────────── */
 
 function Section({
   id,
@@ -94,11 +92,8 @@ function Section({
   children: React.ReactNode;
   className?: string;
 }) {
-  const ref = useRef<HTMLElement>(null);
-  useFadeUp(ref);
-
   return (
-    <section ref={ref} id={id} className={`reveal mt-16 ${className}`}>
+    <section id={id} className={`mt-16 ${className}`}>
       {children}
     </section>
   );

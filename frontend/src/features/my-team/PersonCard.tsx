@@ -52,7 +52,7 @@ const statusDotClass: Record<string, string> = {
   rose: 'bg-error',
 };
 
-export function PersonCard({ member, commitments, index, onAssign }: PersonCardProps) {
+export function PersonCard({ member, commitments, index: _index, onAssign }: PersonCardProps) {
   const [expanded, setExpanded] = useState(false);
   const linked = commitments.filter((c) => c.rcdoLink?.rallyCryTitle).length;
   const carried = commitments.filter((c) => c.carriedFromCommitmentId).length;
@@ -72,10 +72,9 @@ export function PersonCard({ member, commitments, index, onAssign }: PersonCardP
   return (
     <div
       className={[
-        'bg-surface-lowest rounded-sm overflow-hidden animate-fade-up transition-colors duration-[var(--duration-fast)] hover:bg-surface',
+        'bg-surface-lowest rounded-sm overflow-hidden transition-colors duration-[var(--duration-fast)] hover:bg-surface',
         borderClass,
       ].join(' ')}
-      style={{ animationDelay: `${index * 40}ms` }}
     >
       {/* Header */}
       <button

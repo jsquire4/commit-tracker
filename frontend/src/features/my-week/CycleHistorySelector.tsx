@@ -12,11 +12,9 @@ function useCycleHistory() {
     queryKey: ['cycles', 'history'],
     queryFn: async () => {
       const result = await listCycles();
-      // Sort by label descending (Week N), take recent 8
+      // Sort by startsAt descending, take recent 8
       const sorted = [...result.items].sort((a, b) => {
-        const aNum = parseInt(a.label.replace(/\D/g, ''), 10) || 0;
-        const bNum = parseInt(b.label.replace(/\D/g, ''), 10) || 0;
-        return bNum - aNum;
+        return new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime();
       });
       return sorted.slice(0, 8);
     },

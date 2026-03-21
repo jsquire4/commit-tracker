@@ -1,63 +1,44 @@
-import type { ChessCategoryType } from '@/types';
+import type { ChessCategory } from '@/types';
 
 interface CategorySelectorProps {
-  value: ChessCategoryType | null;
-  onChange: (c: ChessCategoryType) => void;
+  /** The currently selected chess category UUID, or null if none selected */
+  value: string | null;
+  /** Called with the chess category UUID when user selects a category */
+  onChange: (id: string) => void;
+  /** Chess category objects loaded from the API */
+  categories: ChessCategory[];
   disabled?: boolean;
 }
 
-interface CategoryOption {
-  value: ChessCategoryType;
-  label: string;
-  description: string;
-  borderColor: string;
-}
+/** Static styling config keyed by canonical category name */
+const CATEGORY_STYLES: Record<string, { description: string; borderColor: string }> = {
+  Strategic: { description: 'Drives long-term objectives', borderColor: 'border-l-navy' },
+  Operational: { description: 'Day-to-day execution', borderColor: 'border-l-muted' },
+  Defensive: { description: 'Risk mitigation & maintenance', borderColor: 'border-l-error' },
+  'Capability Building': { description: 'Growing skills & capacity', borderColor: 'border-l-capability' },
+};
 
-const CATEGORIES: CategoryOption[] = [
-  {
-    value: 'STRATEGIC',
-    label: 'Strategic',
-    description: 'Drives long-term objectives',
-    borderColor: 'border-l-navy',
-  },
-  {
-    value: 'OPERATIONAL',
-    label: 'Operational',
-    description: 'Day-to-day execution',
-    borderColor: 'border-l-muted',
-  },
-  {
-    value: 'DEFENSIVE',
-    label: 'Defensive',
-    description: 'Risk mitigation & maintenance',
-    borderColor: 'border-l-error',
-  },
-  {
-    value: 'CAPABILITY_BUILDING',
-    label: 'Capability Building',
-    description: 'Growing skills & capacity',
-    borderColor: 'border-l-capability',
-  },
-];
+const DEFAULT_STYLE = { description: '', borderColor: 'border-l-muted' };
 
-export function CategorySelector({ value, onChange, disabled = false }: CategorySelectorProps) {
+export function CategorySelector({ value, onChange, categories, disabled = false }: CategorySelectorProps) {
   return (
     <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-label="Category">
-      {CATEGORIES.map((category) => {
-        const isSelected = value === category.value;
+      {categories.filter((c) => c.isActive).map((category) => {
+        const isSelected = value === category.id;
+        const style = CATEGORY_STYLES[category.name] ?? DEFAULT_STYLE;
 
         return (
           <button
-            key={category.value}
+            key={category.id}
             type="button"
             role="radio"
             aria-checked={isSelected}
             disabled={disabled}
-            onClick={() => { onChange(category.value); }}
+            onClick={() => { onChange(category.id); }}
             className={[
               'relative flex flex-col p-3 rounded-sm border border-outline-variant border-l-[3px] text-left',
               'bg-surface-lowest transition-all duration-[200ms] ease-[var(--ease-standard)]',
-              category.borderColor,
+              style.borderColor,
               isSelected
                 ? 'border-accent border-l-accent bg-accent/[0.04]'
                 : 'hover:bg-surface-container-low',
@@ -80,8 +61,8 @@ export function CategorySelector({ value, onChange, disabled = false }: Category
               </svg>
             </div>
 
-            <span className="text-[0.8125rem] font-medium text-on-surface">{category.label}</span>
-            <span className="text-small text-on-surface-variant mt-0.5">{category.description}</span>
+            <span className="text-[0.8125rem] font-medium text-on-surface">{category.name}</span>
+            <span className="text-small text-on-surface-variant mt-0.5">{style.description}</span>
           </button>
         );
       })}

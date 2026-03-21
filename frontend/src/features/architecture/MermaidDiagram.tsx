@@ -6,6 +6,7 @@ interface MermaidDiagramProps {
 }
 
 let mermaidInitialized = false;
+let diagramCounter = 0;
 
 async function initMermaid() {
   if (mermaidInitialized) return;
@@ -34,25 +35,21 @@ export function MermaidDiagram({ definition, title }: MermaidDiagramProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [svg, setSvg] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
-  const diagramCounterRef = useRef(0);
-  const idRef = useRef(`mermaid-diagram-${++diagramCounterRef.current}`);
+  const idRef = useRef(`mermaid-${++diagramCounter}`);
 
   useEffect(() => {
     let cancelled = false;
 
     async function render() {
       try {
-        // Clean up any prior SVG in the container from a previous render
-        if (containerRef.current) {
-          const existingSvg = containerRef.current.querySelector('svg');
-          if (existingSvg) existingSvg.remove();
-        }
-
         await initMermaid();
         const { default: mermaid } = await import('mermaid');
 
+        // Use a unique ID per render to avoid mermaid ID collisions
+        const renderId = `${idRef.current}-${Date.now()}`;
+
         try {
-          const { svg: rendered } = await mermaid.render(idRef.current, definition);
+          const { svg: rendered } = await mermaid.render(renderId, definition);
           if (!cancelled) {
             setSvg(rendered);
             setError(null);

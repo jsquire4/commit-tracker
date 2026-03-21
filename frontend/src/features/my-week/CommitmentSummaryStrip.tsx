@@ -20,7 +20,7 @@ export function CommitmentSummaryStrip({ commitments }: CommitmentSummaryStripPr
     const capability = commitments.filter(
       (c) => c.chessCategoryName === 'Capability Building',
     ).length;
-    const linked = commitments.filter((c) => c.rcdoLink.rallyCryId !== null).length;
+    const linked = commitments.filter((c) => Boolean(c.rcdoLink.rallyCryId)).length;
     const assigned = commitments.filter((c) => c.attribution.kind === 'ASSIGNED_BY').length;
 
     return { total, strategic, operational, defensive, capability, linked, assigned };
@@ -33,7 +33,7 @@ export function CommitmentSummaryStrip({ commitments }: CommitmentSummaryStripPr
   return (
     <div className="bg-surface-lowest rounded-sm px-5 py-2 text-small text-on-surface-variant flex items-center gap-1.5 tracking-wide">
       <AnimatedCount value={stats.total} />
-      <span className="text-muted">commitments</span>
+      <span className="text-muted">{stats.total === 1 ? 'commitment' : 'commitments'}</span>
       {sep}
       {stats.strategic > 0 && (
         <>

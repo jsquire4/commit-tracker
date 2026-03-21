@@ -98,8 +98,8 @@ class CycleStateMachineTest {
     }
 
     @Test
-    @DisplayName("DRAFT→LOCKED fails with past week start (no backdating)")
-    void draftToLocked_fails_withPastWeekStart() {
+    @DisplayName("DRAFT→LOCKED succeeds even with past week start (backdating allowed)")
+    void draftToLocked_succeeds_withPastWeekStart() {
         Cycle pastCycle = Cycle.builder()
                 .org(org)
                 .label("Past Cycle")
@@ -111,8 +111,8 @@ class CycleStateMachineTest {
         var result = stateMachine.validate(pastCycle, CycleState.LOCKED, manager,
                 ctx(3, 0, 3, NOW));
 
-        assertThat(result.allowed()).isFalse();
-        assertThat(result.rejectionReason()).isEqualTo("Cannot lock a cycle for a past week");
+        assertThat(result.allowed()).isTrue();
+        assertThat(result.rejectionReason()).isNull();
     }
 
     @Test

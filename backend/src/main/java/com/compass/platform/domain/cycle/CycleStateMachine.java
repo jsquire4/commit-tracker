@@ -81,17 +81,16 @@ public class CycleStateMachine {
      * Rule 1: DRAFT → LOCKED
      * <ul>
      *   <li>At least one commitment must exist.</li>
-     *   <li>The cycle's {@code startsAt} must not fall before the current week.</li>
      *   <li>Actor must be MANAGER or above.</li>
      * </ul>
+     *
+     * Note: date-based validation (past-week check) was intentionally removed.
+     * The state machine enforces state transitions, not calendar constraints.
+     * Locking a cycle for a past week is valid (e.g., seed data, late entry).
      */
     TransitionResult validateLock(Cycle cycle, AppUser actor, TransitionContext context) {
         if (context.commitmentCount() < 1) {
             return TransitionResult.rejected("Cannot lock cycle with no commitments");
-        }
-
-        if (isBeforeCurrentWeek(cycle.getStartsAt(), context.now(), context.orgTimezone())) {
-            return TransitionResult.rejected("Cannot lock a cycle for a past week");
         }
 
         if (!isManagerOrAbove(actor)) {

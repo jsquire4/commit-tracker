@@ -9,13 +9,14 @@ import {
   useUpdateCommitment,
   useCommitments,
 } from '@/hooks/useCommitments';
+import { useChessCategories } from '@/hooks/useChessCategories';
 import { HorizonSelector } from './HorizonSelector';
 import { CategorySelector } from './CategorySelector';
 import { AssignmentAttribution } from './AssignmentAttribution';
 import { TaskBulletEditor } from './TaskBulletEditor';
 import { StrategyLinker } from '@/features/shared/StrategyLinker';
 import Button from '@/components/Button';
-import type { CompletionHorizon, CompletionDay, CompletionTimeBlock, ChessCategoryType } from '@/types';
+import type { CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
 
 type FormValues = z.infer<typeof CreateCommitmentFormSchema>;
 
@@ -32,6 +33,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
   const isEdit = Boolean(commitmentId);
 
   const { data: commitments = [] } = useCommitments(cycleId, undefined);
+  const { data: chessCategories = [] } = useChessCategories();
   const existingCommitment = commitmentId
     ? commitments.find((c) => c.id === commitmentId)
     : undefined;
@@ -177,8 +179,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
 
   return (
     <Transition appear show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-40" onClose={handleClose}>
-        {/* Overlay */}
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
+        {/* Overlay — uses Dialog.Overlay for proper pointer-event blocking */}
         <Transition.Child
           as={Fragment}
           enter="duration-[200ms] ease-[var(--ease-standard)]"
@@ -188,21 +190,23 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-[rgba(45,52,50,0.4)]" aria-hidden="true" />
+          <Dialog.Overlay className="fixed inset-0 bg-[rgba(45,52,50,0.4)]" />
         </Transition.Child>
 
-        <div className="fixed inset-0 flex items-start justify-end">
-          {/* Slide-over panel */}
-          <Transition.Child
-            as={Fragment}
-            enter="duration-[300ms] ease-[var(--ease-entrance)]"
-            enterFrom="translate-x-full"
-            enterTo="translate-x-0"
-            leave="duration-[200ms] ease-[var(--ease-exit)]"
-            leaveFrom="translate-x-0"
-            leaveTo="translate-x-full"
-          >
-            <Dialog.Panel className="relative h-full w-full max-w-[440px] bg-surface-lowest shadow-whisper flex flex-col">
+        {/* Panel container — fixed right edge */}
+        <div className="fixed inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full">
+              <Transition.Child
+                as={Fragment}
+                enter="duration-[300ms] ease-[var(--ease-entrance)]"
+                enterFrom="translate-x-full"
+                enterTo="translate-x-0"
+                leave="duration-[200ms] ease-[var(--ease-exit)]"
+                leaveFrom="translate-x-0"
+                leaveTo="translate-x-full"
+              >
+                <Dialog.Panel className="pointer-events-auto h-full w-[440px] bg-surface-lowest shadow-whisper flex flex-col">
               {/* Header */}
               <div className="flex items-center justify-between px-7 pt-5 pb-4 border-b border-outline-variant">
                 <Dialog.Title className="font-serif text-headline text-on-surface tracking-[-0.01em]">
@@ -279,8 +283,9 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                       control={control}
                       render={({ field }) => (
                         <CategorySelector
-                          value={(field.value ?? null) as ChessCategoryType | null}
-                          onChange={(c) => { field.onChange(c); }}
+                          value={field.value ?? null}
+                          onChange={(id) => { field.onChange(id); }}
+                          categories={chessCategories}
                         />
                       )}
                     />
@@ -402,6 +407,8 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
               </div>
             </Dialog.Panel>
           </Transition.Child>
+            </div>
+          </div>
         </div>
       </Dialog>
     </Transition>

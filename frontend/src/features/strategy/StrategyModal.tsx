@@ -85,7 +85,7 @@ export function StrategyModal({
 
   return (
     <Transition appear show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={() => { if (!isPending) onClose(); }}>
+      <Dialog as="div" className="fixed inset-0 z-50 overflow-y-auto" onClose={() => { if (!isPending) onClose(); }}>
         {/* Overlay */}
         <Transition.Child
           as={Fragment}

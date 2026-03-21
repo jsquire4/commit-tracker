@@ -39,12 +39,9 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
         </span>
       </button>
 
-      {/* Expandable content */}
-      <div
-        className="overflow-hidden transition-all duration-300 ease-[var(--ease-entrance)]"
-        style={{ maxHeight: expanded ? '2000px' : '0px' }}
-      >
-        <div className="px-5 pb-5 space-y-6 border-t border-outline-variant">
+      {/* Expandable content — only mount charts when expanded to avoid Recharts DOM conflicts */}
+      {expanded && (
+        <div className="px-5 pb-5 space-y-6 border-t border-outline-variant animate-fade-up">
           {/* Alignment Distribution */}
           <div className="pt-4">
             <h3 className="text-title text-on-surface mb-2">Alignment Distribution</h3>
@@ -66,7 +63,7 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
             <CarryForwardVelocity cycleId={cycleId} />
           </div>
         </div>
-      </div>
+      )}
     </Card>
   );
 }

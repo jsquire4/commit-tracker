@@ -4,6 +4,7 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useCommitments } from '@/hooks/useCommitments';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Button from '@/components/Button';
 import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
 import { TeamSummaryCard } from './TeamSummaryCard';
@@ -121,43 +122,47 @@ export function MyTeamPage() {
       {rcdoCoverage && <RallyCryCoverageCards coverage={rcdoCoverage} />}
 
       {/* Team Members */}
-      <div className="bg-surface-lowest rounded-sm animate-fade-up" style={{ animationDelay: '200ms' }}>
-        <div className="px-5 pt-5 pb-0">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-serif text-[1.25rem] text-on-surface">Team Members</h2>
-            <Button
-              variant="secondary"
-              size="sm"
-              onClick={() => { setAssignFormState(createEmptyFormState()); setAssignFormOpen(true); }}
-              icon={
-                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-                </svg>
-              }
-            >
-              Assign Work
-            </Button>
+      <ErrorBoundary>
+        <div className="bg-surface-lowest rounded-sm">
+          <div className="px-5 pt-5 pb-0">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-serif text-[1.25rem] text-on-surface">Team Members</h2>
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={() => { setAssignFormState(createEmptyFormState()); setAssignFormOpen(true); }}
+                icon={
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+                  </svg>
+                }
+              >
+                Assign Work
+              </Button>
+            </div>
+          </div>
+
+          <div className="flex flex-col">
+            {sortedMembers.map((member, idx) => (
+              <PersonCard
+                key={member.userId}
+                member={member}
+                commitments={commitmentsByUser[member.userId] ?? []}
+                index={idx}
+                onAssign={openAssignFromPerson}
+              />
+            ))}
+            {sortedMembers.length === 0 && (
+              <p className="text-body text-muted text-center py-8">No team members found.</p>
+            )}
           </div>
         </div>
-
-        <div className="flex flex-col">
-          {sortedMembers.map((member, idx) => (
-            <PersonCard
-              key={member.userId}
-              member={member}
-              commitments={commitmentsByUser[member.userId] ?? []}
-              index={idx}
-              onAssign={openAssignFromPerson}
-            />
-          ))}
-          {sortedMembers.length === 0 && (
-            <p className="text-body text-muted text-center py-8">No team members found.</p>
-          )}
-        </div>
-      </div>
+      </ErrorBoundary>
 
       {/* Team Analytics — collapsible */}
-      <TeamAnalytics dashboard={dashboard} cycleId={activeCycleId} />
+      <ErrorBoundary>
+        <TeamAnalytics dashboard={dashboard} cycleId={activeCycleId} />
+      </ErrorBoundary>
 
       {/* Assign Work Slide-Over */}
       <AssignWorkForm

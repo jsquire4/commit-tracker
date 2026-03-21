@@ -69,9 +69,7 @@
     font-variant-numeric: tabular-nums;
   }
 
-  .font-serif {
-    font-family: 'Newsreader', Georgia, serif;
-  }
+  /* font-serif is provided by the Tailwind utility from tailwind.config fontFamily.serif */
 }
 
 /* ── Utilities Layer ────────────────────────────────────────────────── */

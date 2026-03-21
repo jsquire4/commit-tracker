@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from 'react';
-import { useCurrentCycle } from '@/hooks/useCycle';
+import { useCurrentCycle, useCycle } from '@/hooks/useCycle';
 import { useCommitments, useDeleteCommitment } from '@/hooks/useCommitments';
 import { useReconciliationView, useCompleteReconciliation } from '@/hooks/useReconciliation';
 import { useDashboard } from '@/hooks/useTeamDashboard';
@@ -26,7 +26,14 @@ import type { CycleState, ReconciliationStatus } from '@/types';
 export function MyWeekPage() {
   const { userId } = useAuth();
 
-  const { data: cycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
+  const { data: currentCycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
+  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+
+  // When a different cycle is selected via the pill selector, fetch it
+  const { data: selectedCycleData } = useCycle(selectedCycleId ?? '');
+
+  // Use the selected cycle if one is picked, otherwise the current cycle
+  const cycle = selectedCycleId ? selectedCycleData ?? currentCycle : currentCycle;
   const cycleId = cycle?.id ?? '';
   const cycleState: CycleState = cycle?.state ?? 'DRAFT';
 
@@ -117,7 +124,13 @@ export function MyWeekPage() {
           <div className="bg-surface-lowest rounded-sm p-4 flex items-center justify-between gap-4 flex-wrap">
             <div className="flex items-center gap-3 flex-wrap">
               <CycleStateIndicator currentState={cycleState} />
-              <CycleHistorySelector currentCycleId={cycleId} />
+              <CycleHistorySelector
+                currentCycleId={cycleId}
+                onSelect={(id) => {
+                  // If selecting the current cycle, clear the override
+                  setSelectedCycleId(id === currentCycle?.id ? null : id);
+                }}
+              />
             </div>
             <TransitionActions cycle={cycle} commitmentCount={myCommitments.length} />
           </div>
