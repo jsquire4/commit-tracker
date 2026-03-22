@@ -29,7 +29,7 @@ import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
-import type { ChatMessage } from '@/hooks/useAIChat';
+// ChatMessage type no longer needed — no seed messages
 
 const HealthMapContent = lazy(() =>
   import('@/features/observatory/ExecutiveHealthPage').then((m) => ({
@@ -48,15 +48,7 @@ const ConfigContent = lazy(() =>
 );
 
 
-/** Seed conversation message content (timestamps computed at render time via useMemo) */
-const BRIEFING_SEED_CONTENT: { id: string; role: 'user' | 'ai'; text: string; ageMs: number }[] = [
-  { id: 'briefing-seed-1', role: 'user', text: 'Why did strategic alignment drop this week?', ageMs: 120_000 },
-  { id: 'briefing-seed-2', role: 'ai', text: 'Strategic alignment fell 7 points because 3 commitments were reassigned by managers from strategic to operational work mid-cycle. Sarah Chen\u2019s team accounted for 2 of those reassignments, both related to a production incident on Tuesday. The remaining reassignment came from Marcus Thorne\u2019s team where a scope change shifted an Enterprise Tier commitment to defensive work.', ageMs: 100_000 },
-  { id: 'briefing-seed-3', role: 'user', text: 'Which rally cries have the worst coverage?', ageMs: 60_000 },
-  { id: 'briefing-seed-4', role: 'ai', text: 'Reduce Churn to <2% has the weakest coverage at just 1 commitment from 1 person. Two of its three objectives\u2009\u2014\u2009Customer Success Playbook and Risk Scoring Model\u2009\u2014\u2009have zero linked commitments. This is a significant gap given that churn reduction was identified as a top-3 priority this quarter.', ageMs: 40_000 },
-  { id: 'briefing-seed-5', role: 'user', text: 'What should I focus on in my 1:1 with Marcus?', ageMs: 20_000 },
-  { id: 'briefing-seed-6', role: 'ai', text: 'Marcus\u2019s team has the highest carry-forward rate at 28% and a sustained alignment drift signal. Three areas to probe: (1) his 4 unlinked commitments\u2009\u2014\u2009are they strategic work that just hasn\u2019t been tagged, or genuinely off-strategy? (2) The external dependency blocking 2 carried-forward items\u2009\u2014\u2009can you unblock it? (3) His team has zero coverage on Churn Reduction despite having relevant skills.', ageMs: 10_000 },
-];
+// No seed messages — chat starts fresh each session
 
 const MODE_TABS: { mode: BriefingMode; label: string }[] = [
   { mode: 'briefing', label: 'Briefing' },
@@ -109,16 +101,7 @@ export function BriefingView() {
     return names;
   }, [drill.rallyCryId, drill.teamId, drill.personId, rcdoTree, health, commitments]);
 
-  // Compute seed timestamps at render time so they stay fresh
-  const briefingInitialMessages: ChatMessage[] = useMemo(() =>
-    BRIEFING_SEED_CONTENT.map((s) => ({
-      id: s.id,
-      role: s.role,
-      text: s.text,
-      timestamp: new Date(Date.now() - s.ageMs).toISOString(),
-    })),
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  []);
+  // Chat starts fresh — no seed messages
 
   // Role guard — after all hooks
   if (!role || !DIRECTOR_AND_ABOVE.has(role)) {
@@ -203,7 +186,6 @@ export function BriefingView() {
                 context="briefing"
                 placeholder="Ask about this week..."
                 footerText="Powered by AI · Based on current cycle data"
-                initialMessages={briefingInitialMessages}
               />
             </div>
           </div>

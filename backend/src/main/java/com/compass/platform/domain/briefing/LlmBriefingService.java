@@ -2,6 +2,7 @@ package com.compass.platform.domain.briefing;
 
 import com.compass.platform.config.LlmConfig;
 import com.compass.platform.domain.briefing.dto.*;
+import com.compass.platform.domain.briefing.dto.BriefingMetric;
 import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
 import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
@@ -115,20 +116,12 @@ public class LlmBriefingService implements BriefingService {
             return emptyBriefing();
         }
 
-        // Check cache
-        String scopeKey = "cycle:" + resolvedCycleId;
-        Optional<GeneratedNarrative> cached = narrativeRepository
-                .findByOrgIdAndCycleIdAndNarrativeTypeAndScopeKey(orgId, resolvedCycleId, "BRIEFING", scopeKey);
-
-        // Gather data (needed for both cache validation and generation)
+        // Gather data
         BriefingDataContext ctx = gatherData(orgId, resolvedCycleId);
-        String promptHash = hashPrompt(ctx.userPrompt());
 
-        // Return cache if prompt hasn't changed
-        if (cached.isPresent() && cached.get().getPromptHash().equals(promptHash)) {
-            log.debug("Serving cached BRIEFING narrative for cycle={}", resolvedCycleId);
-            return buildResponseFromCache(cached.get(), ctx);
-        }
+        // TODO: Re-enable caching after prompt iteration is complete.
+        // For now, always make a fresh LLM call so we can iterate on the prompt
+        // without stale cached results interfering.
 
         // Generate new narrative
         log.info("Generating BRIEFING narrative for org={} cycle={} model={}", orgId, resolvedCycleId, llmConfig.getResolvedModel());
@@ -169,19 +162,10 @@ public class LlmBriefingService implements BriefingService {
             }
         }
 
-        // Store
-        String verificationJson = serializeVerification(verification);
-        Org org = orgRepository.getReferenceById(orgId);
-        Cycle cycle = cycleRepository.getReferenceById(resolvedCycleId);
-
-        if (cached.isPresent()) {
-            cached.get().updateContent(narrative, suggestionsJson, verificationJson, promptHash);
-        } else {
-            narrativeRepository.save(new GeneratedNarrative(
-                    org, cycle, "BRIEFING", scopeKey,
-                    narrative, suggestionsJson, llmConfig.getResolvedModel(),
-                    promptHash, verificationJson));
-        }
+        // TODO: Re-enable storage after prompt iteration is complete.
+        // Log verification result for debugging
+        log.info("Verification result: passed={}, checks={}, violations={}",
+                verification.passed(), verification.checks().size(), verification.violations());
 
         return buildResponse(narrative, suggestionsJson, ctx);
     }
@@ -367,39 +351,57 @@ public class LlmBriefingService implements BriefingService {
     private BriefingResponse buildResponse(String narrative, String suggestionsJson, BriefingDataContext ctx) {
         List<BriefingSuggestion> suggestions = parseSuggestions(suggestionsJson);
         List<BriefingCitation> citations = buildCitations(ctx);
-        return new BriefingResponse(narrative, suggestions, citations, Instant.now());
+        List<BriefingMetric> metrics = buildMetrics(ctx);
+        return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, metrics, Instant.now());
     }
 
     private BriefingResponse buildResponseFromCache(GeneratedNarrative cached, BriefingDataContext ctx) {
         List<BriefingSuggestion> suggestions = parseSuggestions(cached.getSuggestions());
         List<BriefingCitation> citations = buildCitations(ctx);
-        return new BriefingResponse(cached.getContent(), suggestions, citations, cached.getGeneratedAt());
+        List<BriefingMetric> metrics = buildMetrics(ctx);
+        return new BriefingResponse("Weekly Intelligence Summary", cached.getContent(), suggestions, citations, metrics, cached.getGeneratedAt());
     }
 
     private BriefingResponse emptyBriefing() {
-        return new BriefingResponse("No reconciled cycles available for briefing.", List.of(), List.of(), Instant.now());
+        return new BriefingResponse("Weekly Intelligence Summary", "No reconciled cycles available for briefing.", List.of(), List.of(), List.of(), Instant.now());
     }
 
     /** Deterministic citations — always computed from data, never LLM-generated. */
     private List<BriefingCitation> buildCitations(BriefingDataContext ctx) {
         List<BriefingCitation> citations = new ArrayList<>();
-        citations.add(new BriefingCitation("Strategic Alignment",
-                String.format("%.0f%%", ctx.alignmentPct()),
-                "Observatory Analytics — Alignment Trend",
-                "/api/v1/observatory/alignment-trend"));
-        citations.add(new BriefingCitation("Rally Cry Coverage",
-                String.format("%.0f%%", ctx.rallyCryCoveragePct()),
+        citations.add(new BriefingCitation("c1",
+                String.format("Strategic alignment: %.0f%%", ctx.alignmentPct()),
+                "Computed from " + ctx.totalCommitments() + " commitments",
+                "View breakdown"));
+        citations.add(new BriefingCitation("c2",
+                String.format("Rally Cry Coverage: %.0f%%", ctx.rallyCryCoveragePct()),
                 "Commitments linked to a Rally Cry / total commitments",
-                "/api/v1/commitments"));
-        citations.add(new BriefingCitation("Carry-Forward Rate",
-                String.format("%.0f%%", ctx.carryForwardRate() * 100),
-                "Observatory Analytics — Completion Trend",
-                "/api/v1/observatory/completion-trend"));
-        citations.add(new BriefingCitation("Active Drift Signals",
-                String.valueOf(ctx.driftCount()),
+                "View details"));
+        citations.add(new BriefingCitation("c3",
+                String.format("Carry-Forward Rate: %.0f%%", ctx.carryForwardRate() * 100),
+                "From reconciliation records",
+                "View list"));
+        citations.add(new BriefingCitation("c4",
+                String.format("Active Drift Signals: %d", ctx.driftCount()),
                 "Observatory Drift Detection",
-                "/api/v1/observatory/drift"));
+                "View signals"));
         return citations;
+    }
+
+    /** Deterministic metrics — always computed from data, never LLM-generated. */
+    private List<BriefingMetric> buildMetrics(BriefingDataContext ctx) {
+        String alignTrend = ctx.referenceData().getOrDefault("A.delta", 0.0) > 0 ? "up"
+                : ctx.referenceData().getOrDefault("A.delta", 0.0) < -1 ? "down" : "flat";
+        String carryTrend = ctx.carryForwardRate() * 100 > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down"
+                : ctx.carryForwardRate() * 100 < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up" : "flat";
+
+        return List.of(
+                new BriefingMetric("alignment", "Strategic Alignment", Math.round(ctx.alignmentPct()), "%", alignTrend),
+                new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", null),
+                new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate() * 100), "%", carryTrend),
+                new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate() * 100), "%", null),
+                new BriefingMetric("drift", "Active Drift Signals", ctx.driftCount(), null, null)
+        );
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -431,10 +433,11 @@ public class LlmBriefingService implements BriefingService {
             JsonNode array = objectMapper.readTree(json);
             List<BriefingSuggestion> result = new ArrayList<>();
             if (array.isArray()) {
+                int idx = 0;
                 for (JsonNode node : array) {
                     String text = node.has("text") ? node.get("text").asText() : node.toString();
                     String actionType = node.has("actionType") ? node.get("actionType").asText() : "NO_ACTION";
-                    result.add(new BriefingSuggestion(text, actionType));
+                    result.add(new BriefingSuggestion("s" + (++idx), text, actionType));
                 }
             }
             return result;

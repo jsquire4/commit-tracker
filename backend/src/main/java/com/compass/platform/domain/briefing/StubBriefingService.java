@@ -133,7 +133,7 @@ public class StubBriefingService implements BriefingService {
         List<BriefingCitation> citations = buildCitations(
                 alignmentPct, rallyCryCoveragePct, carryForwardRate, driftCount);
 
-        return new BriefingResponse(narrative, suggestions, citations, Instant.now());
+        return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, List.of(), Instant.now());
     }
 
     @Override
@@ -199,15 +199,16 @@ public class StubBriefingService implements BriefingService {
                                                        int driftCount, DriftReport driftReport) {
         List<BriefingSuggestion> suggestions = new ArrayList<>();
 
+        int idx = 0;
         if (coveragePct < 80.0) {
-            suggestions.add(new BriefingSuggestion(
+            suggestions.add(new BriefingSuggestion("s" + (++idx),
                     String.format("Rally cry coverage is at %.0f%%. Review unlinked commitments to improve strategic alignment visibility.", coveragePct),
                     "REVIEW_COVERAGE"
             ));
         }
 
         if (carryForwardRate > 20.0) {
-            suggestions.add(new BriefingSuggestion(
+            suggestions.add(new BriefingSuggestion("s" + (++idx),
                     String.format("Carry-forward rate is %.0f%%. Consider a displacement review to address recurring incomplete work.", carryForwardRate),
                     "DISPLACEMENT_REVIEW"
             ));
@@ -218,14 +219,14 @@ public class StubBriefingService implements BriefingService {
                     .limit(3)
                     .map(s -> String.format("%s (%s, %s)", s.unitName(), s.metric(), s.severity()))
                     .collect(Collectors.joining("; "));
-            suggestions.add(new BriefingSuggestion(
+            suggestions.add(new BriefingSuggestion("s" + (++idx),
                     String.format("%d drift signal%s detected: %s", driftCount, driftCount == 1 ? "" : "s", signalSummary),
                     "INVESTIGATE_DRIFT"
             ));
         }
 
         if (suggestions.isEmpty()) {
-            suggestions.add(new BriefingSuggestion(
+            suggestions.add(new BriefingSuggestion("s1",
                     "All key metrics are within healthy ranges. No immediate action required.",
                     "NO_ACTION"
             ));
@@ -241,33 +242,25 @@ public class StubBriefingService implements BriefingService {
                                                     double carryForwardRate, int driftCount) {
         List<BriefingCitation> citations = new ArrayList<>();
 
-        citations.add(new BriefingCitation(
-                "Strategic Alignment",
-                String.format("%.0f%%", alignmentPct),
+        citations.add(new BriefingCitation("c1",
+                String.format("Strategic alignment: %.0f%%", alignmentPct),
                 "Observatory Analytics — Alignment Trend",
-                "/api/v1/observatory/alignment-trend"
-        ));
+                "View breakdown"));
 
-        citations.add(new BriefingCitation(
-                "Rally Cry Coverage",
-                String.format("%.0f%%", coveragePct),
+        citations.add(new BriefingCitation("c2",
+                String.format("Rally Cry Coverage: %.0f%%", coveragePct),
                 "Commitments linked to a Rally Cry / total commitments",
-                "/api/v1/commitments"
-        ));
+                "View details"));
 
-        citations.add(new BriefingCitation(
-                "Carry-Forward Rate",
-                String.format("%.0f%%", carryForwardRate),
-                "Observatory Analytics — Completion Trend",
-                "/api/v1/observatory/completion-trend"
-        ));
+        citations.add(new BriefingCitation("c3",
+                String.format("Carry-Forward Rate: %.0f%%", carryForwardRate),
+                "From reconciliation records",
+                "View list"));
 
-        citations.add(new BriefingCitation(
-                "Active Drift Signals",
-                String.valueOf(driftCount),
+        citations.add(new BriefingCitation("c4",
+                String.format("Active Drift Signals: %d", driftCount),
                 "Observatory Drift Detection",
-                "/api/v1/observatory/drift"
-        ));
+                "View signals"));
 
         return citations;
     }

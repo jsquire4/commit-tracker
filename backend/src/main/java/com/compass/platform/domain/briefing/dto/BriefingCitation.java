@@ -1,8 +1,8 @@
 package com.compass.platform.domain.briefing.dto;
 
 public record BriefingCitation(
+        String id,
         String label,
-        String value,
-        String source,
-        String endpoint
+        String detail,
+        String linkText
 ) {}
