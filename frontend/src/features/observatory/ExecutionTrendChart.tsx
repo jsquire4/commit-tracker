@@ -26,6 +26,7 @@ const CHESS_COLORS = {
   operational: '#8E9AA0',
   defensive: '#B07070',
   capability: '#6B9F7F',
+  uncategorized: '#E2E2E0',
 } as const;
 
 const RC_LINE_COLOR = '#036A6A';
@@ -35,6 +36,7 @@ const BAR_CONFIG = [
   { key: 'operationalPct', label: 'Operational', color: CHESS_COLORS.operational },
   { key: 'defensivePct', label: 'Defensive', color: CHESS_COLORS.defensive },
   { key: 'capabilityBuildingPct', label: 'Capability Building', color: CHESS_COLORS.capability },
+  { key: 'uncategorizedPct', label: 'Not Categorized', color: CHESS_COLORS.uncategorized },
 ] as const;
 
 interface ChartDataPoint {
@@ -43,19 +45,26 @@ interface ChartDataPoint {
   operationalPct: number;
   defensivePct: number;
   capabilityBuildingPct: number;
+  uncategorizedPct: number;
   /** Rally cry coverage line — currently proxied from strategicPct */
   rcCoverage: number;
 }
 
 function mapToChartData(points: AlignmentDataPoint[]): ChartDataPoint[] {
-  return points.map((p) => ({
-    cycleLabel: p.cycleLabel,
-    strategicPct: p.strategicPct,
-    operationalPct: p.operationalPct,
-    defensivePct: p.defensivePct,
-    capabilityBuildingPct: p.capabilityBuildingPct,
-    rcCoverage: p.strategicPct,
-  }));
+  return points.map((p) => {
+    const categorizedSum =
+      p.strategicPct + p.operationalPct + p.defensivePct + p.capabilityBuildingPct;
+    const uncategorizedPct = Math.max(0, 100 - categorizedSum);
+    return {
+      cycleLabel: p.cycleLabel,
+      strategicPct: p.strategicPct,
+      operationalPct: p.operationalPct,
+      defensivePct: p.defensivePct,
+      capabilityBuildingPct: p.capabilityBuildingPct,
+      uncategorizedPct,
+      rcCoverage: p.strategicPct,
+    };
+  });
 }
 
 // ── Tooltip ──────────────────────────────────────────────────────────────────
@@ -215,9 +224,9 @@ export function ExecutionTrendChart({
                 />
               ))}
 
-              {/* Stacked bars — CHESS categories */}
-              {BAR_CONFIG.map(({ key, color }) =>
-                key === 'capabilityBuildingPct' ? (
+              {/* Stacked bars — CHESS categories + uncategorized */}
+              {BAR_CONFIG.map(({ key, color }, idx) =>
+                idx === BAR_CONFIG.length - 1 ? (
                   <Bar
                     key={key}
                     dataKey={key}

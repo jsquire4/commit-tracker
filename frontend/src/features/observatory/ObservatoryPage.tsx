@@ -8,8 +8,8 @@
  *   ExecutionTrendChart
  *   Placeholder sections for charts built by other agents
  */
-import { useState } from 'react';
-import { useExecutiveHealth } from '@/hooks/useObservatory';
+import { useState, useMemo } from 'react';
+import { useExecutiveHealth, useAlignmentTrend, useCompletionTrend } from '@/hooks/useObservatory';
 import { ProgramSummary } from './ProgramSummary';
 import { ExecutionTrendChart } from './ExecutionTrendChart';
 import { TeamTrajectories } from './TeamTrajectories';
@@ -57,22 +57,46 @@ export function ObservatoryPage() {
   const [weekCount, setWeekCount] = useState<WeekOption>(26);
 
   const { data: health, isLoading: healthLoading } = useExecutiveHealth(weekCount);
+  const { data: alignmentTrend, isLoading: alignmentLoading } = useAlignmentTrend(weekCount);
+  const { data: completionTrend, isLoading: completionLoading } = useCompletionTrend(weekCount);
 
   const orgName = health?.orgName ?? '';
-  const peopleCount = health?.units?.length ?? 0;
+
+  // Average RC coverage across all weeks in the selected period
+  const avgRcCoverage = useMemo(() => {
+    if (!alignmentTrend || alignmentTrend.length === 0) return null;
+    const sum = alignmentTrend.reduce((acc, p) => acc + p.strategicPct, 0);
+    return sum / alignmentTrend.length;
+  }, [alignmentTrend]);
+
+  // Average completion rate across all weeks in the selected period
+  const avgCompletion = useMemo(() => {
+    if (!completionTrend || completionTrend.length === 0) return null;
+    const sum = completionTrend.reduce((acc, p) => acc + p.completionRate, 0);
+    return sum / completionTrend.length;
+  }, [completionTrend]);
+
+  // Average carry-forward rate across all weeks
+  const avgCarryForward = useMemo(() => {
+    if (!completionTrend || completionTrend.length === 0) return null;
+    const sum = completionTrend.reduce((acc, p) => acc + p.carryForwardRate, 0);
+    return sum / completionTrend.length;
+  }, [completionTrend]);
+
+  const kpiLoading = healthLoading || alignmentLoading || completionLoading;
 
   // KPI values — fallback to em-dash while loading
-  const rcCoverage = healthLoading
+  const rcCoverage = kpiLoading || avgRcCoverage === null
     ? '—'
-    : `${(health?.strategicAlignmentPct ?? 0).toFixed(1)}`;
+    : avgRcCoverage.toFixed(1);
 
-  const completion = healthLoading
+  const completion = kpiLoading || avgCompletion === null
     ? '—'
-    : `${(health?.completionRate ?? 0).toFixed(1)}`;
+    : avgCompletion.toFixed(1);
 
-  const carryForward = healthLoading
+  const carryForward = kpiLoading || avgCarryForward === null
     ? '—'
-    : `${(health?.carryForwardRate ?? 0).toFixed(1)}`;
+    : avgCarryForward.toFixed(1);
 
   const driftSignals = healthLoading
     ? '—'
@@ -126,7 +150,7 @@ export function ObservatoryPage() {
       </div>
 
       {/* ── Program summary (LLM stub) ── */}
-      <ProgramSummary weekCount={weekCount} peopleCount={peopleCount} />
+      <ProgramSummary weekCount={weekCount} />
 
       {/* ── Execution trend chart ── */}
       <ExecutionTrendChart weekCount={weekCount} />

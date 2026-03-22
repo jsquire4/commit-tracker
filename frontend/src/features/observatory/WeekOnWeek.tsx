@@ -16,6 +16,17 @@ interface TableRow {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+/**
+ * Formats a cycle label for a compact column header.
+ * Strips "Week of " prefix and trims the year so "Week of Mar 16, 2026" → "Mar 16".
+ */
+function formatColumnLabel(cycleLabel: string): string {
+  // Strip "Week of " prefix (case-insensitive)
+  const stripped = cycleLabel.replace(/^week\s+of\s+/i, '');
+  // Remove the year portion (", YYYY" at end)
+  return stripped.replace(/,\s*\d{4}$/, '').trim();
+}
+
 function fmt(value: number, isPercent: boolean): string {
   if (isPercent) return `${Math.round(value)}%`;
   return Math.round(value).toLocaleString();
@@ -255,7 +266,7 @@ export function WeekOnWeek({ weekCount }: WeekOnWeekProps) {
                   }}
                   title={col.isEventCycle ? 'Significant event cycle' : undefined}
                 >
-                  {col.cycleLabel}
+                  {formatColumnLabel(col.cycleLabel)}
                 </th>
               ))}
             </tr>
