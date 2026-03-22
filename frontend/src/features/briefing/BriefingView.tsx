@@ -180,12 +180,13 @@ export function BriefingView() {
           </div>
 
           {/* Sidebar — AI Chat */}
-          <div className="sticky top-[120px]" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="h-full animate-fade-up" style={{ animationDelay: '200ms' }}>
+          <div className="sticky top-[120px]" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+            <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
               <AIChatSidebar
                 context="briefing"
                 placeholder="Ask about this week..."
                 footerText="Powered by AI · Based on current cycle data"
+                primerMessage="I can help you understand this week's execution data — alignment, coverage, carry-forward, and drift signals. What would you like to know?"
               />
             </div>
           </div>

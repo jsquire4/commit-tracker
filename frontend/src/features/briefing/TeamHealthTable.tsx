@@ -10,10 +10,11 @@ interface TeamHealthTableProps {
 }
 
 function driftLabel(unit: OrgUnitHealth): { text: string; className: string } {
-  if (unit.trendDirection === 'DECLINING' && unit.weeksTrending >= 3) {
+  const dir = unit.trendDirection.toUpperCase();
+  if (dir === 'DECLINING' && unit.weeksTrending >= 3) {
     return { text: `Alignment \u2193 Sustained`, className: 'text-warning font-medium' };
   }
-  if (unit.trendDirection === 'DECLINING') {
+  if (dir === 'DECLINING') {
     return { text: `Alignment \u2193 Emerging`, className: 'text-warning' };
   }
   return { text: '\u2014', className: 'text-muted' };
@@ -22,8 +23,8 @@ function driftLabel(unit: OrgUnitHealth): { text: string; className: string } {
 export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
   // Sort: drift rows first (declining), then by strategic alignment ascending
   const sorted = [...units].sort((a, b) => {
-    const aDrift = a.trendDirection === 'DECLINING' ? 0 : 1;
-    const bDrift = b.trendDirection === 'DECLINING' ? 0 : 1;
+    const aDrift = a.trendDirection.toUpperCase() === 'DECLINING' ? 0 : 1;
+    const bDrift = b.trendDirection.toUpperCase() === 'DECLINING' ? 0 : 1;
     if (aDrift !== bDrift) return aDrift - bDrift;
     return a.strategicAlignmentPct - b.strategicAlignmentPct;
   });
@@ -34,7 +35,7 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
         <caption className="sr-only">Team Health — metrics exclude the team lead&apos;s own commitments</caption>
         <thead>
           <tr>
-            {['Team Lead', 'Headcount', 'Strategic %', 'Completion', 'Drift Signal', 'Trending', ''].map(
+            {['Team Lead', 'Headcount', 'Alignment %', 'Completion', 'Drift Signal', 'Trending', ''].map(
               (h, i) => (
                 <th
                   key={h || `empty-${i}`}
@@ -52,7 +53,7 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
         <tbody>
           {sorted.map((unit, i) => {
             const drift = driftLabel(unit);
-            const isDrift = unit.trendDirection === 'DECLINING';
+            const isDrift = unit.trendDirection.toUpperCase() === 'DECLINING';
             return (
               <tr
                 key={unit.managerId}

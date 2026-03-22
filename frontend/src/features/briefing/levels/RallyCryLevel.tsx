@@ -9,14 +9,14 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useCommitments } from '@/hooks/useCommitments';
 import { useRcdoTree } from '@/hooks/useRcdo';
-import { useExecutiveHealth, useCarryChains, useCostImpact } from '@/hooks/useObservatory';
+import { useExecutiveHealth, useCarryChains } from '@/hooks/useObservatory';
 import { listCycles } from '@/api/cycles.api';
 import { getCommitments } from '@/api/commitments.api';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import type { RallyCryNode } from '@/types/rcdo.types';
 import type { Commitment } from '@/types/commitment.types';
 import type { RcdoCoverageResponse, AlignmentSignalResponse } from '@/types/dashboard.types';
-import type { CarryForwardChain, CostWeightedSignal, OrgUnitHealth } from '@/types/observatory.types';
+import type { CarryForwardChain, OrgUnitHealth } from '@/types/observatory.types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -172,7 +172,6 @@ function buildRallyCryCards(
 
 function buildWatchList(
   carryChains: CarryForwardChain[] | undefined,
-  costSignals: CostWeightedSignal[] | undefined,
   healthUnits: OrgUnitHealth[] | undefined,
   alignment: AlignmentSignalResponse | undefined,
 ): WatchItem[] {
@@ -193,16 +192,11 @@ function buildWatchList(
     }
   }
 
-  if (costSignals) {
-    for (const signal of costSignals.filter((s) => parseFloat(s.misalignmentCost) > 0).sort((a, b) => parseFloat(b.misalignmentCost) - parseFloat(a.misalignmentCost)).slice(0, 3)) {
-      const cost = parseFloat(signal.misalignmentCost);
-      items.push({ id: `cost-${signal.userId}`, message: `${signal.displayName}: ${Math.round(cost)}h misalignment cost`, severity: cost > 20 ? 'critical' : 'warning', drillTarget: { team: signal.userId } });
-    }
-  }
+  // Cost/misalignment signals removed — they impose value judgments.
 
   if (healthUnits) {
-    for (const unit of healthUnits.filter((u) => u.trendDirection === 'DECLINING' && u.weeksTrending >= 2).slice(0, 5)) {
-      items.push({ id: `decline-${unit.managerId}`, message: `${unit.managerName}'s team declining for ${unit.weeksTrending} weeks (${Math.round(unit.strategicAlignmentPct)}% alignment)`, severity: unit.weeksTrending >= 4 ? 'critical' : 'warning', drillTarget: { team: unit.managerId } });
+    for (const unit of healthUnits.filter((u) => u.trendDirection.toUpperCase() === 'DECLINING' && u.weeksTrending >= 2).slice(0, 5)) {
+      items.push({ id: `decline-${unit.managerId}`, message: `${unit.managerName}'s team: alignment trending down for ${unit.weeksTrending} weeks (${Math.round(unit.strategicAlignmentPct)}%)`, severity: unit.weeksTrending >= 4 ? 'critical' : 'warning', drillTarget: { team: unit.managerId } });
     }
   }
 
@@ -317,7 +311,6 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
   const { data: rcdoTree } = useRcdoTree();
   const { data: health } = useExecutiveHealth(6);
   const { data: carryChains } = useCarryChains(cycleId);
-  const { data: costSignals } = useCostImpact(cycleId);
 
   const { data: previousCycleData } = useQuery({
     queryKey: ['cycles', 'previous', cycle?.startsAt],
@@ -393,8 +386,8 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
   }, [dashboard, commitments, rcdoTree, previousCommitments]);
 
   const watchItems = useMemo(
-    () => buildWatchList(carryChains, costSignals, health?.units, dashboard?.alignmentSignal),
-    [carryChains, costSignals, health, dashboard],
+    () => buildWatchList(carryChains, health?.units, dashboard?.alignmentSignal),
+    [carryChains, health, dashboard],
   );
 
   if (isLoading) {

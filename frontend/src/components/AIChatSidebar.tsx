@@ -1,18 +1,18 @@
 /**
- * AIChatSidebar — Full-height sticky sidebar for AI chat.
- * Shared between Briefing and Portfolio pages.
+ * AIChatSidebar — Compact chat sidebar for AI assistant.
+ * Starts short with a primer message, grows as conversation builds.
  *
  * Header: "Compass Intelligence" label.
  * Scrollable chat area with ChatBubble messages.
  * Input field with send button at bottom.
  * "Powered by AI" footer.
  */
-import { useRef, useEffect, useState, type KeyboardEvent } from 'react';
+import { useRef, useEffect, useState, useMemo, type KeyboardEvent } from 'react';
 import { useAIChat, type ChatMessage } from '@/hooks/useAIChat';
 import { ChatBubble } from './ChatBubble';
 
 interface AIChatSidebarProps {
-  /** Optional context hint for stub responses */
+  /** Optional context hint passed to the chat hook */
   context?: string;
   /** Placeholder text for the input */
   placeholder?: string;
@@ -20,6 +20,8 @@ interface AIChatSidebarProps {
   footerText?: string;
   /** Optional initial messages to seed the conversation */
   initialMessages?: ChatMessage[];
+  /** Auto-injected primer message shown when chat is empty */
+  primerMessage?: string;
 }
 
 export function AIChatSidebar({
@@ -27,16 +29,38 @@ export function AIChatSidebar({
   placeholder = 'Ask about the data...',
   footerText = 'Powered by AI \u00B7 Based on current cycle data',
   initialMessages,
+  primerMessage,
 }: AIChatSidebarProps) {
   const { messages, isLoading, sendMessage } = useAIChat(context);
   const [inputValue, setInputValue] = useState('');
   const conversationRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Combine initial + live messages
-  const allMessages = initialMessages
-    ? [...initialMessages, ...messages]
-    : messages;
+  // Build the primer as a static AI message
+  const primerMsg = useMemo<ChatMessage | null>(() => {
+    if (!primerMessage) return null;
+    return {
+      id: 'primer',
+      role: 'ai',
+      text: primerMessage,
+      timestamp: new Date().toISOString(),
+    };
+  }, [primerMessage]);
+
+  // Combine primer + initial + live messages
+  const allMessages = useMemo(() => {
+    const result: ChatMessage[] = [];
+    if (primerMsg && messages.length === 0 && !initialMessages?.length) {
+      result.push(primerMsg);
+    }
+    if (initialMessages) {
+      result.push(...initialMessages);
+    }
+    result.push(...messages);
+    return result;
+  }, [primerMsg, initialMessages, messages]);
+
+  const hasConversation = messages.length > 0;
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -61,9 +85,11 @@ export function AIChatSidebar({
   };
 
   return (
-    <div className="bg-surface-lowest rounded-sm h-full flex flex-col overflow-hidden">
+    <div className="bg-surface-lowest rounded-sm flex flex-col overflow-hidden transition-all duration-300"
+      style={{ maxHeight: hasConversation ? '100%' : '280px' }}
+    >
       {/* Header */}
-      <div className="flex items-center gap-2 px-5 py-4 border-b border-outline-variant">
+      <div className="flex items-center gap-2 px-5 py-3 border-b border-outline-variant">
         <svg className="w-[18px] h-[18px] text-accent flex-shrink-0" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
           <path d="M10 2a8 8 0 100 16 8 8 0 000-16zm0 14.5a6.5 6.5 0 110-13 6.5 6.5 0 010 13zm-.75-9.25a.75.75 0 011.5 0v3.5a.75.75 0 01-.75.75h-2a.75.75 0 010-1.5h1.25V7.25z" />
         </svg>
@@ -73,15 +99,8 @@ export function AIChatSidebar({
       {/* Conversation */}
       <div
         ref={conversationRef}
-        className="flex-1 overflow-y-auto p-5 flex flex-col gap-4 scrollbar-thin"
+        className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scrollbar-thin"
       >
-        {allMessages.length === 0 && !isLoading && (
-          <div className="flex-1 flex items-center justify-center">
-            <p className="text-[0.8125rem] text-muted text-center px-4">
-              Ask a question about your data to get started.
-            </p>
-          </div>
-        )}
         {allMessages.map((msg, i) => (
           <ChatBubble
             key={msg.id}
@@ -101,7 +120,7 @@ export function AIChatSidebar({
       </div>
 
       {/* Input */}
-      <div className="px-5 py-4 border-t border-outline-variant">
+      <div className="px-4 py-3 border-t border-outline-variant">
         <div className="flex items-center gap-2">
           <input
             ref={inputRef}
@@ -130,7 +149,7 @@ export function AIChatSidebar({
       </div>
 
       {/* Footer */}
-      <div className="text-center py-2 px-5 text-[0.6875rem] text-muted">
+      <div className="text-center py-1.5 px-4 text-[0.6875rem] text-muted">
         {footerText}
       </div>
     </div>

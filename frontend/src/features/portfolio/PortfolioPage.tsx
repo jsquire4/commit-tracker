@@ -120,15 +120,16 @@ export function PortfolioPage() {
       </div>
 
       {/* Sidebar — AI Chat */}
-      <div className="sticky top-[120px]" style={{ height: 'calc(100vh - 140px)' }}>
+      <div className="sticky top-[120px]" style={{ maxHeight: 'calc(100vh - 140px)' }}>
         <div
-          className="h-full animate-fade-up"
+          className="animate-fade-up"
           style={{ animationDelay: '200ms' }}
         >
           <AIChatSidebar
             context="portfolio"
             placeholder="Ask about the portfolio..."
             footerText="Powered by AI · Portfolio-wide analysis"
+            primerMessage="I can help you compare portfolio companies on alignment, completion, drift, and coverage. What would you like to explore?"
           />
         </div>
       </div>
