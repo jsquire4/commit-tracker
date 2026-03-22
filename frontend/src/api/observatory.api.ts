@@ -10,6 +10,8 @@ import type {
   IntegrityReport,
   ObservatoryConfig,
   PortfolioHealthResponse,
+  ProgramHeatmapResponse,
+  SignalsSummaryResponse,
 } from '@/types';
 
 const BASE = '/api/v1/observatory';
@@ -83,4 +85,16 @@ export async function updateObservatoryConfig(
 
 export async function getPortfolioHealth(): Promise<PortfolioHealthResponse> {
   return fetchData<PortfolioHealthResponse>(`${BASE}/portfolio`);
+}
+
+export async function getProgramHeatmap(
+  weekCount?: number
+): Promise<ProgramHeatmapResponse> {
+  return fetchData<ProgramHeatmapResponse>(`${BASE}/program-heatmap`, weekCount !== undefined ? { weekCount } : undefined);
+}
+
+export async function getSignalsSummary(
+  weekCount?: number
+): Promise<SignalsSummaryResponse> {
+  return fetchData<SignalsSummaryResponse>(`${BASE}/signals-summary`, weekCount !== undefined ? { weekCount } : undefined);
 }
