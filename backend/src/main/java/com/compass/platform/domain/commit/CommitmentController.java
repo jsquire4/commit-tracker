@@ -1,11 +1,14 @@
 package com.compass.platform.domain.commit;
 
+import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.commit.dto.CommitmentFilters;
 import com.compass.platform.domain.commit.dto.CommitmentResponse;
 import com.compass.platform.domain.commit.dto.CreateCommitmentRequest;
 import com.compass.platform.domain.commit.dto.CreateUnplannedCommitmentRequest;
 import com.compass.platform.domain.commit.dto.ReorderRequest;
 import com.compass.platform.domain.commit.dto.UpdateCommitmentRequest;
+import com.compass.platform.domain.reconciliation.ReconciliationRecord;
+import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
@@ -41,13 +44,16 @@ public class CommitmentController {
     private final CommitmentService commitmentService;
     private final CommitmentMapper commitmentMapper;
     private final TaskBulletRepository taskBulletRepository;
+    private final ReconciliationRecordRepository reconciliationRecordRepository;
 
     public CommitmentController(CommitmentService commitmentService,
                                 CommitmentMapper commitmentMapper,
-                                TaskBulletRepository taskBulletRepository) {
+                                TaskBulletRepository taskBulletRepository,
+                                ReconciliationRecordRepository reconciliationRecordRepository) {
         this.commitmentService = commitmentService;
         this.commitmentMapper = commitmentMapper;
         this.taskBulletRepository = taskBulletRepository;
+        this.reconciliationRecordRepository = reconciliationRecordRepository;
     }
 
     @PostMapping
@@ -133,8 +139,20 @@ public class CommitmentController {
                 ? Map.of()
                 : taskBulletRepository.findByCommitmentIdIn(commitmentIds).stream()
                         .collect(java.util.stream.Collectors.groupingBy(t -> t.getCommitment().getId()));
+
+        // Load reconciliation status for each commitment (if reconciled)
+        List<ReconciliationRecord> reconRecords = reconciliationRecordRepository
+                .findByOrgIdAndCycleId(actor.getOrg().getId(), effectiveCycleId);
+        Map<UUID, ReconciliationStatus> reconStatusByCommitmentId = reconRecords.stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        r -> r.getCommitment().getId(),
+                        ReconciliationRecord::getStatus,
+                        (a, b) -> a));
+
         List<CommitmentResponse> responses = commitmentPage.getContent().stream()
-                .map(c -> commitmentMapper.toResponse(c, bulletsByCommitmentId.getOrDefault(c.getId(), List.of())))
+                .map(c -> commitmentMapper.toResponse(c,
+                        bulletsByCommitmentId.getOrDefault(c.getId(), List.of()),
+                        reconStatusByCommitmentId.get(c.getId())))
                 .toList();
 
         PagedResponse<CommitmentResponse> pagedResponse = new PagedResponse<>(

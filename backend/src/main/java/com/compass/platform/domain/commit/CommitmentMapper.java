@@ -1,5 +1,6 @@
 package com.compass.platform.domain.commit;
 
+import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.commit.dto.CommitmentResponse;
 import org.springframework.stereotype.Component;
 
@@ -13,7 +14,7 @@ public class CommitmentMapper {
      * Reconciliation status fields are not available at the commitment level; callers that
      * need them must build the response differently (e.g., ReconciliationController).
      */
-    public CommitmentResponse toResponse(Commitment entity, List<TaskBullet> bullets) {
+    public CommitmentResponse toResponse(Commitment entity, List<TaskBullet> bullets, ReconciliationStatus reconStatus) {
         CommitmentResponse.RcdoLinkResponse rcdoLink = new CommitmentResponse.RcdoLinkResponse(
             entity.getRallyCry() != null ? entity.getRallyCry().getId() : null,
             entity.getRallyCry() != null ? entity.getRallyCry().getTitle() : null,
@@ -62,8 +63,8 @@ public class CommitmentMapper {
             entity.getCarriedFrom() != null ? entity.getCarriedFrom().getId() : null,
             entity.isUnplanned(),
             entity.getEstimatedHours(),
-            null,   // reconciliationStatus — not available from entity alone
-            null,   // reconciliationNote — not available from entity alone
+            reconStatus,
+            null,   // reconciliationNote — loaded separately when needed
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );
@@ -74,8 +75,13 @@ public class CommitmentMapper {
      * Only safe after the collection has been initialized (i.e., within a transaction
      * or when fetched eagerly).
      */
+    /** Overload without reconciliation status — backwards compatible. */
+    public CommitmentResponse toResponse(Commitment entity, List<TaskBullet> bullets) {
+        return toResponse(entity, bullets, null);
+    }
+
     public CommitmentResponse toResponse(Commitment entity) {
-        return toResponse(entity, entity.getTaskBullets());
+        return toResponse(entity, entity.getTaskBullets(), null);
     }
 
     public List<CommitmentResponse> toResponseList(List<Commitment> entities) {

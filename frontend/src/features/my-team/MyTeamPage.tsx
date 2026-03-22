@@ -105,7 +105,9 @@ export function MyTeamPage() {
   }
 
   const { rcdoCoverage } = dashboard;
-  const carriedCount = allCommitments.filter((c) => c.reconciliationStatus === 'CARRIED_FORWARD').length;
+  // carriedFromCommitmentId identifies commitments carried into this cycle from a previous one.
+  // In DRAFT cycles, reconciliationStatus is null — use carriedFromCommitmentId for carry-in detection.
+  const carriedCount = allCommitments.filter((c) => c.carriedFromCommitmentId != null).length;
   const totalCommitments = allCommitments.length;
   const linkedPct = Math.round(rcdoCoverage?.linkedPercentage ?? 0);
   const carryPct = totalCommitments > 0 ? Math.round((carriedCount / totalCommitments) * 100) : 0;
