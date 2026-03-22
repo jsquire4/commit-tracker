@@ -22,7 +22,7 @@ const OBSERVATORY_KEYS = {
   executiveHealth: (weekCount?: number) => ['observatory', 'executiveHealth', weekCount] as const,
   driftReport: (weekCount?: number) => ['observatory', 'driftReport', weekCount] as const,
   alignmentTrend: (weekCount?: number, managerId?: string) => ['observatory', 'alignmentTrend', weekCount, managerId] as const,
-  completionTrend: (weekCount?: number) => ['observatory', 'completionTrend', weekCount] as const,
+  completionTrend: (weekCount?: number, managerId?: string) => ['observatory', 'completionTrend', weekCount, managerId] as const,
   costImpact: (cycleId?: string) => ['observatory', 'costImpact', cycleId] as const,
   displacementReport: (weekCount?: number) => ['observatory', 'displacementReport', weekCount] as const,
   carryChains: (cycleId: string) => ['observatory', 'carryChains', cycleId] as const,
@@ -65,10 +65,10 @@ export function useAlignmentTrend(weekCount?: number, managerId?: string) {
   });
 }
 
-export function useCompletionTrend(weekCount?: number) {
+export function useCompletionTrend(weekCount?: number, managerId?: string) {
   return useQuery({
-    queryKey: OBSERVATORY_KEYS.completionTrend(weekCount),
-    queryFn: () => getCompletionTrend(weekCount),
+    queryKey: OBSERVATORY_KEYS.completionTrend(weekCount, managerId),
+    queryFn: () => getCompletionTrend(weekCount, managerId),
     staleTime: 60_000,
   });
 }

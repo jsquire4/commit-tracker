@@ -88,13 +88,13 @@ function buildRallyCryCards(
 
   const uncoveredByRC = new Map<string, { definingObjectiveId: string; title: string }[]>();
   for (const uo of rcdo.uncoveredObjectives) {
-    if (!uncoveredByRC.has(uo.rallyCryTitle)) uncoveredByRC.set(uo.rallyCryTitle, []);
-    uncoveredByRC.get(uo.rallyCryTitle)!.push({ definingObjectiveId: uo.definingObjectiveId, title: uo.title });
+    if (!uncoveredByRC.has(uo.rallyCryId)) uncoveredByRC.set(uo.rallyCryId, []);
+    uncoveredByRC.get(uo.rallyCryId)!.push({ definingObjectiveId: uo.definingObjectiveId, title: uo.title });
   }
 
   return rcdo.byRallyCry.map((rc) => {
     const rcCommitments = commitsByRC.get(rc.rallyCryId) ?? [];
-    const uncovered = uncoveredByRC.get(rc.title) ?? [];
+    const uncovered = uncoveredByRC.get(rc.rallyCryId) ?? [];
 
     const contributorNames = new Set<string>();
     for (const c of rcCommitments) contributorNames.add(c.userDisplayName);
@@ -173,7 +173,7 @@ function buildWatchList(
 
   if (alignment?.byTeamMember) {
     const unlinked = alignment.byTeamMember.filter(
-      (m) => m.unlinkedCount > 0 && m.unlinkedCount === Object.values(m.distribution).reduce((s, d) => s + d.count, 0),
+      (m) => m.unlinkedCount > 0,
     );
     for (const m of unlinked.slice(0, 5)) {
       items.push({ id: `unlinked-${m.userId}`, message: `${m.displayName} has ${m.unlinkedCount} commitment${m.unlinkedCount === 1 ? '' : 's'} with no rally cry linkage`, severity: 'warning', drillTarget: { team: m.userId } });
@@ -366,6 +366,7 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
             definingObjectiveId: doNode.id,
             title: doNode.title,
             rallyCryTitle: rc.title,
+            rallyCryId: rc.id,
           });
         }
       }
@@ -380,7 +381,7 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
       uncoveredObjectives,
     };
 
-    return buildRallyCryCards(syntheticCoverage, commitments, commitments.length, rcdoTree.rallyCries, previousCommitments)
+    return buildRallyCryCards(syntheticCoverage, commitments, new Set(commitments.map(c => c.userId)).size, rcdoTree.rallyCries, previousCommitments)
       .sort((a, b) => a.sortOrder - b.sortOrder);
   }, [dashboard, commitments, rcdoTree, previousCommitments]);
 

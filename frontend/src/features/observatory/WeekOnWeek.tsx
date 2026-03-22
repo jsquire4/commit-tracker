@@ -86,6 +86,7 @@ function buildRows(
   columns: CycleColumn[],
   alignment: AlignmentDataPoint[] | undefined,
   completion: CompletionDataPoint[] | undefined,
+  displacementWeeklyTrend: Record<string, number> | undefined,
 ): TableRow[] {
   const alignMap = new Map(alignment?.map((p) => [p.cycleId, p]) ?? []);
   const compMap = new Map(completion?.map((p) => [p.cycleId, p]) ?? []);
@@ -117,19 +118,26 @@ function buildRows(
       }),
     },
     {
-      metricName: 'Unplanned Work %',
+      metricName: 'Not Started %',
       values: columns.map((col) => {
         const p = compMap.get(col.cycleId);
         if (!p) return null;
-        // Not started = unplanned/blocked work that never began
         return fmt(p.notStartedRate, true);
       }),
     },
     {
       metricName: 'Displacement Events',
-      values: columns.map((_col) => {
-        // Displacement data is not per-cycle from the API; show dash
-        return '—';
+      values: columns.map((col) => {
+        if (!displacementWeeklyTrend) return null;
+        // weeklyTrend keys are week identifiers; try direct cycleLabel match first,
+        // then fall back to a partial match (e.g. key is contained in cycleLabel).
+        const directValue = displacementWeeklyTrend[col.cycleLabel];
+        if (directValue !== undefined) return String(directValue);
+        const partialKey = Object.keys(displacementWeeklyTrend).find(
+          (k) => col.cycleLabel.includes(k) || k.includes(col.cycleLabel),
+        );
+        if (partialKey !== undefined) return String(displacementWeeklyTrend[partialKey] ?? 0);
+        return null;
       }),
     },
     {
@@ -219,7 +227,7 @@ export function WeekOnWeek({ weekCount }: WeekOnWeekProps) {
 
   const eventCycleSet = buildEventCycleSet(completion, displacement?.weeklyTrend);
   const columns = buildColumns(alignment, completion, eventCycleSet);
-  const rows = buildRows(columns, alignment, completion);
+  const rows = buildRows(columns, alignment, completion, displacement?.weeklyTrend);
 
   return (
     <div

@@ -34,21 +34,26 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
   const personName = personCommitments[0]?.userDisplayName ?? 'Person';
 
   const rcGroups = useMemo(() => {
-    const groups = new Map<string, number>();
+    const groups = new Map<string, { title: string; count: number }>();
     let unlinked = 0;
     for (const c of personCommitments) {
-      if (c.rcdoLink.rallyCryTitle) {
-        groups.set(c.rcdoLink.rallyCryTitle, (groups.get(c.rcdoLink.rallyCryTitle) ?? 0) + 1);
+      if (c.rcdoLink.rallyCryId) {
+        const existing = groups.get(c.rcdoLink.rallyCryId);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          groups.set(c.rcdoLink.rallyCryId, { title: c.rcdoLink.rallyCryTitle ?? c.rcdoLink.rallyCryId, count: 1 });
+        }
       } else {
         unlinked += 1;
       }
     }
-    const result = [...groups.entries()].map(([title, count]) => ({ title, count }));
+    const result = [...groups.values()].map(({ title, count }) => ({ title, count }));
     if (unlinked > 0) result.push({ title: 'Unlinked', count: unlinked });
     return result;
   }, [personCommitments]);
 
-  const strategicCount = personCommitments.filter((c) => c.chessCategoryName === 'Strategic').length;
+  const strategicCount = personCommitments.filter((c) => c.chessCategoryName?.toLowerCase() === 'strategic').length;
 
   if (isLoading) {
     return (

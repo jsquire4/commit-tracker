@@ -42,12 +42,7 @@ public class DashboardController {
         DashboardFilters filters = new DashboardFilters(
                 cycleWeekStart, teamMemberId, rcdoId, rcdoType, includeSubtree);
 
-        DashboardResponse response = new DashboardResponse(
-                dashboardService.getTeamRollup(actor, filters),
-                dashboardService.getAlignmentSignal(actor, filters),
-                dashboardService.getAssignmentAttribution(actor, filters),
-                dashboardService.getRcdoCoverage(actor, filters)
-        );
+        DashboardResponse response = dashboardService.getDashboard(actor, filters);
 
         return ResponseEntity.ok(ApiResponse.of(response));
     }

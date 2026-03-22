@@ -38,9 +38,14 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   const managerUnit = healthUnits.find((u) => u.managerId === teamId);
   const isManager = Boolean(managerUnit);
 
+  // H11: Alignment trend is only meaningful for managers (an IC has no "team" to compute alignment for).
+  // Pass managerId only when the person is a known manager; otherwise skip the trending call.
   const alignmentQuery = useAlignmentTrend(12, isManager ? teamId : undefined);
-  const completionQuery = useCompletionTrend(12);
+  // H9: Scope completion trend to this manager's team when the backend supports it.
+  const completionQuery = useCompletionTrend(12, isManager ? teamId : undefined);
   const costQuery = useCostImpact(cycleId || undefined);
+  // H9: Displacement endpoint does not yet accept a managerId filter — data shown is org-wide.
+  // TODO: add managerId support to GET /api/v1/observatory/displacement and pass teamId here.
   const displacementQuery = useDisplacementReport(12);
   const carryQuery = useCarryChains(cycleId);
   const commitmentsQuery = useCommitments(cycleId, teamId ? { userId: teamId } : undefined);
@@ -68,9 +73,15 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   const displacementData = displacementQuery.data ?? { totalDisplacements: 0, byCategory: [], weeklyTrend: {} };
   const carryChains = carryQuery.data ?? [];
 
-  const latestAlignment = alignmentData.length > 0 ? alignmentData[alignmentData.length - 1] : null;
+  // H11: For non-managers, alignment trend data is org-wide and not meaningful for an IC.
+  const latestAlignment = isManager && alignmentData.length > 0 ? alignmentData[alignmentData.length - 1] : null;
   const strategicPct = latestAlignment?.strategicPct ?? managerUnit?.strategicAlignmentPct;
-  const carryForwardCount = carryChains.length;
+
+  // H10: Filter carry chains to only include commitments belonging to this team.
+  // Use the set of user IDs from this team's commitments as the filter.
+  const teamMemberIds = new Set(commitments.map((c) => c.userId));
+  const teamCarryChains = carryChains.filter((chain) => teamMemberIds.has(chain.userId));
+  const carryForwardCount = teamCarryChains.length;
 
   // Group commitments by person for click-through
   const byPerson = new Map<string, { name: string; count: number }>();
@@ -128,10 +139,13 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
       )}
 
       {/* Analytics sections */}
-      <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
-        <p className="text-small text-muted mb-2">Strategic alignment over time.</p>
-        <AlignmentTrendChart {...(isManager ? { managerId: teamId } : {})} weekCount={12} showTarget />
-      </Card>
+      {/* H11: Only render alignment trend for managers — it's not meaningful for ICs. */}
+      {isManager && (
+        <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+          <p className="text-small text-muted mb-2">Strategic alignment over time.</p>
+          <AlignmentTrendChart managerId={teamId} weekCount={12} showTarget />
+        </Card>
+      )}
 
       <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '120ms' }}>
         <p className="text-small text-muted mb-2">Completion rate and carry-forward rate.</p>
@@ -150,7 +164,7 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
 
       <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '240ms' }}>
         <p className="text-small text-muted mb-2">Carry-forward chains.</p>
-        <CarryForwardChainList chains={carryChains} />
+        <CarryForwardChainList chains={teamCarryChains} />
       </Card>
 
       <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '280ms' }}>

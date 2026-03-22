@@ -1,5 +1,6 @@
 package com.compass.platform.domain.observatory;
 
+import com.compass.platform.domain.CycleState;
 import com.compass.platform.domain.DisplacementCategory;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
@@ -213,11 +214,13 @@ public class DisplacementService {
     }
 
     /**
-     * Returns the most recent N cycles for the org, ordered newest first.
+     * Returns the most recent N RECONCILED cycles for the org, ordered newest first.
+     * Only RECONCILED cycles have complete reconciliation data; including other states
+     * would mix partial or absent data into analytics calculations.
      */
     private List<Cycle> resolveRecentCycles(UUID orgId, int weekCount) {
-        List<Cycle> all = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
-        return all.stream().limit(weekCount).toList();
+        List<Cycle> reconciled = cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
+        return reconciled.stream().limit(weekCount).toList();
     }
 
     /**

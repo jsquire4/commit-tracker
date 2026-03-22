@@ -51,9 +51,13 @@ export async function getAlignmentTrend(
 }
 
 export async function getCompletionTrend(
-  weekCount?: number
+  weekCount?: number,
+  managerId?: string
 ): Promise<CompletionDataPoint[]> {
-  return fetchData<CompletionDataPoint[]>(`${BASE}/completion-trend`, weekCount !== undefined ? { weekCount } : undefined);
+  const params: Record<string, unknown> = {};
+  if (weekCount !== undefined) params.weekCount = weekCount;
+  if (managerId !== undefined) params.managerId = managerId;
+  return fetchData<CompletionDataPoint[]>(`${BASE}/completion-trend`, Object.keys(params).length > 0 ? params : undefined);
 }
 
 export async function getCostImpact(

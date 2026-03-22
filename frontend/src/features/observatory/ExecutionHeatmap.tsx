@@ -191,6 +191,9 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) 
 
   // Build the child list: manager's own personal row first, then other team members.
   // If the manager is already in the members list (backend includes them), deduplicate.
+  // NOTE (M5): The synthetic "(you)" row reuses row.weekCells which is team-averaged data,
+  // not the manager's personal commitment data. It is shown as a placeholder when the
+  // backend does not include the manager in the members list.
   const managerPersonalRow: PersonHeatmapRow = {
     userId: row.managerId,
     displayName: `${row.managerName} (you)`,

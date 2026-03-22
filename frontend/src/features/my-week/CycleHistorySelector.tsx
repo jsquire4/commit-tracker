@@ -4,7 +4,8 @@ import type { Cycle } from '@/types';
 
 interface CycleHistorySelectorProps {
   currentCycleId: string;
-  onSelect?: (cycleId: string) => void;
+  /** Called with the cycle id and the full Cycle object when the user picks a cycle. */
+  onSelect?: (cycleId: string, cycle: Cycle) => void;
 }
 
 function useCycleHistory() {
@@ -53,7 +54,7 @@ export function CycleHistorySelector({ currentCycleId, onSelect }: CycleHistoryS
           <button
             key={cycle.id}
             type="button"
-            onClick={() => onSelect?.(cycle.id)}
+            onClick={() => onSelect?.(cycle.id, cycle)}
             className={[
               'px-2.5 py-1 text-small font-medium rounded-full border whitespace-nowrap',
               'transition-colors duration-[var(--duration-fast)]',

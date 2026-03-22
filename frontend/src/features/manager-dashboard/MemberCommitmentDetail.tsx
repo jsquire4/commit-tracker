@@ -33,7 +33,7 @@ function CommitmentRow({ commitment }: { commitment: Commitment }) {
   const recLabel = recStatus ? (RECONCILIATION_LABELS[recStatus] ?? recStatus) : null;
   const recColor = recStatus ? (RECONCILIATION_COLORS[recStatus] ?? 'bg-surface-container text-on-surface-variant') : null;
   const catColor = commitment.chessCategoryName
-    ? (CATEGORY_COLORS[commitment.chessCategoryName] ?? 'bg-surface-container text-on-surface-variant')
+    ? (CATEGORY_COLORS[commitment.chessCategoryName.toUpperCase().replace(/ /g, '_')] ?? 'bg-surface-container text-on-surface-variant')
     : 'bg-surface-container text-on-surface-variant';
 
   return (

@@ -13,6 +13,7 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
   const [expanded, setExpanded] = useState(false);
 
   const strategicPct = dashboard.alignmentSignal?.distribution?.STRATEGIC?.percentage ?? 0;
+  const teamMemberIds = (dashboard.teamRollup?.members ?? []).map((m) => m.userId);
 
   return (
     <Card padding="compact" className="overflow-hidden">
@@ -60,7 +61,7 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
             <p className="text-body text-on-surface-variant mb-3">
               Items carried forward from previous weeks.
             </p>
-            <CarryForwardVelocity cycleId={cycleId} />
+            <CarryForwardVelocity cycleId={cycleId} teamMemberIds={teamMemberIds} />
           </div>
         </div>
       )}

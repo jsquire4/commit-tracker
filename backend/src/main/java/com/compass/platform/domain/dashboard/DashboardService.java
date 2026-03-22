@@ -10,6 +10,7 @@ import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.dashboard.dto.AlignmentSignalResponse;
 import com.compass.platform.domain.dashboard.dto.AssignmentAttributionResponse;
 import com.compass.platform.domain.dashboard.dto.DashboardFilters;
+import com.compass.platform.domain.dashboard.dto.DashboardResponse;
 import com.compass.platform.domain.dashboard.dto.RcdoCoverageResponse;
 import com.compass.platform.domain.dashboard.dto.TeamRollupResponse;
 import com.compass.platform.domain.rcdo.DefiningObjective;
@@ -19,6 +20,7 @@ import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
+import com.compass.platform.domain.observatory.CategoryUtils;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.security.VisibilityEnforcer;
@@ -91,6 +93,21 @@ public class DashboardService {
     }
 
     /**
+     * Composite dashboard method — loads shared data once and populates all four sections.
+     * Prefer this over calling the four individual methods to avoid 4x loadDashboardData.
+     */
+    public DashboardResponse getDashboard(AppUser actor, DashboardFilters filters) {
+        assertManagerRole(actor);
+        DashboardData data = loadDashboardData(actor, filters);
+        return new DashboardResponse(
+                buildTeamRollup(actor, data),
+                buildAlignmentSignal(data),
+                buildAssignmentAttribution(data),
+                buildRcdoCoverage(actor, data)
+        );
+    }
+
+    /**
      * Get team roll-up for a manager.
      * Validates: actor must be MANAGER, DIRECTOR, VP, or EXECUTIVE.
      * Returns: for each direct report, their commitment count, reconciliation status,
@@ -100,9 +117,10 @@ public class DashboardService {
      */
     public TeamRollupResponse getTeamRollup(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
+        return buildTeamRollup(manager, loadDashboardData(manager, filters));
+    }
 
-        DashboardData data = loadDashboardData(manager, filters);
-
+    private TeamRollupResponse buildTeamRollup(AppUser manager, DashboardData data) {
         // Fetch reconciliation records once for the whole org+cycle, not per member.
         // Map commitmentId → status so buildTeamMemberSummary can count both
         // reconciledCount (any record) and completedCount (COMPLETED + PARTIALLY_COMPLETED).
@@ -132,8 +150,10 @@ public class DashboardService {
      */
     public AlignmentSignalResponse getAlignmentSignal(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
+        return buildAlignmentSignal(loadDashboardData(manager, filters));
+    }
 
-        DashboardData data = loadDashboardData(manager, filters);
+    private AlignmentSignalResponse buildAlignmentSignal(DashboardData data) {
         List<AppUser> members = data.members();
         Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
@@ -150,7 +170,7 @@ public class DashboardService {
             if (c.getChessCategory() == null) {
                 teamUnlinked++;
             } else {
-                String name = c.getChessCategory().getName();
+                String name = CategoryUtils.normalizeCategoryName(c.getChessCategory().getName());
                 categoryCounts.merge(name, 1, Integer::sum);
             }
         }
@@ -168,7 +188,7 @@ public class DashboardService {
                         if (c.getChessCategory() == null) {
                             memberUnlinked++;
                         } else {
-                            memberCounts.merge(c.getChessCategory().getName(), 1, Integer::sum);
+                            memberCounts.merge(CategoryUtils.normalizeCategoryName(c.getChessCategory().getName()), 1, Integer::sum);
                         }
                     }
                     Map<String, AlignmentSignalResponse.CategoryDistribution> dist =
@@ -190,8 +210,10 @@ public class DashboardService {
      */
     public AssignmentAttributionResponse getAssignmentAttribution(AppUser manager, DashboardFilters filters) {
         assertManagerRole(manager);
+        return buildAssignmentAttribution(loadDashboardData(manager, filters));
+    }
 
-        DashboardData data = loadDashboardData(manager, filters);
+    private AssignmentAttributionResponse buildAssignmentAttribution(DashboardData data) {
         List<AppUser> members = data.members();
         Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
@@ -236,8 +258,10 @@ public class DashboardService {
      */
     public RcdoCoverageResponse getRcdoCoverage(AppUser actor, DashboardFilters filters) {
         assertManagerRole(actor);
+        return buildRcdoCoverage(actor, loadDashboardData(actor, filters));
+    }
 
-        DashboardData data = loadDashboardData(actor, filters);
+    private RcdoCoverageResponse buildRcdoCoverage(AppUser actor, DashboardData data) {
         Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
 
         List<Commitment> allCommitments = byUser.values().stream()
@@ -298,7 +322,7 @@ public class DashboardService {
             for (DefiningObjective doObj : dos) {
                 if (!coveredDoIds.contains(doObj.getId())) {
                     uncoveredObjectives.add(new RcdoCoverageResponse.UncoveredObjective(
-                            doObj.getId(), doObj.getTitle(), rc.getTitle()));
+                            doObj.getId(), doObj.getTitle(), rc.getTitle(), rc.getId()));
                 }
             }
         }
@@ -443,7 +467,7 @@ public class DashboardService {
         Map<String, Integer> breakdown = new HashMap<>();
         for (Commitment c : commitments) {
             if (c.getChessCategory() != null) {
-                breakdown.merge(c.getChessCategory().getName(), 1, Integer::sum);
+                breakdown.merge(CategoryUtils.normalizeCategoryName(c.getChessCategory().getName()), 1, Integer::sum);
             }
         }
 

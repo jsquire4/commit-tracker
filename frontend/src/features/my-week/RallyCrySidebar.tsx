@@ -7,6 +7,11 @@ interface RallyCrySidebarProps {
   onLinkClick?: (rallyCryId: string) => void;
 }
 
+// NOTE (M8 — known limitation): This sidebar always loads the current RCDO tree via
+// useRcdoTree(), which is not cycle-scoped. When viewing historical weeks, the rally
+// cries and defining objectives shown here reflect the current org structure, not the
+// structure that was active during that cycle. Fixing this requires a cycle-aware RCDO
+// API endpoint and is out of scope for the current implementation.
 export function RallyCrySidebar({ commitments, onLinkClick }: RallyCrySidebarProps) {
   const { data: tree, isLoading } = useRcdoTree();
 

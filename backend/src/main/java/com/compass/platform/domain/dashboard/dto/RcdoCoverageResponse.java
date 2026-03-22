@@ -12,5 +12,5 @@ public record RcdoCoverageResponse(
     List<UncoveredObjective> uncoveredObjectives
 ) {
     public record RallyCryCoverage(UUID rallyCryId, String title, int commitmentCount, double percentage) {}
-    public record UncoveredObjective(UUID definingObjectiveId, String title, String rallyCryTitle) {}
+    public record UncoveredObjective(UUID definingObjectiveId, String title, String rallyCryTitle, UUID rallyCryId) {}
 }

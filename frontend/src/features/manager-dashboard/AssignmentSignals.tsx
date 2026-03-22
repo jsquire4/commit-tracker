@@ -50,7 +50,8 @@ function SignalCard({ label, value, isAmber = false, sublabel }: SignalCardProps
 export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
   const topConcentration = signals.concentrationRisks[0] ?? null;
   const topConcentrationPct = topConcentration?.percentageOfTotal ?? 0;
-  const isConcentrationRisk = topConcentrationPct > 60;
+  // Threshold aligned with backend CONCENTRATION_RISK_THRESHOLD = 0.5 (50%)
+  const isConcentrationRisk = topConcentrationPct >= 50;
 
   return (
     <div className="flex flex-col gap-3">
@@ -79,7 +80,7 @@ export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
         />
 
         <SignalCard
-          label="Total assignments this week"
+          label="Manager Assignments"
           value={String(signals.managerAssignedCount)}
           sublabel={`${String(signals.totalCommitments)} total commitments across team`}
         />

@@ -1,6 +1,7 @@
 package com.compass.platform.domain.briefing;
 
 import com.compass.platform.domain.briefing.dto.BriefingCitation;
+import com.compass.platform.domain.briefing.dto.BriefingMetric;
 import com.compass.platform.domain.briefing.dto.BriefingResponse;
 import com.compass.platform.domain.briefing.dto.BriefingSuggestion;
 import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
@@ -133,7 +134,9 @@ public class StubBriefingService implements BriefingService {
         List<BriefingCitation> citations = buildCitations(
                 alignmentPct, rallyCryCoveragePct, carryForwardRate, driftCount);
 
-        return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, List.of(), Instant.now());
+        List<BriefingMetric> metrics = buildMetrics(alignmentPct, rallyCryCoveragePct, carryForwardRate, completionRate, driftCount);
+
+        return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, metrics, Instant.now());
     }
 
     @Override
@@ -233,6 +236,21 @@ public class StubBriefingService implements BriefingService {
         }
 
         return suggestions;
+    }
+
+    /**
+     * Build KPI metrics for the BriefingMetricsStrip, mirroring the logic in LlmBriefingService.
+     */
+    private List<BriefingMetric> buildMetrics(double alignmentPct, double rallyCryCoveragePct,
+                                               double carryForwardRate, double completionRate,
+                                               int driftCount) {
+        return List.of(
+                new BriefingMetric("alignment", "Strategic Alignment", Math.round(alignmentPct), "%", null),
+                new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(rallyCryCoveragePct), "%", null),
+                new BriefingMetric("carry", "Carry-Forward Rate", Math.round(carryForwardRate), "%", null),
+                new BriefingMetric("completion", "Completion Rate", Math.round(completionRate), "%", null),
+                new BriefingMetric("drift", "Active Drift Signals", driftCount, null, null)
+        );
     }
 
     /**

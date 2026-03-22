@@ -18,7 +18,6 @@ interface CarriedItemRowProps {
 
 function CarriedItemRow({ commitment, cycleId, onAccept, accepted }: CarriedItemRowProps) {
   const [declining, setDeclining] = useState(false);
-  const [declineReason, setDeclineReason] = useState('');
   const { mutate: deleteCommitment, isPending } = useDeleteCommitment(cycleId);
 
   // Reconciliation status from the carried commitment
@@ -108,22 +107,12 @@ function CarriedItemRow({ commitment, cycleId, onAccept, accepted }: CarriedItem
           </button>
         </div>
       ) : (
+        // DELETE /api/v1/commitments/{id} does not accept a request body, so no reason field is shown.
         <div className="bg-surface-container-low rounded-sm p-3 border border-outline-variant">
-          <label
-            htmlFor={`decline-reason-${commitment.id}`}
-            className="mb-1 block text-small font-medium text-on-surface-variant"
-          >
-            Reason for declining (optional)
-          </label>
-          <input
-            id={`decline-reason-${commitment.id}`}
-            type="text"
-            value={declineReason}
-            onChange={(e) => { setDeclineReason(e.target.value); }}
-            placeholder="e.g. no longer relevant"
-            className="w-full border-b border-outline-variant bg-transparent px-1 py-1.5 text-small text-on-surface placeholder-muted focus:outline-none focus:border-accent"
-          />
-          <div className="mt-2 flex items-center justify-end gap-2">
+          <p className="text-small text-on-surface-variant mb-2">
+            Remove this commitment? It will be permanently deleted.
+          </p>
+          <div className="flex items-center justify-end gap-2">
             <button
               type="button"
               onClick={() => { setDeclining(false); }}

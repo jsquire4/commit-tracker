@@ -20,6 +20,7 @@ const AREA_CONFIG = [
   { key: 'operationalPct', label: 'Operational', color: '#455F87' },
   { key: 'defensivePct', label: 'Defensive', color: '#9F403D' },
   { key: 'capabilityBuildingPct', label: 'Capability Building', color: '#94A3B8' },
+  { key: 'uncategorizedPct', label: 'Not Categorized', color: '#CBD5E1' },
 ] as const;
 
 interface ChartDataPoint {
@@ -28,16 +29,21 @@ interface ChartDataPoint {
   operationalPct: number;
   defensivePct: number;
   capabilityBuildingPct: number;
+  uncategorizedPct: number;
 }
 
 function mapToChartData(points: AlignmentDataPoint[]): ChartDataPoint[] {
-  return points.map((p) => ({
-    cycleLabel: p.cycleLabel,
-    strategicPct: p.strategicPct,
-    operationalPct: p.operationalPct,
-    defensivePct: p.defensivePct,
-    capabilityBuildingPct: p.capabilityBuildingPct,
-  }));
+  return points.map((p) => {
+    const categorized = p.strategicPct + p.operationalPct + p.defensivePct + p.capabilityBuildingPct;
+    return {
+      cycleLabel: p.cycleLabel,
+      strategicPct: p.strategicPct,
+      operationalPct: p.operationalPct,
+      defensivePct: p.defensivePct,
+      capabilityBuildingPct: p.capabilityBuildingPct,
+      uncategorizedPct: Math.max(0, 100 - categorized),
+    };
+  });
 }
 
 interface TooltipPayloadEntry {

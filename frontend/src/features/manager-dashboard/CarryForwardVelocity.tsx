@@ -3,6 +3,8 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface CarryForwardVelocityProps {
   cycleId: string;
+  /** When provided, only commitments belonging to these user IDs are counted. */
+  teamMemberIds?: string[];
 }
 
 interface StatCardProps {
@@ -60,7 +62,7 @@ function StatCard({ label, value, isAmber = false, sublabel }: StatCardProps) {
   );
 }
 
-export function CarryForwardVelocity({ cycleId }: CarryForwardVelocityProps) {
+export function CarryForwardVelocity({ cycleId, teamMemberIds }: CarryForwardVelocityProps) {
   const { data: commitments, isLoading, isError } = useCommitments(cycleId);
 
   if (isLoading) {
@@ -79,7 +81,10 @@ export function CarryForwardVelocity({ cycleId }: CarryForwardVelocityProps) {
     );
   }
 
-  const carryCount = commitments.filter((c) => c.carriedFromCommitmentId !== null).length;
+  const teamCommitments = teamMemberIds && teamMemberIds.length > 0
+    ? commitments.filter((c) => teamMemberIds.includes(c.userId))
+    : commitments;
+  const carryCount = teamCommitments.filter((c) => c.carriedFromCommitmentId !== null).length;
   const isAmber = carryCount > 3;
 
   return (
@@ -91,7 +96,7 @@ export function CarryForwardVelocity({ cycleId }: CarryForwardVelocityProps) {
         <StatCard
           label="Active Carry Chains"
           value={String(carryCount)}
-          sublabel={`${String(commitments.length)} total commitments this cycle`}
+          sublabel={`${String(teamCommitments.length)} total commitments this cycle`}
           isAmber={isAmber}
         />
       </div>

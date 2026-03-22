@@ -92,6 +92,7 @@ export function PersonCard({ member, commitments, index: _index, onAssign }: Per
           operational={operational}
           defensive={defensive}
           capability={capability}
+          total={commitments.length}
         />
         <span className="text-label text-on-surface-variant whitespace-nowrap">
           {commitments.length} commitments &middot; {linked} linked

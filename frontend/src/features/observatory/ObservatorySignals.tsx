@@ -60,7 +60,7 @@ function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined): S
     recent.reduce((sum, p) => sum + p.operationalPct, 0) / recent.length;
   const avgTotal = recent.reduce((sum, p) => sum + p.totalCommitments, 0) / recent.length;
 
-  // Only surface if strategic is meaningfully below 50%
+  // TODO: threshold hardcoded at 50% — should read from ObservatoryConfig.strategicAlignmentTarget
   if (avgStrategic >= 50) return null;
 
   const weekLabel = alignment[alignment.length - 1]?.cycleLabel ?? 'recent';
@@ -91,7 +91,7 @@ function deriveWorkDistributionSignal(
   const avgCompletion =
     recent.reduce((sum, p) => sum + p.completionRate, 0) / recent.length;
 
-  // Only surface if unfinished work is notable
+  // TODO: threshold hardcoded at 20% combined carry+not-started — should read from ObservatoryConfig.darkWorkWarningPct
   if (avgCarry + avgNotStarted < 20) return null;
 
   const weekLabel = completion[completion.length - 1]?.cycleLabel ?? 'recent';

@@ -31,6 +31,7 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
   return (
     <div className="bg-surface-lowest rounded-sm overflow-hidden">
       <table className="w-full border-collapse">
+        <caption className="sr-only">Team Health — metrics exclude the team lead&apos;s own commitments</caption>
         <thead>
           <tr>
             {['Team Lead', 'Headcount', 'Strategic %', 'Completion', 'Drift Signal', 'Trending', ''].map(
@@ -91,6 +92,13 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
           })}
         </tbody>
       </table>
+      {/* H3 note: findSubtreeUserIds excludes the root manager, so team metrics here
+          cover only direct/transitive reports — not the team lead themselves. This
+          is intentional for team scoping but means org-wide numbers (which include
+          all users) will always be slightly higher than the sum of team subtotals. */}
+      <p className="px-3 py-2 text-[0.75rem] text-muted border-t border-outline-variant">
+        Team metrics exclude the team lead&apos;s own commitments.
+      </p>
     </div>
   );
 }

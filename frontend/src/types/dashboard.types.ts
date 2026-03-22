@@ -80,5 +80,5 @@ export interface RcdoCoverageResponse {
   unlinkedCount: number;
   linkedPercentage: number;
   byRallyCry: { rallyCryId: string; title: string; commitmentCount: number; percentage: number }[];
-  uncoveredObjectives: { definingObjectiveId: string; title: string; rallyCryTitle: string }[];
+  uncoveredObjectives: { definingObjectiveId: string; title: string; rallyCryTitle: string; rallyCryId: string }[];
 }

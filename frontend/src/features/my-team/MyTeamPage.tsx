@@ -105,7 +105,7 @@ export function MyTeamPage() {
   }
 
   const { rcdoCoverage } = dashboard;
-  const carriedCount = allCommitments.filter((c) => c.carriedFromCommitmentId != null).length;
+  const carriedCount = allCommitments.filter((c) => c.reconciliationStatus === 'CARRIED_FORWARD').length;
   const totalCommitments = allCommitments.length;
   const linkedPct = Math.round(rcdoCoverage?.linkedPercentage ?? 0);
   const carryPct = totalCommitments > 0 ? Math.round((carriedCount / totalCommitments) * 100) : 0;
@@ -123,7 +123,12 @@ export function MyTeamPage() {
         <h1 className="font-serif text-[1.25rem] text-on-surface shrink-0">My Team</h1>
         <CycleHistorySelector
           currentCycleId={activeCycleId}
-          onSelect={(id) => setSelectedCycleId(id)}
+          onSelect={(id, selectedCycle) => {
+            setSelectedCycleId(id);
+            // Wire the selected cycle's start date into the dashboard filters so the
+            // backend resolveCycle() picks the correct historical cycle.
+            setDashboardFilters({ cycleWeekStart: selectedCycle.startsAt });
+          }}
         />
       </div>
 

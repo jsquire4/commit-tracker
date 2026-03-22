@@ -72,6 +72,11 @@ public class ExecutiveHealthComposer {
                 .orElseGet(() -> defaultConfig(org));
 
         // 3. Alignment trend — extract most recent data point for org-level strategic %
+        // NOTE (H3): org-wide strategicAlignmentPct is computed across ALL active users in the org,
+        // including managers/executives themselves. Per-team numbers (OrgUnitHealth) are computed via
+        // findSubtreeUserIds which excludes the root manager, so org-wide will always be slightly
+        // higher than the arithmetic sum of team subtotals. This is intentional — the org-wide figure
+        // is the authoritative alignment number; the per-team table shows only subordinate coverage.
         List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
         double strategicAlignmentPct = mostRecentStrategicPct(alignmentTrend);
 
@@ -201,8 +206,8 @@ public class ExecutiveHealthComposer {
                 orgId, managerId, weekCount);
         double unitCompletionRate = mostRecentCompletionRate(teamCompletion);
 
-        // Headcount from direct reports collection (loaded lazily but within same transaction)
-        int headcount = (leader.getDirectReports() != null) ? leader.getDirectReports().size() : 0;
+        // Headcount from full reporting subtree (not just direct reports)
+        int headcount = userRepository.findSubtreeUserIds(managerId).size();
         int costBandWeightedHeadcount = computeCostBandWeightedHeadcount(leader);
 
         String trendDirection = computeTrendDirection(teamAlignment);

@@ -75,6 +75,9 @@ function trendArrowColor(direction: string): string {
   }
 }
 
+// TODO: thresholds (50/30) are hardcoded here but are configurable on the backend via
+// ObservatoryConfig.strategicAlignmentTarget and misalignmentWarningPct. These should
+// be read from the /api/v1/observatory/config endpoint so they stay in sync.
 function gradeFromAlignment(pct: number): HealthGrade {
   if (pct >= 50) return 'GREEN';
   if (pct >= 30) return 'YELLOW';

@@ -53,6 +53,11 @@ export function RallyCryDetailLevel({ rallyCryId, onSelectTeam }: RallyCryDetail
           const ocCommitments = rcCommitments.filter((c) => c.rcdoLink.outcomeId === oc.id);
           return { id: oc.id, title: oc.title, commitmentCount: ocCommitments.length, covered: ocCommitments.length > 0 };
         }),
+        // Commitments linked to this DO but not to any specific outcome (stopped at DO level)
+        get unassignedToOutcomeCount() {
+          const outcomeLinked = doCommitments.filter((c) => c.rcdoLink.outcomeId != null).length;
+          return doCommitments.length - outcomeLinked;
+        },
       };
     });
   }, [rallyCry, rcCommitments]);
@@ -126,6 +131,15 @@ export function RallyCryDetailLevel({ rallyCryId, onSelectTeam }: RallyCryDetail
                         <span className="text-muted tabular-nums">{oc.commitmentCount}</span>
                       </div>
                     ))}
+                    {obj.unassignedToOutcomeCount > 0 && (
+                      <div className="flex items-center justify-between text-small">
+                        <div className="flex items-center gap-2 text-on-surface-variant/60 italic">
+                          <span className="w-1.5 h-1.5 rounded-full bg-muted/60" />
+                          Unassigned to outcome
+                        </div>
+                        <span className="text-muted tabular-nums">{obj.unassignedToOutcomeCount}</span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
