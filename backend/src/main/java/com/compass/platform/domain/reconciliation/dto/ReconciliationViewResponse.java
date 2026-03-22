@@ -8,7 +8,8 @@ import java.util.List;
 public record ReconciliationViewResponse(
     CycleResponse cycle,
     List<CommitmentReconciliationDetail> commitments,
-    ReconciliationSummary summary
+    ReconciliationSummary summary,
+    boolean allReconciled
 ) {
     public record CommitmentReconciliationDetail(
         CommitmentResponse commitment,

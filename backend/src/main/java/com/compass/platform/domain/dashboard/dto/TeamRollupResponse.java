@@ -16,6 +16,8 @@ public record TeamRollupResponse(
         int totalCommitments,
         CycleState cycleState,
         int reconciledCount,
+        /** Count of COMPLETED + PARTIALLY_COMPLETED reconciliation records for this member. */
+        int completedCount,
         Map<String, Integer> categoryBreakdown
     ) {}
 }

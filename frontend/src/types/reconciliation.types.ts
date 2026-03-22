@@ -35,6 +35,8 @@ export interface ReconciliationViewResponse {
   cycle: import('./cycle.types').Cycle;
   commitments: CommitmentReconciliationDetail[];
   summary: ReconciliationSummary;
+  /** True when every user in the org has reconciled all their commitments (org-wide gate). */
+  allReconciled: boolean;
 }
 
 export interface CommitmentReconciliationDetail {

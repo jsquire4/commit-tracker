@@ -109,6 +109,7 @@ export function teamMemberFactory(overrides: Partial<TeamMemberSummary> = {}): T
     totalCommitments: 3,
     cycleState: 'DRAFT',
     reconciledCount: 0,
+    completedCount: 0,
     categoryBreakdown: { STRATEGIC: 1, OPERATIONAL: 2 },
     ...overrides,
   };

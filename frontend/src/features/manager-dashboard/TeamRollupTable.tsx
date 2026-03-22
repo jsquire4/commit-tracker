@@ -48,7 +48,7 @@ function deriveMember(m: TeamMemberSummary): DerivedMember {
   const strategicPct = Math.round(((m.categoryBreakdown['STRATEGIC'] ?? 0) / total) * 100);
   const operationalPct = Math.round(((m.categoryBreakdown['OPERATIONAL'] ?? 0) / total) * 100);
   const completionRate =
-    m.totalCommitments > 0 ? Math.round((m.reconciledCount / m.totalCommitments) * 100) : 0;
+    m.totalCommitments > 0 ? Math.round((m.completedCount / m.totalCommitments) * 100) : 0;
 
   const topEntry = Object.entries(m.categoryBreakdown).sort(([, a], [, b]) => b - a)[0];
   const topRcdo = topEntry ? topEntry[0] : '—';

@@ -24,6 +24,8 @@ export interface TeamMemberSummary {
   totalCommitments: number;
   cycleState: import('./cycle.types').CycleState;
   reconciledCount: number;
+  /** Count of COMPLETED + PARTIALLY_COMPLETED reconciliation records for this member. */
+  completedCount: number;
   categoryBreakdown: Record<string, number>;
 }
 

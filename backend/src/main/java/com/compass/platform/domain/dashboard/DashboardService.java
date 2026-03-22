@@ -16,6 +16,7 @@ import com.compass.platform.domain.rcdo.DefiningObjective;
 import com.compass.platform.domain.rcdo.DefiningObjectiveRepository;
 import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.rcdo.RallyCryRepository;
+import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
 import com.compass.platform.domain.user.AppUser;
@@ -102,17 +103,20 @@ public class DashboardService {
 
         DashboardData data = loadDashboardData(manager, filters);
 
-        // Fetch reconciliation records once for the whole org+cycle, not per member
-        Set<UUID> reconciledCommitmentIds = data.cycle()
+        // Fetch reconciliation records once for the whole org+cycle, not per member.
+        // Map commitmentId → status so buildTeamMemberSummary can count both
+        // reconciledCount (any record) and completedCount (COMPLETED + PARTIALLY_COMPLETED).
+        Map<UUID, ReconciliationStatus> reconciledStatusByCommitmentId = data.cycle()
                 .map(cycle -> reconciliationRecordRepository
                         .findByOrgIdAndCycleId(manager.getOrg().getId(), cycle.getId())
                         .stream()
-                        .map(r -> r.getCommitment().getId())
-                        .collect(Collectors.toSet()))
-                .orElse(Set.of());
+                        .collect(Collectors.toMap(
+                                r -> r.getCommitment().getId(),
+                                ReconciliationRecord::getStatus)))
+                .orElse(Map.of());
 
         List<TeamRollupResponse.TeamMemberSummary> summaries = data.members().stream()
-                .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser(), reconciledCommitmentIds))
+                .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser(), reconciledStatusByCommitmentId))
                 .toList();
 
         log.debug("getTeamRollup managerId={} cycleId={} memberCount={}",
@@ -252,13 +256,20 @@ public class DashboardService {
                 .filter(c -> c.getRallyCry() != null)
                 .collect(Collectors.groupingBy(c -> c.getRallyCry().getId(), Collectors.counting()));
 
-        // Build rally cry coverage list from the commitments (preserving titles)
+        // Build rally cry coverage map from the commitments (preserving titles)
         Map<UUID, RallyCry> rallyCryById = allCommitments.stream()
                 .filter(c -> c.getRallyCry() != null)
                 .collect(Collectors.toMap(
                         c -> c.getRallyCry().getId(),
                         Commitment::getRallyCry,
                         (a, b) -> a));
+
+        // Add any active rally cries that have zero commitments (they would be absent otherwise)
+        List<RallyCry> allActiveRallyCries =
+                rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(actor.getOrg().getId());
+        for (RallyCry rc : allActiveRallyCries) {
+            rallyCryById.putIfAbsent(rc.getId(), rc);
+        }
 
         List<RcdoCoverageResponse.RallyCryCoverage> byRallyCry = rallyCryById.values().stream()
                 .map(rc -> {
@@ -268,7 +279,7 @@ public class DashboardService {
                 })
                 .toList();
 
-        // Uncovered defining objectives: DOs linked to rally cries that appear in our commitments, but have 0 commitments
+        // Uncovered defining objectives: DOs linked to ANY active rally cry that have 0 commitments
         Set<UUID> coveredDoIds = allCommitments.stream()
                 .filter(c -> c.getDefiningObjective() != null)
                 .map(c -> c.getDefiningObjective().getId())
@@ -416,11 +427,11 @@ public class DashboardService {
 
     private TeamRollupResponse.TeamMemberSummary buildTeamMemberSummary(AppUser member, Optional<Cycle> cycleOpt,
                                                                          Map<UUID, List<Commitment>> commitmentsByUser,
-                                                                         Set<UUID> reconciledCommitmentIds) {
+                                                                         Map<UUID, ReconciliationStatus> reconciledStatusByCommitmentId) {
         if (cycleOpt.isEmpty()) {
             return new TeamRollupResponse.TeamMemberSummary(
                     member.getId(), member.getDisplayName(), member.getRole().name(),
-                    0, null, 0, Map.of());
+                    0, null, 0, 0, Map.of());
         }
 
         Cycle cycle = cycleOpt.get();
@@ -436,14 +447,25 @@ public class DashboardService {
             }
         }
 
-        // Reconciliation count: use pre-fetched set (queried once per org+cycle, not per member)
-        int reconciledCount = (int) commitments.stream()
-                .filter(c -> reconciledCommitmentIds.contains(c.getId()))
-                .count();
+        // Reconciliation counts: use pre-fetched status map (queried once per org+cycle, not per member).
+        // reconciledCount = any reconciliation record present (existing behaviour).
+        // completedCount  = COMPLETED + PARTIALLY_COMPLETED only (used for completion rate in frontend).
+        int reconciledCount = 0;
+        int completedCount = 0;
+        for (Commitment c : commitments) {
+            ReconciliationStatus status = reconciledStatusByCommitmentId.get(c.getId());
+            if (status != null) {
+                reconciledCount++;
+                if (status == ReconciliationStatus.COMPLETED
+                        || status == ReconciliationStatus.PARTIALLY_COMPLETED) {
+                    completedCount++;
+                }
+            }
+        }
 
         return new TeamRollupResponse.TeamMemberSummary(
                 member.getId(), member.getDisplayName(), member.getRole().name(),
-                total, cycle.getState(), reconciledCount, breakdown);
+                total, cycle.getState(), reconciledCount, completedCount, breakdown);
     }
 
     private Map<String, AlignmentSignalResponse.CategoryDistribution> buildCategoryDistribution(

@@ -214,11 +214,11 @@ public class DriftDetectionService {
             detectUniformCategorization(manager, teamCommitments, config, flags);
 
             // ── COMPLETION_MISMATCH ───────────────────────────────────────────
-            detectCompletionMismatch(manager, teamUserIds, cycleId, flags);
+            detectCompletionMismatch(manager, teamUserIds, resolvedCycleId, flags);
         }
 
         // ── DUPLICATE_NOTES ───────────────────────────────────────────────────
-        detectDuplicateNotes(orgId, cycleId, flags);
+        detectDuplicateNotes(orgId, resolvedCycleId, flags);
 
         return new IntegrityReport(flags);
     }

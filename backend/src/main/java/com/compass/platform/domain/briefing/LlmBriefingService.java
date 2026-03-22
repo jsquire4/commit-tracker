@@ -393,8 +393,8 @@ public class LlmBriefingService implements BriefingService {
     private List<BriefingMetric> buildMetrics(BriefingDataContext ctx) {
         String alignTrend = ctx.referenceData().getOrDefault("A.delta", 0.0) > 0 ? "up"
                 : ctx.referenceData().getOrDefault("A.delta", 0.0) < -1 ? "down" : "flat";
-        String carryTrend = ctx.carryForwardRate() > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down"
-                : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up" : "flat";
+        String carryTrend = ctx.carryForwardRate() > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up"
+                : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down" : "flat";
 
         return List.of(
                 new BriefingMetric("alignment", "Strategic Alignment", Math.round(ctx.alignmentPct()), "%", alignTrend),

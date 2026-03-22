@@ -21,10 +21,10 @@ const gradeBorderAccent: Record<HealthGrade, string> = {
 };
 
 function TrendArrow({ direction }: { direction: string }) {
-  if (direction === 'IMPROVING') {
+  if (direction.toUpperCase() === 'IMPROVING') {
     return <span className="text-accent font-bold text-base">{'\u2191'}</span>;
   }
-  if (direction === 'DECLINING') {
+  if (direction.toUpperCase() === 'DECLINING') {
     return <span className="text-error font-bold text-base">{'\u2193'}</span>;
   }
   return <span className="text-muted font-bold text-base">{'\u2192'}</span>;

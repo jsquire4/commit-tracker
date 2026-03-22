@@ -87,8 +87,10 @@ export function ObservatoryPage() {
 
   const orgName = health?.orgName ?? '';
 
-  // Average RC coverage across all weeks in the selected period
-  const avgRcCoverage = useMemo(() => {
+  // Average strategic alignment across all weeks in the selected period.
+  // TODO: Replace with a real per-cycle rallyCoveragePct field once the
+  // alignment trend endpoint exposes % of commitments linked to any rally cry.
+  const avgStrategicAlignment = useMemo(() => {
     if (!alignmentTrend || alignmentTrend.length === 0) return null;
     const sum = alignmentTrend.reduce((acc, p) => acc + p.strategicPct, 0);
     return sum / alignmentTrend.length;
@@ -111,9 +113,9 @@ export function ObservatoryPage() {
   const kpiLoading = dashboardLoading;
 
   // KPI values — fallback to em-dash while loading
-  const rcCoverage = kpiLoading || avgRcCoverage === null
+  const strategicAlignment = kpiLoading || avgStrategicAlignment === null
     ? '—'
-    : avgRcCoverage.toFixed(1);
+    : avgStrategicAlignment.toFixed(1);
 
   const completion = kpiLoading || avgCompletion === null
     ? '—'
@@ -187,8 +189,9 @@ export function ObservatoryPage() {
 
       {/* ── KPI strip ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {/* RC coverage proxied from strategicPct until backend exposes per-cycle rallyCoveragePct */}
-        <KpiTile label="Rally Cry Coverage" value={rcCoverage} unit="%" />
+        {/* Strategic % averaged over selected period. TODO: replace with real RC coverage once
+            the alignment trend endpoint exposes a per-cycle rallyCoveragePct field. */}
+        <KpiTile label="Strategic Alignment" value={strategicAlignment} unit="%" />
         <KpiTile label="Completion Rate" value={completion} unit="%" />
         <KpiTile label="Carry-Forward Rate" value={carryForward} unit="%" />
         <KpiTile label="Active Drift Signals" value={driftSignals} />

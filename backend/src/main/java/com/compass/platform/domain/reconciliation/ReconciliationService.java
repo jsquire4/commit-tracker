@@ -249,9 +249,13 @@ public class ReconciliationService {
             details.add(new CommitmentReconciliationDetail(commitment, bullets, rec));
         }
 
-        ReconciliationSummary summary = computeSummary(cycleId);
+        // Personal summary: only the actor's own commitments
+        ReconciliationSummary summary = computeSummary(cycleId, actor.getId());
 
-        return new ReconciliationView(cycle, details, summary);
+        // Org-wide gate: all commitments in the cycle must be reconciled
+        boolean allReconciled = isFullyReconciled(cycleId);
+
+        return new ReconciliationView(cycle, details, summary, allReconciled);
     }
 
     /**
@@ -278,23 +282,32 @@ public class ReconciliationService {
     }
 
     /**
-     * Compute reconciliation summary statistics for a cycle.
-     * Returns: counts by status, overall completion rate, bullet completion rate.
+     * Compute reconciliation summary statistics scoped to a single user's commitments in a cycle.
+     * Used for per-user display ("You completed X of Y").
      */
     @Transactional(readOnly = true)
-    public ReconciliationSummary computeSummary(UUID cycleId) {
-        Cycle cycle = cycleRepository.findById(cycleId)
-                .orElseThrow(() -> new EntityNotFoundException("Cycle", cycleId));
-
-        UUID orgId = cycle.getOrg().getId();
-
+    public ReconciliationSummary computeSummary(UUID cycleId, UUID userId) {
+        // Load only this user's commitments
         List<Commitment> commitments =
-                commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+                commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(userId, cycleId);
 
         int totalCommitments = commitments.size();
 
+        // Filter org-wide records down to this user's commitment IDs
+        java.util.Set<UUID> userCommitmentIds = commitments.stream()
+                .map(Commitment::getId)
+                .collect(Collectors.toSet());
+
+        Cycle cycle = commitments.isEmpty()
+                ? cycleRepository.findById(cycleId)
+                        .orElseThrow(() -> new EntityNotFoundException("Cycle", cycleId))
+                : commitments.get(0).getCycle();
+
         List<ReconciliationRecord> records =
-                reconciliationRecordRepository.findByOrgIdAndCycleId(orgId, cycleId);
+                reconciliationRecordRepository.findByOrgIdAndCycleId(cycle.getOrg().getId(), cycleId)
+                        .stream()
+                        .filter(r -> userCommitmentIds.contains(r.getCommitment().getId()))
+                        .toList();
 
         int reconciledCount = records.size();
         int completedCount = (int) records.stream()
@@ -310,14 +323,14 @@ public class ReconciliationService {
                 .filter(r -> r.getStatus() == ReconciliationStatus.CARRIED_FORWARD)
                 .count();
 
+        // Inclusive completion rate: COMPLETED + PARTIALLY_COMPLETED, matching AnalyticsService.
         double completionRate = totalCommitments == 0 ? 0.0
-                : (double) completedCount / totalCommitments;
+                : (double) (completedCount + partiallyCompletedCount) / totalCommitments;
 
-        // Compute bullet completion rate across all commitments in cycle — single bulk query
-        List<UUID> commitmentIds = commitments.stream().map(Commitment::getId).toList();
-        List<TaskBullet> allBullets = commitmentIds.isEmpty()
+        // Bullet completion rate scoped to this user's commitments
+        List<TaskBullet> allBullets = userCommitmentIds.isEmpty()
                 ? List.of()
-                : taskBulletRepository.findByCommitmentIdIn(commitmentIds);
+                : taskBulletRepository.findByCommitmentIdIn(new java.util.ArrayList<>(userCommitmentIds));
         int totalBullets = allBullets.size();
         int completedBullets = (int) allBullets.stream().filter(TaskBullet::isCompleted).count();
 
@@ -341,7 +354,8 @@ public class ReconciliationService {
     public record ReconciliationView(
             Cycle cycle,
             List<CommitmentReconciliationDetail> commitments,
-            ReconciliationSummary summary
+            ReconciliationSummary summary,
+            boolean allReconciled
     ) {}
 
     public record CommitmentReconciliationDetail(

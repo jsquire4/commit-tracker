@@ -197,9 +197,7 @@ interface TeamTrajectoriesProps {
 export function TeamTrajectories({ weekCount }: TeamTrajectoriesProps) {
   const { data: healthData, isLoading, isError } = useExecutiveHealth(weekCount);
 
-  const units = (healthData?.units ?? []).filter(
-    (u) => u.role.toUpperCase() === 'MANAGER',
-  );
+  const units = healthData?.units ?? [];
 
   if (isLoading) {
     return (

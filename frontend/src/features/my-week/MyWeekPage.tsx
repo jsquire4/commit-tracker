@@ -89,10 +89,9 @@ export function MyWeekPage() {
   }
 
   const reconSummary = reconView?.summary;
-  const allReconciled =
-    reconSummary != null &&
-    reconSummary.reconciledCount >= reconSummary.totalCommitments &&
-    reconSummary.totalCommitments > 0;
+  // allReconciled comes from the backend (org-wide gate: every user must be done).
+  // The summary is personal-only; using it here would incorrectly block until the whole org reconciles.
+  const allReconciled = reconView?.allReconciled ?? false;
 
   async function handleSubmitReconciliation() {
     if (!allReconciled) return;

@@ -89,7 +89,7 @@ public class ReconciliationController {
                         .toList();
 
         ReconciliationViewResponse response = new ReconciliationViewResponse(
-                cycleResponse, details, view.summary());
+                cycleResponse, details, view.summary(), view.allReconciled());
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 

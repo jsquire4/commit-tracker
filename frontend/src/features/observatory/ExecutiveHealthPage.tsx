@@ -54,7 +54,7 @@ const CHESS_COLORS = CHESS_ACCENT;
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
 function trendArrow(direction: string): string {
-  switch (direction) {
+  switch (direction.toUpperCase()) {
     case 'IMPROVING':
       return '\u2191';
     case 'DECLINING':
@@ -65,7 +65,7 @@ function trendArrow(direction: string): string {
 }
 
 function trendArrowColor(direction: string): string {
-  switch (direction) {
+  switch (direction.toUpperCase()) {
     case 'IMPROVING':
       return 'text-accent';
     case 'DECLINING':
@@ -285,7 +285,7 @@ function generateAlerts(
 
   // Declining teams that aren't already RED
   for (const unit of units) {
-    if (unit.trendDirection === 'DECLINING' && unit.grade !== 'RED' && unit.weeksTrending >= 3) {
+    if (unit.trendDirection.toUpperCase() === 'DECLINING' && unit.grade !== 'RED' && unit.weeksTrending >= 3) {
       alerts.push({
         id: `declining-${unit.managerId}`,
         icon: 'declining',
@@ -310,8 +310,8 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
   const alignColor = HEALTH_COLORS[alignGrade];
 
   // Determine overall trend from units
-  const decliningCount = health.units.filter((u) => u.trendDirection === 'DECLINING').length;
-  const improvingCount = health.units.filter((u) => u.trendDirection === 'IMPROVING').length;
+  const decliningCount = health.units.filter((u) => u.trendDirection.toUpperCase() === 'DECLINING').length;
+  const improvingCount = health.units.filter((u) => u.trendDirection.toUpperCase() === 'IMPROVING').length;
   const overallTrend = improvingCount > decliningCount
     ? 'IMPROVING'
     : decliningCount > improvingCount
@@ -447,7 +447,7 @@ function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCardProps) 
         </div>
       </div>
 
-      {/* CHESS distribution bar */}
+      {/* CHESS distribution bar: Strategic vs Other (only real data available) */}
       <div className="w-full h-2 rounded-full bg-outline-variant overflow-hidden flex">
         <div
           className="h-full transition-all duration-500"
@@ -455,15 +455,7 @@ function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCardProps) 
         />
         <div
           className="h-full transition-all duration-500"
-          style={{ width: `${String(remainingW * 0.4)}%`, backgroundColor: CHESS_COLORS.operational }}
-        />
-        <div
-          className="h-full transition-all duration-500"
-          style={{ width: `${String(remainingW * 0.35)}%`, backgroundColor: CHESS_COLORS.defensive }}
-        />
-        <div
-          className="h-full transition-all duration-500"
-          style={{ width: `${String(remainingW * 0.25)}%`, backgroundColor: CHESS_COLORS.capability }}
+          style={{ width: `${String(remainingW)}%`, backgroundColor: '#64748B' }}
         />
       </div>
 
@@ -609,9 +601,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
       <div className="flex items-center gap-4 px-1 pt-2 border-t border-outline-variant/50">
         {[
           { color: CHESS_COLORS.strategic, label: 'Strategic' },
-          { color: CHESS_COLORS.operational, label: 'Operational' },
-          { color: CHESS_COLORS.defensive, label: 'Defensive' },
-          { color: CHESS_COLORS.capability, label: 'Capability' },
+          { color: '#64748B', label: 'Other' },
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />

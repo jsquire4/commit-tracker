@@ -1,15 +1,15 @@
 /**
- * ExecutionTrendChart — 100% stacked bar (CHESS categories) + rally cry coverage line.
+ * ExecutionTrendChart — 100% stacked bar (CHESS categories).
  *
- * Rally cry coverage is approximated per-cycle using strategicPct from the alignment
- * trend endpoint. A dedicated per-cycle rallyCoveragePct field can replace this when
- * the backend exposes it.
+ * The RC coverage overlay line has been removed because the only available proxy
+ * (strategicPct) would duplicate the Strategic bar segment and misrepresent the metric.
+ * TODO: add a dedicated per-cycle rallyCoveragePct field to the alignment trend endpoint
+ * and restore the overlay line once the backend exposes real RC coverage data.
  */
 import { useRef, useState, useEffect, useCallback } from 'react';
 import {
   ComposedChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -23,8 +23,6 @@ import type { AlignmentDataPoint, CompletionDataPoint } from '@/types';
 import { SpeechBubble, generateWeekNarrative } from './SpeechBubble';
 import type { SpeechBubbleMetric } from './SpeechBubble';
 import { CHESS_MUTED } from '@/constants/chess-colors';
-
-const RC_LINE_COLOR = '#036A6A';
 
 const BAR_CONFIG = [
   { key: 'strategicPct', label: 'Strategic', color: CHESS_MUTED.strategic },
@@ -42,8 +40,6 @@ interface ChartDataPoint {
   defensivePct: number;
   capabilityBuildingPct: number;
   uncategorizedPct: number;
-  /** Rally cry coverage line — currently proxied from strategicPct */
-  rcCoverage: number;
   /** Completion rate from CompletionDataPoint (null if not joined) */
   completionRate: number | null;
   /** Carry-forward rate from CompletionDataPoint (null if not joined) */
@@ -74,7 +70,6 @@ function mapToChartData(
       defensivePct: p.defensivePct,
       capabilityBuildingPct: p.capabilityBuildingPct,
       uncategorizedPct,
-      rcCoverage: p.strategicPct,
       completionRate: cp?.completionRate ?? null,
       carryForwardRate: cp?.carryForwardRate ?? null,
     };
@@ -98,13 +93,10 @@ interface CustomTooltipProps {
 function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
 
-  const bars = payload.filter((e) => e.dataKey !== 'rcCoverage');
-  const rcEntry = payload.find((e) => e.dataKey === 'rcCoverage');
-
   return (
     <div className="bg-surface-lowest border border-outline-variant rounded-lg shadow-whisper p-3 min-w-[210px]">
       <p className="font-semibold text-on-surface mb-2 text-sm">{label}</p>
-      {bars.map((entry) => {
+      {payload.map((entry) => {
         const config = BAR_CONFIG.find((c) => c.key === entry.dataKey);
         return (
           <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-sm">
@@ -119,18 +111,6 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
           </div>
         );
       })}
-      {rcEntry !== undefined && (
-        <div className="flex items-center justify-between gap-4 text-sm mt-2 pt-2 border-t border-outline-variant">
-          <div className="flex items-center gap-2">
-            <span
-              className="inline-block w-3 h-0.5 flex-shrink-0"
-              style={{ backgroundColor: RC_LINE_COLOR }}
-            />
-            <span className="text-on-surface-variant">RC Coverage</span>
-          </div>
-          <span className="text-on-surface tabular-nums">{rcEntry.value.toFixed(1)}%</span>
-        </div>
-      )}
     </div>
   );
 }
@@ -149,13 +129,6 @@ function CustomLegend() {
           <span className="text-xs text-on-surface-variant">{label}</span>
         </div>
       ))}
-      <div className="flex items-center gap-1.5">
-        <span
-          className="inline-block w-5 h-0.5 flex-shrink-0"
-          style={{ backgroundColor: RC_LINE_COLOR }}
-        />
-        <span className="text-xs text-on-surface-variant">Rally Cry Coverage</span>
-      </div>
     </div>
   );
 }
@@ -358,33 +331,21 @@ export function ExecutionTrendChart({
                 )
               )}
 
-              {/* Rally cry coverage line overlay */}
-              <Line
-                type="monotone"
-                dataKey="rcCoverage"
-                stroke={RC_LINE_COLOR}
-                strokeWidth={2}
-                dot={false}
-                activeDot={{ r: 4, fill: RC_LINE_COLOR }}
-                legendType="none"
-              />
             </ComposedChart>
           </ResponsiveContainer>
 
           {/* Speech bubble — rendered outside ResponsiveContainer but inside relative wrapper */}
           {activeBar && (() => {
             const { data } = activeBar;
-            const rcPct = `${data.rcCoverage.toFixed(0)}%`;
             const completionPct =
               data.completionRate !== null
-                ? `${(data.completionRate * 100).toFixed(0)}%`
+                ? `${data.completionRate.toFixed(0)}%`
                 : '—';
             const carryPct =
               data.carryForwardRate !== null
-                ? `${(data.carryForwardRate * 100).toFixed(0)}%`
+                ? `${data.carryForwardRate.toFixed(0)}%`
                 : '—';
             const metrics: SpeechBubbleMetric[] = [
-              { label: 'RC Coverage', value: rcPct },
               { label: 'Completion', value: completionPct },
               { label: 'Carry-Forward', value: carryPct },
             ];
