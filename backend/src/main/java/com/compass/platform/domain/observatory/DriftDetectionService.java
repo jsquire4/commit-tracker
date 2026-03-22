@@ -334,7 +334,7 @@ public class DriftDetectionService {
         Map<String, Long> byCat = teamCommitments.stream()
                 .collect(Collectors.groupingBy(
                         c -> c.getChessCategory() != null
-                                ? c.getChessCategory().getName()
+                                ? CategoryUtils.normalizeCategoryName(c.getChessCategory().getName())
                                 : "__NONE__",
                         Collectors.counting()
                 ));
