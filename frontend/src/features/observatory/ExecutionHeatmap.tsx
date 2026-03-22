@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProgramHeatmap } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { WeekCell, ManagerHeatmapRow, PersonHeatmapRow } from '@/types';
@@ -138,13 +139,14 @@ interface PersonRowProps {
 }
 
 function PersonRow({ row, weekLabels }: PersonRowProps) {
+  const navigate = useNavigate();
   // Build a lookup by cycleLabel so we can align cells to week columns
   const cellsByLabel = new Map(row.weekCells.map((c) => [c.cycleLabel, c]));
 
   function handleCellClick(weekLabel: string) {
     const cell = cellsByLabel.get(weekLabel);
     if (!cell) return;
-    console.log(`Navigate to user ${row.userId} week ${cell.cycleId}`);
+    navigate(`/?cycleId=${cell.cycleId}&userId=${row.userId}`);
   }
 
   return (
@@ -182,13 +184,27 @@ interface ManagerRowProps {
 }
 
 function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) {
+  const navigate = useNavigate();
+  // The manager row's weekCells represent team-averaged CHESS data (not the manager's personal data).
   const cellsByLabel = new Map(row.weekCells.map((c) => [c.cycleLabel, c]));
 
   function handleCellClick(weekLabel: string) {
     const cell = cellsByLabel.get(weekLabel);
     if (!cell) return;
-    console.log(`Navigate to manager ${row.managerId} week ${cell.cycleId}`);
+    navigate(`/?cycleId=${cell.cycleId}&userId=${row.managerId}`);
   }
+
+  // Build the child list: manager's own personal row first, then other team members.
+  // If the manager is already in the members list (backend includes them), deduplicate.
+  const managerPersonalRow: PersonHeatmapRow = {
+    userId: row.managerId,
+    displayName: `${row.managerName} (you)`,
+    weekCells: row.weekCells,
+  };
+  const memberIds = new Set(row.members.map((m) => m.userId));
+  const childRows: PersonHeatmapRow[] = memberIds.has(row.managerId)
+    ? row.members
+    : [managerPersonalRow, ...row.members];
 
   return (
     <>
@@ -222,13 +238,13 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) 
                 {row.managerName}
               </span>
               <span className="text-[10px] text-muted">
-                {row.managerRole} · {row.teamSize} members
+                {row.managerRole} · {row.teamSize} members · team avg
               </span>
             </div>
           </div>
         </td>
 
-        {/* Week cells */}
+        {/* Week cells (team-averaged) */}
         {weekLabels.map((label) => (
           <td
             key={label}
@@ -244,8 +260,8 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) 
         ))}
       </tr>
 
-      {/* Person rows (expanded) */}
-      {isExpanded && row.members.map((person) => (
+      {/* Person rows (expanded): manager's own row first, then team members */}
+      {isExpanded && childRows.map((person) => (
         <PersonRow
           key={person.userId}
           row={person}
@@ -360,9 +376,23 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
     );
   }
 
-  // Derive the ordered list of week labels from the first manager's cells
-  // (all rows should share the same week sequence)
-  const weekLabels: string[] = managers[0]?.weekCells.map((c) => c.cycleLabel) ?? [];
+  // Derive the ordered list of week labels from the union of all manager cells,
+  // sorted chronologically (ascending). The backend may return cells in descending order.
+  const allLabelSet = new Set<string>();
+  for (const mgr of managers) {
+    for (const cell of mgr.weekCells) allLabelSet.add(cell.cycleLabel);
+  }
+  // Sort ascending: extract trailing number if present ("Week 3" → 3), else lex sort.
+  function extractWeekNum(label: string): number {
+    const m = label.match(/(\d+)\s*$/);
+    return m != null && m[1] != null ? parseInt(m[1], 10) : 0;
+  }
+  const weekLabels: string[] = Array.from(allLabelSet).sort((a, b) => {
+    const na = extractWeekNum(a);
+    const nb = extractWeekNum(b);
+    if (na !== 0 || nb !== 0) return na - nb;
+    return a.localeCompare(b);
+  });
 
   return (
     <div className="bg-surface-lowest border border-outline-variant rounded-lg overflow-hidden">

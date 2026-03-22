@@ -17,16 +17,6 @@ import { ExecutionHeatmap } from './ExecutionHeatmap';
 import { ObservatorySignals } from './ObservatorySignals';
 import { WeekOnWeek } from './WeekOnWeek';
 
-const WEEK_OPTIONS = [
-  { value: 4, label: '4 weeks' },
-  { value: 8, label: '8 weeks' },
-  { value: 12, label: '12 weeks' },
-  { value: 26, label: '26 weeks' },
-  { value: 52, label: '52 weeks' },
-] as const;
-
-type WeekOption = (typeof WEEK_OPTIONS)[number]['value'];
-
 // ── KPI Strip ─────────────────────────────────────────────────────────────────
 
 interface KpiTileProps {
@@ -51,10 +41,44 @@ function KpiTile({ label, value, unit }: KpiTileProps) {
   );
 }
 
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Format a ISO date string as "MMM d" (e.g. "Mar 16"). */
+function formatCycleDate(startsAt: string): string {
+  try {
+    return new Date(startsAt).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+    });
+  } catch {
+    return startsAt;
+  }
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ObservatoryPage() {
-  const [weekCount, setWeekCount] = useState<WeekOption>(26);
+  // Load ALL available reconciled cycles (large cap so we get the full history)
+  const { data: allCycles } = useAlignmentTrend(999);
+
+  // Sorted ascending list of available cycle start dates
+  const availableCycles = useMemo(() => {
+    if (!allCycles || allCycles.length === 0) return [];
+    return [...allCycles].sort(
+      (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+    );
+  }, [allCycles]);
+
+  // "From" index into availableCycles (default: first cycle)
+  const [fromIdx, setFromIdx] = useState<number>(0);
+
+  // Compute weekCount from the selected "from" position.
+  // weekCount = number of cycles from "from" to the last available cycle (inclusive).
+  // The APIs accept a trailing-window count, so this keeps "to" as the most recent cycle.
+  const weekCount = useMemo(() => {
+    if (availableCycles.length === 0) return 26;
+    return Math.max(1, availableCycles.length - fromIdx);
+  }, [availableCycles, fromIdx]);
 
   const { data: health, isLoading: healthLoading } = useExecutiveHealth(weekCount);
   const { data: alignmentTrend, isLoading: alignmentLoading } = useAlignmentTrend(weekCount);
@@ -102,6 +126,13 @@ export function ObservatoryPage() {
     ? '—'
     : String(health?.activeDriftSignals ?? 0);
 
+  // Date range labels for the header display
+  const fromLabel = availableCycles[fromIdx]
+    ? formatCycleDate(availableCycles[fromIdx].startsAt)
+    : null;
+  const lastCycle = availableCycles[availableCycles.length - 1];
+  const toLabel = lastCycle != null ? formatCycleDate(lastCycle.startsAt) : null;
+
   return (
     <div className="space-y-6">
       {/* ── Page header ── */}
@@ -119,25 +150,37 @@ export function ObservatoryPage() {
         </div>
 
         {/* Date range selector */}
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
           <label
-            htmlFor="obs-week-count"
+            htmlFor="obs-from-cycle"
             className="text-sm text-on-surface-variant whitespace-nowrap"
           >
-            Showing
+            From
           </label>
           <select
-            id="obs-week-count"
-            value={weekCount}
-            onChange={(e) => setWeekCount(Number(e.target.value) as WeekOption)}
+            id="obs-from-cycle"
+            value={fromIdx}
+            onChange={(e) => { setFromIdx(Number(e.target.value)); }}
             className="text-sm border border-outline-variant rounded-md px-2 py-1.5 bg-surface-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-accent"
+            disabled={availableCycles.length === 0}
           >
-            {WEEK_OPTIONS.map(({ value, label }) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
+            {availableCycles.length === 0 ? (
+              <option value={0}>Loading…</option>
+            ) : (
+              availableCycles.map((cycle, idx) => (
+                <option key={cycle.cycleId} value={idx}>
+                  {formatCycleDate(cycle.startsAt)}
+                </option>
+              ))
+            )}
           </select>
+          <span className="text-sm text-on-surface-variant">→</span>
+          <span className="text-sm text-on-surface font-medium whitespace-nowrap">
+            {toLabel ?? '…'}
+          </span>
+          {fromLabel && toLabel && (
+            <span className="text-xs text-muted">({weekCount} week{weekCount !== 1 ? 's' : ''})</span>
+          )}
         </div>
       </div>
 

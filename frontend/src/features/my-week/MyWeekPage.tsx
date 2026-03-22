@@ -1,4 +1,5 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useCurrentCycle, useCycle } from '@/hooks/useCycle';
 import { useCommitments, useDeleteCommitment } from '@/hooks/useCommitments';
 import { useReconciliationView, useCompleteReconciliation } from '@/hooks/useReconciliation';
@@ -23,10 +24,26 @@ import Button from '@/components/Button';
 import type { CycleState, ReconciliationStatus } from '@/types';
 
 export function MyWeekPage() {
-  const { userId } = useAuth();
+  const { userId: authUserId } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // Support deep-link from Observatory heatmap: /?cycleId=...&userId=...
+  // The userId param is informational only (we show the logged-in user's data per cycle).
+  const deepLinkCycleId = searchParams.get('cycleId');
 
   const { data: currentCycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
+
+  // On first load, apply the deep-linked cycleId if provided
+  useEffect(() => {
+    if (deepLinkCycleId && selectedCycleId === null) {
+      setSelectedCycleId(deepLinkCycleId);
+    }
+    // Only run on mount (deepLinkCycleId from URL, not reactive)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const userId = authUserId;
 
   // When a different cycle is selected via the pill selector, fetch it
   const { data: selectedCycleData } = useCycle(selectedCycleId ?? '');
