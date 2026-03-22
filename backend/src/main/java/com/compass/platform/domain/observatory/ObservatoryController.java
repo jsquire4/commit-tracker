@@ -4,11 +4,13 @@ import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
 import com.compass.platform.domain.observatory.dto.DisplacementSummary;
+import com.compass.platform.domain.observatory.dto.ProgramHeatmapResponse;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.ExecutiveHealthResponse;
 import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.ObservatoryConfigResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
+import com.compass.platform.domain.observatory.dto.SignalsSummaryResponse;
 import com.compass.platform.domain.observatory.dto.UpdateObservatoryConfigRequest;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.Org;
@@ -190,6 +192,31 @@ public class ObservatoryController {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // Signals summary
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/v1/observatory/signals-summary
+     * Composed signal cards spanning drift patterns, displacement cascades,
+     * specificity anomalies, and work-distribution concentration risk.
+     */
+    @GetMapping("/signals-summary")
+    public ResponseEntity<ApiResponse<SignalsSummaryResponse>> getSignalsSummary(
+            @RequestParam(defaultValue = "26") int weekCount) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        UUID orgId = actor.getOrg().getId();
+
+        DriftReport driftReport = driftDetectionService.detectDrift(orgId);
+        IntegrityReport integrityReport = driftDetectionService.detectSignalIntegrity(orgId, null);
+        com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary =
+                displacementService.aggregateDisplacements(orgId, weekCount);
+
+        return ResponseEntity.ok(ApiResponse.of(
+                analyticsService.computeSignalsSummary(orgId, weekCount, driftReport, integrityReport, displacementSummary)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // Carry-forward chains
     // ═══════════════════════════════════════════════════════════════
 
@@ -205,6 +232,24 @@ public class ObservatoryController {
         UUID orgId = actor.getOrg().getId();
         return ResponseEntity.ok(ApiResponse.of(
                 analyticsService.computeCarryForwardChains(orgId, cycleId)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Program heatmap
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/v1/observatory/program-heatmap
+     * Per-manager per-cycle dominant CHESS category heatmap, with per-person drill-down.
+     */
+    @GetMapping("/program-heatmap")
+    public ResponseEntity<ApiResponse<ProgramHeatmapResponse>> getProgramHeatmap(
+            @RequestParam(defaultValue = "26") int weekCount) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        UUID orgId = actor.getOrg().getId();
+        return ResponseEntity.ok(ApiResponse.of(
+                analyticsService.computeProgramHeatmap(orgId, weekCount)));
     }
 
     // ═══════════════════════════════════════════════════════════════

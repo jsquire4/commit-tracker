@@ -10,9 +10,22 @@ import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
+import com.compass.platform.domain.observatory.dto.DriftReport;
+import com.compass.platform.domain.observatory.dto.DriftSignal;
+import com.compass.platform.domain.observatory.dto.IntegrityFlag;
+import com.compass.platform.domain.observatory.dto.IntegrityFlagType;
+import com.compass.platform.domain.observatory.dto.IntegrityReport;
+import com.compass.platform.domain.observatory.dto.ManagerHeatmapRow;
+import com.compass.platform.domain.observatory.dto.ObservatorySignal;
+import com.compass.platform.domain.observatory.dto.PersonHeatmapRow;
+import com.compass.platform.domain.observatory.dto.ProgramHeatmapResponse;
+import com.compass.platform.domain.observatory.dto.SignalMetric;
+import com.compass.platform.domain.observatory.dto.SignalsSummaryResponse;
 import com.compass.platform.domain.observatory.dto.TeamAlignmentTrend;
+import com.compass.platform.domain.observatory.dto.WeekCell;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
+import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.AppUserRepository;
 import org.slf4j.Logger;
@@ -21,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -147,6 +161,97 @@ public class AnalyticsService {
                 teamUserIds.size(),
                 dataPoints
         );
+    }
+
+    /**
+     * Compute per-manager per-cycle CHESS category heatmap data for the last N reconciled cycles.
+     * Returns one row per MANAGER-role user, with team-averaged week cells and per-person breakdown.
+     *
+     * @param orgId     organization ID
+     * @param weekCount number of most-recent reconciled cycles to include
+     * @return {@link ProgramHeatmapResponse} with a row per manager
+     */
+    public ProgramHeatmapResponse computeProgramHeatmap(UUID orgId, int weekCount) {
+        List<Cycle> cycles = latestCycles(orgId, weekCount);
+        List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
+
+        // Bulk-load all commitments for the cycle range in one pass
+        Map<UUID, List<Commitment>> commitmentsByCycle = new HashMap<>();
+        for (UUID cycleId : cycleIds) {
+            List<Commitment> cycleCmts =
+                    commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+            commitmentsByCycle.put(cycleId, cycleCmts);
+        }
+
+        // Index commitments by (cycleId, userId) for fast per-person lookup
+        Map<UUID, Map<UUID, List<Commitment>>> byUserByCycle = new HashMap<>();
+        for (Map.Entry<UUID, List<Commitment>> entry : commitmentsByCycle.entrySet()) {
+            UUID cycleId = entry.getKey();
+            Map<UUID, List<Commitment>> byUser = entry.getValue().stream()
+                    .collect(Collectors.groupingBy(c -> c.getUser().getId()));
+            byUserByCycle.put(cycleId, byUser);
+        }
+
+        // Resolve all MANAGER-role users in the org
+        List<AppUser> managers = userRepository.findByOrgIdAndRoleIn(orgId, List.of(UserRole.MANAGER));
+
+        List<ManagerHeatmapRow> managerRows = new ArrayList<>();
+        for (AppUser manager : managers) {
+            List<UUID> teamUserIds = userRepository.findSubtreeUserIds(manager.getId());
+
+            // Build per-person rows
+            // Collect unique AppUser instances for all team members encountered across cycles
+            Map<UUID, AppUser> teamUsersById = new HashMap<>();
+            for (UUID cycleId : cycleIds) {
+                Map<UUID, List<Commitment>> byUser = byUserByCycle.getOrDefault(cycleId, Map.of());
+                for (UUID userId : teamUserIds) {
+                    if (!teamUsersById.containsKey(userId)) {
+                        List<Commitment> userCmts = byUser.get(userId);
+                        if (userCmts != null && !userCmts.isEmpty()) {
+                            teamUsersById.put(userId, userCmts.get(0).getUser());
+                        }
+                    }
+                }
+            }
+
+            List<PersonHeatmapRow> personRows = new ArrayList<>();
+            for (UUID memberId : teamUserIds) {
+                AppUser member = teamUsersById.get(memberId);
+                if (member == null) continue; // no commitments in range — skip
+
+                List<WeekCell> personCells = new ArrayList<>();
+                for (Cycle cycle : cycles) {
+                    Map<UUID, List<Commitment>> byUser =
+                            byUserByCycle.getOrDefault(cycle.getId(), Map.of());
+                    List<Commitment> userCmts = byUser.getOrDefault(memberId, List.of());
+                    personCells.add(buildWeekCell(cycle, userCmts));
+                }
+                personRows.add(new PersonHeatmapRow(member.getId(), member.getDisplayName(), personCells));
+            }
+
+            // Build team-averaged week cells
+            List<WeekCell> teamCells = new ArrayList<>();
+            for (Cycle cycle : cycles) {
+                Map<UUID, List<Commitment>> byUser =
+                        byUserByCycle.getOrDefault(cycle.getId(), Map.of());
+                List<Commitment> teamCmts = teamUserIds.stream()
+                        .flatMap(uid -> byUser.getOrDefault(uid, List.of()).stream())
+                        .toList();
+                teamCells.add(buildWeekCell(cycle, teamCmts));
+            }
+
+            managerRows.add(new ManagerHeatmapRow(
+                    manager.getId(),
+                    manager.getDisplayName(),
+                    manager.getRole().name(),
+                    teamUserIds.size(),
+                    teamCells,
+                    personRows
+            ));
+        }
+
+        log.debug("computeProgramHeatmap orgId={} weekCount={} managersFound={}", orgId, weekCount, managerRows.size());
+        return new ProgramHeatmapResponse(managerRows);
     }
 
     /**
@@ -338,6 +443,190 @@ public class AnalyticsService {
         return signals;
     }
 
+    /**
+     * Compose a signals summary from pre-computed drift and integrity reports, plus live
+     * displacement and work-distribution data.
+     *
+     * <p>Signal types produced:
+     * <ul>
+     *   <li>DRIFT_PATTERN — one signal per DriftSignal in the drift report</li>
+     *   <li>DISPLACEMENT_CASCADE — one signal per org-level displacement total > 5</li>
+     *   <li>SPECIFICITY_PATTERN — one signal per UNIFORM_CATEGORIZATION integrity flag</li>
+     *   <li>WORK_DISTRIBUTION — one signal per manager where one assignee receives >50% of assignments</li>
+     * </ul>
+     *
+     * @param orgId           organisation to analyse
+     * @param weekCount       trailing-cycle window for displacement and work-distribution data
+     * @param driftReport     pre-computed drift report (call DriftDetectionService first)
+     * @param integrityReport pre-computed integrity report (call DriftDetectionService first)
+     * @param displacementSummary pre-computed displacement summary (call DisplacementService first)
+     * @return SignalsSummaryResponse containing all surfaced signals and a generation timestamp
+     */
+    public SignalsSummaryResponse computeSignalsSummary(UUID orgId, int weekCount,
+                                                         DriftReport driftReport,
+                                                         IntegrityReport integrityReport,
+                                                         com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary) {
+        List<ObservatorySignal> signals = new ArrayList<>();
+
+        // ── DRIFT_PATTERN signals ─────────────────────────────────────────────
+        for (DriftSignal ds : driftReport.signals()) {
+            String title = String.format("%s drift: %s (%s)",
+                    ds.metric().name().toLowerCase().replace("_", " "),
+                    ds.unitName(),
+                    ds.severity().name().toLowerCase());
+            String body = String.format(
+                    "%s has been in %s-severity %s drift for %d consecutive weeks. " +
+                    "Current value: %.1f%%, baseline: %.1f%%.",
+                    ds.unitName(),
+                    ds.severity().name().toLowerCase(),
+                    ds.metric().name().toLowerCase().replace("_", " "),
+                    ds.weekCount(),
+                    ds.currentValue(),
+                    ds.baselineValue());
+            List<SignalMetric> metrics = List.of(
+                    new SignalMetric("Weeks declining", String.valueOf(ds.weekCount())),
+                    new SignalMetric("Current value", String.format("%.1f%%", ds.currentValue())),
+                    new SignalMetric("Baseline", String.format("%.1f%%", ds.baselineValue()))
+            );
+            signals.add(new ObservatorySignal(
+                    "DRIFT_PATTERN",
+                    "active",
+                    null,
+                    null,
+                    title,
+                    body,
+                    metrics
+            ));
+        }
+
+        // ── DISPLACEMENT_CASCADE signals ──────────────────────────────────────
+        if (displacementSummary.totalDisplacements() > 5) {
+            String topCategory = displacementSummary.byCategory().isEmpty()
+                    ? "unspecified"
+                    : displacementSummary.byCategory().get(0).category().name().toLowerCase().replace("_", " ");
+            String title = String.format("Displacement cascade: %d events over %d weeks",
+                    displacementSummary.totalDisplacements(), weekCount);
+            String body = String.format(
+                    "%d displaced commitments recorded in the last %d cycles. " +
+                    "Top displacement category: %s.",
+                    displacementSummary.totalDisplacements(), weekCount, topCategory);
+            List<SignalMetric> metrics = List.of(
+                    new SignalMetric("Total displacements", String.valueOf(displacementSummary.totalDisplacements())),
+                    new SignalMetric("Top category", topCategory),
+                    new SignalMetric("Categories affected",
+                            String.valueOf(displacementSummary.byCategory().size()))
+            );
+            signals.add(new ObservatorySignal(
+                    "DISPLACEMENT_CASCADE",
+                    "active",
+                    null,
+                    null,
+                    title,
+                    body,
+                    metrics
+            ));
+        }
+
+        // ── SPECIFICITY_PATTERN signals ───────────────────────────────────────
+        for (IntegrityFlag flag : integrityReport.flags()) {
+            if (flag.type() != IntegrityFlagType.UNIFORM_CATEGORIZATION) continue;
+            Map<String, Object> d = flag.details();
+            String managerName = String.valueOf(d.getOrDefault("managerName", "Unknown"));
+            String dominantCat = String.valueOf(d.getOrDefault("dominantCategory", "unknown"));
+            Object pctObj = d.get("percentage");
+            String pctStr = pctObj != null ? pctObj + "%" : "unknown";
+            Object totalObj = d.get("totalCommitments");
+            String totalStr = totalObj != null ? String.valueOf(totalObj) : "unknown";
+
+            String title = String.format("Specificity pattern: %s's team over-indexed on %s",
+                    managerName, dominantCat);
+            String body = String.format(
+                    "%s's team has %s of commitments categorised as %s, " +
+                    "suggesting low-specificity or gaming of the CHESS taxonomy.",
+                    managerName, pctStr, dominantCat);
+            List<SignalMetric> metrics = List.of(
+                    new SignalMetric("Dominant category", dominantCat),
+                    new SignalMetric("Category share", pctStr),
+                    new SignalMetric("Total commitments", totalStr)
+            );
+            signals.add(new ObservatorySignal(
+                    "SPECIFICITY_PATTERN",
+                    "active",
+                    null,
+                    null,
+                    title,
+                    body,
+                    metrics
+            ));
+        }
+
+        // ── WORK_DISTRIBUTION signals ─────────────────────────────────────────
+        // Look at recent cycles: for each manager-assigned commitment, find managers
+        // where >50% of their assignments go to a single person.
+        List<Cycle> recentCycles = latestCycles(orgId, weekCount);
+        List<UUID> recentCycleIds = recentCycles.stream().map(Cycle::getId).toList();
+
+        // Load managers (MANAGER, DIRECTOR, VP roles)
+        Set<UserRole> managerRoles = Set.of(UserRole.MANAGER, UserRole.DIRECTOR, UserRole.VP);
+        List<AppUser> managers = userRepository.findByOrgIdAndIsActiveTrue(orgId).stream()
+                .filter(u -> managerRoles.contains(u.getRole()))
+                .toList();
+
+        for (AppUser manager : managers) {
+            // Collect all commitments assigned by this manager across recent cycles
+            List<Commitment> assigned = recentCycleIds.stream()
+                    .flatMap(cycleId -> commitmentRepository
+                            .findByAssignedByIdAndCycleId(manager.getId(), cycleId).stream())
+                    .toList();
+
+            if (assigned.size() < 3) continue; // not enough data
+
+            // Group by assignee
+            Map<UUID, Long> countByAssignee = assigned.stream()
+                    .collect(Collectors.groupingBy(c -> c.getUser().getId(), Collectors.counting()));
+
+            long total = assigned.size();
+            for (Map.Entry<UUID, Long> entry : countByAssignee.entrySet()) {
+                double pct = (double) entry.getValue() / total * 100.0;
+                if (pct > 50.0) {
+                    // Find the assignee's name from the commitment list
+                    String assigneeName = assigned.stream()
+                            .filter(c -> c.getUser().getId().equals(entry.getKey()))
+                            .findFirst()
+                            .map(c -> c.getUser().getDisplayName())
+                            .orElse("unknown");
+
+                    String title = String.format("Work distribution risk: %s routes %.0f%% of assignments to %s",
+                            manager.getDisplayName(), pct, assigneeName);
+                    String body = String.format(
+                            "%s has assigned %d of %d commitments (%s) to %s over the last %d cycles, " +
+                            "indicating potential concentration risk.",
+                            manager.getDisplayName(), entry.getValue(), total,
+                            String.format("%.0f%%", pct), assigneeName, weekCount);
+                    List<SignalMetric> metrics = List.of(
+                            new SignalMetric("Concentration", String.format("%.0f%%", pct)),
+                            new SignalMetric("Assignments to " + assigneeName,
+                                    entry.getValue() + " of " + total),
+                            new SignalMetric("Cycles analysed", String.valueOf(recentCycles.size()))
+                    );
+                    signals.add(new ObservatorySignal(
+                            "WORK_DISTRIBUTION",
+                            "active",
+                            null,
+                            null,
+                            title,
+                            body,
+                            metrics
+                    ));
+                    break; // one signal per manager
+                }
+            }
+        }
+
+        log.debug("computeSignalsSummary orgId={} weekCount={} signalsGenerated={}", orgId, weekCount, signals.size());
+        return new SignalsSummaryResponse(signals, Instant.now());
+    }
+
     // ===== Internal helpers =====
 
     /**
@@ -351,6 +640,47 @@ public class AnalyticsService {
                 .filter(c -> c.getState() == CycleState.RECONCILED)
                 .toList();
         return reconciled.size() <= limit ? reconciled : reconciled.subList(0, limit);
+    }
+
+    /**
+     * Builds a {@link WeekCell} from a cycle and a list of commitments (for one person or a team).
+     * Computes CHESS category percentages and derives the dominant category.
+     */
+    private WeekCell buildWeekCell(Cycle cycle, List<Commitment> commitments) {
+        int total = commitments.size();
+        Map<String, Integer> counts = new HashMap<>();
+        for (Commitment c : commitments) {
+            String key = c.getChessCategory() != null
+                    ? CategoryUtils.normalizeCategoryName(c.getChessCategory().getName())
+                    : "Uncategorized";
+            counts.merge(key, 1, Integer::sum);
+        }
+
+        double strategicPct = pct(counts.getOrDefault("Strategic", 0), total);
+        double operationalPct = pct(counts.getOrDefault("Operational", 0), total);
+        double defensivePct = pct(counts.getOrDefault("Defensive", 0), total);
+        double capabilityPct = pct(counts.getOrDefault("Capability Building", 0), total);
+
+        String dominantCategory = null;
+        if (total > 0) {
+            double max = Math.max(Math.max(strategicPct, operationalPct),
+                    Math.max(defensivePct, capabilityPct));
+            if (max == strategicPct) dominantCategory = "Strategic";
+            else if (max == operationalPct) dominantCategory = "Operational";
+            else if (max == defensivePct) dominantCategory = "Defensive";
+            else dominantCategory = "Capability Building";
+        }
+
+        return new WeekCell(
+                cycle.getId(),
+                cycle.getLabel(),
+                dominantCategory,
+                strategicPct,
+                operationalPct,
+                defensivePct,
+                capabilityPct,
+                total
+        );
     }
 
     /**
