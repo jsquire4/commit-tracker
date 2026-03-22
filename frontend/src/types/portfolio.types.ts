@@ -2,14 +2,14 @@
 
 export type HealthGradeLabel = 'On Track' | 'Watch' | 'At Risk';
 export type HealthGradeColor = 'teal' | 'amber' | 'rose';
-export type TrendDirection = 'up' | 'down' | 'flat';
+export type PortfolioTrend = 'up' | 'down' | 'flat';
 
 export interface PortfolioMetric {
   key: string;
   label: string;
   value: number;
   suffix?: string;
-  trend?: TrendDirection;
+  trend?: PortfolioTrend;
 }
 
 export interface RallyCryStatus {
@@ -51,7 +51,7 @@ export interface ComparisonRow {
   name: string;
   weeksActive: number;
   alignment: number;
-  trend: TrendDirection;
+  trend: PortfolioTrend;
   trendLabel: string;
   coverage: number;
   carryForward: number;

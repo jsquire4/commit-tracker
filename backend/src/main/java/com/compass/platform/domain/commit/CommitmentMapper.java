@@ -26,7 +26,7 @@ public class CommitmentMapper {
         CommitmentResponse.AssignmentAttributionResponse attribution = null;
         if (entity.getAssignedBy() != null) {
             attribution = new CommitmentResponse.AssignmentAttributionResponse(
-                "MANAGER_ASSIGNED",
+                "ASSIGNED_BY",
                 entity.getAssignedBy().getId(),
                 entity.getAssignedBy().getDisplayName()
             );

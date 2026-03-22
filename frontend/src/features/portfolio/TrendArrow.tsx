@@ -1,15 +1,15 @@
 /**
  * TrendArrow — SVG arrow (up/down/flat) with color coding.
  */
-import type { TrendDirection } from '@/types/portfolio.types';
+import type { PortfolioTrend } from '@/types/portfolio.types';
 
 interface TrendArrowProps {
-  direction: TrendDirection;
+  direction: PortfolioTrend;
   label?: string;
   className?: string;
 }
 
-const directionConfig: Record<TrendDirection, { path: string; color: string; symbol: string }> = {
+const directionConfig: Record<PortfolioTrend, { path: string; color: string; symbol: string }> = {
   up: {
     path: 'M4 8L8 2L12 8',
     color: 'text-accent',
