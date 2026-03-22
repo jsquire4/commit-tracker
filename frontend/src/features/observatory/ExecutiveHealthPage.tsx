@@ -8,7 +8,7 @@ import { getAlignmentTrend } from '@/api/observatory.api';
 import { getOrgTree } from '@/api/users.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CHESS_ACCENT } from '@/constants/chess-colors';
-import type { UserRole } from '@/types';
+import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
 import type {
   ExecutiveHealthResponse,
   OrgUnitHealth,
@@ -18,8 +18,6 @@ import type {
 import type { User } from '@/types/user.types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
-
-const ALLOWED_ROLES: UserRole[] = ['DIRECTOR', 'VP', 'EXECUTIVE'];
 
 const HEALTH_COLORS: Record<HealthGrade, string> = {
   GREEN: '#036A6A',
@@ -706,7 +704,7 @@ export function ExecutiveHealthPage() {
   });
 
   // Role guard
-  if (!role || !ALLOWED_ROLES.includes(role)) {
+  if (!role || !DIRECTOR_AND_ABOVE.has(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
         <div className="w-12 h-12 bg-error/[0.08] rounded-full flex items-center justify-center">
