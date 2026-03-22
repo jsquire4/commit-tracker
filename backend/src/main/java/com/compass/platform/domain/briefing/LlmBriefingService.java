@@ -874,6 +874,9 @@ public class LlmBriefingService implements BriefingService {
             Generate a 2-sentence summary of this week's execution data. \
             Report data and change only. Use directional language (increased, declined, \
             held steady) not judgmental language. Do not evaluate performance. \
+            The four commitment categories are: Strategic, Operational, Defensive, and \
+            Capability Building. Refer to them as "commitment categories" — never say \
+            "chess strategies" or "chess categories." \
             Return plain text only — no JSON, no markdown, no bullet points.""";
 
     static final String SYSTEM_PROMPT = """
