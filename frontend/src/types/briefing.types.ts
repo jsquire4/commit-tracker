@@ -28,3 +28,11 @@ export interface BriefingResponse {
   citations: BriefingCitation[];
   metrics: BriefingMetric[];
 }
+
+/** LLM-generated team summary for the My Team AI Summary card. */
+export interface TeamSummaryResponse {
+  headline: string;
+  narrative: string;
+  suggestedActions: string[];
+  generatedAt: string;
+}

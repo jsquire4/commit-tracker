@@ -140,6 +140,29 @@ public class StubBriefingService implements BriefingService {
     }
 
     @Override
+    public String generateWeekNarrative(UUID orgId, UUID cycleId) {
+        log.debug("generateWeekNarrative orgId={} cycleId={} (stub)", orgId, cycleId);
+
+        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, 12);
+        double completionRate = completionTrend.isEmpty() ? 0.0
+                : completionTrend.get(completionTrend.size() - 1).completionRate();
+        double carryForwardRate = completionTrend.isEmpty() ? 0.0
+                : completionTrend.get(completionTrend.size() - 1).carryForwardRate();
+
+        return String.format(
+                "Week closed with a %.0f%% completion rate and a %.0f%% carry-forward rate. " +
+                "No LLM configured — narrative generated from template.",
+                completionRate, carryForwardRate);
+    }
+
+    @Override
+    public String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId) {
+        log.debug("generateTeamSummary orgId={} cycleId={} managerId={} (stub)", orgId, cycleId, managerId);
+        return String.format(
+                "Team summary for manager %s is unavailable — no LLM configured.", managerId);
+    }
+
+    @Override
     public ChatResponse generateChat(UUID orgId, List<ChatMessage> messages) {
         log.debug("generateChat orgId={} messageCount={}", orgId, messages.size());
 

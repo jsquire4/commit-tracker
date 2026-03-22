@@ -11,6 +11,7 @@ import type {
   ObservatoryConfig,
   PortfolioHealthResponse,
   ProgramHeatmapResponse,
+  ProgramSummaryResponse,
   SignalsSummaryResponse,
 } from '@/types';
 
@@ -109,4 +110,24 @@ export async function getSignalsSummary(
   weekCount?: number
 ): Promise<SignalsSummaryResponse> {
   return fetchData<SignalsSummaryResponse>(`${BASE}/signals-summary`, weekCount !== undefined ? { weekCount } : undefined);
+}
+
+export async function getProgramSummary(
+  weekCount?: number
+): Promise<ProgramSummaryResponse> {
+  return fetchData<ProgramSummaryResponse>(
+    `${BASE}/program-summary`,
+    weekCount !== undefined ? { weekCount } : undefined
+  );
+}
+
+export interface WeekNarrativeResponse {
+  narrative: string;
+  generatedAt: string;
+}
+
+export async function getWeekNarrative(
+  cycleId: string
+): Promise<WeekNarrativeResponse> {
+  return fetchData<WeekNarrativeResponse>(`${BASE}/week-narrative`, { cycleId });
 }

@@ -1,9 +1,12 @@
 import Card from '@/components/Card';
+import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useTeamSummary } from '@/hooks/useTeamSummary';
 import type { DashboardResponse, Commitment } from '@/types';
 
 interface TeamSummaryCardProps {
   dashboard: DashboardResponse;
   commitments: Commitment[];
+  cycleWeekStart?: string;
 }
 
 interface SuggestedAction {
@@ -63,8 +66,17 @@ function buildSummary(dashboard: DashboardResponse, commitments: Commitment[]): 
   return { headline, narrative, actions };
 }
 
-export function TeamSummaryCard({ dashboard, commitments }: TeamSummaryCardProps) {
-  const { headline, narrative, actions } = buildSummary(dashboard, commitments);
+export function TeamSummaryCard({ dashboard, commitments, cycleWeekStart }: TeamSummaryCardProps) {
+  const { data: llmSummary, isLoading } = useTeamSummary(cycleWeekStart);
+
+  // Use LLM response when available; fall back to deterministic while loading or when null
+  const fallback = buildSummary(dashboard, commitments);
+
+  const headline = llmSummary?.headline ?? fallback.headline;
+  const narrative = llmSummary?.narrative ?? fallback.narrative;
+  const actions: SuggestedAction[] = llmSummary
+    ? llmSummary.suggestedActions.map((text) => ({ text }))
+    : fallback.actions;
 
   return (
     <Card className="animate-fade-up">
@@ -72,7 +84,14 @@ export function TeamSummaryCard({ dashboard, commitments }: TeamSummaryCardProps
         AI Summary
       </span>
       <h2 className="font-serif text-headline text-on-surface mb-3">{headline}</h2>
-      <p className="text-body text-on-surface-variant leading-relaxed mb-5">{narrative}</p>
+      {isLoading ? (
+        <div className="flex items-center gap-3 mb-5">
+          <LoadingSpinner size="sm" />
+          <p className="text-body text-on-surface-variant leading-relaxed">{fallback.narrative}</p>
+        </div>
+      ) : (
+        <p className="text-body text-on-surface-variant leading-relaxed mb-5">{narrative}</p>
+      )}
       <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">Suggested Actions</h3>
       <ul className="flex flex-col gap-2">
         {actions.map((action, i) => (

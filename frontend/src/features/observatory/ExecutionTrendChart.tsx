@@ -17,7 +17,7 @@ import {
   ReferenceLine,
   ResponsiveContainer,
 } from 'recharts';
-import { useAlignmentTrend, useCompletionTrend } from '@/hooks/useObservatory';
+import { useAlignmentTrend, useCompletionTrend, useWeekNarrative } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { AlignmentDataPoint, CompletionDataPoint } from '@/types';
 import { SpeechBubble, generateWeekNarrative } from './SpeechBubble';
@@ -172,6 +172,10 @@ export function ExecutionTrendChart({
 
   const [activeBar, setActiveBar] = useState<ActiveBar | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // LLM narrative for the clicked bar — fires only when a bar is selected.
+  // While loading, the template fallback from generateNarrative() is shown.
+  const { data: llmNarrativeData } = useWeekNarrative(activeBar?.data.cycleId ?? null);
 
   // Dismiss when clicking outside the bubble
   const handleContainerClick = useCallback(
@@ -349,13 +353,15 @@ export function ExecutionTrendChart({
               { label: 'Completion', value: completionPct },
               { label: 'Carry-Forward', value: carryPct },
             ];
+            // Use LLM narrative when available; fall back to deterministic template while loading
+            const narrative = llmNarrativeData?.narrative ?? generateNarrative(data, chartData);
             return (
               <SpeechBubble
                 anchorX={activeBar.x}
                 anchorY={activeBar.chartAreaTop}
                 position="above"
                 weekLabel={data.cycleLabel}
-                narrative={generateNarrative(data, chartData)}
+                narrative={narrative}
                 metrics={metrics}
                 linkUrl={`/?cycleId=${data.cycleId}`}
                 onDismiss={() => setActiveBar(null)}

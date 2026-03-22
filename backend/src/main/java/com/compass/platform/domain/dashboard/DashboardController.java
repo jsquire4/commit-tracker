@@ -1,7 +1,9 @@
 package com.compass.platform.domain.dashboard;
 
+import com.compass.platform.domain.briefing.LlmBriefingService;
 import com.compass.platform.domain.dashboard.dto.DashboardFilters;
 import com.compass.platform.domain.dashboard.dto.DashboardResponse;
+import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
@@ -25,9 +27,12 @@ import java.util.UUID;
 public class DashboardController {
 
     private final DashboardService dashboardService;
+    private final LlmBriefingService llmBriefingService;
 
-    public DashboardController(DashboardService dashboardService) {
+    public DashboardController(DashboardService dashboardService,
+                               LlmBriefingService llmBriefingService) {
         this.dashboardService = dashboardService;
+        this.llmBriefingService = llmBriefingService;
     }
 
     @GetMapping
@@ -45,5 +50,25 @@ public class DashboardController {
         DashboardResponse response = dashboardService.getDashboard(actor, filters);
 
         return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    /**
+     * Returns an LLM-generated team summary for the My Team AI Summary card.
+     *
+     * <p>When the LLM is not configured, returns 204 No Content so the frontend
+     * falls back to the deterministic {@code buildSummary()} function without error.
+     */
+    @GetMapping("/team-summary")
+    public ResponseEntity<ApiResponse<TeamSummaryResponse>> getTeamSummary(
+            @RequestParam(required = false) Instant cycleWeekStart) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+
+        TeamSummaryResponse summary = llmBriefingService.generateTeamSummary(actor, cycleWeekStart);
+
+        if (summary == null) {
+            return ResponseEntity.noContent().build();
+        }
+
+        return ResponseEntity.ok(ApiResponse.of(summary));
     }
 }

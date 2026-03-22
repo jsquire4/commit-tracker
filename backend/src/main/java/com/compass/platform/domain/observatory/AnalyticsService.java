@@ -637,6 +637,44 @@ public class AnalyticsService {
      * fetched in descending order. Only reconciled cycles have meaningful data
      * for analytics — DRAFT and in-progress cycles are excluded.
      */
+    /**
+     * Compute alignment data for a single specific cycle.
+     *
+     * @param orgId   organization ID
+     * @param cycleId the exact cycle to load
+     * @return {@link AlignmentDataPoint} for the cycle, or {@code null} if the cycle is not found
+     */
+    public AlignmentDataPoint computeAlignmentForCycle(UUID orgId, UUID cycleId) {
+        return cycleRepository.findById(cycleId)
+                .filter(c -> c.getOrg().getId().equals(orgId))
+                .map(cycle -> {
+                    List<Commitment> commitments =
+                            commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+                    return buildAlignmentDataPoint(cycle, commitments);
+                })
+                .orElse(null);
+    }
+
+    /**
+     * Compute completion data for a single specific cycle.
+     *
+     * @param orgId   organization ID
+     * @param cycleId the exact cycle to load
+     * @return {@link CompletionDataPoint} for the cycle, or {@code null} if the cycle is not found
+     */
+    public CompletionDataPoint computeCompletionForCycle(UUID orgId, UUID cycleId) {
+        return cycleRepository.findById(cycleId)
+                .filter(c -> c.getOrg().getId().equals(orgId))
+                .map(cycle -> {
+                    List<Commitment> commitments =
+                            commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+                    List<ReconciliationRecord> records =
+                            reconciliationRecordRepository.findByOrgIdAndCycleId(orgId, cycleId);
+                    return buildCompletionDataPoint(cycle, commitments, records);
+                })
+                .orElse(null);
+    }
+
     private List<Cycle> latestCycles(UUID orgId, int limit) {
         List<Cycle> all = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
         List<Cycle> reconciled = all.stream()

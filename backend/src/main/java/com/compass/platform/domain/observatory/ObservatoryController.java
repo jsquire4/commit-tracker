@@ -1,6 +1,8 @@
 package com.compass.platform.domain.observatory;
 
 import com.compass.platform.domain.UserRole;
+import com.compass.platform.domain.briefing.LlmBriefingService;
+import com.compass.platform.domain.briefing.dto.ProgramSummaryResponse;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
 import com.compass.platform.domain.observatory.dto.DisplacementSummary;
@@ -12,6 +14,7 @@ import com.compass.platform.domain.observatory.dto.ObservatoryConfigResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
 import com.compass.platform.domain.observatory.dto.SignalsSummaryResponse;
 import com.compass.platform.domain.observatory.dto.UpdateObservatoryConfigRequest;
+import com.compass.platform.domain.observatory.dto.WeekNarrativeResponse;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.domain.user.OrgRepository;
@@ -55,6 +58,7 @@ public class ObservatoryController {
     private final PortfolioService portfolioService;
     private final ObservatoryConfigRepository configRepository;
     private final OrgRepository orgRepository;
+    private final LlmBriefingService llmBriefingService;
 
     public ObservatoryController(ExecutiveHealthComposer healthComposer,
                                  AnalyticsService analyticsService,
@@ -62,7 +66,8 @@ public class ObservatoryController {
                                  DisplacementService displacementService,
                                  PortfolioService portfolioService,
                                  ObservatoryConfigRepository configRepository,
-                                 OrgRepository orgRepository) {
+                                 OrgRepository orgRepository,
+                                 LlmBriefingService llmBriefingService) {
         this.healthComposer = healthComposer;
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
@@ -70,6 +75,7 @@ public class ObservatoryController {
         this.portfolioService = portfolioService;
         this.configRepository = configRepository;
         this.orgRepository = orgRepository;
+        this.llmBriefingService = llmBriefingService;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -278,6 +284,46 @@ public class ObservatoryController {
         UUID orgId = actor.getOrg().getId();
         return ResponseEntity.ok(ApiResponse.of(
                 analyticsService.computeProgramHeatmap(orgId, weekCount)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Program summary (LLM narrative)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/v1/observatory/program-summary
+     * LLM-generated 2-3 sentence narrative summarising the organisation's
+     * execution trajectory over the last {@code weekCount} reconciled cycles.
+     * Falls back to a deterministic template when no LLM key is configured.
+     */
+    @GetMapping("/program-summary")
+    public ResponseEntity<ApiResponse<ProgramSummaryResponse>> getProgramSummary(
+            @RequestParam(defaultValue = "26") int weekCount) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        UUID orgId = actor.getOrg().getId();
+        return ResponseEntity.ok(ApiResponse.of(
+                llmBriefingService.generateProgramSummary(orgId, weekCount)));
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Week narrative (SpeechBubble LLM)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/v1/observatory/week-narrative?cycleId=...
+     * LLM-generated 2-sentence narrative for a single week's execution data.
+     * Used by the SpeechBubble popover in the Execution Trend chart.
+     * Falls back to a deterministic template when the LLM is not configured.
+     */
+    @GetMapping("/week-narrative")
+    public ResponseEntity<ApiResponse<WeekNarrativeResponse>> getWeekNarrative(
+            @RequestParam UUID cycleId) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        UUID orgId = actor.getOrg().getId();
+        return ResponseEntity.ok(ApiResponse.of(
+                llmBriefingService.generateWeekNarrativeResponse(orgId, cycleId)));
     }
 
     // ═══════════════════════════════════════════════════════════════

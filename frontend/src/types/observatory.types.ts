@@ -245,3 +245,10 @@ export interface SignalsSummaryResponse {
   signals: ObservatorySignal[];
   computedAt: string;
 }
+
+// ─── Program Summary ─────────────────────────────────────────────────────────
+
+export interface ProgramSummaryResponse {
+  narrative: string;
+  generatedAt: string;
+}

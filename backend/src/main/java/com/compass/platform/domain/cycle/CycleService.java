@@ -4,6 +4,7 @@ import com.compass.platform.audit.AuditService;
 import com.compass.platform.domain.CycleState;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.UserRole;
+import com.compass.platform.domain.briefing.NarrativeGenerationService;
 import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.commit.CommitmentService;
@@ -51,17 +52,20 @@ public class CycleService {
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final AuditService auditService;
     private final CycleStateMachine stateMachine;
+    private final NarrativeGenerationService narrativeGenerationService;
 
     public CycleService(CycleRepository cycleRepository,
                         CommitmentRepository commitmentRepository,
                         CommitmentService commitmentService,
                         ReconciliationRecordRepository reconciliationRecordRepository,
-                        AuditService auditService) {
+                        AuditService auditService,
+                        NarrativeGenerationService narrativeGenerationService) {
         this.cycleRepository = cycleRepository;
         this.commitmentRepository = commitmentRepository;
         this.commitmentService = commitmentService;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.auditService = auditService;
+        this.narrativeGenerationService = narrativeGenerationService;
         this.stateMachine = new CycleStateMachine();
     }
 
@@ -198,6 +202,12 @@ public class CycleService {
 
         if (carriedForwardCommitments.isEmpty()) {
             log.info("completeCycle: no carry-forward items for cycleId={}", cycle.getId());
+            // Still generate sealed narratives even when nothing was carried forward
+            try {
+                narrativeGenerationService.generateNarrativesForCycle(actor.getOrg().getId(), cycle.getId());
+            } catch (Exception e) {
+                log.error("Narrative generation hook failed for cycleId={}: {}", cycle.getId(), e.getMessage(), e);
+            }
             return;
         }
 
@@ -218,6 +228,13 @@ public class CycleService {
             Commitment savedClone = commitmentService.cloneForCarryForward(original, nextCycle);
             log.info("completeCycle: carried forward commitment originalId={} cloneId={} userId={} cycleId={}",
                     original.getId(), savedClone.getId(), original.getUser().getId(), nextCycle.getId());
+        }
+
+        // Generate sealed narratives (S1, S3, S4) — fire-and-forget; never blocks the transition
+        try {
+            narrativeGenerationService.generateNarrativesForCycle(actor.getOrg().getId(), cycle.getId());
+        } catch (Exception e) {
+            log.error("Narrative generation hook failed for cycleId={}: {}", cycle.getId(), e.getMessage(), e);
         }
     }
 

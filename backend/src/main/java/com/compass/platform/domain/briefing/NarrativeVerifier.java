@@ -125,6 +125,7 @@ public class NarrativeVerifier {
      * Strip all [ref] citation tags from a narrative, leaving clean prose for the frontend.
      */
     public String stripCitations(String narrative) {
-        return narrative.replaceAll("\\s*\\[[A-Za-z0-9_.]+]", "");
+        // Matches [ref], [ref1, ref2], [ref1, ref2, ref3] etc.
+        return narrative.replaceAll("\\s*\\[[A-Za-z0-9_.,\\s]+]", "");
     }
 }

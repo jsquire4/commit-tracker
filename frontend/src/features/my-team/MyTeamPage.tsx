@@ -144,7 +144,11 @@ export function MyTeamPage() {
       />
 
       {/* AI Summary Card */}
-      <TeamSummaryCard dashboard={dashboard} commitments={allCommitments} />
+      <TeamSummaryCard
+        dashboard={dashboard}
+        commitments={allCommitments}
+        {...(filters.cycleWeekStart !== undefined && { cycleWeekStart: filters.cycleWeekStart })}
+      />
 
       {/* Metrics Strip */}
       <TeamMetricsStrip

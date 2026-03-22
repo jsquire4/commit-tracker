@@ -12,7 +12,9 @@ import {
   getObservatoryDashboard,
   getPortfolioHealth,
   getProgramHeatmap,
+  getProgramSummary,
   getSignalsSummary,
+  getWeekNarrative,
   updateObservatoryConfig,
 } from '@/api/observatory.api';
 import type { ObservatoryConfig } from '@/types';
@@ -30,7 +32,9 @@ const OBSERVATORY_KEYS = {
   config: () => ['observatory', 'config'] as const,
   portfolioHealth: () => ['observatory', 'portfolioHealth'] as const,
   programHeatmap: (weekCount?: number) => ['observatory', 'programHeatmap', weekCount] as const,
+  programSummary: (weekCount?: number) => ['observatory', 'programSummary', weekCount] as const,
   signalsSummary: (weekCount?: number) => ['observatory', 'signalsSummary', weekCount] as const,
+  weekNarrative: (cycleId: string) => ['observatory', 'weekNarrative', cycleId] as const,
 } as const;
 
 export function useObservatoryDashboard(weekCount?: number) {
@@ -140,10 +144,34 @@ export function useProgramHeatmap(weekCount?: number) {
   });
 }
 
+export function useProgramSummary(weekCount?: number) {
+  return useQuery({
+    queryKey: OBSERVATORY_KEYS.programSummary(weekCount),
+    queryFn: () => getProgramSummary(weekCount),
+    // LLM calls are expensive — cache for 5 minutes
+    staleTime: 5 * 60_000,
+  });
+}
+
 export function useSignalsSummary(weekCount?: number) {
   return useQuery({
     queryKey: OBSERVATORY_KEYS.signalsSummary(weekCount),
     queryFn: () => getSignalsSummary(weekCount),
     staleTime: 60_000,
+  });
+}
+
+/**
+ * Fetches an LLM-generated 2-sentence narrative for a specific week (cycleId).
+ * Only fires when a cycleId is provided (i.e. when a bar is clicked).
+ * Cached per cycleId so re-clicking the same bar is instant.
+ */
+export function useWeekNarrative(cycleId: string | null) {
+  return useQuery({
+    queryKey: OBSERVATORY_KEYS.weekNarrative(cycleId ?? ''),
+    queryFn: () => getWeekNarrative(cycleId!),
+    // LLM calls are expensive — cache aggressively; per-week data doesn't change
+    staleTime: 10 * 60_000,
+    enabled: Boolean(cycleId),
   });
 }

@@ -8,6 +8,12 @@ import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
+import com.compass.platform.domain.dashboard.DashboardService;
+import com.compass.platform.domain.dashboard.dto.AlignmentSignalResponse;
+import com.compass.platform.domain.dashboard.dto.DashboardFilters;
+import com.compass.platform.domain.dashboard.dto.RcdoCoverageResponse;
+import com.compass.platform.domain.dashboard.dto.TeamRollupResponse;
+import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
 import com.compass.platform.domain.observatory.AnalyticsService;
 import com.compass.platform.domain.observatory.DriftDetectionService;
 import com.compass.platform.domain.observatory.dto.*;
@@ -59,6 +65,7 @@ public class LlmBriefingService implements BriefingService {
     private final GeneratedNarrativeRepository narrativeRepository;
     private final LlmConfig llmConfig;
     private final ObjectMapper objectMapper;
+    private final DashboardService dashboardService;
     private final NarrativeVerifier verifier = new NarrativeVerifier();
 
     private volatile OpenAIClient client;
@@ -70,7 +77,8 @@ public class LlmBriefingService implements BriefingService {
                               OrgRepository orgRepository,
                               GeneratedNarrativeRepository narrativeRepository,
                               LlmConfig llmConfig,
-                              ObjectMapper objectMapper) {
+                              ObjectMapper objectMapper,
+                              DashboardService dashboardService) {
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
         this.cycleRepository = cycleRepository;
@@ -79,6 +87,7 @@ public class LlmBriefingService implements BriefingService {
         this.narrativeRepository = narrativeRepository;
         this.llmConfig = llmConfig;
         this.objectMapper = objectMapper;
+        this.dashboardService = dashboardService;
     }
 
     private OpenAIClient getClient() {
@@ -205,6 +214,312 @@ public class LlmBriefingService implements BriefingService {
 
         String content = completion.choices().get(0).message().content().orElse("");
         return new ChatResponse(content, Instant.now());
+    }
+
+
+    @Override
+    public String generateWeekNarrative(UUID orgId, UUID cycleId) {
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — skipping week narrative generation for cycleId={}", cycleId);
+            List<CompletionDataPoint> trend = analyticsService.computeCompletionTrend(orgId, 12);
+            double completionRate = trend.isEmpty() ? 0.0
+                    : trend.get(trend.size() - 1).completionRate();
+            double carryForwardRate = trend.isEmpty() ? 0.0
+                    : trend.get(trend.size() - 1).carryForwardRate();
+            return String.format(
+                    "Week closed with a %.0f%% completion rate and a %.0f%% carry-forward rate.",
+                    completionRate, carryForwardRate);
+        }
+
+        BriefingDataContext ctx = gatherData(orgId, cycleId);
+        String systemPrompt = """
+                You are the intelligence layer for Compass, an execution management platform.                 Write a 2-3 sentence week-in-review narrative summarising the completed cycle.                 Use directional language (increased, declined, held steady). Do not evaluate performance.                 Return ONLY plain text — no JSON, no markdown.""";
+        log.info("Generating WEEK_NARRATIVE for org={} cycle={} model={}", orgId, cycleId, llmConfig.getResolvedModel());
+        String rawOutput = callLlm(systemPrompt, ctx.userPrompt());
+        return verifier.stripCitations(rawOutput.strip());
+    }
+
+    @Override
+    public String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId) {
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — skipping sealed team summary for managerId={}", managerId);
+            return String.format("Team summary for manager %s is unavailable — no LLM configured.", managerId);
+        }
+
+        // Gather commitments belonging to this manager's direct reports
+        List<Commitment> teamCommitments =
+                commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId)
+                        .stream()
+                        .filter(c -> c.getUser() != null
+                                && c.getUser().getReportsTo() != null
+                                && managerId.equals(c.getUser().getReportsTo().getId()))
+                        .collect(Collectors.toList());
+
+        int total = teamCommitments.size();
+        long linked = teamCommitments.stream()
+                .filter(c -> c.getRallyCry() != null).count();
+        double coveragePct = total > 0 ? (linked * 100.0 / total) : 0.0;
+        String managerName = teamCommitments.stream()
+                .findFirst()
+                .map(c -> c.getUser().getReportsTo().getDisplayName())
+                .orElse(managerId.toString());
+
+        String userPrompt = String.format(
+                "Generate a 1-2 sentence team summary for manager %s.%n"
+                + "Team commitments: %d total, %.0f%% linked to a rally cry.%n"
+                + "Be factual and directional. Return only plain text.",
+                managerName, total, coveragePct);
+        String sealedSystemPrompt = """
+                You are the intelligence layer for Compass. Write a concise team summary                 for a single manager's team based on the provided data.                 Use directional language. Do not evaluate performance. Do not name individuals.                 Return ONLY plain text — no JSON, no markdown.""";
+        log.info("Generating SEALED TEAM_SUMMARY for org={} cycle={} manager={} model={}",
+                orgId, cycleId, managerId, llmConfig.getResolvedModel());
+        String rawOutput = callLlm(sealedSystemPrompt, userPrompt);
+        return verifier.stripCitations(rawOutput.strip());
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Team summary (My Team page)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Generate an LLM team summary for the My Team AI Summary card.
+     *
+     * <p>Returns {@code null} when the LLM is not configured — the controller
+     * returns 204 No Content so the frontend falls back to the deterministic
+     * {@code buildSummary()} function.
+     *
+     * @param actor          the authenticated manager making the request
+     * @param cycleWeekStart optional cycle filter passed through to DashboardService
+     */
+    public TeamSummaryResponse generateTeamSummary(com.compass.platform.domain.user.AppUser actor,
+                                                    Instant cycleWeekStart) {
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — team summary returns null (frontend falls back)");
+            return null;
+        }
+
+        DashboardFilters filters = new DashboardFilters(cycleWeekStart, null, null, null, false);
+        com.compass.platform.domain.dashboard.dto.DashboardResponse dash =
+                dashboardService.getDashboard(actor, filters);
+
+        TeamRollupResponse rollup = dash.teamRollup();
+        AlignmentSignalResponse alignment = dash.alignmentSignal();
+        RcdoCoverageResponse coverage = dash.rcdoCoverage();
+
+        int teamSize = rollup != null ? rollup.members().size() : 0;
+        int totalCommitments = coverage != null ? coverage.totalCommitments() : 0;
+        int unlinkedCount = coverage != null ? coverage.unlinkedCount() : 0;
+        double linkedPct = coverage != null ? coverage.linkedPercentage() : 0;
+        int uncoveredCount = coverage != null && coverage.uncoveredObjectives() != null
+                ? coverage.uncoveredObjectives().size() : 0;
+
+        Map<String, AlignmentSignalResponse.CategoryDistribution> dist =
+                alignment != null ? alignment.distribution() : Map.of();
+        int teamUnlinked = alignment != null ? alignment.unlinkedCount() : 0;
+
+        StringBuilder sb = new StringBuilder();
+        sb.append("Generate a team execution summary for a manager's weekly review.\n\n");
+        sb.append("TEAM SIZE: ").append(teamSize).append('\n');
+        sb.append("TOTAL COMMITMENTS THIS CYCLE: ").append(totalCommitments).append("\n\n");
+
+        sb.append("CHESS DISTRIBUTION:\n");
+        for (Map.Entry<String, AlignmentSignalResponse.CategoryDistribution> entry : dist.entrySet()) {
+            sb.append(String.format("- %s: %.1f%%%n", entry.getKey(), entry.getValue().percentage()));
+        }
+        if (teamUnlinked > 0) {
+            sb.append(String.format("- Uncategorized: %d commitments%n", teamUnlinked));
+        }
+
+        sb.append(String.format("%nRALLY CRY COVERAGE: %.1f%% linked (%d unlinked)%n",
+                linkedPct, unlinkedCount));
+        sb.append(String.format("UNCOVERED OBJECTIVES: %d%n", uncoveredCount));
+
+        if (coverage != null && coverage.uncoveredObjectives() != null) {
+            for (RcdoCoverageResponse.UncoveredObjective uc : coverage.uncoveredObjectives()) {
+                sb.append(String.format("- %s (rally cry: %s)%n", uc.title(), uc.rallyCryTitle()));
+            }
+        }
+
+        log.info("Generating TEAM_SUMMARY for managerId={} teamSize={} model={}",
+                actor.getId(), teamSize, llmConfig.getResolvedModel());
+
+        String rawOutput = callLlm(TEAM_SUMMARY_SYSTEM_PROMPT, sb.toString());
+
+        String headline = "Team Summary";
+        String narrative = "";
+        List<String> suggestedActions = new ArrayList<>();
+
+        try {
+            String cleaned = rawOutput.strip();
+            if (cleaned.startsWith("```")) {
+                cleaned = cleaned.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "");
+            }
+            JsonNode root = objectMapper.readTree(cleaned);
+            if (root.has("headline")) headline = root.get("headline").asText();
+            if (root.has("narrative")) narrative = root.get("narrative").asText();
+            if (root.has("suggestedActions") && root.get("suggestedActions").isArray()) {
+                for (JsonNode node : root.get("suggestedActions")) {
+                    suggestedActions.add(node.asText());
+                }
+            }
+        } catch (JsonProcessingException e) {
+            log.warn("Failed to parse team summary LLM output as JSON — using raw as narrative");
+            narrative = rawOutput;
+        }
+
+        return new TeamSummaryResponse(headline, narrative, suggestedActions, Instant.now());
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Program summary
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Generate a 2-3 sentence program-level summary of execution trajectory
+     * over the last {@code weekCount} reconciled cycles.
+     *
+     * <p>When no LLM API key is configured a deterministic template fallback
+     * is returned so the endpoint is always usable.
+     */
+    public ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount) {
+        // Gather trend data
+        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
+        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
+
+        // Derived metrics
+        double avgStrategicPct = alignmentTrend.stream()
+                .mapToDouble(AlignmentDataPoint::strategicPct).average().orElse(0);
+        double avgCompletionRate = completionTrend.stream()
+                .mapToDouble(CompletionDataPoint::completionRate).average().orElse(0);
+        double avgCarryForwardRate = completionTrend.stream()
+                .mapToDouble(CompletionDataPoint::carryForwardRate).average().orElse(0);
+
+        // Trend direction (compare first half vs second half of window)
+        String alignTrendDir = computeTrendDirection(
+                alignmentTrend.stream().mapToDouble(AlignmentDataPoint::strategicPct).toArray());
+        String completionTrendDir = computeTrendDirection(
+                completionTrend.stream().mapToDouble(CompletionDataPoint::completionRate).toArray());
+
+        // Drift signals
+        DriftReport driftReport = driftDetectionService.detectDrift(orgId);
+        int driftCount = (driftReport != null && driftReport.signals() != null) ? driftReport.signals().size() : 0;
+
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — using template fallback for program summary");
+            return new ProgramSummaryResponse(
+                    buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                            avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
+                    Instant.now());
+        }
+
+        // Build user prompt
+        String orgName = orgRepository.findById(orgId).map(Org::getName).orElse("Organization");
+        StringBuilder sb = new StringBuilder();
+        sb.append(String.format("Summarize %s's execution trajectory over the last %d weeks.\n\n", orgName, weekCount));
+        sb.append(String.format("ALIGNMENT: avg strategic %.1f%% [P.avg_strategic], trend %s\n",
+                avgStrategicPct, alignTrendDir));
+        sb.append(String.format("COMPLETION: avg completion %.1f%% [P.avg_completion], trend %s\n",
+                avgCompletionRate, completionTrendDir));
+        sb.append(String.format("CARRY-FORWARD: avg carry-forward %.1f%% [P.avg_carry]\n",
+                avgCarryForwardRate));
+        sb.append(String.format("DRIFT: %d [P.drift] active drift signals\n", driftCount));
+
+        String systemPrompt = PROGRAM_SUMMARY_SYSTEM_PROMPT.replace("{N}", String.valueOf(weekCount));
+
+        log.info("Generating PROGRAM SUMMARY narrative for org={} weekCount={} model={}",
+                orgId, weekCount, llmConfig.getResolvedModel());
+
+        try {
+            String raw = callLlm(systemPrompt, sb.toString());
+            // Strip any stray JSON wrapping if the model returns it
+            String narrative = raw.strip();
+            if (narrative.startsWith("{")) {
+                narrative = extractField(narrative, "narrative");
+            }
+            return new ProgramSummaryResponse(narrative, Instant.now());
+        } catch (Exception e) {
+            log.warn("LLM call failed for program summary, using fallback: {}", e.getMessage());
+            return new ProgramSummaryResponse(
+                    buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                            avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
+                    Instant.now());
+        }
+    }
+
+    /** Determine whether values are trending up, down, or flat across a series. */
+    private String computeTrendDirection(double[] values) {
+        if (values.length < 2) return "flat";
+        int half = values.length / 2;
+        double firstHalfAvg = 0;
+        double secondHalfAvg = 0;
+        for (int i = 0; i < half; i++) firstHalfAvg += values[i];
+        for (int i = half; i < values.length; i++) secondHalfAvg += values[i];
+        firstHalfAvg /= half;
+        secondHalfAvg /= (values.length - half);
+        double delta = secondHalfAvg - firstHalfAvg;
+        if (delta > 2.0) return "improving";
+        if (delta < -2.0) return "declining";
+        return "flat";
+    }
+
+    private String buildProgramSummaryFallback(int weekCount, double avgStrategicPct,
+                                                double avgCompletionRate, double avgCarryForwardRate,
+                                                String alignTrendDir, String completionTrendDir,
+                                                int driftCount) {
+        return String.format(
+                "Over the last %d weeks, strategic alignment averaged %.0f%% (%s). " +
+                "Completion rate averaged %.0f%% (%s) with a carry-forward rate of %.0f%%. " +
+                "%d active drift signal%s detected.",
+                weekCount,
+                avgStrategicPct, alignTrendDir,
+                avgCompletionRate, completionTrendDir,
+                avgCarryForwardRate,
+                driftCount, driftCount == 1 ? "" : "s");
+    }
+
+    /**
+     * Generates a 2-sentence LLM narrative for a single week's execution data.
+     *
+     * <p>Loads the {@link AlignmentDataPoint} and {@link CompletionDataPoint} for the
+     * specified cycle, builds a compact tagged prompt, and calls GPT-4.1-nano with a
+     * short system prompt. Falls back to a deterministic template when the LLM is not
+     * configured or when the cycle is not found.
+     *
+     * @param orgId   organization ID (used for access-scoping)
+     * @param cycleId the specific cycle to narrate
+     * @return {@link WeekNarrativeResponse} containing the 2-sentence narrative and generation timestamp
+     */
+    public WeekNarrativeResponse generateWeekNarrativeResponse(UUID orgId, UUID cycleId) {
+        AlignmentDataPoint alignment = analyticsService.computeAlignmentForCycle(orgId, cycleId);
+        CompletionDataPoint completion = analyticsService.computeCompletionForCycle(orgId, cycleId);
+
+        if (alignment == null) {
+            return new WeekNarrativeResponse("No data available for this cycle.", Instant.now());
+        }
+
+        // Build template fallback (used when LLM is not configured or call fails)
+        String templateNarrative = buildWeekTemplateFallback(alignment, completion);
+
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — using template fallback for week narrative");
+            return new WeekNarrativeResponse(templateNarrative, Instant.now());
+        }
+
+        try {
+            String userPrompt = buildWeekNarrativePrompt(alignment, completion);
+            log.info("Generating WEEK narrative for org={} cycle={} label={} model={}",
+                    orgId, cycleId, alignment.cycleLabel(), llmConfig.getResolvedModel());
+            String raw = callLlmWithMaxTokens(WEEK_NARRATIVE_SYSTEM_PROMPT, userPrompt, 200);
+            String narrative = raw.trim().replaceAll("^[\"']|[\"']$", "");
+            if (narrative.isBlank()) {
+                log.warn("LLM returned blank narrative for cycle={}, falling back to template", cycleId);
+                return new WeekNarrativeResponse(templateNarrative, Instant.now());
+            }
+            return new WeekNarrativeResponse(narrative, Instant.now());
+        } catch (Exception e) {
+            log.warn("LLM week narrative failed for cycle={}: {}. Falling back to template.", cycleId, e.getMessage());
+            return new WeekNarrativeResponse(templateNarrative, Instant.now());
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -345,6 +660,26 @@ public class LlmBriefingService implements BriefingService {
         return completion.choices().get(0).message().content().orElse("");
     }
 
+    /**
+     * Variant of {@link #callLlm} with an explicit {@code maxTokens} override.
+     * Used for short-form outputs (e.g. week narratives) where a tight token cap
+     * prevents runaway responses.
+     */
+    private String callLlmWithMaxTokens(String systemPrompt, String userPrompt, int maxTokens) {
+        ChatCompletion completion = getClient().chat().completions().create(
+                ChatCompletionCreateParams.builder()
+                        .model(llmConfig.getResolvedModel())
+                        .addMessage(ChatCompletionSystemMessageParam.builder()
+                                .content(systemPrompt).build())
+                        .addMessage(ChatCompletionUserMessageParam.builder()
+                                .content(userPrompt).build())
+                        .temperature(llmConfig.getTemperature())
+                        .maxTokens(maxTokens)
+                        .build());
+
+        return completion.choices().get(0).message().content().orElse("");
+    }
+
     // ═══════════════════════════════════════════════════════════════
     // Response builders
     // ═══════════════════════════════════════════════════════════════
@@ -448,6 +783,48 @@ public class LlmBriefingService implements BriefingService {
         }
     }
 
+    private String buildWeekNarrativePrompt(AlignmentDataPoint alignment, CompletionDataPoint completion) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Week: ").append(alignment.cycleLabel()).append("\n\n");
+        sb.append("CHESS BREAKDOWN:\n");
+        sb.append(String.format("- Strategic: %.1f%%\n", alignment.strategicPct()));
+        sb.append(String.format("- Operational: %.1f%%\n", alignment.operationalPct()));
+        sb.append(String.format("- Defensive: %.1f%%\n", alignment.defensivePct()));
+        sb.append(String.format("- Capability Building: %.1f%%\n", alignment.capabilityBuildingPct()));
+        double uncategorized = Math.max(0, 100 - alignment.strategicPct() - alignment.operationalPct()
+                - alignment.defensivePct() - alignment.capabilityBuildingPct());
+        sb.append(String.format("- Not Categorized: %.1f%%\n", uncategorized));
+        sb.append(String.format("- Total commitments: %d\n\n", alignment.totalCommitments()));
+
+        if (completion != null) {
+            sb.append("EXECUTION:\n");
+            sb.append(String.format("- Completion rate: %.1f%%\n", completion.completionRate()));
+            sb.append(String.format("- Carry-forward rate: %.1f%%\n", completion.carryForwardRate()));
+            sb.append(String.format("- Not started rate: %.1f%%\n", completion.notStartedRate()));
+        }
+        return sb.toString();
+    }
+
+    private String buildWeekTemplateFallback(AlignmentDataPoint alignment, CompletionDataPoint completion) {
+        double defensivePct = alignment.defensivePct();
+        String sentence1;
+        if (defensivePct > 15) {
+            sentence1 = String.format("Defensive work was elevated at %.0f%% this week, pulling capacity away from strategic initiatives.",
+                    defensivePct);
+        } else {
+            sentence1 = String.format("Strategic work made up %.0f%% of commitments this week, with a balanced mix across operational and capability categories.",
+                    alignment.strategicPct());
+        }
+        String sentence2;
+        if (completion != null) {
+            sentence2 = String.format("Completion rate was %.0f%% and carry-forward rate stood at %.0f%%.",
+                    completion.completionRate(), completion.carryForwardRate());
+        } else {
+            sentence2 = String.format("Strategic alignment was at %.0f%% for the week.", alignment.strategicPct());
+        }
+        return sentence1 + " " + sentence2;
+    }
+
     private String buildTemplateFallback(BriefingDataContext ctx) {
         return String.format(
                 "Strategic alignment is at %.0f%% this cycle. " +
@@ -493,6 +870,12 @@ public class LlmBriefingService implements BriefingService {
     // System prompts
     // ═══════════════════════════════════════════════════════════════
 
+    static final String WEEK_NARRATIVE_SYSTEM_PROMPT = """
+            Generate a 2-sentence summary of this week's execution data. \
+            Report data and change only. Use directional language (increased, declined, \
+            held steady) not judgmental language. Do not evaluate performance. \
+            Return plain text only — no JSON, no markdown, no bullet points.""";
+
     static final String SYSTEM_PROMPT = """
             You are the intelligence layer for Compass, an execution management platform \
             used by PE portfolio companies. You produce executive briefings that summarize \
@@ -534,4 +917,40 @@ public class LlmBriefingService implements BriefingService {
             - Use directional language, not judgmental language.
             - Keep answers concise — 2-5 sentences unless the user asks for detail.
             - When citing numbers, use the exact values from the data.""";
+
+    static final String PROGRAM_SUMMARY_SYSTEM_PROMPT = """
+            Summarize the organization's execution trajectory over the last {N} weeks. \
+            2-3 sentences. Report data and change, do not evaluate performance.
+
+            RULES:
+            - Use directional language (increased, declined, held steady) not judgmental \
+            language (good, bad, concerning, impressive).
+            - Cite the key metrics: strategic alignment average, completion rate average, \
+            carry-forward rate, and active drift signals.
+            - Do not use bullet points or headers. Write flowing prose.
+            - Return only the narrative text. No JSON, no markdown, no extra commentary.""";
+
+    static final String TEAM_SUMMARY_SYSTEM_PROMPT = """
+            Summarize this manager's team execution data. Include 2-4 specific suggested \
+            actions. Report data and change only.
+
+            RULES:
+            - Use directional language (increased, declined, holds) not judgmental language \
+            (good, bad, concerning, impressive).
+            - Never name individuals.
+            - Narrative: 2-3 sentences of flowing prose. Dense, not verbose.
+            - Suggested actions must be specific and actionable — say exactly what to look \
+            for and why.
+
+            OUTPUT FORMAT (JSON):
+            {
+              "headline": "Team Summary",
+              "narrative": "2-3 sentences summarising team execution state",
+              "suggestedActions": [
+                "specific actionable recommendation",
+                "another recommendation"
+              ]
+            }
+
+            Return ONLY the JSON object. No markdown fences, no extra text.""";
 }
