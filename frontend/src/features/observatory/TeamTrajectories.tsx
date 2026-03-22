@@ -159,9 +159,9 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
 
       {/* Metrics row */}
       <div className="grid grid-cols-2 gap-2">
-        {/* RC Coverage */}
+        {/* Strategic Alignment */}
         <div className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-muted uppercase tracking-wide">RC Coverage</span>
+          <span className="text-[10px] text-muted uppercase tracking-wide">Strategic</span>
           <div className="flex items-center gap-1">
             <span className="text-sm font-semibold text-on-surface tabular-nums">
               {Math.round(unit.strategicAlignmentPct)}%

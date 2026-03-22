@@ -93,11 +93,10 @@ function buildRows(
 
   const rows: TableRow[] = [
     {
-      metricName: 'Rally Cry Coverage %',
+      metricName: 'Strategic Alignment %',
       values: columns.map((col) => {
         const p = alignMap.get(col.cycleId);
         if (!p) return null;
-        // Rally cry coverage = strategic %; best approximation from alignment data
         return fmt(p.strategicPct, true);
       }),
     },
