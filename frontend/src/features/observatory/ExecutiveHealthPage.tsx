@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueries } from '@tanstack/react-query';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useAuth } from '@/hooks/useAuth';
-import { useExecutiveHealth, useDriftReport, useAlignmentTrend } from '@/hooks/useObservatory';
+import { useExecutiveHealth, useDriftReport } from '@/hooks/useObservatory';
+import { getAlignmentTrend } from '@/api/observatory.api';
 import { getOrgTree } from '@/api/users.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { CHESS_ACCENT } from '@/constants/chess-colors';
@@ -402,19 +403,10 @@ interface ManagerCardProps {
   unit: OrgUnitHealth;
   index: number;
   onClick: () => void;
+  sparklineData: { value: number }[];
 }
 
-function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
-  // TODO: Lift this into the parent OrgHealthMap and pass sparkline data as props
-  // to avoid N per-card API calls. Low priority — only reachable via Briefing Health Map tab.
-  // Tracked: complexity-sweep-2026-03-22 (#42)
-  const { data: trendData } = useAlignmentTrend(8, unit.managerId);
-
-  // Build sparkline data from trend response
-  const sparklineData = useMemo(() => {
-    if (!trendData) return [];
-    return trendData.map((dp) => ({ value: dp.strategicPct }));
-  }, [trendData]);
+function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCardProps) {
 
   const gradeColor = HEALTH_COLORS[unit.grade];
   const isRed = unit.grade === 'RED';
@@ -515,9 +507,10 @@ function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
 interface VPSectionProps {
   group: VPGroup;
   sectionIndex: number;
+  sparklineMap: Map<string, { value: number }[]>;
 }
 
-function VPSection({ group, sectionIndex }: VPSectionProps) {
+function VPSection({ group, sectionIndex, sparklineMap }: VPSectionProps) {
   const navigate = useNavigate();
 
   return (
@@ -550,6 +543,7 @@ function VPSection({ group, sectionIndex }: VPSectionProps) {
             key={unit.managerId}
             unit={unit}
             index={sectionIndex * 10 + i}
+            sparklineData={sparklineMap.get(unit.managerId) ?? []}
             onClick={() => {
               void navigate(`/observatory/team/${unit.managerId}`);
             }}
@@ -573,6 +567,32 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
     [health.units, orgTree],
   );
 
+  // Batch-fetch all manager alignment trends in parallel (one useQueries call
+  // instead of N useAlignmentTrend hooks inside each ManagerCard).
+  const managerIds = useMemo(
+    () => health.units.filter(u => u.role !== 'VP' && u.role !== 'EXECUTIVE').map(u => u.managerId),
+    [health.units],
+  );
+
+  const trendQueries = useQueries({
+    queries: managerIds.map((managerId) => ({
+      queryKey: ['observatory', 'alignmentTrend', 8, managerId] as const,
+      queryFn: () => getAlignmentTrend(8, managerId),
+      staleTime: 60_000,
+    })),
+  });
+
+  const sparklineMap = useMemo(() => {
+    const map = new Map<string, { value: number }[]>();
+    for (let i = 0; i < managerIds.length; i++) {
+      const data = trendQueries[i]?.data;
+      if (data && Array.isArray(data)) {
+        map.set(managerIds[i]!, data.map((dp) => ({ value: dp.strategicPct })));
+      }
+    }
+    return map;
+  }, [managerIds, trendQueries]);
+
   if (health.units.length === 0) {
     return (
       <div className="flex items-center justify-center py-20 text-muted text-sm">
@@ -584,7 +604,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
       {vpGroups.map((group, i) => (
-        <VPSection key={group.vpId} group={group} sectionIndex={i} />
+        <VPSection key={group.vpId} group={group} sectionIndex={i} sparklineMap={sparklineMap} />
       ))}
 
       {/* CHESS legend */}
