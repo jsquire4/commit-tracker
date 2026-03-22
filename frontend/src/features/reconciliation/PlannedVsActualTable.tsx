@@ -24,11 +24,13 @@ const HORIZON_LABELS: Record<string, string> = {
   EOW: 'End of Week',
 };
 
+import { CHESS_ACCENT } from '@/constants/chess-colors';
+
 const CHESS_BAR_COLORS: Record<string, string> = {
-  Strategic: '#036A6A',
-  Operational: '#DCD9D4',
-  Defensive: '#C2860B',
-  'Capability Building': '#455F87',
+  Strategic: CHESS_ACCENT.strategic,
+  Operational: CHESS_ACCENT.operational,
+  Defensive: CHESS_ACCENT.defensive,
+  'Capability Building': CHESS_ACCENT.capability,
 };
 
 const STATUS_PILL: Record<ReconciliationStatus, { bg: string; text: string; label: string; icon: string }> = {

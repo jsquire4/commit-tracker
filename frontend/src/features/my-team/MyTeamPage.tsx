@@ -14,13 +14,11 @@ import { PersonCard } from './PersonCard';
 import { AssignWorkForm, createEmptyFormState } from './AssignWorkForm';
 import { TeamAnalytics } from './TeamAnalytics';
 import type {
-  UserRole,
   Commitment,
   TeamMemberSummary,
 } from '@/types';
 import type { AssignmentFormState } from './AssignWorkForm';
-
-const ALLOWED_ROLES: UserRole[] = ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE'];
+import { MANAGER_AND_ABOVE } from '@/constants/roles';
 
 // ── Main Page ────────────────────────────────────────────────────────────────
 
@@ -64,7 +62,7 @@ export function MyTeamPage() {
   }, [members, commitmentsByUser]);
 
   // Role guard — after all hooks
-  if (!role || !ALLOWED_ROLES.includes(role)) {
+  if (!role || !MANAGER_AND_ABOVE.has(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
         <h1 className="font-serif text-headline text-on-surface">Access Restricted</h1>

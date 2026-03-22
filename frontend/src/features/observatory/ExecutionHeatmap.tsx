@@ -3,21 +3,16 @@ import { useNavigate } from 'react-router-dom';
 import { useProgramHeatmap } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { WeekCell, ManagerHeatmapRow, PersonHeatmapRow } from '@/types';
+import { CHESS_MUTED } from '@/constants/chess-colors';
+import { CHESS_LABELS } from '@/constants/chess-colors';
 
 // ─── CHESS cell colors (muted palette) ────────────────────────────────────────
 
 const CHESS_CELL_COLORS: Record<string, string> = {
-  STRATEGIC: '#5B7FA6',
-  OPERATIONAL: '#8E9AA0',
-  DEFENSIVE: '#B07070',
-  CAPABILITY_BUILDING: '#6B9F7F',
-};
-
-const CHESS_LABELS: Record<string, string> = {
-  STRATEGIC: 'Strategic',
-  OPERATIONAL: 'Operational',
-  DEFENSIVE: 'Defensive',
-  CAPABILITY_BUILDING: 'Capability Building',
+  STRATEGIC: CHESS_MUTED.strategic,
+  OPERATIONAL: CHESS_MUTED.operational,
+  DEFENSIVE: CHESS_MUTED.defensive,
+  CAPABILITY_BUILDING: CHESS_MUTED.capability,
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────

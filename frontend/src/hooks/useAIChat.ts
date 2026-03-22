@@ -7,6 +7,8 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+// STUB: Keyword-matching stub. Replace with real LLM API integration.
+// Tracked: complexity-sweep-2026-03-22
 /** Stub response generator — keyword-based for now, ready for API integration. */
 function generateStubResponse(message: string): string {
   const lower = message.toLowerCase();

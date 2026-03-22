@@ -186,7 +186,7 @@ export function ObservatoryPage() {
 
       {/* ── KPI strip ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiTile label="Rally Cry Coverage" value={rcCoverage} unit="%" />
+        <KpiTile label="Strategic Alignment" value={rcCoverage} unit="%" />
         <KpiTile label="Completion Rate" value={completion} unit="%" />
         <KpiTile label="Carry-Forward Rate" value={carryForward} unit="%" />
         <KpiTile label="Active Drift Signals" value={driftSignals} />

@@ -8,6 +8,7 @@ import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
 import { Badge } from '@/components/Badge';
+import { TIMEZONE_OPTIONS } from '@/constants/timezones';
 import type { User, UserRole } from '@/types';
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -563,14 +564,9 @@ export function AdminTab() {
                         backgroundPosition: 'right 0 center',
                       }}
                     >
-                      <option value="America/New_York">Eastern (America/New_York)</option>
-                      <option value="America/Chicago">Central (America/Chicago)</option>
-                      <option value="America/Denver">Mountain (America/Denver)</option>
-                      <option value="America/Los_Angeles">Pacific (America/Los_Angeles)</option>
-                      <option value="UTC">UTC</option>
-                      <option value="Europe/London">London (Europe/London)</option>
-                      <option value="Europe/Berlin">Berlin (Europe/Berlin)</option>
-                      <option value="Asia/Tokyo">Tokyo (Asia/Tokyo)</option>
+                      {TIMEZONE_OPTIONS.map((tz) => (
+                        <option key={tz.value} value={tz.value}>{tz.label}</option>
+                      ))}
                     </select>
                   </div>
                   {createOrgMutation.isError && (

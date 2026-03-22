@@ -2,14 +2,11 @@ import { useContext, useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 import { AuthContext } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
+import { VP_AND_ABOVE, DIRECTOR_AND_ABOVE, MANAGER_AND_ABOVE } from '@/constants/roles';
 
 interface LayoutProps {
   children: ReactNode;
 }
-
-const VP_ROLES = new Set(['VP', 'EXECUTIVE']);
-const DIRECTOR_ROLES = new Set(['DIRECTOR', 'VP', 'EXECUTIVE']);
-const MANAGER_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
 
 function getInitials(displayName?: string): string {
   if (!displayName) return '??';
@@ -45,9 +42,9 @@ export function Layout({ children }: LayoutProps) {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const role = auth?.role ?? null;
-  const isManager = role != null && MANAGER_ROLES.has(role);
-  const isDirector = role != null && DIRECTOR_ROLES.has(role);
-  const isVP = role != null && VP_ROLES.has(role);
+  const isManager = role != null && MANAGER_AND_ABOVE.has(role);
+  const isDirector = role != null && DIRECTOR_AND_ABOVE.has(role);
+  const isVP = role != null && VP_AND_ABOVE.has(role);
 
   const initials = getInitials(auth?.displayName);
 

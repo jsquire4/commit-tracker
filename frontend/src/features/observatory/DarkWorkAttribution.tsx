@@ -8,22 +8,22 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Commitment } from '@/types';
+import { CHESS_ACCENT } from '@/constants/chess-colors';
+import { CHESS_LABELS } from '@/constants/chess-colors';
 
 interface DarkWorkAttributionProps {
   commitments: Commitment[];
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
-  STRATEGIC: '#036A6A',
-  OPERATIONAL: '#455F87',
-  DEFENSIVE: '#9F403D',
-  CAPABILITY_BUILDING: '#94A3B8',
+  STRATEGIC: CHESS_ACCENT.strategic,
+  OPERATIONAL: CHESS_ACCENT.operational,
+  DEFENSIVE: CHESS_ACCENT.defensive,
+  CAPABILITY_BUILDING: CHESS_ACCENT.capability,
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
-  STRATEGIC: 'Strategic',
-  OPERATIONAL: 'Operational',
-  DEFENSIVE: 'Defensive',
+  ...CHESS_LABELS,
   CAPABILITY_BUILDING: 'Capability',
 };
 

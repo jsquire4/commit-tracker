@@ -41,7 +41,7 @@ function MetricCard({ metric, index }: { metric: PortfolioMetric; index: number 
 
 export function PortfolioMetricsStrip({ metrics }: PortfolioMetricsStripProps) {
   return (
-    <div className="grid grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {metrics.map((m, i) => (
         <MetricCard key={m.key} metric={m} index={i} />
       ))}

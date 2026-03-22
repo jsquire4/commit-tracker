@@ -4,17 +4,14 @@ import { PageHeader } from '@/components/PageHeader';
 import { ProfileTab } from './ProfileTab';
 import { AdminTab } from './AdminTab';
 import { OrganizationsTab } from './OrganizationsTab';
-import type { UserRole } from '@/types';
-
-const ADMIN_ROLES: UserRole[] = ['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE'];
-const ORG_ROLES: UserRole[] = ['VP', 'EXECUTIVE'];
+import { MANAGER_AND_ABOVE, VP_AND_ABOVE } from '@/constants/roles';
 
 type TabId = 'profile' | 'admin' | 'organizations';
 
 export function SettingsPage() {
   const { role } = useAuth();
-  const canAdmin = role != null && ADMIN_ROLES.includes(role);
-  const canOrgs = role != null && ORG_ROLES.includes(role);
+  const canAdmin = role != null && MANAGER_AND_ABOVE.has(role);
+  const canOrgs = role != null && VP_AND_ABOVE.has(role);
 
   const [activeTab, setActiveTab] = useState<TabId>('profile');
 

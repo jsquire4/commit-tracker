@@ -7,6 +7,8 @@ import type { PortfolioData } from '@/types/portfolio.types';
  * Will be replaced by real API calls to /api/v1/observatory/portfolio.
  */
 export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData> {
+  // STUB: Returns hardcoded data. Replace with real API call to /api/v1/observatory/portfolio
+  // when portfolio data pipeline is live. Tracked: complexity-sweep-2026-03-22
   void _cycleId;
 
   return {

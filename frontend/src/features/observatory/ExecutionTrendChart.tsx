@@ -22,24 +22,16 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { AlignmentDataPoint, CompletionDataPoint } from '@/types';
 import { SpeechBubble, generateWeekNarrative } from './SpeechBubble';
 import type { SpeechBubbleMetric } from './SpeechBubble';
-
-// Muted CHESS palette as specified
-const CHESS_COLORS = {
-  strategic: '#5B7FA6',
-  operational: '#8E9AA0',
-  defensive: '#B07070',
-  capability: '#6B9F7F',
-  uncategorized: '#E2E2E0',
-} as const;
+import { CHESS_MUTED } from '@/constants/chess-colors';
 
 const RC_LINE_COLOR = '#036A6A';
 
 const BAR_CONFIG = [
-  { key: 'strategicPct', label: 'Strategic', color: CHESS_COLORS.strategic },
-  { key: 'operationalPct', label: 'Operational', color: CHESS_COLORS.operational },
-  { key: 'defensivePct', label: 'Defensive', color: CHESS_COLORS.defensive },
-  { key: 'capabilityBuildingPct', label: 'Capability Building', color: CHESS_COLORS.capability },
-  { key: 'uncategorizedPct', label: 'Not Categorized', color: CHESS_COLORS.uncategorized },
+  { key: 'strategicPct', label: 'Strategic', color: CHESS_MUTED.strategic },
+  { key: 'operationalPct', label: 'Operational', color: CHESS_MUTED.operational },
+  { key: 'defensivePct', label: 'Defensive', color: CHESS_MUTED.defensive },
+  { key: 'capabilityBuildingPct', label: 'Capability Building', color: CHESS_MUTED.capability },
+  { key: 'uncategorizedPct', label: 'Not Categorized', color: CHESS_MUTED.uncategorized },
 ] as const;
 
 interface ChartDataPoint {

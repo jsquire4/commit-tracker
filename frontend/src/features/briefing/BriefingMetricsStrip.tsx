@@ -40,7 +40,7 @@ function MetricCard({ metric, index }: { metric: BriefingMetric; index: number }
 
 export function BriefingMetricsStrip({ metrics }: BriefingMetricsStripProps) {
   return (
-    <div className="grid grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {metrics.map((m, i) => (
         <MetricCard key={m.key} metric={m} index={i} />
       ))}

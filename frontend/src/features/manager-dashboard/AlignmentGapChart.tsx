@@ -8,20 +8,17 @@ import {
   Cell,
 } from 'recharts';
 import type { AlignmentSignalResponse, MemberAlignment } from '@/types';
+import { CHESS_ACCENT } from '@/constants/chess-colors';
+import { CHESS_LABELS } from '@/constants/chess-colors';
 
 const CATEGORY_COLORS: Record<string, string> = {
-  STRATEGIC: '#036A6A',
-  OPERATIONAL: '#455F87',
-  DEFENSIVE: '#9F403D',
-  CAPABILITY_BUILDING: '#94A3B8',
+  STRATEGIC: CHESS_ACCENT.strategic,
+  OPERATIONAL: CHESS_ACCENT.operational,
+  DEFENSIVE: CHESS_ACCENT.defensive,
+  CAPABILITY_BUILDING: CHESS_ACCENT.capability,
 };
 
-const CATEGORY_LABELS: Record<string, string> = {
-  STRATEGIC: 'Strategic',
-  OPERATIONAL: 'Operational',
-  DEFENSIVE: 'Defensive',
-  CAPABILITY_BUILDING: 'Capability Building',
-};
+const CATEGORY_LABELS = CHESS_LABELS;
 
 const CATEGORY_KEYS = ['STRATEGIC', 'OPERATIONAL', 'DEFENSIVE', 'CAPABILITY_BUILDING'] as const;
 

@@ -7,8 +7,7 @@ import { Badge } from '@/components/Badge';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { User } from '@/types';
 import type { HealthGrade } from '@/types/observatory.types';
-
-const MANAGER_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
+import { MANAGER_AND_ABOVE } from '@/constants/roles';
 const DEFAULT_EXPAND_DEPTH = 2;
 
 // Map HealthGrade to a color dot class
@@ -76,7 +75,7 @@ function OrgNode({ node, depth, expanded, onToggle, healthMap }: OrgNodeProps) {
   const navigate = useNavigate();
   const hasChildren = node.children.length > 0;
   const isExpanded = expanded.has(node.id);
-  const isManager = MANAGER_ROLES.has(node.role);
+  const isManager = MANAGER_AND_ABOVE.has(node.role);
   const healthGrade = healthMap.get(node.id);
 
   function handleNameClick() {

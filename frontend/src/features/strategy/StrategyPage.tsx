@@ -28,11 +28,11 @@ import type {
 import { RallyCryColumn } from './RallyCryColumn';
 import { StrategyModal, type StrategyModalMode, type BreadcrumbPart } from './StrategyModal';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
+import { VP_AND_ABOVE } from '@/constants/roles';
 
 // ── Constants ───────────────────────────────────────────────────────────
 
 const RCDO_TREE_KEY = ['rcdo', 'tree'];
-const ALLOWED_ROLES = new Set(['VP', 'EXECUTIVE']);
 
 // ── Modal state types ───────────────────────────────────────────────────
 
@@ -260,7 +260,7 @@ export function StrategyPage() {
 
   // ── Access guard ──────────────────────────────────────────────────────
 
-  if (!role || !ALLOWED_ROLES.has(role)) {
+  if (!role || !VP_AND_ABOVE.has(role)) {
     return (
       <div className="flex h-64 items-center justify-center">
         <p className="text-on-surface-variant">

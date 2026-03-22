@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExecutiveHealth, useDriftReport, useAlignmentTrend } from '@/hooks/useObservatory';
 import { getOrgTree } from '@/api/users.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import type { UserRole } from '@/types';
+import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
 import type {
   ExecutiveHealthResponse,
   OrgUnitHealth,
@@ -16,8 +16,6 @@ import type {
 import type { User } from '@/types/user.types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
-
-const ALLOWED_ROLES: UserRole[] = ['DIRECTOR', 'VP', 'EXECUTIVE'];
 
 const HEALTH_COLORS: Record<HealthGrade, string> = {
   GREEN: '#22c55e',
@@ -687,7 +685,7 @@ export function ExecutiveHealthPage() {
   });
 
   // Role guard
-  if (!role || !ALLOWED_ROLES.includes(role)) {
+  if (!role || !DIRECTOR_AND_ABOVE.has(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 gap-4 text-center p-8">
         <div className="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center">

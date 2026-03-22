@@ -7,7 +7,8 @@ import type { BriefingResponse } from '@/types/briefing.types';
  * once the BriefingController is deployed.
  */
 export async function getBriefing(cycleId: string): Promise<BriefingResponse> {
-  // TODO: replace with real API call once backend endpoint exists
+  // STUB: Returns hardcoded data. Replace with fetchData<BriefingResponse>(`/api/v1/briefing?cycleId=${cycleId}`)
+  // when BriefingController is deployed. Tracked: complexity-sweep-2026-03-22
   // return fetchData<BriefingResponse>(`/api/v1/briefing?cycleId=${cycleId}`);
 
   void cycleId; // suppress unused warning

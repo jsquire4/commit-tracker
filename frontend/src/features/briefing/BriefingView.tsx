@@ -28,8 +28,8 @@ import { PersonDetailLevel } from './levels/PersonDetailLevel';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
+import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
 import type { ChatMessage } from '@/hooks/useAIChat';
-import type { UserRole } from '@/types';
 
 const HealthMapContent = lazy(() =>
   import('@/features/observatory/ExecutiveHealthPage').then((m) => ({
@@ -47,7 +47,6 @@ const ConfigContent = lazy(() =>
   })),
 );
 
-const ALLOWED_ROLES: UserRole[] = ['DIRECTOR', 'VP', 'EXECUTIVE'];
 
 /** Seed conversation message content (timestamps computed at render time via useMemo) */
 const BRIEFING_SEED_CONTENT: { id: string; role: 'user' | 'ai'; text: string; ageMs: number }[] = [
@@ -122,7 +121,7 @@ export function BriefingView() {
   []);
 
   // Role guard — after all hooks
-  if (!role || !ALLOWED_ROLES.includes(role)) {
+  if (!role || !DIRECTOR_AND_ABOVE.has(role)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
         <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
