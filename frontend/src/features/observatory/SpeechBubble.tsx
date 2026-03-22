@@ -251,7 +251,8 @@ export function generateWeekNarrative(
   allData?: WeekNarrativeData[],
 ): string {
   const { strategicPct, defensivePct, completionRate } = data;
-  const rcCoverage = strategicPct; // RC coverage proxied from strategic %
+  // TODO: Replace with real rally cry coverage when backend exposes per-cycle rallyCoveragePct
+  const strategicAlignment = strategicPct;
 
   const sentences: string[] = [];
 
@@ -307,13 +308,13 @@ export function generateWeekNarrative(
 
   // Sentence 2 — completion + RC coverage
   if (completionRate != null) {
-    const completionStr = (completionRate * 100).toFixed(0);
-    const rcStr = rcCoverage.toFixed(0);
+    const completionStr = completionRate.toFixed(0);
+    const rcStr = strategicAlignment.toFixed(0);
     sentences.push(
-      `Completion rate was ${completionStr}% and rally cry coverage stood at ${rcStr}%.`,
+      `Completion rate was ${completionStr}% and strategic alignment stood at ${rcStr}%.`,
     );
   } else {
-    sentences.push(`Rally cry coverage was at ${rcCoverage.toFixed(0)}% for the week.`);
+    sentences.push(`Strategic alignment was at ${strategicAlignment.toFixed(0)}% for the week.`);
   }
 
   return sentences.join(' ');
