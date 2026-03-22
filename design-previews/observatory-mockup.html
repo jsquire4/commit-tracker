@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Observatory — Compass Execution Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --surface: #F9F9F7;
+    --surface-lowest: #FFFFFF;
+    --surface-container: #EEEEEC;
+    --on-surface: #2D3432;
+    --on-surface-variant: #5A605E;
+    --on-surface-muted: #8A8F8D;
+    --accent: #036A6A;
+    --accent-light: #E8F4F4;
+    --accent-dark: #005050;
+    --error: #9F403D;
+    --error-light: #FDF2F2;
+    --warning: #C2860B;
+    --warning-light: #FEF9EC;
+    --navy: #455F87;
+    --green: #059669;
+    --green-light: #ECFDF5;
+    --chess-strategic: #2563EB;
+    --chess-operational: #6B7280;
+    --chess-defensive: #DC2626;
+    --chess-capability: #059669;
+    --border: #E2E2E0;
+    --radius: 4px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: var(--surface);
+    color: var(--on-surface);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+  }
+
+  /* Header */
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .page-header h1 {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    letter-spacing: -0.01em;
+  }
+  .page-header p {
+    font-size: 0.875rem;
+    color: var(--on-surface-variant);
+    margin-top: 4px;
+  }
+  .page-header .meta {
+    display: flex;
+    gap: 24px;
+    margin-top: 12px;
+    font-size: 0.75rem;
+    color: var(--on-surface-muted);
+  }
+  .page-header .meta span {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .page-header .meta .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  /* Section */
+  .section {
+    margin-bottom: 32px;
+  }
+  .section-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: 4px;
+  }
+  .section-subtitle {
+    font-size: 0.75rem;
+    color: var(--on-surface-muted);
+    margin-bottom: 16px;
+  }
+
+  /* Card */
+  .card {
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .card-accent {
+    border-left: 3px solid var(--accent);
+  }
+
+  /* ── Section 1: Program Timeline ────────────────────────── */
+  .timeline-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+  }
+  .timeline-scroll::-webkit-scrollbar { height: 4px; }
+  .timeline-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .week-card {
+    flex: 0 0 92px;
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 8px;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .week-card:hover {
+    border-color: var(--accent);
+    box-shadow: 0 1px 4px rgba(3,106,106,0.12);
+  }
+  .week-card.crisis {
+    border-left: 3px solid var(--error);
+  }
+  .week-card.intervention {
+    border-left: 3px solid var(--warning);
+  }
+  .week-card.recovery {
+    border-left: 3px solid var(--green);
+  }
+
+  .week-card .week-num {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--on-surface-variant);
+    margin-bottom: 6px;
+  }
+  .week-card .alignment-bar {
+    height: 24px;
+    background: var(--surface-container);
+    border-radius: 2px;
+    overflow: hidden;
+    display: flex;
+    margin-bottom: 6px;
+  }
+  .week-card .alignment-bar .seg {
+    height: 100%;
+    transition: width 0.3s;
+  }
+  .week-card .alignment-pct {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    text-align: center;
+  }
+  .week-card .badges {
+    display: flex;
+    gap: 3px;
+    margin-top: 4px;
+    justify-content: center;
+  }
+  .week-card .badge-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+  }
+
+  /* ── Section 2: Team Sparklines ─────────────────────────── */
+  .sparkline-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  .sparkline-card {
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .sparkline-card:hover {
+    border-color: var(--accent);
+  }
+  .sparkline-card .info {
+    flex: 0 0 120px;
+  }
+  .sparkline-card .info .name {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--on-surface);
+  }
+  .sparkline-card .info .role {
+    font-size: 0.6875rem;
+    color: var(--on-surface-muted);
+  }
+  .sparkline-card .info .current {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+  .sparkline-card .chart {
+    flex: 1;
+    height: 40px;
+  }
+  .sparkline-card svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── Section 3: Person Heatmap ──────────────────────────── */
+  .heatmap-container {
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow-x: auto;
+    padding: 16px;
+  }
+  .heatmap-table {
+    border-collapse: separate;
+    border-spacing: 2px;
+    width: 100%;
+    min-width: 900px;
+  }
+  .heatmap-table th {
+    font-size: 0.625rem;
+    font-weight: 500;
+    color: var(--on-surface-muted);
+    padding: 2px 0;
+    text-align: center;
+    position: sticky;
+    top: 0;
+    background: var(--surface-lowest);
+  }
+  .heatmap-table td.person-name {
+    font-size: 0.6875rem;
+    font-weight: 500;
+    color: var(--on-surface);
+    padding-right: 8px;
+    white-space: nowrap;
+    position: sticky;
+    left: 0;
+    background: var(--surface-lowest);
+    z-index: 1;
+    min-width: 120px;
+  }
+  .heatmap-table td.person-name .team-label {
+    font-size: 0.5625rem;
+    color: var(--on-surface-muted);
+    font-weight: 400;
+  }
+  .heatmap-cell {
+    width: 28px;
+    height: 22px;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    position: relative;
+  }
+  .heatmap-cell:hover {
+    opacity: 0.75;
+    outline: 2px solid var(--on-surface);
+    outline-offset: -1px;
+  }
+  /* CHESS colors */
+  .chess-s { background: var(--chess-strategic); }
+  .chess-o { background: var(--chess-operational); }
+  .chess-d { background: var(--chess-defensive); }
+  .chess-c { background: var(--chess-capability); }
+  .chess-mixed-so { background: linear-gradient(135deg, var(--chess-strategic) 50%, var(--chess-operational) 50%); }
+  .chess-mixed-sd { background: linear-gradient(135deg, var(--chess-strategic) 50%, var(--chess-defensive) 50%); }
+  .chess-mixed-od { background: linear-gradient(135deg, var(--chess-operational) 50%, var(--chess-defensive) 50%); }
+  .chess-mixed-sc { background: linear-gradient(135deg, var(--chess-strategic) 50%, var(--chess-capability) 50%); }
+
+  .heatmap-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    font-size: 0.6875rem;
+    color: var(--on-surface-variant);
+  }
+  .heatmap-legend .swatch {
+    width: 12px; height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* ── Section 4: Observatory Signals ─────────────────────── */
+  .signals-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 12px;
+  }
+  .signal-card {
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+  }
+  .signal-card.severity-structural {
+    border-left: 3px solid var(--error);
+    background: var(--error-light);
+  }
+  .signal-card.severity-sustained {
+    border-left: 3px solid var(--warning);
+    background: var(--warning-light);
+  }
+  .signal-card.severity-emerging {
+    border-left: 3px solid var(--navy);
+  }
+  .signal-card.severity-positive {
+    border-left: 3px solid var(--green);
+    background: var(--green-light);
+  }
+  .signal-card .signal-type {
+    font-size: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 4px;
+  }
+  .signal-card.severity-structural .signal-type { color: var(--error); }
+  .signal-card.severity-sustained .signal-type { color: var(--warning); }
+  .signal-card.severity-emerging .signal-type { color: var(--navy); }
+  .signal-card.severity-positive .signal-type { color: var(--green); }
+
+  .signal-card .signal-title {
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--on-surface);
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .signal-card .signal-body {
+    font-size: 0.75rem;
+    color: var(--on-surface-variant);
+    line-height: 1.5;
+  }
+  .signal-card .signal-metric {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 8px;
+    font-size: 0.6875rem;
+    color: var(--on-surface-muted);
+  }
+  .signal-card .signal-metric strong {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--on-surface);
+  }
+
+  /* ── Section 5: Then vs Now ─────────────────────────────── */
+  .comparison-container {
+    background: var(--surface-lowest);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .comparison-selectors {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .comparison-selectors select {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8125rem;
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface-lowest);
+    color: var(--on-surface);
+  }
+  .comparison-selectors .arrow {
+    font-size: 1.25rem;
+    color: var(--on-surface-muted);
+  }
+
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 100px 100px 100px;
+    gap: 0;
+    font-size: 0.8125rem;
+  }
+  .comparison-grid .row {
+    display: contents;
+  }
+  .comparison-grid .cell {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+  }
+  .comparison-grid .cell.header {
+    font-weight: 600;
+    font-size: 0.6875rem;
+    color: var(--on-surface-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    background: var(--surface-container);
+    border-bottom: none;
+  }
+  .comparison-grid .cell.metric-name {
+    font-weight: 500;
+    color: var(--on-surface);
+  }
+  .comparison-grid .cell.value {
+    font-weight: 600;
+    justify-content: center;
+  }
+  .comparison-grid .cell.change-positive {
+    color: var(--green);
+    font-weight: 600;
+    justify-content: center;
+  }
+  .comparison-grid .cell.change-negative {
+    color: var(--error);
+    font-weight: 600;
+    justify-content: center;
+  }
+  .comparison-grid .cell.change-neutral {
+    color: var(--on-surface-muted);
+    justify-content: center;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Page Header -->
+  <div class="page-header">
+    <h1>Program Observatory</h1>
+    <p>Meridian Advanced Manufacturing — 26-week execution arc</p>
+    <div class="meta">
+      <span><span class="dot" style="background:var(--accent)"></span> Alignment: 50%</span>
+      <span><span class="dot" style="background:var(--green)"></span> Completion: 84%</span>
+      <span><span class="dot" style="background:var(--warning)"></span> Active Drift Signals: 2</span>
+      <span>Weeks 1-26 &middot; Mar 16 - Sep 7, 2026</span>
+    </div>
+  </div>
+
+  <!-- ═══ Section 1: Program Timeline ═══ -->
+  <div class="section">
+    <div class="section-title">Program Timeline</div>
+    <div class="section-subtitle">Click any week to drill into cycle detail. Left border indicates crisis (red), intervention (amber), or recovery (green).</div>
+    <div class="timeline-scroll">
+      <!-- Weeks 1-8: Stable -->
+      <div class="week-card"><div class="week-num">W1</div><div class="alignment-bar"><div class="seg" style="width:55%;background:var(--chess-strategic)"></div><div class="seg" style="width:25%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">55%</div></div>
+      <div class="week-card"><div class="week-num">W2</div><div class="alignment-bar"><div class="seg" style="width:56%;background:var(--chess-strategic)"></div><div class="seg" style="width:24%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">56%</div></div>
+      <div class="week-card"><div class="week-num">W3</div><div class="alignment-bar"><div class="seg" style="width:55%;background:var(--chess-strategic)"></div><div class="seg" style="width:25%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">55%</div></div>
+      <div class="week-card"><div class="week-num">W4</div><div class="alignment-bar"><div class="seg" style="width:54%;background:var(--chess-strategic)"></div><div class="seg" style="width:26%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">54%</div></div>
+      <div class="week-card"><div class="week-num">W5</div><div class="alignment-bar"><div class="seg" style="width:54%;background:var(--chess-strategic)"></div><div class="seg" style="width:26%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">54%</div></div>
+      <div class="week-card"><div class="week-num">W6</div><div class="alignment-bar"><div class="seg" style="width:53%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:12%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">53%</div></div>
+      <div class="week-card"><div class="week-num">W7</div><div class="alignment-bar"><div class="seg" style="width:52%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:13%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">52%</div></div>
+      <div class="week-card"><div class="week-num">W8</div><div class="alignment-bar"><div class="seg" style="width:51%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:13%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">51%</div></div>
+      <div class="week-card"><div class="week-num">W9</div><div class="alignment-bar"><div class="seg" style="width:50%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:14%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">50%</div></div>
+      <!-- Weeks 10-13: Crisis -->
+      <div class="week-card crisis"><div class="week-num">W10</div><div class="alignment-bar"><div class="seg" style="width:44%;background:var(--chess-strategic)"></div><div class="seg" style="width:26%;background:var(--chess-operational)"></div><div class="seg" style="width:24%;background:var(--chess-defensive)"></div><div class="seg" style="width:6%;background:var(--chess-capability)"></div></div><div class="alignment-pct">44%</div><div class="badges"><div class="badge-dot" style="background:var(--error)"></div><div class="badge-dot" style="background:var(--warning)"></div></div></div>
+      <div class="week-card crisis"><div class="week-num">W11</div><div class="alignment-bar"><div class="seg" style="width:42%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:25%;background:var(--chess-defensive)"></div><div class="seg" style="width:6%;background:var(--chess-capability)"></div></div><div class="alignment-pct">42%</div><div class="badges"><div class="badge-dot" style="background:var(--error)"></div><div class="badge-dot" style="background:var(--warning)"></div></div></div>
+      <div class="week-card crisis"><div class="week-num">W12</div><div class="alignment-bar"><div class="seg" style="width:40%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:26%;background:var(--chess-defensive)"></div><div class="seg" style="width:6%;background:var(--chess-capability)"></div></div><div class="alignment-pct">40%</div><div class="badges"><div class="badge-dot" style="background:var(--error)"></div><div class="badge-dot" style="background:var(--error)"></div></div></div>
+      <div class="week-card crisis"><div class="week-num">W13</div><div class="alignment-bar"><div class="seg" style="width:41%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:24%;background:var(--chess-defensive)"></div><div class="seg" style="width:7%;background:var(--chess-capability)"></div></div><div class="alignment-pct">41%</div><div class="badges"><div class="badge-dot" style="background:var(--error)"></div></div></div>
+      <!-- Weeks 14-15: Stabilizing -->
+      <div class="week-card"><div class="week-num">W14</div><div class="alignment-bar"><div class="seg" style="width:43%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:22%;background:var(--chess-defensive)"></div><div class="seg" style="width:7%;background:var(--chess-capability)"></div></div><div class="alignment-pct">43%</div></div>
+      <div class="week-card"><div class="week-num">W15</div><div class="alignment-bar"><div class="seg" style="width:44%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:20%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">44%</div></div>
+      <!-- Week 16: ERP Catastrophe -->
+      <div class="week-card crisis"><div class="week-num">W16</div><div class="alignment-bar"><div class="seg" style="width:38%;background:var(--chess-strategic)"></div><div class="seg" style="width:30%;background:var(--chess-operational)"></div><div class="seg" style="width:26%;background:var(--chess-defensive)"></div><div class="seg" style="width:6%;background:var(--chess-capability)"></div></div><div class="alignment-pct">38%</div><div class="badges"><div class="badge-dot" style="background:var(--error)"></div><div class="badge-dot" style="background:var(--error)"></div><div class="badge-dot" style="background:var(--warning)"></div></div></div>
+      <div class="week-card"><div class="week-num">W17</div><div class="alignment-bar"><div class="seg" style="width:40%;background:var(--chess-strategic)"></div><div class="seg" style="width:30%;background:var(--chess-operational)"></div><div class="seg" style="width:22%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">40%</div></div>
+      <!-- Week 18: Intervention -->
+      <div class="week-card intervention"><div class="week-num">W18</div><div class="alignment-bar"><div class="seg" style="width:42%;background:var(--chess-strategic)"></div><div class="seg" style="width:29%;background:var(--chess-operational)"></div><div class="seg" style="width:21%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">42%</div><div class="badges"><div class="badge-dot" style="background:var(--warning)"></div></div></div>
+      <!-- Weeks 19-26: Recovery -->
+      <div class="week-card recovery"><div class="week-num">W19</div><div class="alignment-bar"><div class="seg" style="width:44%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:20%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">44%</div></div>
+      <div class="week-card recovery"><div class="week-num">W20</div><div class="alignment-bar"><div class="seg" style="width:45%;background:var(--chess-strategic)"></div><div class="seg" style="width:28%;background:var(--chess-operational)"></div><div class="seg" style="width:19%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">45%</div></div>
+      <div class="week-card recovery"><div class="week-num">W21</div><div class="alignment-bar"><div class="seg" style="width:46%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:19%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">46%</div></div>
+      <div class="week-card recovery"><div class="week-num">W22</div><div class="alignment-bar"><div class="seg" style="width:47%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:18%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">47%</div></div>
+      <div class="week-card recovery"><div class="week-num">W23</div><div class="alignment-bar"><div class="seg" style="width:48%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:17%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">48%</div></div>
+      <div class="week-card recovery"><div class="week-num">W24</div><div class="alignment-bar"><div class="seg" style="width:49%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:16%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">49%</div></div>
+      <div class="week-card recovery"><div class="week-num">W25</div><div class="alignment-bar"><div class="seg" style="width:49%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:16%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">49%</div></div>
+      <div class="week-card recovery"><div class="week-num">W26</div><div class="alignment-bar"><div class="seg" style="width:50%;background:var(--chess-strategic)"></div><div class="seg" style="width:27%;background:var(--chess-operational)"></div><div class="seg" style="width:15%;background:var(--chess-defensive)"></div><div class="seg" style="width:8%;background:var(--chess-capability)"></div></div><div class="alignment-pct">50%</div></div>
+    </div>
+  </div>
+
+  <!-- ═══ Section 2: Team Trajectory Sparklines ═══ -->
+  <div class="section">
+    <div class="section-title">Team Trajectories</div>
+    <div class="section-subtitle">Strategic alignment % over 26 weeks. Click a team to drill into the manager's view.</div>
+    <div class="sparkline-grid">
+      <!-- Elena Rodriguez -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Elena Rodriguez</div>
+          <div class="role">Quality &middot; 5 reports</div>
+          <div class="current">62%</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#036A6A" stroke-width="1.5" points="0,8 8,7 16,8 24,7 32,8 40,7 48,8 56,7 64,8 72,9 80,8 88,7 96,8 104,7 112,8 120,7 128,8 136,7 144,8 152,7 160,8 168,7 176,8 184,7 192,8 200,7"/>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Wei Zhang -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Wei Zhang</div>
+          <div class="role">Supply Chain &middot; 3 reports</div>
+          <div class="current" style="color:var(--warning)">44%</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#C2860B" stroke-width="1.5" points="0,8 8,9 16,10 24,11 32,13 40,15 48,18 56,20 64,22 72,24 80,26 88,28 96,30 104,32 112,30 120,34 128,32 136,28 144,24 152,22 160,20 168,18 176,17 184,16 192,16 200,15"/>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Grace Lee -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Grace Lee</div>
+          <div class="role">Engineering &middot; 4 reports</div>
+          <div class="current">85%</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#036A6A" stroke-width="1.5" points="0,6 8,6 16,6 24,6 32,6 40,6 48,6 56,6 64,7 72,12 80,18 88,20 96,16 104,12 112,10 120,16 128,12 136,10 144,8 152,6 160,5 168,5 176,4 184,4 192,4 200,3"/>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Tom Jackson -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Tom Jackson</div>
+          <div class="role">Assembly &middot; 4 reports</div>
+          <div class="current" style="color:var(--error)">18%</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#9F403D" stroke-width="1.5" points="0,30 8,31 16,30 24,32 32,30 40,31 48,30 56,32 64,30 72,31 80,30 88,32 96,30 104,31 112,30 120,32 128,30 136,31 144,30 152,31 160,30 168,29 176,28 184,28 192,28 200,28"/>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Anna Mueller -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Anna Mueller</div>
+          <div class="role">Procurement &middot; 4 reports</div>
+          <div class="current" style="color:var(--error)">12%</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#9F403D" stroke-width="1.5" points="0,32 8,33 16,32 24,33 32,32 40,33 48,32 56,33 64,32 72,33 80,32 88,33 96,32 104,33 112,32 120,33 128,32 136,33 144,32 152,33 160,32 168,33 176,32 184,32 192,32 200,32"/>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+      <!-- Victor Solis -->
+      <div class="sparkline-card">
+        <div class="info">
+          <div class="name">Victor Solis</div>
+          <div class="role">Platform &middot; 3 reports</div>
+          <div class="current" style="color:var(--on-surface-muted)">72%*</div>
+        </div>
+        <div class="chart">
+          <svg viewBox="0 0 200 40" preserveAspectRatio="none">
+            <polyline fill="none" stroke="#6B7280" stroke-width="1.5" stroke-dasharray="3,2" points="0,8 8,8 16,8 24,8 32,8 40,8 48,8 56,8 64,8 72,8 80,8 88,8 96,8 104,8 112,8 120,8 128,8 136,8 144,8 152,8 160,8 168,8 176,8 184,8 192,8 200,8"/>
+            <text x="170" y="38" fill="#9F403D" font-size="6" font-family="Inter">low specificity</text>
+            <line x1="0" y1="16" x2="200" y2="16" stroke="#E2E2E0" stroke-width="0.5" stroke-dasharray="4,4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Section 3: Person Heatmap ═══ -->
+  <div class="section">
+    <div class="section-title">Execution Heatmap</div>
+    <div class="section-subtitle">Dominant CHESS category per person per week. Click any cell to drill into that person's week.</div>
+    <div class="heatmap-container">
+      <table class="heatmap-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:120px">Person</th>
+            <th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th>
+            <th>11</th><th>12</th><th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th>
+            <th>21</th><th>22</th><th>23</th><th>24</th><th>25</th><th>26</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Elena Rodriguez -->
+          <tr>
+            <td class="person-name">Elena Rodriguez<br><span class="team-label">Quality</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+          </tr>
+          <!-- Carlos Vega -->
+          <tr>
+            <td class="person-name">Carlos Vega<br><span class="team-label">Quality</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+          </tr>
+          <!-- Aisha Johnson — THE FIREFIGHTER ARC -->
+          <tr>
+            <td class="person-name">Aisha Johnson<br><span class="team-label">Quality</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-mixed-sd"></div></td>
+            <td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-mixed-sd"></div></td><td><div class="heatmap-cell chess-mixed-sd"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+          </tr>
+          <!-- Kenji Watanabe — CB to Strategic transition -->
+          <tr>
+            <td class="person-name">Kenji Watanabe<br><span class="team-label">Quality</span></td>
+            <td colspan="7" style="text-align:center;font-size:0.6rem;color:var(--on-surface-muted)">—</td>
+            <td><div class="heatmap-cell chess-c"></div></td><td><div class="heatmap-cell chess-c"></div></td><td><div class="heatmap-cell chess-c"></div></td>
+            <td><div class="heatmap-cell chess-mixed-sc"></div></td><td><div class="heatmap-cell chess-mixed-sc"></div></td><td><div class="heatmap-cell chess-mixed-sc"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+          </tr>
+          <!-- Wei Zhang — THE DRIFTER -->
+          <tr>
+            <td class="person-name">Wei Zhang<br><span class="team-label">Supply Chain</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td>
+            <td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-mixed-od"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td>
+            <td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td>
+          </tr>
+          <!-- Daniel Park — Displaced AI specialist -->
+          <tr>
+            <td class="person-name">Daniel Park<br><span class="team-label">Engineering</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-d"></div></td>
+            <td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-d"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-mixed-sd"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+          </tr>
+          <!-- Sam Wilson — Degradation arc -->
+          <tr>
+            <td class="person-name">Sam Wilson<br><span class="team-label">Platform</span></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td>
+            <td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-s"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td>
+            <td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td>
+          </tr>
+          <!-- Robert Chang — Sandbagged -->
+          <tr>
+            <td class="person-name">Robert Chang<br><span class="team-label">Procurement</span></td>
+            <td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td>
+            <td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td>
+            <td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-o"></div></td><td><div class="heatmap-cell chess-mixed-so"></div></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="heatmap-legend">
+        <span><span class="swatch chess-s"></span>Strategic</span>
+        <span><span class="swatch chess-o"></span>Operational</span>
+        <span><span class="swatch chess-d"></span>Defensive</span>
+        <span><span class="swatch chess-c"></span>Capability Building</span>
+        <span style="margin-left:auto;font-style:italic">Showing 8 of 34 people &middot; scroll or filter to see all</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Section 4: Observatory Signals ═══ -->
+  <div class="section">
+    <div class="section-title">Observatory Signals</div>
+    <div class="section-subtitle">Computed from reconciliation data. Updated after each cycle completes.</div>
+    <div class="signals-grid">
+      <div class="signal-card severity-structural">
+        <div class="signal-type">Confirmed Drift</div>
+        <div class="signal-title">Wei Zhang's team strategic alignment dropped 55% &rarr; 20% over 10 weeks</div>
+        <div class="signal-body">Supply Chain logistics team drifted from healthy strategic allocation to predominantly operational/defensive work. Coincides with ERP instability period (weeks 6-16). Partial recovery to 44% post-intervention, but below pre-crisis baseline.</div>
+        <div class="signal-metric"><strong>-11%</strong> permanent gap from baseline</div>
+      </div>
+
+      <div class="signal-card severity-sustained">
+        <div class="signal-type">Gaming Pattern</div>
+        <div class="signal-title">Victor Solis: 92% completion, 0% outcome linkage, low title specificity</div>
+        <div class="signal-body">26-week pattern of high reported completion with vague commitment titles (avg 18 chars vs team median 54), no defining objective or outcome links, and uniform 8.0h estimates. Team member Sam Wilson shows identical pattern since transfer in week 14.</div>
+        <div class="signal-metric"><strong>26</strong> consecutive weeks</div>
+      </div>
+
+      <div class="signal-card severity-sustained">
+        <div class="signal-type">Concentration Risk</div>
+        <div class="signal-title">Anna Mueller assigns 60% of team analytical work to Ben Torres</div>
+        <div class="signal-body">Procurement team has a single point of failure. During the Week 16 ERP crisis, Ben processed 23 emergency spot purchases alone. Robert Chang (L3 senior analyst, $80/hr) doing L1 operational PO processing — visible cost misalignment.</div>
+        <div class="signal-metric"><strong>$42K</strong> estimated annual misalignment cost</div>
+      </div>
+
+      <div class="signal-card severity-positive">
+        <div class="signal-type">Model Team</div>
+        <div class="signal-title">Elena Rodriguez: sustained 60%+ strategic alignment across 26 weeks</div>
+        <div class="signal-body">Quality team maintained strategic focus through two crises. Completion rate 87%, carry-forward rate 8%. Five team members showing measurable growth trajectories. Corrective action on Lines 3-4 achieved 0.43% scrap rate (below 0.5% target).</div>
+        <div class="signal-metric"><strong>0.43%</strong> scrap rate achieved</div>
+      </div>
+
+      <div class="signal-card severity-positive">
+        <div class="signal-type">Recovery Signal</div>
+        <div class="signal-title">Engineering displacement eliminated — zero production pulls for 8 consecutive weeks</div>
+        <div class="signal-body">Following Week 18 CEO intervention and new routing process, Grace Lee's engineering team has had zero PRODUCTION_EMERGENCY displacement events. Strategic alignment recovered from 53% to 85%. AI inspection deployed on all 3 production lines ahead of Q4 target.</div>
+        <div class="signal-metric"><strong>85%</strong> strategic alignment</div>
+      </div>
+
+      <div class="signal-card severity-emerging">
+        <div class="signal-type">Carry-Forward Chain</div>
+        <div class="signal-title">Miguel Fernandez carried certification documentation forward for 4 consecutive weeks</div>
+        <div class="signal-body">Weeks 8-14: operator certification documentation carried forward each cycle due to crisis displacement. Resolved after management accountability conversation. Now 8 consecutive clean weeks post-resolution.</div>
+        <div class="signal-metric"><strong>Resolved</strong> week 14</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Section 5: Then vs Now ═══ -->
+  <div class="section">
+    <div class="section-title">Then vs Now</div>
+    <div class="section-subtitle">Compare any two weeks side by side.</div>
+    <div class="comparison-container">
+      <div class="comparison-selectors">
+        <select>
+          <option>Week 10 — Crisis Onset</option>
+          <option>Week 1 — Baseline</option>
+          <option>Week 8 — Pre-Crisis</option>
+          <option>Week 12 — Crisis Peak</option>
+          <option>Week 16 — ERP Failure</option>
+        </select>
+        <span class="arrow">&rarr;</span>
+        <select>
+          <option>Week 26 — Program Close</option>
+          <option>Week 18 — Post-Intervention</option>
+          <option>Week 20 — Recovery Start</option>
+          <option selected>Week 26 — Program Close</option>
+        </select>
+      </div>
+      <div class="comparison-grid">
+        <div class="row">
+          <div class="cell header">Metric</div>
+          <div class="cell header" style="justify-content:center">Week 10</div>
+          <div class="cell header" style="justify-content:center">Week 26</div>
+          <div class="cell header" style="justify-content:center">Change</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Strategic Alignment</div>
+          <div class="cell value">44%</div>
+          <div class="cell value">50%</div>
+          <div class="cell change-positive">+6%</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Completion Rate</div>
+          <div class="cell value">71%</div>
+          <div class="cell value">84%</div>
+          <div class="cell change-positive">+13%</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Carry-Forward Rate</div>
+          <div class="cell value">18%</div>
+          <div class="cell value">6%</div>
+          <div class="cell change-positive">-12%</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Displacement Events</div>
+          <div class="cell value">17</div>
+          <div class="cell value">0</div>
+          <div class="cell change-positive">-17</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Active Drift Signals</div>
+          <div class="cell value">3</div>
+          <div class="cell value">1</div>
+          <div class="cell change-positive">-2</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Avg Commitments / Person</div>
+          <div class="cell value">3.2</div>
+          <div class="cell value">2.6</div>
+          <div class="cell change-neutral">-0.6</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">RCDO Coverage</div>
+          <div class="cell value">62%</div>
+          <div class="cell value">78%</div>
+          <div class="cell change-positive">+16%</div>
+        </div>
+        <div class="row">
+          <div class="cell metric-name">Unplanned Work %</div>
+          <div class="cell value">24%</div>
+          <div class="cell value">4%</div>
+          <div class="cell change-positive">-20%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>
