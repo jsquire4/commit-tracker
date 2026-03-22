@@ -935,12 +935,21 @@ public class LlmBriefingService implements BriefingService {
             actions. Report data and change only.
 
             RULES:
+            - Always mention team size.
             - Use directional language (increased, declined, holds) not judgmental language \
             (good, bad, concerning, impressive).
             - Never name individuals.
             - Narrative: 2-3 sentences of flowing prose. Dense, not verbose.
             - Suggested actions must be specific and actionable — say exactly what to look \
             for and why.
+            - IMPORTANT TERMINOLOGY: "Unlinked commitments" means commitments NOT linked \
+            to any rally cry. "Uncovered objectives" means rally cry objectives that have \
+            ZERO commitments assigned to them. These are different concepts — use the correct \
+            term for each. Never say "unlinked objectives" or "unaddressed objectives" — say \
+            "uncovered objectives."
+            - Do not contradict yourself. If rally cry coverage is 100% (all commitments \
+            are linked), do not say objectives are "uncovered" unless you clearly distinguish \
+            that some rally cry sub-objectives have zero commitments despite full linkage.
 
             OUTPUT FORMAT (JSON):
             {
