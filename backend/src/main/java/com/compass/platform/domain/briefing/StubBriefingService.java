@@ -27,12 +27,11 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
- * Stub implementation of {@link BriefingService} that gathers real metrics from
- * existing analytics services and composes a templated narrative.
+ * Fallback implementation of {@link BriefingService} that gathers real metrics
+ * and composes a templated narrative without an LLM call.
  *
- * <p>This implementation reads live data from AnalyticsService, DriftDetectionService,
- * and CycleRepository, then templates it into a human-readable briefing. When a real
- * LLM-backed service is available, this can be swapped out.
+ * <p>Active only when no LLM API key is configured (i.e., {@link LlmBriefingService}
+ * is not instantiated). Produces deterministic output from analytics data.
  */
 @Service
 @Transactional(readOnly = true)

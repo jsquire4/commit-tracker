@@ -37,6 +37,9 @@ dependencies {
     // CSV
     implementation("com.opencsv:opencsv:5.9")
 
+    // LLM — OpenAI SDK (model-agnostic via configuration)
+    implementation("com.openai:openai-java:2.2.0")
+
     // Test
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")

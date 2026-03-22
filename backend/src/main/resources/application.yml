@@ -42,6 +42,13 @@ management:
 compass:
   seed:
     enabled: false
+  llm:
+    openai-api-key: ${OPENAI_API_KEY:}
+    anthropic-api-key: ${ANTHROPIC_API_KEY:}
+    model: ${LLM_MODEL:gpt-4.1-nano}
+    base-url: ${LLM_BASE_URL:https://api.openai.com/v1}
+    temperature: 0.3
+    max-tokens: 1024
   cors:
     allowed-origins: ""
   jwt:
