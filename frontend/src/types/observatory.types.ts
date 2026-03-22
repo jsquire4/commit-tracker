@@ -191,3 +191,57 @@ export interface PortfolioComparisonResponse {
   portfolioName: string;
   trends: PortcoTrendLine[];
 }
+
+// ─── Program Heatmap ─────────────────────────────────────────────────────────
+
+export interface WeekCell {
+  cycleId: string;
+  cycleLabel: string;
+  dominantCategory: string | null;
+  strategicPct: number;
+  operationalPct: number;
+  defensivePct: number;
+  capabilityBuildingPct: number;
+  totalCommitments: number;
+}
+
+export interface PersonHeatmapRow {
+  userId: string;
+  displayName: string;
+  weekCells: WeekCell[];
+}
+
+export interface ManagerHeatmapRow {
+  managerId: string;
+  managerName: string;
+  managerRole: string;
+  teamSize: number;
+  weekCells: WeekCell[];
+  members: PersonHeatmapRow[];
+}
+
+export interface ProgramHeatmapResponse {
+  managers: ManagerHeatmapRow[];
+}
+
+// ─── Signals Summary ─────────────────────────────────────────────────────────
+
+export interface SignalMetric {
+  label: string;
+  value: string;
+}
+
+export interface ObservatorySignal {
+  signalType: string;
+  status: string;
+  detectedWeek: string;
+  resolvedWeek: string | null;
+  title: string;
+  body: string;
+  metrics: SignalMetric[];
+}
+
+export interface SignalsSummaryResponse {
+  signals: ObservatorySignal[];
+  computedAt: string;
+}

@@ -17,6 +17,7 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(
 // New pages
 const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
 const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
+const ObservatoryPage = lazy(() => import('./features/observatory/ObservatoryPage').then(m => ({ default: m.ObservatoryPage })));
 const LandingPage = lazy(() => import('./features/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const ArchitecturePage = lazy(() => import('./features/architecture/ArchitecturePage').then(m => ({ default: m.ArchitecturePage })));
 
@@ -77,14 +78,16 @@ export default function App({ basename, authContext }: AppProps) {
                       <Route path="/strategy" element={<StrategyPage />} />
                       <Route path="/portfolio" element={<PortfolioPage />} />
 
+                      {/* Observatory — VP/EXECUTIVE only */}
+                      <Route path="/observatory" element={<ObservatoryPage />} />
+
                       {/* Backward-compat redirects */}
                       <Route path="/cycle" element={<Navigate to="/" replace />} />
                       <Route path="/reconciliation" element={<Navigate to="/" replace />} />
                       <Route path="/reconciliation/:cycleId" element={<Navigate to="/" replace />} />
                       <Route path="/dashboard" element={<Navigate to="/team" replace />} />
-                      <Route path="/observatory" element={<Navigate to="/briefing" replace />} />
-                      <Route path="/observatory/team/:managerId" element={<Navigate to="/briefing" replace />} />
-                      <Route path="/observatory/config" element={<Navigate to="/briefing?mode=config" replace />} />
+                      <Route path="/observatory/team/:managerId" element={<Navigate to="/observatory" replace />} />
+                      <Route path="/observatory/config" element={<Navigate to="/settings" replace />} />
                       <Route path="/observatory/portfolio" element={<Navigate to="/portfolio" replace />} />
                     </Routes>
                   </Layout>

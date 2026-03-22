@@ -10,6 +10,8 @@ import {
   getIntegrityReport,
   getObservatoryConfig,
   getPortfolioHealth,
+  getProgramHeatmap,
+  getSignalsSummary,
   updateObservatoryConfig,
 } from '@/api/observatory.api';
 import type { ObservatoryConfig } from '@/types';
@@ -25,6 +27,8 @@ const OBSERVATORY_KEYS = {
   integrityReport: (cycleId?: string) => ['observatory', 'integrityReport', cycleId] as const,
   config: () => ['observatory', 'config'] as const,
   portfolioHealth: () => ['observatory', 'portfolioHealth'] as const,
+  programHeatmap: (weekCount?: number) => ['observatory', 'programHeatmap', weekCount] as const,
+  signalsSummary: (weekCount?: number) => ['observatory', 'signalsSummary', weekCount] as const,
 } as const;
 
 export function useExecutiveHealth(weekCount?: number) {
@@ -114,6 +118,22 @@ export function usePortfolioHealth() {
   return useQuery({
     queryKey: OBSERVATORY_KEYS.portfolioHealth(),
     queryFn: getPortfolioHealth,
+    staleTime: 60_000,
+  });
+}
+
+export function useProgramHeatmap(weekCount?: number) {
+  return useQuery({
+    queryKey: OBSERVATORY_KEYS.programHeatmap(weekCount),
+    queryFn: () => getProgramHeatmap(weekCount),
+    staleTime: 60_000,
+  });
+}
+
+export function useSignalsSummary(weekCount?: number) {
+  return useQuery({
+    queryKey: OBSERVATORY_KEYS.signalsSummary(weekCount),
+    queryFn: () => getSignalsSummary(weekCount),
     staleTime: 60_000,
   });
 }

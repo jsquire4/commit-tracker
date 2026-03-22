@@ -57,6 +57,7 @@ export function Layout({ children }: LayoutProps) {
     { to: '/briefing', label: 'The Briefing', show: isDirector },
     { to: '/strategy', label: 'Strategy', show: isDirector },
     { to: '/portfolio', label: 'Portfolio', show: isVP },
+    { to: '/observatory', label: 'Observatory', show: isVP },
   ].filter((t) => t.show);
 
   return (
