@@ -20,6 +20,11 @@ public interface AppUserRepository extends JpaRepository<AppUser, UUID> {
     @EntityGraph(attributePaths = {"org"})
     Optional<AppUser> findWithOrgById(UUID id);
 
+    /** Load all users with org eagerly — used by DevController user picker. */
+    @EntityGraph(attributePaths = {"org"})
+    @Query("SELECT u FROM AppUser u WHERE u.isActive = true ORDER BY u.org.name, u.role, u.displayName")
+    List<AppUser> findAllActiveWithOrg();
+
     Optional<AppUser> findByOrgIdAndEmail(UUID orgId, String email);
 
     List<AppUser> findByOrgIdAndIsActiveTrue(UUID orgId);

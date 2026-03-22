@@ -9,6 +9,8 @@
  *   Placeholder sections for charts built by other agents
  */
 import { useState, useMemo } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { VP_AND_ABOVE } from '@/constants/roles';
 import { useObservatoryDashboard, useAlignmentTrend } from '@/hooks/useObservatory';
 import { ProgramSummary } from './ProgramSummary';
 import { ExecutionTrendChart } from './ExecutionTrendChart';
@@ -58,6 +60,20 @@ function formatCycleDate(startsAt: string): string {
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ObservatoryPage() {
+  const { role } = useAuth();
+
+  // Role guard — VP and above only
+  if (!role || !VP_AND_ABOVE.has(role)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
+        <p className="text-body text-on-surface-variant max-w-sm">
+          The Observatory is only accessible to VPs and Executives.
+        </p>
+      </div>
+    );
+  }
+
   // Load ALL available reconciled cycles (large cap so we get the full history)
   const { data: allCycles } = useAlignmentTrend(999);
 

@@ -8,6 +8,8 @@
  * Fetches portfolio data from stub API.
  */
 import { useState } from 'react';
+import { useAuth } from '@/hooks/useAuth';
+import { VP_AND_ABOVE } from '@/constants/roles';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
@@ -50,6 +52,20 @@ const INITIAL_MESSAGES: ChatMessage[] = [
 ];
 
 export function PortfolioPage() {
+  const { role } = useAuth();
+
+  // Role guard — VP and above only
+  if (!role || !VP_AND_ABOVE.has(role)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
+        <p className="text-body text-on-surface-variant max-w-sm">
+          The Portfolio view is only accessible to VPs and Executives.
+        </p>
+      </div>
+    );
+  }
+
   const { data: cycle } = useCurrentCycle();
   const [selectedCycleId, setSelectedCycleId] = useState<string | undefined>(undefined);
   const activeCycleId = selectedCycleId ?? cycle?.id;

@@ -25,7 +25,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/dev")
-@Profile({"local", "test"})
+@Profile({"local", "test", "railway"})
 @org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class DevController {
 
@@ -43,7 +43,7 @@ public class DevController {
      */
     @GetMapping("/users")
     public ApiResponse<List<DevUserDto>> listUsers() {
-        List<AppUser> users = userRepository.findAll();
+        List<AppUser> users = userRepository.findAllActiveWithOrg();
         List<DevUserDto> dtos = users.stream()
                 .map(u -> new DevUserDto(
                         u.getId(),
