@@ -275,11 +275,12 @@ public class LlmBriefingService implements BriefingService {
         refData.put("A.uncategorized", uncategorizedPct);
         refData.put("A.prev_strategic", prevStrategicPct);
         refData.put("A.delta", strategicPct - prevStrategicPct);
-        refData.put("E.completion", completionRate * 100);
-        refData.put("E.carry_forward", carryForwardRate * 100);
-        refData.put("E.not_started", notStartedRate * 100);
-        refData.put("E.prev_completion", prevCompletionRate * 100);
-        refData.put("E.prev_carry_forward", prevCarryForwardRate * 100);
+        // CompletionDataPoint rates are already 0-100 scale (percentages, not ratios)
+        refData.put("E.completion", completionRate);
+        refData.put("E.carry_forward", carryForwardRate);
+        refData.put("E.not_started", notStartedRate);
+        refData.put("E.prev_completion", prevCompletionRate);
+        refData.put("E.prev_carry_forward", prevCarryForwardRate);
         refData.put("R.coverage", rallyCryCoveragePct);
         refData.put("R.unlinked", (double) unlinkedCount);
         refData.put("D.count", (double) driftCount);
@@ -302,10 +303,10 @@ public class LlmBriefingService implements BriefingService {
 
         sb.append("EXECUTION:\n");
         sb.append(String.format("- Completion rate: %.1f%% [E.completion] (previous: %.1f%% [E.prev_completion])\n",
-                completionRate * 100, prevCompletionRate * 100));
+                completionRate, prevCompletionRate));
         sb.append(String.format("- Carry-forward rate: %.1f%% [E.carry_forward] (previous: %.1f%% [E.prev_carry_forward])\n",
-                carryForwardRate * 100, prevCarryForwardRate * 100));
-        sb.append(String.format("- Not started rate: %.1f%% [E.not_started]\n\n", notStartedRate * 100));
+                carryForwardRate, prevCarryForwardRate));
+        sb.append(String.format("- Not started rate: %.1f%% [E.not_started]\n\n", notStartedRate));
 
         sb.append("RALLY CRY COVERAGE:\n");
         sb.append(String.format("- %.1f%% [R.coverage] of commitments linked to a rally cry\n", rallyCryCoveragePct));
@@ -378,7 +379,7 @@ public class LlmBriefingService implements BriefingService {
                 "Commitments linked to a Rally Cry / total commitments",
                 "View details"));
         citations.add(new BriefingCitation("c3",
-                String.format("Carry-Forward Rate: %.0f%%", ctx.carryForwardRate() * 100),
+                String.format("Carry-Forward Rate: %.0f%%", ctx.carryForwardRate()),
                 "From reconciliation records",
                 "View list"));
         citations.add(new BriefingCitation("c4",
@@ -392,14 +393,14 @@ public class LlmBriefingService implements BriefingService {
     private List<BriefingMetric> buildMetrics(BriefingDataContext ctx) {
         String alignTrend = ctx.referenceData().getOrDefault("A.delta", 0.0) > 0 ? "up"
                 : ctx.referenceData().getOrDefault("A.delta", 0.0) < -1 ? "down" : "flat";
-        String carryTrend = ctx.carryForwardRate() * 100 > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down"
-                : ctx.carryForwardRate() * 100 < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up" : "flat";
+        String carryTrend = ctx.carryForwardRate() > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down"
+                : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up" : "flat";
 
         return List.of(
                 new BriefingMetric("alignment", "Strategic Alignment", Math.round(ctx.alignmentPct()), "%", alignTrend),
                 new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", null),
-                new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate() * 100), "%", carryTrend),
-                new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate() * 100), "%", null),
+                new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate()), "%", carryTrend),
+                new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate()), "%", null),
                 new BriefingMetric("drift", "Active Drift Signals", ctx.driftCount(), null, null)
         );
     }
@@ -456,7 +457,7 @@ public class LlmBriefingService implements BriefingService {
                 ctx.alignmentPct(),
                 ctx.rallyCryCoveragePct(),
                 ctx.referenceData().get("R.unlinked"),
-                ctx.carryForwardRate() * 100,
+                ctx.carryForwardRate(),
                 ctx.referenceData().get("D.count"),
                 ctx.driftCount() == 1 ? "" : "s");
     }
