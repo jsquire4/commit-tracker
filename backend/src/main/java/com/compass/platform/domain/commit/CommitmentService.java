@@ -13,11 +13,8 @@ import com.compass.platform.domain.commit.dto.CreateUnplannedCommitmentRequest;
 import com.compass.platform.domain.commit.dto.UpdateCommitmentRequest;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
-import com.compass.platform.domain.rcdo.DefiningObjective;
 import com.compass.platform.domain.rcdo.DefiningObjectiveRepository;
-import com.compass.platform.domain.rcdo.Outcome;
 import com.compass.platform.domain.rcdo.OutcomeRepository;
-import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
@@ -62,6 +59,7 @@ public class CommitmentService {
     private final AuditService auditService;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final TeamActivationService teamActivationService;
+    private final RcdoValidator rcdoValidator;
 
     public CommitmentService(CommitmentRepository commitmentRepository,
                              TaskBulletRepository taskBulletRepository,
@@ -74,7 +72,8 @@ public class CommitmentService {
                              VisibilityEnforcer visibilityEnforcer,
                              AuditService auditService,
                              ReconciliationRecordRepository reconciliationRecordRepository,
-                             TeamActivationService teamActivationService) {
+                             TeamActivationService teamActivationService,
+                             RcdoValidator rcdoValidator) {
         this.commitmentRepository = commitmentRepository;
         this.taskBulletRepository = taskBulletRepository;
         this.cycleRepository = cycleRepository;
@@ -87,6 +86,7 @@ public class CommitmentService {
         this.auditService = auditService;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.teamActivationService = teamActivationService;
+        this.rcdoValidator = rcdoValidator;
     }
 
     /**
@@ -195,7 +195,7 @@ public class CommitmentService {
         }
 
         validateBulletCount(request.bullets());
-        validateRcdoConsistencyAndExistence(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
+        rcdoValidator.validateRcdoConsistencyAndExistence(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
 
         ChessCategory chessCategory = resolveChessCategory(request.chessCategoryId());
 
@@ -218,11 +218,11 @@ public class CommitmentService {
         if (request.completionDay() != null || request.completionTimeBlock() != null) {
             commitment.setCompletionDay(request.completionDay());
             commitment.setCompletionTimeBlock(request.completionTimeBlock());
-            commitment.setCompletionHorizon(computeLegacyHorizon(request.completionDay(), request.completionTimeBlock()));
+            commitment.setCompletionHorizon(CompletionHorizonConverter.computeLegacyHorizon(request.completionDay(), request.completionTimeBlock()));
         } else {
             commitment.setCompletionHorizon(request.completionHorizon());
-            commitment.setCompletionDay(computeDayFromHorizon(request.completionHorizon()));
-            commitment.setCompletionTimeBlock(computeTimeBlockFromHorizon(request.completionHorizon()));
+            commitment.setCompletionDay(CompletionHorizonConverter.computeDayFromHorizon(request.completionHorizon()));
+            commitment.setCompletionTimeBlock(CompletionHorizonConverter.computeTimeBlockFromHorizon(request.completionHorizon()));
         }
 
         commitment.setChessCategory(chessCategory);
@@ -477,7 +477,7 @@ public class CommitmentService {
             boolean isUnplanned) {
 
         validateBulletCount(bullets);
-        validateRcdoConsistencyAndExistence(rallyCryId, definingObjectiveId, outcomeId);
+        rcdoValidator.validateRcdoConsistencyAndExistence(rallyCryId, definingObjectiveId, outcomeId);
 
         ChessCategory chessCategory = resolveChessCategory(chessCategoryId);
 
@@ -489,10 +489,10 @@ public class CommitmentService {
         CompletionTimeBlock resolvedTimeBlock = completionTimeBlock;
 
         if (completionDay != null || completionTimeBlock != null) {
-            resolvedHorizon = computeLegacyHorizon(completionDay, completionTimeBlock);
+            resolvedHorizon = CompletionHorizonConverter.computeLegacyHorizon(completionDay, completionTimeBlock);
         } else {
-            resolvedDay = computeDayFromHorizon(completionHorizon);
-            resolvedTimeBlock = computeTimeBlockFromHorizon(completionHorizon);
+            resolvedDay = CompletionHorizonConverter.computeDayFromHorizon(completionHorizon);
+            resolvedTimeBlock = CompletionHorizonConverter.computeTimeBlockFromHorizon(completionHorizon);
         }
 
         Commitment commitment = Commitment.builder()
@@ -528,41 +528,6 @@ public class CommitmentService {
     private void validateBulletCount(List<String> bullets) {
         if (bullets == null || bullets.size() < 2 || bullets.size() > 5) {
             throw new IllegalArgumentException("Between 2 and 5 task bullets are required");
-        }
-    }
-
-    private void validateRcdoConsistencyAndExistence(UUID rallyCryId, UUID definingObjectiveId, UUID outcomeId) {
-        // Hierarchy consistency: outcome requires DO, DO requires RC
-        if (outcomeId != null && definingObjectiveId == null) {
-            throw new IllegalArgumentException("definingObjectiveId is required when outcomeId is set");
-        }
-        if (definingObjectiveId != null && rallyCryId == null) {
-            throw new IllegalArgumentException("rallyCryId is required when definingObjectiveId is set");
-        }
-
-        // Existence and archive checks
-        if (rallyCryId != null) {
-            RallyCry rc = rallyCryRepository.findById(rallyCryId)
-                    .orElseThrow(() -> new EntityNotFoundException("RallyCry", rallyCryId));
-            if (rc.isArchived()) {
-                throw new IllegalArgumentException("RallyCry is archived: " + rallyCryId);
-            }
-        }
-
-        if (definingObjectiveId != null) {
-            DefiningObjective doEntity = definingObjectiveRepository.findById(definingObjectiveId)
-                    .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", definingObjectiveId));
-            if (doEntity.isArchived()) {
-                throw new IllegalArgumentException("DefiningObjective is archived: " + definingObjectiveId);
-            }
-        }
-
-        if (outcomeId != null) {
-            Outcome outcome = outcomeRepository.findById(outcomeId)
-                    .orElseThrow(() -> new EntityNotFoundException("Outcome", outcomeId));
-            if (outcome.isArchived()) {
-                throw new IllegalArgumentException("Outcome is archived: " + outcomeId);
-            }
         }
     }
 
@@ -604,51 +569,4 @@ public class CommitmentService {
         return "none";
     }
 
-    // -------------------------------------------------------------------------
-    // Horizon dual-write helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Compute legacy CompletionHorizon from day + timeBlock.
-     * If day is FRIDAY and timeBlock is EOD, legacy = EOW.
-     * Otherwise, legacy = the timeBlock value (MORNING/MIDDAY/AFTERNOON/EOD).
-     */
-    static CompletionHorizon computeLegacyHorizon(CompletionDay day, CompletionTimeBlock timeBlock) {
-        if (day == CompletionDay.FRIDAY && timeBlock == CompletionTimeBlock.EOD) {
-            return CompletionHorizon.EOW;
-        }
-        if (timeBlock != null) {
-            return CompletionHorizon.valueOf(timeBlock.name());
-        }
-        // Fallback: if only day provided without timeBlock, default to EOD
-        return CompletionHorizon.EOD;
-    }
-
-    /**
-     * Compute CompletionDay from a legacy horizon.
-     * EOW -> FRIDAY, time-of-day horizons -> null (implies today / current day).
-     */
-    static CompletionDay computeDayFromHorizon(CompletionHorizon horizon) {
-        if (horizon == null) {
-            return null;
-        }
-        if (horizon == CompletionHorizon.EOW) {
-            return CompletionDay.FRIDAY;
-        }
-        return null;
-    }
-
-    /**
-     * Compute CompletionTimeBlock from a legacy horizon.
-     * EOW -> EOD, others map directly by name.
-     */
-    static CompletionTimeBlock computeTimeBlockFromHorizon(CompletionHorizon horizon) {
-        if (horizon == null) {
-            return null;
-        }
-        if (horizon == CompletionHorizon.EOW) {
-            return CompletionTimeBlock.EOD;
-        }
-        return CompletionTimeBlock.valueOf(horizon.name());
-    }
 }

@@ -90,6 +90,34 @@ public class ObservatoryController {
     }
 
     // ═══════════════════════════════════════════════════════════════
+    // Dashboard (composite)
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * GET /api/v1/observatory/dashboard
+     * Composite endpoint returning health + alignment trend + completion trend in one call.
+     */
+    @GetMapping("/dashboard")
+    public ResponseEntity<ApiResponse<ObservatoryDashboardResponse>> getDashboard(
+            @RequestParam(defaultValue = "26") int weekCount) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        UUID orgId = actor.getOrg().getId();
+
+        ExecutiveHealthResponse health = healthComposer.computeHealth(orgId, weekCount);
+        var alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
+        var completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
+
+        return ResponseEntity.ok(ApiResponse.of(new ObservatoryDashboardResponse(health, alignmentTrend, completionTrend)));
+    }
+
+    public record ObservatoryDashboardResponse(
+        ExecutiveHealthResponse health,
+        List<com.compass.platform.domain.observatory.dto.AlignmentDataPoint> alignmentTrend,
+        List<com.compass.platform.domain.observatory.dto.CompletionDataPoint> completionTrend
+    ) {}
+
+    // ═══════════════════════════════════════════════════════════════
     // Drift
     // ═══════════════════════════════════════════════════════════════
 

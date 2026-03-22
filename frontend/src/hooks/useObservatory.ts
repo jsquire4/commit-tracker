@@ -9,6 +9,7 @@ import {
   getExecutiveHealth,
   getIntegrityReport,
   getObservatoryConfig,
+  getObservatoryDashboard,
   getPortfolioHealth,
   getProgramHeatmap,
   getSignalsSummary,
@@ -17,6 +18,7 @@ import {
 import type { ObservatoryConfig } from '@/types';
 
 const OBSERVATORY_KEYS = {
+  dashboard: (weekCount?: number) => ['observatory', 'dashboard', weekCount] as const,
   executiveHealth: (weekCount?: number) => ['observatory', 'executiveHealth', weekCount] as const,
   driftReport: (weekCount?: number) => ['observatory', 'driftReport', weekCount] as const,
   alignmentTrend: (weekCount?: number, managerId?: string) => ['observatory', 'alignmentTrend', weekCount, managerId] as const,
@@ -30,6 +32,14 @@ const OBSERVATORY_KEYS = {
   programHeatmap: (weekCount?: number) => ['observatory', 'programHeatmap', weekCount] as const,
   signalsSummary: (weekCount?: number) => ['observatory', 'signalsSummary', weekCount] as const,
 } as const;
+
+export function useObservatoryDashboard(weekCount?: number) {
+  return useQuery({
+    queryKey: OBSERVATORY_KEYS.dashboard(weekCount),
+    queryFn: () => getObservatoryDashboard(weekCount),
+    staleTime: 60_000,
+  });
+}
 
 export function useExecutiveHealth(weekCount?: number) {
   return useQuery({

@@ -84,6 +84,16 @@
 /* ── Utilities Layer ────────────────────────────────────────────────── */
 
 @layer utilities {
+  /* SpeechBubble entrance animations */
+  @keyframes speechBubbleFadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(4px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+  @keyframes speechBubbleFadeInBelow {
+    from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
+    to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+  }
+
   /* Fade-up entrance — staggered via --i custom property */
   .animate-fade-up {
     animation: fadeUp 300ms var(--ease-entrance) both;

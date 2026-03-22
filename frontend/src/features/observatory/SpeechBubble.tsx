@@ -7,9 +7,6 @@
  */
 import { useRef, useEffect } from 'react';
 
-// ── Teal brand colour used across Observatory AI labels / links ──────────────
-const TEAL = '#036A6A';
-
 // ── Types ────────────────────────────────────────────────────────────────────
 
 export interface SpeechBubbleMetric {
@@ -39,23 +36,6 @@ export interface SpeechBubbleProps {
   linkLabel?: string;
   /** Called when the user presses Escape or clicks outside the bubble */
   onDismiss: () => void;
-}
-
-// ── Keyframe injection ────────────────────────────────────────────────────────
-
-function SpeechBubbleStyles() {
-  return (
-    <style>{`
-      @keyframes speechBubbleFadeIn {
-        from { opacity: 0; transform: translateX(-50%) translateY(4px); }
-        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-      }
-      @keyframes speechBubbleFadeInBelow {
-        from { opacity: 0; transform: translateX(-50%) translateY(-4px); }
-        to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-      }
-    `}</style>
-  );
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -102,224 +82,146 @@ export function SpeechBubble({
     position === 'above' ? 'speechBubbleFadeIn' : 'speechBubbleFadeInBelow';
 
   return (
-    <>
-      <SpeechBubbleStyles />
-      <div
-        ref={bubbleRef}
-        role="dialog"
-        aria-label={`Week summary for ${weekLabel}`}
-        style={{
-          position: 'absolute',
-          left: anchorX,
-          ...positionStyle,
-          transform: 'translateX(-50%)',
-          width: 300,
-          zIndex: 50,
-          animation: `${animationName} 200ms ease-out`,
-        }}
-      >
-        {/* Bubble body */}
-        <div
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: '1px solid #E2E2E0',
-            borderRadius: 8,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06)',
-            padding: '12px 14px',
-          }}
-        >
-          {/* AI label */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 5,
-              marginBottom: 6,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 10,
-                fontWeight: 600,
-                letterSpacing: '0.08em',
-                color: TEAL,
-                fontFamily: 'Inter, sans-serif',
-                textTransform: 'uppercase',
-              }}
-            >
-              ✦ AI Summary
-            </span>
-          </div>
-
-          {/* Week label */}
-          <p
-            style={{
-              fontSize: 13,
-              fontWeight: 700,
-              color: '#1A1A1A',
-              marginBottom: 6,
-              fontFamily: 'Inter, sans-serif',
-            }}
-          >
-            {weekLabel}
-          </p>
-
-          {/* Narrative */}
-          <p
-            style={{
-              fontSize: 13,
-              lineHeight: 1.55,
-              color: '#3D3D3B',
-              marginBottom: metrics && metrics.length > 0 ? 10 : linkUrl ? 10 : 0,
-              fontFamily: 'Newsreader, Georgia, serif',
-            }}
-          >
-            {narrative}
-          </p>
-
-          {/* Metrics row */}
-          {metrics && metrics.length > 0 && (
-            <div
-              style={{
-                display: 'flex',
-                gap: 10,
-                marginBottom: linkUrl ? 10 : 0,
-                paddingTop: 8,
-                borderTop: '1px solid #E2E2E0',
-              }}
-            >
-              {metrics.map(({ label, value }) => (
-                <div
-                  key={label}
-                  style={{
-                    flex: 1,
-                    textAlign: 'center',
-                    padding: '4px 2px',
-                    backgroundColor: '#F8F8F7',
-                    borderRadius: 4,
-                  }}
-                >
-                  <div
-                    style={{
-                      fontSize: 14,
-                      fontWeight: 700,
-                      color: '#1A1A1A',
-                      fontFamily: 'Inter, sans-serif',
-                    }}
-                  >
-                    {value}
-                  </div>
-                  <div
-                    style={{
-                      fontSize: 10,
-                      color: '#5A605E',
-                      fontFamily: 'Inter, sans-serif',
-                      marginTop: 1,
-                    }}
-                  >
-                    {label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Optional link */}
-          {linkUrl && (
-            <a
-              href={linkUrl}
-              style={{
-                fontSize: 12,
-                color: TEAL,
-                textDecoration: 'none',
-                fontFamily: 'Inter, sans-serif',
-                fontWeight: 500,
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 3,
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'underline';
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLAnchorElement).style.textDecoration = 'none';
-              }}
-            >
-              {linkLabel}
-            </a>
-          )}
+    <div
+      ref={bubbleRef}
+      role="dialog"
+      aria-label={`Week summary for ${weekLabel}`}
+      style={{
+        position: 'absolute',
+        left: anchorX,
+        ...positionStyle,
+        transform: 'translateX(-50%)',
+        width: 300,
+        zIndex: 50,
+        animation: `${animationName} 200ms ease-out`,
+      }}
+    >
+      {/* Bubble body */}
+      <div className="bg-white border border-outline-variant rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06)] px-3.5 py-3">
+        {/* AI label */}
+        <div className="flex items-center gap-[5px] mb-1.5">
+          <span className="text-[10px] font-semibold tracking-[0.08em] text-accent font-sans uppercase">
+            ✦ AI Summary
+          </span>
         </div>
 
-        {/* Caret — points toward the anchor (down for 'above', up for 'below') */}
-        {position === 'above' ? (
-          <>
-            {/* White fill caret */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -7,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 0,
-                height: 0,
-                borderLeft: '7px solid transparent',
-                borderRight: '7px solid transparent',
-                borderTop: '7px solid #FFFFFF',
-                filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.08))',
-              }}
-            />
-            {/* Border layer caret (sits just behind the white caret) */}
-            <div
-              style={{
-                position: 'absolute',
-                bottom: -8,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 0,
-                height: 0,
-                borderLeft: '8px solid transparent',
-                borderRight: '8px solid transparent',
-                borderTop: '8px solid #E2E2E0',
-                zIndex: -1,
-              }}
-            />
-          </>
-        ) : (
-          <>
-            {/* White fill caret pointing up */}
-            <div
-              style={{
-                position: 'absolute',
-                top: -7,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 0,
-                height: 0,
-                borderLeft: '7px solid transparent',
-                borderRight: '7px solid transparent',
-                borderBottom: '7px solid #FFFFFF',
-                filter: 'drop-shadow(0 -2px 1px rgba(0,0,0,0.08))',
-              }}
-            />
-            {/* Border layer caret */}
-            <div
-              style={{
-                position: 'absolute',
-                top: -8,
-                left: '50%',
-                transform: 'translateX(-50%)',
-                width: 0,
-                height: 0,
-                borderLeft: '8px solid transparent',
-                borderRight: '8px solid transparent',
-                borderBottom: '8px solid #E2E2E0',
-                zIndex: -1,
-              }}
-            />
-          </>
+        {/* Week label */}
+        <p className="text-[13px] font-bold text-on-surface mb-1.5 font-sans">
+          {weekLabel}
+        </p>
+
+        {/* Narrative */}
+        <p
+          className={`text-[13px] leading-[1.55] text-on-surface font-serif${
+            (metrics && metrics.length > 0) || linkUrl ? ' mb-2.5' : ''
+          }`}
+        >
+          {narrative}
+        </p>
+
+        {/* Metrics row */}
+        {metrics && metrics.length > 0 && (
+          <div
+            className={`flex gap-2.5 pt-2 border-t border-outline-variant${
+              linkUrl ? ' mb-2.5' : ''
+            }`}
+          >
+            {metrics.map(({ label, value }) => (
+              <div
+                key={label}
+                className="flex-1 text-center py-1 px-0.5 bg-surface rounded"
+              >
+                <div className="text-sm font-bold text-on-surface font-sans">
+                  {value}
+                </div>
+                <div className="text-[10px] text-on-surface-variant font-sans mt-px">
+                  {label}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Optional link */}
+        {linkUrl && (
+          <a
+            href={linkUrl}
+            className="text-xs text-accent font-sans font-medium inline-flex items-center gap-[3px] hover:underline"
+          >
+            {linkLabel}
+          </a>
         )}
       </div>
-    </>
+
+      {/* Caret — points toward the anchor (down for 'above', up for 'below') */}
+      {position === 'above' ? (
+        <>
+          {/* White fill caret */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -7,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '7px solid transparent',
+              borderRight: '7px solid transparent',
+              borderTop: '7px solid #FFFFFF',
+              filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.08))',
+            }}
+          />
+          {/* Border layer caret (sits just behind the white caret) */}
+          <div
+            style={{
+              position: 'absolute',
+              bottom: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderTop: '8px solid #E2E2E0',
+              zIndex: -1,
+            }}
+          />
+        </>
+      ) : (
+        <>
+          {/* White fill caret pointing up */}
+          <div
+            style={{
+              position: 'absolute',
+              top: -7,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '7px solid transparent',
+              borderRight: '7px solid transparent',
+              borderBottom: '7px solid #FFFFFF',
+              filter: 'drop-shadow(0 -2px 1px rgba(0,0,0,0.08))',
+            }}
+          />
+          {/* Border layer caret */}
+          <div
+            style={{
+              position: 'absolute',
+              top: -8,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '8px solid transparent',
+              borderRight: '8px solid transparent',
+              borderBottom: '8px solid #E2E2E0',
+              zIndex: -1,
+            }}
+          />
+        </>
+      )}
+    </div>
   );
 }
 

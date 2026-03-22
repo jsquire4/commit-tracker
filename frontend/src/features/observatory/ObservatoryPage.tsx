@@ -9,7 +9,7 @@
  *   Placeholder sections for charts built by other agents
  */
 import { useState, useMemo } from 'react';
-import { useExecutiveHealth, useAlignmentTrend, useCompletionTrend } from '@/hooks/useObservatory';
+import { useObservatoryDashboard, useAlignmentTrend } from '@/hooks/useObservatory';
 import { ProgramSummary } from './ProgramSummary';
 import { ExecutionTrendChart } from './ExecutionTrendChart';
 import { TeamTrajectories } from './TeamTrajectories';
@@ -80,9 +80,10 @@ export function ObservatoryPage() {
     return Math.max(1, availableCycles.length - fromIdx);
   }, [availableCycles, fromIdx]);
 
-  const { data: health, isLoading: healthLoading } = useExecutiveHealth(weekCount);
-  const { data: alignmentTrend, isLoading: alignmentLoading } = useAlignmentTrend(weekCount);
-  const { data: completionTrend, isLoading: completionLoading } = useCompletionTrend(weekCount);
+  const { data: dashboard, isLoading: dashboardLoading } = useObservatoryDashboard(weekCount);
+  const health = dashboard?.health;
+  const alignmentTrend = dashboard?.alignmentTrend;
+  const completionTrend = dashboard?.completionTrend;
 
   const orgName = health?.orgName ?? '';
 
@@ -107,7 +108,7 @@ export function ObservatoryPage() {
     return sum / completionTrend.length;
   }, [completionTrend]);
 
-  const kpiLoading = healthLoading || alignmentLoading || completionLoading;
+  const kpiLoading = dashboardLoading;
 
   // KPI values — fallback to em-dash while loading
   const rcCoverage = kpiLoading || avgRcCoverage === null
@@ -122,7 +123,7 @@ export function ObservatoryPage() {
     ? '—'
     : avgCarryForward.toFixed(1);
 
-  const driftSignals = healthLoading
+  const driftSignals = dashboardLoading
     ? '—'
     : String(health?.activeDriftSignals ?? 0);
 
@@ -186,7 +187,7 @@ export function ObservatoryPage() {
 
       {/* ── KPI strip ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <KpiTile label="Strategic Alignment" value={rcCoverage} unit="%" />
+        <KpiTile label="Rally Cry Coverage" value={rcCoverage} unit="%" />
         <KpiTile label="Completion Rate" value={completion} unit="%" />
         <KpiTile label="Carry-Forward Rate" value={carryForward} unit="%" />
         <KpiTile label="Active Drift Signals" value={driftSignals} />

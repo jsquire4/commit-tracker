@@ -6,7 +6,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useExecutiveHealth, useDriftReport, useAlignmentTrend } from '@/hooks/useObservatory';
 import { getOrgTree } from '@/api/users.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
+import { CHESS_ACCENT } from '@/constants/chess-colors';
+import type { UserRole } from '@/types';
 import type {
   ExecutiveHealthResponse,
   OrgUnitHealth,
@@ -17,42 +18,39 @@ import type { User } from '@/types/user.types';
 
 // ─── Constants ──────────────────────────────────────────────────────────────────
 
+const ALLOWED_ROLES: UserRole[] = ['DIRECTOR', 'VP', 'EXECUTIVE'];
+
 const HEALTH_COLORS: Record<HealthGrade, string> = {
-  GREEN: '#22c55e',
-  YELLOW: '#f59e0b',
-  RED: '#ef4444',
+  GREEN: '#036A6A',
+  YELLOW: '#C2860B',
+  RED: '#9F403D',
 };
 
 const HEALTH_BG: Record<HealthGrade, string> = {
-  GREEN: 'bg-green-500/8',
-  YELLOW: 'bg-amber-500/8',
-  RED: 'bg-red-500/8',
+  GREEN: 'bg-accent/[0.08]',
+  YELLOW: 'bg-warning/[0.08]',
+  RED: 'bg-error/[0.08]',
 };
 
 const HEALTH_BORDER: Record<HealthGrade, string> = {
-  GREEN: 'border-l-green-500',
-  YELLOW: 'border-l-amber-500',
-  RED: 'border-l-red-500',
+  GREEN: 'border-l-accent',
+  YELLOW: 'border-l-warning',
+  RED: 'border-l-error',
 };
 
 const HEALTH_GLOW: Record<HealthGrade, string> = {
-  GREEN: 'shadow-green-500/10',
-  YELLOW: 'shadow-amber-500/10',
-  RED: 'shadow-red-500/20',
+  GREEN: '',
+  YELLOW: '',
+  RED: '',
 };
 
 const HEALTH_TEXT: Record<HealthGrade, string> = {
-  GREEN: 'text-green-400',
-  YELLOW: 'text-amber-400',
-  RED: 'text-red-400',
+  GREEN: 'text-accent',
+  YELLOW: 'text-warning',
+  RED: 'text-error',
 };
 
-const CHESS_COLORS = {
-  strategic: '#2563EB',
-  operational: '#6B7280',
-  defensive: '#DC2626',
-  capability: '#059669',
-};
+const CHESS_COLORS = CHESS_ACCENT;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────────
 
@@ -70,11 +68,11 @@ function trendArrow(direction: string): string {
 function trendArrowColor(direction: string): string {
   switch (direction) {
     case 'IMPROVING':
-      return 'text-green-400';
+      return 'text-accent';
     case 'DECLINING':
-      return 'text-red-400';
+      return 'text-error';
     default:
-      return 'text-gray-500';
+      return 'text-muted';
   }
 }
 
@@ -322,7 +320,7 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
       : 'FLAT';
 
   return (
-    <div className="flex items-center justify-between h-20 px-6 bg-gray-900/80 backdrop-blur-sm border-b border-gray-800">
+    <div className="flex items-center justify-between h-20 px-6 bg-surface-lowest/85 backdrop-blur-sm border-b border-outline-variant">
       {/* Left: Strategic Alignment headline */}
       <div className="flex items-center gap-3">
         <span
@@ -335,7 +333,7 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
           <span className={`text-lg font-semibold ${trendArrowColor(overallTrend)}`}>
             {trendArrow(overallTrend)}
           </span>
-          <span className="text-xs text-gray-500 uppercase tracking-wider">
+          <span className="text-xs text-muted uppercase tracking-wider">
             Strategic Alignment
           </span>
         </div>
@@ -362,8 +360,8 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
 
       {/* Right: Org name + week label */}
       <div className="text-right">
-        <p className="text-sm font-medium text-gray-300">{health.orgName}</p>
-        <p className="text-xs text-gray-500">{formatWeekLabel(health.computedAt)}</p>
+        <p className="text-sm font-medium text-on-surface-variant">{health.orgName}</p>
+        <p className="text-xs text-muted">{formatWeekLabel(health.computedAt)}</p>
       </div>
     </div>
   );
@@ -379,21 +377,21 @@ function StatPill({
   variant: 'neutral' | 'warning' | 'success';
 }) {
   const borderClass = variant === 'warning'
-    ? 'border-amber-500/30'
+    ? 'border-warning/30'
     : variant === 'success'
-      ? 'border-green-500/30'
-      : 'border-gray-700';
+      ? 'border-accent/30'
+      : 'border-outline-variant';
 
   const valueClass = variant === 'warning'
-    ? 'text-amber-400'
+    ? 'text-warning'
     : variant === 'success'
-      ? 'text-green-400'
-      : 'text-gray-200';
+      ? 'text-accent'
+      : 'text-on-surface';
 
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${borderClass} bg-gray-900/60`}>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full border ${borderClass} bg-surface-container`}>
       <span className={`text-sm font-semibold tabular-nums ${valueClass}`}>{value}</span>
-      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-xs text-muted">{label}</span>
     </div>
   );
 }
@@ -428,7 +426,7 @@ function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
       onClick={onClick}
       className={[
         'group relative flex flex-col gap-2 p-4 rounded-lg border-l-4 border transition-all duration-300',
-        'bg-gray-900/50 backdrop-blur border-gray-800 hover:border-gray-700',
+        'bg-surface-lowest backdrop-blur border-outline-variant hover:border-outline-variant',
         'hover:-translate-y-0.5 hover:shadow-lg cursor-pointer text-left',
         HEALTH_BORDER[unit.grade],
         HEALTH_BG[unit.grade],
@@ -443,11 +441,11 @@ function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
     >
       {/* Header row: name + trend */}
       <div className="flex items-center justify-between">
-        <span className="text-sm font-bold text-gray-100 truncate max-w-[120px]">
+        <span className="text-sm font-bold text-on-surface truncate max-w-[120px]">
           {firstName(unit.managerName)}
         </span>
         <div className="flex items-center gap-1">
-          <span className="text-sm font-semibold tabular-nums text-gray-200">
+          <span className="text-sm font-semibold tabular-nums text-on-surface">
             {Math.round(unit.strategicAlignmentPct)}%
           </span>
           <span className={`text-sm font-bold ${trendArrowColor(unit.trendDirection)}`}>
@@ -457,7 +455,7 @@ function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
       </div>
 
       {/* CHESS distribution bar */}
-      <div className="w-full h-2 rounded-full bg-gray-800 overflow-hidden flex">
+      <div className="w-full h-2 rounded-full bg-outline-variant overflow-hidden flex">
         <div
           className="h-full transition-all duration-500"
           style={{ width: `${String(strategicW)}%`, backgroundColor: CHESS_COLORS.strategic }}
@@ -504,7 +502,7 @@ function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
       </div>
 
       {/* Hover indicator */}
-      <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-blue-500/30 transition-colors pointer-events-none" />
+      <div className="absolute inset-0 rounded-lg border-2 border-transparent group-hover:border-accent/30 transition-colors pointer-events-none" />
     </button>
   );
 }
@@ -533,13 +531,13 @@ function VPSection({ group, sectionIndex }: VPSectionProps) {
           className="w-2 h-2 rounded-full flex-shrink-0"
           style={{ backgroundColor: HEALTH_COLORS[group.vpGrade] }}
         />
-        <h3 className="text-sm font-semibold text-gray-300">
+        <h3 className="text-sm font-semibold text-on-surface-variant">
           VP: {group.vpName}
         </h3>
         <span className={`text-sm font-bold ${HEALTH_TEXT[group.vpGrade]}`}>
           ({group.vpGrade} {trendArrow(group.vpTrend)})
         </span>
-        <div className="flex-1 h-px bg-gray-800" />
+        <div className="flex-1 h-px bg-outline-variant" />
       </div>
 
       {/* Manager cards grid */}
@@ -574,7 +572,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
 
   if (health.units.length === 0) {
     return (
-      <div className="flex items-center justify-center py-20 text-gray-600 text-sm">
+      <div className="flex items-center justify-center py-20 text-muted text-sm">
         No org units found.
       </div>
     );
@@ -587,7 +585,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
       ))}
 
       {/* CHESS legend */}
-      <div className="flex items-center gap-4 px-1 pt-2 border-t border-gray-800/50">
+      <div className="flex items-center gap-4 px-1 pt-2 border-t border-outline-variant/50">
         {[
           { color: CHESS_COLORS.strategic, label: 'Strategic' },
           { color: CHESS_COLORS.operational, label: 'Operational' },
@@ -596,7 +594,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
         ].map(({ color, label }) => (
           <div key={label} className="flex items-center gap-1.5">
             <div className="w-2.5 h-2.5 rounded-sm" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-gray-600 uppercase tracking-wider">{label}</span>
+            <span className="text-[10px] text-muted uppercase tracking-wider">{label}</span>
           </div>
         ))}
       </div>
@@ -623,14 +621,14 @@ function ExceptionAlerts({ alerts }: ExceptionAlertsProps) {
   }
 
   return (
-    <div className="border-t border-gray-800 bg-gray-950/80 backdrop-blur px-6 py-3">
-      <div className="flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-800 scrollbar-track-transparent pb-1">
+    <div className="border-t border-outline-variant bg-surface/85 backdrop-blur px-6 py-3">
+      <div className="flex gap-3 overflow-x-auto scrollbar-thin scrollbar-thumb-outline-variant scrollbar-track-transparent pb-1">
         {alerts.map((alert) => (
           <div
             key={alert.id}
             className={[
               'flex items-center gap-2 px-3 py-2 rounded-lg border flex-shrink-0',
-              'bg-gray-900/60 backdrop-blur text-xs max-w-xs',
+              'bg-surface-container backdrop-blur text-xs max-w-xs',
               alert.icon === 'red'
                 ? 'border-red-500/30 text-red-300'
                 : alert.icon === 'drift'
@@ -685,12 +683,12 @@ export function ExecutiveHealthPage() {
   });
 
   // Role guard
-  if (!role || !DIRECTOR_AND_ABOVE.has(role)) {
+  if (!role || !ALLOWED_ROLES.includes(role)) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 gap-4 text-center p-8">
-        <div className="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
+        <div className="w-12 h-12 bg-error/[0.08] rounded-full flex items-center justify-center">
           <svg
-            className="w-6 h-6 text-red-400"
+            className="w-6 h-6 text-error"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -704,8 +702,8 @@ export function ExecutiveHealthPage() {
             />
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-gray-100">Access Restricted</h1>
-        <p className="text-sm text-gray-400 max-w-sm">
+        <h1 className="text-xl font-semibold text-on-surface">Access Restricted</h1>
+        <p className="text-sm text-on-surface-variant max-w-sm">
           The Executive Health Dashboard is only accessible to Directors, VPs, and Executives.
         </p>
       </div>
@@ -714,7 +712,7 @@ export function ExecutiveHealthPage() {
 
   if (healthLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-950">
+      <div className="flex items-center justify-center min-h-screen bg-surface">
         <LoadingSpinner size="lg" label="Loading executive health data\u2026" />
       </div>
     );
@@ -722,10 +720,10 @@ export function ExecutiveHealthPage() {
 
   if (healthError || !health) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-950 gap-4 text-center p-8">
-        <div className="w-12 h-12 bg-red-900/30 rounded-full flex items-center justify-center">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-surface gap-4 text-center p-8">
+        <div className="w-12 h-12 bg-error/[0.08] rounded-full flex items-center justify-center">
           <svg
-            className="w-6 h-6 text-red-400"
+            className="w-6 h-6 text-error"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
@@ -739,15 +737,15 @@ export function ExecutiveHealthPage() {
             />
           </svg>
         </div>
-        <h1 className="text-xl font-semibold text-gray-100">Failed to load health data</h1>
-        <p className="text-sm text-gray-400 max-w-sm">
+        <h1 className="text-xl font-semibold text-on-surface">Failed to load health data</h1>
+        <p className="text-sm text-on-surface-variant max-w-sm">
           {healthErrorObj instanceof Error
             ? healthErrorObj.message
             : 'An unexpected error occurred. Please try again.'}
         </p>
         <button
           type="button"
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+          className="px-4 py-2 text-sm font-medium text-white bg-accent rounded-md hover:bg-accent-dark transition-colors"
           onClick={() => { window.location.reload(); }}
         >
           Retry
@@ -760,7 +758,7 @@ export function ExecutiveHealthPage() {
   const alerts = generateAlerts(health.units, driftSignals);
 
   return (
-    <div className="flex flex-col h-screen bg-gray-950 text-gray-100 animate-fade-in">
+    <div className="flex flex-col h-screen bg-surface text-on-surface animate-fade-in">
       {/* Zone 1: Headline Strip */}
       <HeadlineStrip health={health} />
 

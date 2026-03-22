@@ -16,6 +16,14 @@ import type {
 
 const BASE = '/api/v1/observatory';
 
+export async function getObservatoryDashboard(weekCount?: number): Promise<{
+  health: ExecutiveHealthResponse;
+  alignmentTrend: AlignmentDataPoint[];
+  completionTrend: CompletionDataPoint[];
+}> {
+  return fetchData(`${BASE}/dashboard`, weekCount !== undefined ? { weekCount } : undefined);
+}
+
 export async function getExecutiveHealth(
   weekCount?: number
 ): Promise<ExecutiveHealthResponse> {
