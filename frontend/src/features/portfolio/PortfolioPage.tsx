@@ -21,35 +21,7 @@ import { PortfolioNarrativeCard } from './PortfolioNarrativeCard';
 import { PortfolioMetricsStrip } from './PortfolioMetricsStrip';
 import { CompanyCard } from './CompanyCard';
 import { ComparisonTable } from './ComparisonTable';
-import type { ChatMessage } from '@/hooks/useAIChat';
-
-/** Seed conversation for the AI sidebar */
-const INITIAL_MESSAGES: ChatMessage[] = [
-  {
-    id: 'seed-1',
-    role: 'user',
-    text: 'Which company needs the most attention right now?',
-    timestamp: new Date(Date.now() - 120_000).toISOString(),
-  },
-  {
-    id: 'seed-2',
-    role: 'ai',
-    text: 'Apex Dynamics is the primary concern. Strategic alignment has dropped 12 points over 4 weeks to 28%, and their carry-forward rate of 32% is the highest in the portfolio. Their \u2018Revenue Diversification\u2019 rally cry has zero commitments\u2009\u2014\u2009no one is working on it. I\u2019d recommend a management review focused on why alignment is declining and whether the current leadership team has capacity.',
-    timestamp: new Date(Date.now() - 100_000).toISOString(),
-  },
-  {
-    id: 'seed-3',
-    role: 'user',
-    text: 'Compare Meridian and Cascade on execution quality',
-    timestamp: new Date(Date.now() - 60_000).toISOString(),
-  },
-  {
-    id: 'seed-4',
-    role: 'ai',
-    text: 'Meridian is more mature (Week 6) with solid coverage at 88% but declining alignment (41%, down from 48%). Their main gap is Churn Reduction with only 1 commitment. Cascade is early (Week 2) but showing strong signals\u2009\u2014\u200955% strategic alignment and 85% completion rate. The key difference: Meridian\u2019s teams are busy but drifting from strategy, while Cascade\u2019s smaller team is tightly aligned. Cascade\u2019s risk is that this is only 2 weeks of data.',
-    timestamp: new Date(Date.now() - 40_000).toISOString(),
-  },
-];
+// No seed messages — chat starts fresh each session
 
 export function PortfolioPage() {
   const { role } = useAuth();
@@ -157,7 +129,6 @@ export function PortfolioPage() {
             context="portfolio"
             placeholder="Ask about the portfolio..."
             footerText="Powered by AI · Portfolio-wide analysis"
-            initialMessages={INITIAL_MESSAGES}
           />
         </div>
       </div>
