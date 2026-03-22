@@ -30,6 +30,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -126,11 +127,14 @@ public class CommitmentController {
         }
 
         Page<Commitment> commitmentPage = commitmentService.getForCycle(effectiveCycleId, filters, pageable, actor);
+        List<UUID> commitmentIds = commitmentPage.getContent().stream()
+                .map(Commitment::getId).toList();
+        Map<UUID, List<TaskBullet>> bulletsByCommitmentId = commitmentIds.isEmpty()
+                ? Map.of()
+                : taskBulletRepository.findByCommitmentIdIn(commitmentIds).stream()
+                        .collect(java.util.stream.Collectors.groupingBy(t -> t.getCommitment().getId()));
         List<CommitmentResponse> responses = commitmentPage.getContent().stream()
-                .map(c -> {
-                    List<TaskBullet> bullets = taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(c.getId());
-                    return commitmentMapper.toResponse(c, bullets);
-                })
+                .map(c -> commitmentMapper.toResponse(c, bulletsByCommitmentId.getOrDefault(c.getId(), List.of())))
                 .toList();
 
         PagedResponse<CommitmentResponse> pagedResponse = new PagedResponse<>(

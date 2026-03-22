@@ -225,8 +225,7 @@ public class CycleService {
      * Returns the number of commitments in the given cycle for the actor's org.
      */
     public int getCommitmentCount(UUID orgId, UUID cycleId) {
-        return commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId).size();
+        return (int) commitmentRepository.countByOrgIdAndCycleId(orgId, cycleId);
     }
 
     /**

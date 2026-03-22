@@ -23,6 +23,8 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     @Query("SELECT c FROM Commitment c WHERE c.outcome.id = :outcomeId AND c.cycle.id = :cycleId")
     List<Commitment> findByOutcomeIdAndCycleId(@Param("outcomeId") UUID outcomeId, @Param("cycleId") UUID cycleId);
 
+    long countByOrgIdAndCycleId(UUID orgId, UUID cycleId);
+
     long countByOrgIdAndCycleIdAndChessCategoryId(UUID orgId, UUID cycleId, UUID chessCategoryId);
 
     List<Commitment> findByAssignedByIdAndCycleId(UUID assignedById, UUID cycleId);
@@ -39,4 +41,6 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
 
     @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id = :cycleId ORDER BY c.user.id, c.priorityRank")
     List<Commitment> findByUserIdInAndCycleId(@Param("userIds") Collection<UUID> userIds, @Param("cycleId") UUID cycleId);
+
+    List<Commitment> findByOrgIdAndCycleIdIn(UUID orgId, Collection<UUID> cycleIds);
 }

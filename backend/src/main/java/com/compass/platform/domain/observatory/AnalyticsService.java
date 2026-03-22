@@ -80,11 +80,14 @@ public class AnalyticsService {
      */
     public List<AlignmentDataPoint> computeAlignmentTrend(UUID orgId, int weekCount) {
         List<Cycle> cycles = latestCycles(orgId, weekCount);
+        List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
+        List<Commitment> allCommitments = commitmentRepository.findByOrgIdAndCycleIdIn(orgId, cycleIds);
+        Map<UUID, List<Commitment>> commitmentsByCycle = allCommitments.stream()
+                .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
 
         List<AlignmentDataPoint> results = new ArrayList<>();
         for (Cycle cycle : cycles) {
-            List<Commitment> commitments =
-                    commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycle.getId());
+            List<Commitment> commitments = commitmentsByCycle.getOrDefault(cycle.getId(), List.of());
             results.add(buildAlignmentDataPoint(cycle, commitments));
         }
 

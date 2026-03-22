@@ -5,8 +5,6 @@ import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.user.AppUser;
 
 import java.time.Instant;
-import java.time.ZoneId;
-import java.time.temporal.WeekFields;
 
 /**
  * Pure utility class — no Spring annotations. Instantiate directly.
@@ -165,28 +163,4 @@ public class CycleStateMachine {
         };
     }
 
-    /**
-     * Returns {@code true} if {@code startsAt} falls in an ISO week that is strictly
-     * earlier than the ISO week containing {@code now}.
-     *
-     * Both instants are interpreted in the org's timezone.
-     */
-    private boolean isBeforeCurrentWeek(Instant startsAt, Instant now, String timezone) {
-        ZoneId zone = ZoneId.of(timezone != null ? timezone : "UTC");
-        var startsAtDate = startsAt.atZone(zone).toLocalDate();
-        var nowDate = now.atZone(zone).toLocalDate();
-
-        WeekFields iso = WeekFields.ISO;
-
-        int startsYear = startsAtDate.get(iso.weekBasedYear());
-        int startsWeek = startsAtDate.get(iso.weekOfWeekBasedYear());
-
-        int nowYear = nowDate.get(iso.weekBasedYear());
-        int nowWeek = nowDate.get(iso.weekOfWeekBasedYear());
-
-        if (startsYear != nowYear) {
-            return startsYear < nowYear;
-        }
-        return startsWeek < nowWeek;
-    }
 }
