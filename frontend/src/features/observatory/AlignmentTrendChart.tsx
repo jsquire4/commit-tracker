@@ -188,8 +188,8 @@ export function AlignmentTrendChart({
               tickLine={false}
               axisLine={false}
               tick={{ fontSize: 11, fill: '#5A605E' }}
-              tickFormatter={(v: number) => `${v}%`}
-              width={40}
+              tickFormatter={(v: number) => `${Math.round(v)}%`}
+              width={45}
             />
             <Tooltip content={<CustomTooltip />} />
             {targetPct !== null && !isNaN(targetPct) && (

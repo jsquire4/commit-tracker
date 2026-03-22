@@ -125,7 +125,28 @@ public class CommitmentService {
             }
         }
 
-        Commitment saved = buildAndSaveCommitment(request, actor, cycle, assignedBy, false);
+        // If forUserId is provided, create the commitment on behalf of that user
+        // (manager assigning work to a direct report). The actor must be the target
+        // user's direct manager.
+        AppUser targetUser = actor;
+        if (request.forUserId() != null) {
+            AppUser forUser = userRepository.findById(request.forUserId())
+                    .orElseThrow(() -> new EntityNotFoundException("AppUser", request.forUserId()));
+            if (!forUser.getOrg().getId().equals(actor.getOrg().getId())) {
+                throw new IllegalArgumentException("forUserId must be in the same org");
+            }
+            AppUser forUserManager = forUser.getReportsTo();
+            if (forUserManager == null || !forUserManager.getId().equals(actor.getId())) {
+                throw new AccessDeniedException("You can only assign work to your direct reports");
+            }
+            targetUser = forUser;
+            // If assignedBy was not explicitly set, default to the actor (the assigning manager)
+            if (assignedBy == null) {
+                assignedBy = actor;
+            }
+        }
+
+        Commitment saved = buildAndSaveCommitment(request, targetUser, cycle, assignedBy, false);
 
         String rcdoLink = buildRcdoLinkDescription(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
         String categoryName = saved.getChessCategory() != null ? saved.getChessCategory().getName() : "none";
@@ -135,8 +156,8 @@ public class CommitmentService {
                        "rcdoLink", rcdoLink,
                        "category", categoryName));
 
-        log.info("Created commitment id={} userId={} cycleId={} rcdoLink={} category={}",
-                saved.getId(), actor.getId(), cycle.getId(), rcdoLink, categoryName);
+        log.info("Created commitment id={} userId={} assignedBy={} cycleId={} rcdoLink={} category={}",
+                saved.getId(), targetUser.getId(), actor.getId(), cycle.getId(), rcdoLink, categoryName);
 
         return saved;
     }

@@ -27,6 +27,7 @@ export interface AuthContext {
   orgId: string;
   role?: string;
   displayName?: string;
+  orgName?: string;
 }
 
 interface AppProps {
@@ -55,7 +56,8 @@ export default function App({ basename, authContext }: AppProps) {
     token: authContext.token,
     role: (authContext.role as AuthContextValue['role']) ?? null,
     ...(authContext.displayName != null ? { displayName: authContext.displayName } : {}),
-  }), [authContext.userId, authContext.orgId, authContext.token, authContext.role, authContext.displayName]);
+    ...(authContext.orgName != null ? { orgName: authContext.orgName } : {}),
+  }), [authContext.userId, authContext.orgId, authContext.token, authContext.role, authContext.displayName, authContext.orgName]);
 
   return (
     <ErrorBoundary>

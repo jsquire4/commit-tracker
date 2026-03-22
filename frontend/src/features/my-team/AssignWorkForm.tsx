@@ -82,6 +82,7 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
       await createMutation.mutateAsync({
         cycleId, title: form.title.trim(), bullets: nonEmptyBullets,
         completionHorizon: 'EOW' as CompletionHorizon, assignedBy: managerId,
+        forUserId: form.employeeId,
         ...(form.chessCategoryId ? { chessCategoryId: form.chessCategoryId } : {}),
         ...(form.completionDay ? { completionDay: form.completionDay as CompletionDay } : {}),
         ...(form.completionTimeBlock ? { completionTimeBlock: form.completionTimeBlock as CompletionTimeBlock } : {}),

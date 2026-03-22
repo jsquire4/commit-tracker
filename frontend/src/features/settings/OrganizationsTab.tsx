@@ -14,7 +14,7 @@ import Button from '@/components/Button';
  * the auth context and allow org creation.
  */
 export function OrganizationsTab() {
-  const { orgId } = useAuth();
+  const { orgId, orgName } = useAuth();
   const { data: me } = useMe();
   const { data: users } = useUserList();
   const createOrgMutation = useCreateOrg();
@@ -38,7 +38,7 @@ export function OrganizationsTab() {
       <div className="bg-surface-lowest rounded-sm p-6 border-l-[3px] border-l-accent mb-6">
         <div className="flex items-center justify-between mb-3">
           <h3 className="font-serif text-[1.125rem] font-normal text-on-surface">
-            {me?.displayName ? `${me.displayName}'s Organization` : 'Current Organization'}
+            {orgName ?? (me?.displayName ? `${me.displayName}'s Organization` : 'Current Organization')}
           </h3>
           <span
             className="text-[0.6875rem] font-medium uppercase tracking-[0.04em]

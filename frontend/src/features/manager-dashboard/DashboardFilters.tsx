@@ -46,7 +46,8 @@ export function DashboardFilters({
 
   function handleWeekChange(value: string) {
     if (value) {
-      onChange({ cycleWeekStart: value });
+      // HTML date inputs return YYYY-MM-DD; the backend expects an ISO-8601 instant.
+      onChange({ cycleWeekStart: `${value}T00:00:00Z` });
     } else {
       onChange({});
     }
@@ -111,7 +112,7 @@ export function DashboardFilters({
           id="filter-week"
           type="date"
           className="rounded-md border border-outline-variant bg-surface-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-accent"
-          value={filters.cycleWeekStart ?? ''}
+          value={filters.cycleWeekStart ? filters.cycleWeekStart.substring(0, 10) : ''}
           onChange={(e) => { handleWeekChange(e.target.value); }}
         />
       </div>

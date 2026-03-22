@@ -53,13 +53,19 @@ export function SpeechBubble({
 }: SpeechBubbleProps) {
   const bubbleRef = useRef<HTMLDivElement>(null);
 
-  // Dismiss on Escape key
+  // Dismiss on Escape key — stop propagation so parent Escape handlers
+  // (e.g. router-level navigation) do not also fire.
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onDismiss();
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        e.preventDefault();
+        onDismiss();
+      }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    // Capture phase so we intercept before any bubbling handlers
+    window.addEventListener('keydown', handler, true);
+    return () => window.removeEventListener('keydown', handler, true);
   }, [onDismiss]);
 
   // Positioning: above anchor means the bubble bottom edge is near anchorY;

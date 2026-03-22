@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMe, useUpdateUser } from '@/hooks/useUsers';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Card from '@/components/Card';
 import { Badge } from '@/components/Badge';
@@ -7,6 +8,7 @@ import { Badge } from '@/components/Badge';
 export function ProfileTab() {
   const { data: user, isLoading, isError } = useMe();
   const updateMutation = useUpdateUser();
+  const { orgName } = useAuth();
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
 
@@ -134,7 +136,7 @@ export function ProfileTab() {
           {/* Organization */}
           <div className="py-3.5">
             <dt className="label-caps text-muted mb-1">Organization</dt>
-            <dd className="text-body text-on-surface">{'\u2014'}</dd>
+            <dd className="text-body text-on-surface">{orgName ?? '\u2014'}</dd>
           </div>
         </dl>
       </Card>

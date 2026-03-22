@@ -135,9 +135,9 @@ public class LlmBriefingService implements BriefingService {
         String suggestionsJson;
 
         if (verification.passed()) {
-            // Strip citation tags for clean prose
+            // Strip citation tags for clean prose — both narrative and suggestions
             narrative = verifier.stripCitations(extractField(rawOutput, "narrative"));
-            suggestionsJson = extractField(rawOutput, "suggestions");
+            suggestionsJson = verifier.stripCitations(extractField(rawOutput, "suggestions"));
         } else {
             log.warn("Verification failed for BRIEFING (cycle={}). Violations: {}. Falling back to template.",
                     resolvedCycleId, verification.violations());
@@ -152,7 +152,7 @@ public class LlmBriefingService implements BriefingService {
 
             if (retryVerification.passed()) {
                 narrative = verifier.stripCitations(extractField(retryOutput, "narrative"));
-                suggestionsJson = extractField(retryOutput, "suggestions");
+                suggestionsJson = verifier.stripCitations(extractField(retryOutput, "suggestions"));
                 verification = retryVerification;
             } else {
                 // Fall back to deterministic template

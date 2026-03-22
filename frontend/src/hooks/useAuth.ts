@@ -7,6 +7,7 @@ export interface AuthContextValue {
   token: string;
   role: UserRole | null;
   displayName?: string;
+  orgName?: string;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

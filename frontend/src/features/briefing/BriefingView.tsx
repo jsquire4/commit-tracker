@@ -218,7 +218,7 @@ export function BriefingView() {
       {/* Mode content */}
       {drill.mode === 'health' && (
         <Suspense key="health" fallback={<LoadingSpinner size="lg" fullPage label="Loading health map..." />}>
-          <HealthMapContent />
+          <HealthMapContent onSelectTeam={(managerId) => { drill.drillTo({ team: managerId }); }} />
         </Suspense>
       )}
       {drill.mode === 'strategy' && (

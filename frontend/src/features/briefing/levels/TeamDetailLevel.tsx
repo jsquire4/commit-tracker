@@ -16,6 +16,7 @@ import {
   useExecutiveHealth,
 } from '@/hooks/useObservatory';
 import { useCommitments } from '@/hooks/useCommitments';
+import { useUserList } from '@/hooks/useUsers';
 import { AlignmentTrendChart } from '@/features/observatory/AlignmentTrendChart';
 import { CompletionTrendChart } from '@/features/observatory/CompletionTrendChart';
 import { CostImpactTable } from '@/features/observatory/CostImpactTable';
@@ -48,11 +49,16 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   // TODO: add managerId support to GET /api/v1/observatory/displacement and pass teamId here.
   const displacementQuery = useDisplacementReport(12);
   const carryQuery = useCarryChains(cycleId);
-  const commitmentsQuery = useCommitments(cycleId, teamId ? { userId: teamId } : undefined);
+  // Fetch all cycle commitments so the Team Members list shows every report,
+  // not just the manager's own entries. PersonDetailLevel re-filters by userId.
+  const commitmentsQuery = useCommitments(cycleId);
+  // Fetch the full user list so we can identify direct reports by reportsTo = teamId.
+  const usersQuery = useUserList();
 
   const isLoading =
     healthQuery.isLoading || alignmentQuery.isLoading || completionQuery.isLoading ||
-    costQuery.isLoading || displacementQuery.isLoading || carryQuery.isLoading || commitmentsQuery.isLoading;
+    costQuery.isLoading || displacementQuery.isLoading || carryQuery.isLoading ||
+    commitmentsQuery.isLoading || usersQuery.isLoading;
 
   if (isLoading) {
     return (
@@ -77,17 +83,26 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   const latestAlignment = isManager && alignmentData.length > 0 ? alignmentData[alignmentData.length - 1] : null;
   const strategicPct = latestAlignment?.strategicPct ?? managerUnit?.strategicAlignmentPct;
 
+  // Derive the set of direct reports using the user list (reportsTo === teamId).
+  const allUsers = usersQuery.data ?? [];
+  const directReports = allUsers.filter((u) => u.reportsTo === teamId && u.isActive);
+  const directReportIds = new Set(directReports.map((u) => u.id));
+
   // H10: Filter carry chains to only include commitments belonging to this team.
-  // Use the set of user IDs from this team's commitments as the filter.
-  const teamMemberIds = new Set(commitments.map((c) => c.userId));
+  const teamMemberIds = directReportIds.size > 0 ? directReportIds : new Set(commitments.map((c) => c.userId));
   const teamCarryChains = carryChains.filter((chain) => teamMemberIds.has(chain.userId));
   const carryForwardCount = teamCarryChains.length;
 
-  // Group commitments by person for click-through
+  // Group commitments by person for click-through.
+  // Seed the map from directReports so members with zero commitments are still shown.
   const byPerson = new Map<string, { name: string; count: number }>();
+  for (const u of directReports) {
+    byPerson.set(u.id, { name: u.displayName, count: 0 });
+  }
   for (const c of commitments) {
-    if (!byPerson.has(c.userId)) byPerson.set(c.userId, { name: c.userDisplayName, count: 0 });
-    byPerson.get(c.userId)!.count += 1;
+    if (byPerson.has(c.userId)) {
+      byPerson.get(c.userId)!.count += 1;
+    }
   }
 
   const gradeColor: Record<string, 'on-track' | 'watch' | 'at-risk'> = {

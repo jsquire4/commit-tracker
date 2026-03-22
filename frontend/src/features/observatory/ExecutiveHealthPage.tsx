@@ -501,9 +501,10 @@ interface VPSectionProps {
   group: VPGroup;
   sectionIndex: number;
   sparklineMap: Map<string, { value: number }[]>;
+  onSelectTeam?: ((managerId: string) => void) | undefined;
 }
 
-function VPSection({ group, sectionIndex, sparklineMap }: VPSectionProps) {
+function VPSection({ group, sectionIndex, sparklineMap, onSelectTeam }: VPSectionProps) {
   const navigate = useNavigate();
 
   return (
@@ -538,7 +539,11 @@ function VPSection({ group, sectionIndex, sparklineMap }: VPSectionProps) {
             index={sectionIndex * 10 + i}
             sparklineData={sparklineMap.get(unit.managerId) ?? []}
             onClick={() => {
-              void navigate(`/observatory/team/${unit.managerId}`);
+              if (onSelectTeam) {
+                onSelectTeam(unit.managerId);
+              } else {
+                void navigate(`/observatory/team/${unit.managerId}`);
+              }
             }}
           />
         ))}
@@ -552,9 +557,10 @@ function VPSection({ group, sectionIndex, sparklineMap }: VPSectionProps) {
 interface OrgHealthMapProps {
   health: ExecutiveHealthResponse;
   orgTree: User[] | undefined;
+  onSelectTeam?: ((managerId: string) => void) | undefined;
 }
 
-function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
+function OrgHealthMap({ health, orgTree, onSelectTeam }: OrgHealthMapProps) {
   const vpGroups = useMemo(
     () => buildVPGroups(health.units, orgTree),
     [health.units, orgTree],
@@ -597,7 +603,7 @@ function OrgHealthMap({ health, orgTree }: OrgHealthMapProps) {
   return (
     <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
       {vpGroups.map((group, i) => (
-        <VPSection key={group.vpId} group={group} sectionIndex={i} sparklineMap={sparklineMap} />
+        <VPSection key={group.vpId} group={group} sectionIndex={i} sparklineMap={sparklineMap} onSelectTeam={onSelectTeam} />
       ))}
 
       {/* CHESS legend */}
@@ -678,7 +684,12 @@ function ExceptionAlerts({ alerts }: ExceptionAlertsProps) {
 
 // ─── Main Component ─────────────────────────────────────────────────────────────
 
-export function ExecutiveHealthPage() {
+interface ExecutiveHealthPageProps {
+  /** Optional override for card clicks. When omitted, navigates to /observatory/team/:id. */
+  onSelectTeam?: ((managerId: string) => void) | undefined;
+}
+
+export function ExecutiveHealthPage({ onSelectTeam }: ExecutiveHealthPageProps = {}) {
   const { role } = useAuth();
 
   const {
@@ -777,7 +788,7 @@ export function ExecutiveHealthPage() {
       <HeadlineStrip health={health} />
 
       {/* Zone 2: Org Health Map */}
-      <OrgHealthMap health={health} orgTree={orgTreeQuery.data} />
+      <OrgHealthMap health={health} orgTree={orgTreeQuery.data} onSelectTeam={onSelectTeam} />
 
       {/* Zone 3: Exception Alerts */}
       <ExceptionAlerts alerts={alerts} />

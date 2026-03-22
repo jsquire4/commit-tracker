@@ -58,6 +58,8 @@ export interface CreateCommitmentRequest {
   definingObjectiveId?: string;
   outcomeId?: string;
   assignedBy?: string;
+  /** Optional: assign this commitment to a direct report instead of the authenticated user. */
+  forUserId?: string;
 }
 
 export interface UpdateCommitmentRequest extends Partial<CreateCommitmentRequest> {

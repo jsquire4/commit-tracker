@@ -82,14 +82,6 @@ export function BriefingNarrativeCard({ briefing, onExportPdf }: BriefingNarrati
                 <li key={c.id} className="flex items-baseline gap-2 text-[0.8125rem] text-on-surface-variant">
                   <span>{c.label}</span>
                   <span className="text-[0.75rem] font-mono text-muted">&mdash; {c.detail}</span>
-                  {c.linkText && (
-                    <button
-                      type="button"
-                      className="text-[0.75rem] text-accent ml-auto whitespace-nowrap hover:text-accent-dark hover:underline transition-colors bg-transparent border-0 cursor-pointer p-0"
-                    >
-                      {c.linkText} &rarr;
-                    </button>
-                  )}
                 </li>
               ))}
             </ul>

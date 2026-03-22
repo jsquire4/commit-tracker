@@ -203,7 +203,7 @@ export function ExecutionTrendChart({
   // Recharts chart area margins must match the ComposedChart margin prop
   const CHART_MARGIN = { top: 8, right: 16, bottom: 0, left: 0 };
   // Y-axis width — must match the YAxis width prop below
-  const Y_AXIS_WIDTH = 40;
+  const Y_AXIS_WIDTH = 45;
 
   const handleBarClick = useCallback(
     (barData: ChartDataPoint, _index: number, event: React.MouseEvent) => {
@@ -278,7 +278,7 @@ export function ExecutionTrendChart({
                 tickLine={false}
                 axisLine={false}
                 tick={{ fontSize: 11, fill: '#5A605E' }}
-                tickFormatter={(v: number) => `${v}%`}
+                tickFormatter={(v: number) => `${Math.round(v)}%`}
                 width={Y_AXIS_WIDTH}
               />
               <Tooltip content={<CustomTooltip />} />

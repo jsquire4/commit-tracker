@@ -112,10 +112,17 @@ function buildRallyCryCards(
       definingObjectiveId: doId, title: info.title, commitmentCount: info.count,
     }));
 
+    // Deduplicate: an objective may appear in both covered (from commitments) and
+    // uncovered (from the coverage API) lists. Covered takes priority.
+    const coveredIds = new Set(coveredObjectiveMap.keys());
+    const deduplicatedUncovered = uncovered.filter(
+      (obj) => !coveredIds.has(obj.definingObjectiveId),
+    );
+
     const commitRatio = totalHeadcount > 0 ? rcCommitments.length / totalHeadcount : 0;
     let status: RallyCryStatus;
     if (rcCommitments.length === 0 || commitRatio < 0.05) status = 'OFF_TRACK';
-    else if (uncovered.length > 0) status = 'AT_RISK';
+    else if (deduplicatedUncovered.length > 0) status = 'AT_RISK';
     else status = 'ON_TRACK';
 
     const contributors = [...contributorNames];
@@ -131,7 +138,7 @@ function buildRallyCryCards(
         ? `No commitments linked. None of the ${totalHeadcount} team members have prioritized work here.`
         : `Only ${rcCommitments.length} commitment${rcCommitments.length === 1 ? '' : 's'} across ${totalHeadcount} members. Coverage is critically thin.`;
     } else if (status === 'AT_RISK') {
-      narrative = `${contributorText} driving work with ${rcCommitments.length} commitment${rcCommitments.length === 1 ? '' : 's'}, but ${uncovered.length} objective${uncovered.length === 1 ? ' has' : 's have'} no coverage.`;
+      narrative = `${contributorText} driving work with ${rcCommitments.length} commitment${rcCommitments.length === 1 ? '' : 's'}, but ${deduplicatedUncovered.length} objective${deduplicatedUncovered.length === 1 ? ' has' : 's have'} no coverage.`;
     } else {
       narrative = `${contributorText} actively contributing with ${rcCommitments.length} commitment${rcCommitments.length === 1 ? '' : 's'}. All objectives covered.`;
     }
@@ -155,8 +162,8 @@ function buildRallyCryCards(
       ...(desc ? { description: desc } : {}),
       status, commitmentCount: rc.commitmentCount,
       narrative, coveredObjectiveCount: coveredObjectives.length,
-      totalObjectiveCount: coveredObjectives.length + uncovered.length,
-      uncoveredObjectives: uncovered, coveredObjectives, contributingTeams: contributors,
+      totalObjectiveCount: coveredObjectives.length + deduplicatedUncovered.length,
+      uncoveredObjectives: deduplicatedUncovered, coveredObjectives, contributingTeams: contributors,
       sortOrder: sortOrderMap.get(rc.rallyCryId) ?? 999, trendDirection,
       commitmentsByPerson: [...byPerson.entries()].map(([name, titles]) => ({ name, titles })),
     };
