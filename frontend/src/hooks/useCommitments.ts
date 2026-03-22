@@ -15,6 +15,7 @@ import {
 import type {
   Commitment,
   CreateCommitmentRequest,
+  CreateUnplannedCommitmentRequest,
   UpdateCommitmentRequest,
   CommitmentFilters,
 } from '@/types';
@@ -119,7 +120,7 @@ export function useReorderCommitments() {
 export function useCreateUnplannedCommitment(cycleId: string) {
   const queryClient: QueryClient = useQueryClient();
   return useMutation({
-    mutationFn: (req: CreateCommitmentRequest) => createUnplannedCommitment(req),
+    mutationFn: (req: CreateUnplannedCommitmentRequest) => createUnplannedCommitment(req),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ['commitments', cycleId] });
       void queryClient.invalidateQueries({ queryKey: ['reconciliation', cycleId] });

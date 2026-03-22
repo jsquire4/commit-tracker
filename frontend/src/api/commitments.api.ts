@@ -2,6 +2,7 @@ import apiClient, { fetchData } from './client';
 import type {
   Commitment,
   CreateCommitmentRequest,
+  CreateUnplannedCommitmentRequest,
   UpdateCommitmentRequest,
   CommitmentFilters,
 } from '@/types';
@@ -46,7 +47,7 @@ export async function reorderCommitments(
 }
 
 export async function createUnplannedCommitment(
-  req: CreateCommitmentRequest
+  req: CreateUnplannedCommitmentRequest
 ): Promise<Commitment> {
   const response = await apiClient.post<{ data: Commitment }>(`${BASE}/unplanned`, req);
   return response.data.data;

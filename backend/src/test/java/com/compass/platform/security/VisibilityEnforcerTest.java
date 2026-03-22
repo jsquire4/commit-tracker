@@ -199,7 +199,7 @@ class VisibilityEnforcerTest {
     @Test
     @DisplayName("Analyst can view within scope - RCDO-based")
     void analyst_canViewWithinScope_rcdoBased() {
-        // Analyst has a rally-cry scope — expands to all active org users
+        // Analyst has a rally-cry scope — can see commitments explicitly linked to that RC.
         AnalystScope rcScope = AnalystScope.builder()
                 .org(org).analyst(analyst).rallyCry(rallyCry).build();
         rcScope.setId(UUID.randomUUID());
@@ -210,7 +210,14 @@ class VisibilityEnforcerTest {
                 .thenReturn(List.of(executive, director, managerA, managerB,
                         employeeA1, employeeA2, employeeB1, analyst));
 
-        Commitment c = makeCommitmentFor(employeeA1);
+        // Commitment must be linked to the scoped rally cry to be visible.
+        Commitment c = Commitment.builder()
+                .org(org).user(employeeA1).cycle(null).title("rc-linked commitment")
+                .completionHorizon(CompletionHorizon.EOW)
+                .rallyCry(rallyCry)
+                .build();
+        c.setId(UUID.randomUUID());
+
         assertThat(enforcer.canViewCommitment(analyst, c)).isTrue();
     }
 
@@ -249,6 +256,54 @@ class VisibilityEnforcerTest {
 
         Commitment c = makeCommitmentFor(employeeB1);
         assertThat(enforcer.canViewCommitment(analyst, c)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Rally-cry-scoped analyst cannot view commitment with no rally cry link")
+    void analyst_rallyCryScoped_cannotViewUnlinkedCommitment() {
+        // Analyst scoped to rallyCry — a commitment with null rallyCry must be excluded
+        // even though the commitment owner is an active org user.
+        AnalystScope rcScope = AnalystScope.builder()
+                .org(org).analyst(analyst).rallyCry(rallyCry).build();
+        rcScope.setId(UUID.randomUUID());
+
+        Mockito.when(analystScopeRepository.findByAnalystId(analyst.getId()))
+                .thenReturn(List.of(rcScope));
+        Mockito.when(userRepository.findByOrgIdAndIsActiveTrue(org.getId()))
+                .thenReturn(List.of(executive, director, managerA, managerB,
+                        employeeA1, employeeA2, employeeB1, analyst));
+
+        // Commitment has no rallyCry link — should be invisible
+        Commitment unlinked = makeCommitmentFor(employeeA1);
+        assertThat(unlinked.getRallyCry()).isNull();
+        assertThat(enforcer.canViewCommitment(analyst, unlinked)).isFalse();
+    }
+
+    @Test
+    @DisplayName("Rally-cry-scoped analyst cannot view commitment linked to a different rally cry")
+    void analyst_rallyCryScoped_cannotViewCommitmentLinkedToDifferentRallyCry() {
+        // Analyst scoped to rallyCry — a commitment linked to a DIFFERENT rally cry must be excluded.
+        RallyCry otherRc = RallyCry.builder().org(org).title("RC-other").sortOrder(1).build();
+        otherRc.setId(UUID.randomUUID());
+
+        AnalystScope rcScope = AnalystScope.builder()
+                .org(org).analyst(analyst).rallyCry(rallyCry).build();
+        rcScope.setId(UUID.randomUUID());
+
+        Mockito.when(analystScopeRepository.findByAnalystId(analyst.getId()))
+                .thenReturn(List.of(rcScope));
+        Mockito.when(userRepository.findByOrgIdAndIsActiveTrue(org.getId()))
+                .thenReturn(List.of(executive, director, managerA, managerB,
+                        employeeA1, employeeA2, employeeB1, analyst));
+
+        Commitment wrongRc = Commitment.builder()
+                .org(org).user(employeeA1).cycle(null).title("wrong rc commitment")
+                .completionHorizon(CompletionHorizon.EOW)
+                .rallyCry(otherRc)
+                .build();
+        wrongRc.setId(UUID.randomUUID());
+
+        assertThat(enforcer.canViewCommitment(analyst, wrongRc)).isFalse();
     }
 
     // === RCDO owner cross-cutting ===

@@ -7,6 +7,8 @@ import com.compass.platform.domain.rcdo.DefiningObjectiveRepository;
 import com.compass.platform.domain.rcdo.Outcome;
 import com.compass.platform.domain.rcdo.OutcomeRepository;
 import com.compass.platform.domain.user.AppUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.EnumMap;
@@ -23,6 +25,8 @@ import java.util.stream.Collectors;
  */
 @Component
 public class VisibilityEnforcer {
+
+    private static final Logger log = LoggerFactory.getLogger(VisibilityEnforcer.class);
 
     private final Map<UserRole, VisibilityStrategy> strategies;
     private final DefiningObjectiveRepository definingObjectiveRepository;
@@ -43,11 +47,15 @@ public class VisibilityEnforcer {
 
     /**
      * Can actor view a specific commitment?
-     * Checks role-based visibility first, then falls back to RCDO owner cross-cutting rule.
+     * Checks role-based visibility first (user-id scope AND commitment-level predicate),
+     * then falls back to RCDO owner cross-cutting rule.
      */
     public boolean canViewCommitment(AppUser actor, Commitment commitment) {
-        if (computeVisibleUserIds(actor).contains(commitment.getUser().getId())) return true;
-        return isRcdoOwner(actor, commitment);
+        if (isVisibleByStrategy(actor, commitment)) return true;
+        if (isRcdoOwner(actor, commitment)) return true;
+        log.warn("visibility_denied action=canViewCommitment userId={} targetCommitmentId={} targetOwnerId={} reason=outside_role_scope_and_not_rcdo_owner",
+                actor.getId(), commitment.getId(), commitment.getUser().getId());
+        return false;
     }
 
     /**
@@ -57,10 +65,28 @@ public class VisibilityEnforcer {
     public List<Commitment> filterVisible(AppUser actor, List<Commitment> commitments) {
         Set<UUID> visibleUserIds = computeVisibleUserIds(actor);
         Set<UUID> ownedRcdoIds = computeOwnedRcdoIds(actor);
-        return commitments.stream()
-                .filter(c -> visibleUserIds.contains(c.getUser().getId())
+        VisibilityStrategy strategy = strategies.get(actor.getRole());
+        List<Commitment> visible = commitments.stream()
+                .filter(c -> (visibleUserIds.contains(c.getUser().getId())
+                              && (strategy == null || strategy.canViewCommitment(actor, c)))
                              || matchesOwnedRcdo(c, ownedRcdoIds))
                 .toList();
+        int filtered = commitments.size() - visible.size();
+        if (filtered > 0) {
+            log.warn("visibility_denied action=filterVisible userId={} role={} filtered={} of={} reason=outside_role_scope_and_not_rcdo_owner",
+                    actor.getId(), actor.getRole(), filtered, commitments.size());
+        }
+        return visible;
+    }
+
+    /**
+     * Returns true if the commitment passes both the user-id scope check and the
+     * strategy's optional commitment-level predicate.
+     */
+    private boolean isVisibleByStrategy(AppUser actor, Commitment commitment) {
+        if (!computeVisibleUserIds(actor).contains(commitment.getUser().getId())) return false;
+        VisibilityStrategy strategy = strategies.get(actor.getRole());
+        return strategy == null || strategy.canViewCommitment(actor, commitment);
     }
 
     /**
@@ -68,7 +94,11 @@ public class VisibilityEnforcer {
      */
     public Set<UUID> computeVisibleUserIds(AppUser actor) {
         VisibilityStrategy strategy = strategies.get(actor.getRole());
-        if (strategy == null) return Set.of(actor.getId()); // fallback: self only
+        if (strategy == null) {
+            log.warn("visibility_denied action=computeVisibleUserIds userId={} role={} reason=no_strategy_registered_for_role",
+                    actor.getId(), actor.getRole());
+            return Set.of(actor.getId()); // fallback: self only
+        }
         return strategy.computeVisibleUserIds(actor);
     }
 

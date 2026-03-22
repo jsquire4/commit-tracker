@@ -300,13 +300,47 @@ public class DashboardService {
     /**
      * Loads the three shared data pieces used by every dashboard method:
      * visible team members, resolved cycle, and commitments grouped by user.
+     * When filters.rcdoId and filters.rcdoType are both provided, only commitments
+     * linked to that specific RCDO entity are included in the roll-up.
      */
     private DashboardData loadDashboardData(AppUser manager, DashboardFilters filters) {
         List<AppUser> members = getVisibleTeamMembers(manager, filters);
         Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
         List<UUID> userIds = members.stream().map(AppUser::getId).toList();
         Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleOpt.map(Cycle::getId).orElse(null));
+        if (filters.rcdoId() != null && filters.rcdoType() != null) {
+            byUser = applyRcdoFilter(byUser, filters.rcdoId(), filters.rcdoType());
+        }
         return new DashboardData(members, cycleOpt, byUser);
+    }
+
+    /**
+     * Filters the per-user commitment map to only include commitments linked to
+     * the given RCDO entity. Unrecognised rcdoType values are silently treated as
+     * "no match", leaving the user with an empty list rather than unfiltered data.
+     */
+    private Map<UUID, List<Commitment>> applyRcdoFilter(
+            Map<UUID, List<Commitment>> byUser, UUID rcdoId, String rcdoType) {
+        Map<UUID, List<Commitment>> filtered = new HashMap<>();
+        for (Map.Entry<UUID, List<Commitment>> entry : byUser.entrySet()) {
+            List<Commitment> kept = entry.getValue().stream()
+                    .filter(c -> matchesRcdo(c, rcdoId, rcdoType))
+                    .toList();
+            filtered.put(entry.getKey(), kept);
+        }
+        return filtered;
+    }
+
+    private boolean matchesRcdo(Commitment c, UUID rcdoId, String rcdoType) {
+        return switch (rcdoType) {
+            case "RALLY_CRY" -> c.getRallyCry() != null && c.getRallyCry().getId().equals(rcdoId);
+            case "DEFINING_OBJECTIVE" -> c.getDefiningObjective() != null && c.getDefiningObjective().getId().equals(rcdoId);
+            case "OUTCOME" -> c.getOutcome() != null && c.getOutcome().getId().equals(rcdoId);
+            default -> {
+                log.warn("Unknown rcdoType '{}' in dashboard filter — no commitments will match", rcdoType);
+                yield false;
+            }
+        };
     }
 
     /**

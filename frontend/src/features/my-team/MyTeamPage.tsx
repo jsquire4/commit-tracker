@@ -3,10 +3,12 @@ import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useCommitments } from '@/hooks/useCommitments';
+import { useUIStore } from '@/stores/ui.store';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Button from '@/components/Button';
 import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
+import { DashboardFilters } from '@/features/manager-dashboard/DashboardFilters';
 import { TeamSummaryCard } from './TeamSummaryCard';
 import { TeamMetricsStrip } from './TeamMetricsStrip';
 import { RallyCryCoverageCards } from './RallyCryCoverageCards';
@@ -28,7 +30,10 @@ export function MyTeamPage() {
   const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
   const activeCycleId = selectedCycleId ?? cycle?.id ?? '';
 
-  const { data: dashboard, isLoading: dashLoading, isError: dashError, error: dashErr } = useDashboard();
+  const filters = useUIStore((s) => s.dashboardFilters);
+  const setDashboardFilters = useUIStore((s) => s.setDashboardFilters);
+
+  const { data: dashboard, isLoading: dashLoading, isError: dashError, error: dashErr } = useDashboard(filters);
   const { data: commitments, isLoading: commitmentsLoading } = useCommitments(activeCycleId);
 
   const [assignFormOpen, setAssignFormOpen] = useState(false);
@@ -47,6 +52,20 @@ export function MyTeamPage() {
   }, [allCommitments]);
 
   const members = dashboard?.teamRollup?.members ?? [];
+
+  const teamMemberOptions = useMemo(
+    () => members.map((m) => ({ id: m.userId, displayName: m.displayName })),
+    [members],
+  );
+
+  const rcdoOptions = useMemo(
+    () =>
+      (dashboard?.rcdoCoverage?.byRallyCry ?? []).map((r) => ({
+        id: r.rallyCryId,
+        title: r.title,
+      })),
+    [dashboard?.rcdoCoverage?.byRallyCry],
+  );
 
   const sortedMembers = useMemo(() => {
     return [...members].sort((a, b) => {
@@ -107,6 +126,15 @@ export function MyTeamPage() {
           onSelect={(id) => setSelectedCycleId(id)}
         />
       </div>
+
+      {/* Dashboard Filters */}
+      <DashboardFilters
+        filters={filters}
+        onChange={setDashboardFilters}
+        teamMemberOptions={teamMemberOptions}
+        rcdoOptions={rcdoOptions}
+        role={role}
+      />
 
       {/* AI Summary Card */}
       <TeamSummaryCard dashboard={dashboard} commitments={allCommitments} />

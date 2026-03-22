@@ -1,11 +1,14 @@
 import { useUIStore } from '@/stores/ui.store';
 import type { DashboardFilters } from '@/types';
+import type { UserRole } from '@/types/enums';
+import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
 
 interface DashboardFiltersProps {
   filters: DashboardFilters;
   onChange: (f: Partial<DashboardFilters>) => void;
   teamMemberOptions?: { id: string; displayName: string }[];
   rcdoOptions?: { id: string; title: string }[];
+  role?: UserRole | null;
 }
 
 export function DashboardFilters({
@@ -13,6 +16,7 @@ export function DashboardFilters({
   onChange,
   teamMemberOptions = [],
   rcdoOptions = [],
+  role,
 }: DashboardFiltersProps) {
   const resetDashboardFilters = useUIStore((s) => s.resetDashboardFilters);
 
@@ -112,21 +116,23 @@ export function DashboardFilters({
         />
       </div>
 
-      {/* Include subtree toggle */}
-      <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
-          Include Subtree
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer">
-          <input
-            type="checkbox"
-            className="rounded border-outline-variant text-accent focus:ring-accent"
-            checked={filters.includeSubtree ?? false}
-            onChange={(e) => { handleSubtreeChange(e.target.checked); }}
-          />
-          <span className="text-sm text-on-surface-variant">Include org subtree</span>
-        </label>
-      </div>
+      {/* Include subtree toggle — Director and above only */}
+      {role && DIRECTOR_AND_ABOVE.has(role) && (
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
+            Include Subtree
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              className="rounded border-outline-variant text-accent focus:ring-accent"
+              checked={filters.includeSubtree ?? false}
+              onChange={(e) => { handleSubtreeChange(e.target.checked); }}
+            />
+            <span className="text-sm text-on-surface-variant">Include full org subtree</span>
+          </label>
+        </div>
+      )}
 
       {/* Reset button */}
       <div className="flex flex-col justify-end">

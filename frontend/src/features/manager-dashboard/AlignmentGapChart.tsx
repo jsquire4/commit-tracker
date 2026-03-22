@@ -16,11 +16,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   OPERATIONAL: CHESS_ACCENT.operational,
   DEFENSIVE: CHESS_ACCENT.defensive,
   CAPABILITY_BUILDING: CHESS_ACCENT.capability,
+  UNLINKED: '#94a3b8',
 };
 
-const CATEGORY_LABELS = CHESS_LABELS;
+const CATEGORY_LABELS: Record<string, string> = {
+  ...CHESS_LABELS,
+  UNLINKED: 'Unlinked',
+};
 
-const CATEGORY_KEYS = ['STRATEGIC', 'OPERATIONAL', 'DEFENSIVE', 'CAPABILITY_BUILDING'] as const;
+const CATEGORY_KEYS = ['STRATEGIC', 'OPERATIONAL', 'DEFENSIVE', 'CAPABILITY_BUILDING', 'UNLINKED'] as const;
 
 interface ChartRow {
   name: string;
@@ -30,6 +34,7 @@ interface ChartRow {
   OPERATIONAL: number;
   DEFENSIVE: number;
   CAPABILITY_BUILDING: number;
+  UNLINKED: number;
   totalCommitments: number;
 }
 
@@ -86,6 +91,10 @@ function buildChartData(
   aggregate: AlignmentSignalResponse,
   members: MemberAlignment[]
 ): ChartRow[] {
+  const teamCategorized = Object.values(aggregate.distribution).reduce(
+    (sum, d) => sum + d.count,
+    0
+  );
   const teamTotal: ChartRow = {
     name: 'Team Total',
     userId: null,
@@ -94,22 +103,24 @@ function buildChartData(
     OPERATIONAL: aggregate.distribution['OPERATIONAL']?.count ?? 0,
     DEFENSIVE: aggregate.distribution['DEFENSIVE']?.count ?? 0,
     CAPABILITY_BUILDING: aggregate.distribution['CAPABILITY_BUILDING']?.count ?? 0,
-    totalCommitments: Object.values(aggregate.distribution).reduce(
-      (sum, d) => sum + d.count,
-      0
-    ),
+    UNLINKED: aggregate.unlinkedCount,
+    totalCommitments: teamCategorized + aggregate.unlinkedCount,
   };
 
-  const memberRows: ChartRow[] = members.map((m) => ({
-    name: m.displayName,
-    userId: m.userId,
-    isTeamTotal: false,
-    STRATEGIC: m.distribution['STRATEGIC']?.count ?? 0,
-    OPERATIONAL: m.distribution['OPERATIONAL']?.count ?? 0,
-    DEFENSIVE: m.distribution['DEFENSIVE']?.count ?? 0,
-    CAPABILITY_BUILDING: m.distribution['CAPABILITY_BUILDING']?.count ?? 0,
-    totalCommitments: Object.values(m.distribution).reduce((sum, d) => sum + d.count, 0),
-  }));
+  const memberRows: ChartRow[] = members.map((m) => {
+    const memberCategorized = Object.values(m.distribution).reduce((sum, d) => sum + d.count, 0);
+    return {
+      name: m.displayName,
+      userId: m.userId,
+      isTeamTotal: false,
+      STRATEGIC: m.distribution['STRATEGIC']?.count ?? 0,
+      OPERATIONAL: m.distribution['OPERATIONAL']?.count ?? 0,
+      DEFENSIVE: m.distribution['DEFENSIVE']?.count ?? 0,
+      CAPABILITY_BUILDING: m.distribution['CAPABILITY_BUILDING']?.count ?? 0,
+      UNLINKED: m.unlinkedCount,
+      totalCommitments: memberCategorized + m.unlinkedCount,
+    };
+  });
 
   return [teamTotal, ...memberRows];
 }
@@ -194,7 +205,7 @@ export function AlignmentGapChart({
               stackId="alignment"
               fill={CATEGORY_COLORS[key]}
               cursor={onSegmentClick ? 'pointer' : 'default'}
-              {...(key === 'CAPABILITY_BUILDING' ? { radius: [0, 4, 4, 0] as [number, number, number, number] } : {})}
+              {...(key === 'UNLINKED' ? { radius: [0, 4, 4, 0] as [number, number, number, number] } : {})}
               onClick={(entry: ChartRow) => {
                 if (onSegmentClick) {
                   onSegmentClick(entry.userId, key);

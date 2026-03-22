@@ -18,6 +18,7 @@ interface UnplannedFormState {
   completionHorizon: CompletionHorizon;
   rallyCryId: string;
   reconciliationStatus: ReconciliationStatus | null;
+  reconciliationNotes: string;
 }
 
 const HORIZON_OPTIONS: { value: CompletionHorizon; label: string }[] = [
@@ -34,6 +35,7 @@ const EMPTY_FORM: UnplannedFormState = {
   completionHorizon: 'EOW',
   rallyCryId: '',
   reconciliationStatus: null,
+  reconciliationNotes: '',
 };
 
 const selectClass = [
@@ -109,12 +111,15 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
     }
 
     try {
+      const trimmedNotes = form.reconciliationNotes.trim();
       await createMutation.mutateAsync({
         cycleId,
         title: form.title.trim(),
         bullets: filledBullets,
         completionHorizon: form.completionHorizon,
         rallyCryId: form.rallyCryId,
+        reconciliationStatus: form.reconciliationStatus as ReconciliationStatus,
+        ...(trimmedNotes && { reconciliationNotes: trimmedNotes }),
       });
       setForm(EMPTY_FORM);
       setOpen(false);
@@ -296,6 +301,24 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
                 onChange={(s) => {
                   setForm((prev) => ({ ...prev, reconciliationStatus: s }));
                 }}
+              />
+            </div>
+
+            {/* Reconciliation Notes */}
+            <div className="flex flex-col gap-1">
+              <label htmlFor="unplanned-notes" className="text-sm font-medium text-on-surface-variant">
+                Notes <span className="text-muted font-normal">(optional)</span>
+              </label>
+              <textarea
+                id="unplanned-notes"
+                value={form.reconciliationNotes}
+                onChange={(e) => {
+                  setForm((prev) => ({ ...prev, reconciliationNotes: e.target.value }));
+                }}
+                placeholder="Any context about this unplanned work…"
+                rows={2}
+                maxLength={2000}
+                className={`${inputClass} resize-none`}
               />
             </div>
 

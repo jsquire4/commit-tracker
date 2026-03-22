@@ -68,6 +68,11 @@ export interface ReorderCommitmentsRequest {
   commitmentIds: string[];
 }
 
+export interface CreateUnplannedCommitmentRequest extends CreateCommitmentRequest {
+  reconciliationStatus: ReconciliationStatus;
+  reconciliationNotes?: string;
+}
+
 export interface CommitmentFilters {
   userId?: string;
   rallyCryId?: string;
