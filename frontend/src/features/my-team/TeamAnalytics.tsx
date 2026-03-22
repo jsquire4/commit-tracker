@@ -12,7 +12,9 @@ interface TeamAnalyticsProps {
 export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
   const [expanded, setExpanded] = useState(false);
 
-  const strategicPct = dashboard.alignmentSignal?.distribution?.STRATEGIC?.percentage ?? 0;
+  // Show Rally Cry Coverage in the collapsed header — NOT strategic alignment.
+  // Rally cry coverage = % of commitments linked to any rally cry.
+  const rcCoverage = dashboard.rcdoCoverage?.linkedPercentage ?? 0;
   const teamMemberIds = (dashboard.teamRollup?.members ?? []).map((m) => m.userId);
 
   return (
@@ -36,7 +38,7 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
           <h2 className="font-serif text-title text-on-surface">Team Analytics</h2>
         </div>
         <span className="text-body text-on-surface-variant">
-          Strategic alignment: <span className="font-medium text-on-surface">{Math.round(strategicPct)}%</span>
+          Rally Cry Coverage: <span className="font-medium text-on-surface">{Math.round(rcCoverage)}%</span>
         </span>
       </button>
 

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
@@ -32,6 +32,13 @@ export function MyTeamPage() {
 
   const filters = useUIStore((s) => s.dashboardFilters);
   const setDashboardFilters = useUIStore((s) => s.setDashboardFilters);
+
+  // Executives should see their full org subtree by default, not just direct VP reports
+  useEffect(() => {
+    if (role === 'EXECUTIVE' && filters.includeSubtree !== true) {
+      setDashboardFilters({ includeSubtree: true });
+    }
+  }, [role, filters.includeSubtree, setDashboardFilters]);
 
   const { data: dashboard, isLoading: dashLoading, isError: dashError, error: dashErr } = useDashboard(filters);
   const { data: commitments, isLoading: commitmentsLoading } = useCommitments(activeCycleId);
