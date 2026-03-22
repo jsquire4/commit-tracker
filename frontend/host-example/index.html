@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PA Host App — Compass Integration Example</title>
+
+  <!-- Google Fonts required by Compass design system -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Newsreader:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet" />
+
+  <style>
+    /* Host app shell styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #f5f5f5; }
+    .host-header {
+      background: #1a1a2e; color: white; padding: 12px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .host-header h1 { font-size: 16px; font-weight: 600; }
+    .host-nav { display: flex; gap: 16px; }
+    .host-nav a {
+      color: rgba(255,255,255,0.7); text-decoration: none; font-size: 14px;
+      padding: 4px 8px; border-radius: 4px;
+    }
+    .host-nav a:hover, .host-nav a.active { color: white; background: rgba(255,255,255,0.1); }
+    .host-content { min-height: calc(100vh - 48px); }
+    .host-placeholder {
+      padding: 48px; text-align: center; color: #666;
+    }
+    .host-placeholder h2 { font-size: 24px; margin-bottom: 8px; }
+    #compass-root { min-height: calc(100vh - 48px); }
+    .loading { padding: 48px; text-align: center; color: #999; }
+  </style>
+</head>
+<body>
+  <!-- Host app shell — this is what the real PA host app would look like -->
+  <header class="host-header">
+    <h1>PA Platform</h1>
+    <nav class="host-nav">
+      <a href="/dashboard">Dashboard</a>
+      <a href="/compass" class="active">Compass</a>
+      <a href="/analytics">Analytics</a>
+      <a href="/admin">Admin</a>
+    </nav>
+  </header>
+
+  <div class="host-content">
+    <div id="compass-root">
+      <div class="loading">Loading Compass module...</div>
+    </div>
+  </div>
+
+  <script type="module">
+    // ─── Host Integration Example ───────────────────────────────────────
+    // This demonstrates how the PA host app loads the Compass remote module
+    // via Module Federation and mounts it into the host shell.
+
+    // 1. Import the remote entry (adjust URL to where Compass is deployed)
+    const COMPASS_REMOTE_URL = 'http://localhost:3001/assets/remoteEntry.js';
+
+    async function loadCompass() {
+      try {
+        // Dynamic import of the federated remote
+        const compassModule = await import(/* @vite-ignore */ COMPASS_REMOTE_URL);
+        const CompassApp = compassModule.default;
+
+        // 2. Inject Compass design tokens (CSS custom properties)
+        // Option A: The host already includes the stylesheet
+        // Option B: Load it from the remote
+        if (compassModule.styles) {
+          const style = document.createElement('style');
+          style.textContent = compassModule.styles;
+          document.head.appendChild(style);
+        }
+
+        // 3. Provide auth context from the host's identity system
+        // In production, this would come from the PA host's auth provider
+        const authContext = {
+          token: 'host-provided-jwt-token',
+          userId: 'user-uuid-from-host',
+          orgId: 'org-uuid-from-host',
+          role: 'EXECUTIVE',
+          displayName: 'Host User',
+        };
+
+        // 4. Mount Compass into the host's DOM
+        const { createRoot } = await import('react-dom/client');
+        const { createElement } = await import('react');
+        const { StrictMode } = await import('react');
+
+        const container = document.getElementById('compass-root');
+        const root = createRoot(container);
+        root.render(
+          createElement(StrictMode, null,
+            createElement(CompassApp, {
+              basename: '/compass',    // Mount under /compass in the host
+              authContext: authContext,
+            })
+          )
+        );
+
+        console.log('[PA Host] Compass module mounted successfully');
+      } catch (err) {
+        console.error('[PA Host] Failed to load Compass module:', err);
+        document.getElementById('compass-root').innerHTML = `
+          <div class="host-placeholder">
+            <h2>Compass Module</h2>
+            <p>Could not load remote module. Make sure the Compass dev server is running on port 3001.</p>
+            <p style="margin-top: 8px; font-size: 12px; color: #999;">${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    // 5. Listen for auth expiry events from Compass
+    window.addEventListener('compass:auth:expired', () => {
+      console.warn('[PA Host] Compass reported auth expired — triggering re-auth');
+      // In production: redirect to login, refresh token, etc.
+      alert('Session expired. Redirecting to login...');
+    });
+
+    loadCompass();
+  </script>
+</body>
+</html>

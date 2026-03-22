@@ -1,9 +1,27 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import federation from '@originjs/vite-plugin-federation';
 import path from 'path';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [
+    react(),
+    federation({
+      name: 'compass',
+      filename: 'remoteEntry.js',
+      exposes: {
+        // Main app — host imports: import CompassApp from 'compass/App'
+        './App': './src/remoteEntry.tsx',
+        // Design tokens — host imports: import 'compass/styles'
+        './styles': './src/styles/global.css',
+      },
+      shared: {
+        react: { requiredVersion: '^18.3.1' },
+        'react-dom': { requiredVersion: '^18.3.1' },
+        'react-router-dom': { requiredVersion: '^6.22.3' },
+      },
+    }),
+  ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'src'),
@@ -21,17 +39,11 @@ export default defineConfig({
   },
   build: {
     sourcemap: true,
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-query': ['@tanstack/react-query'],
-          'vendor-ui': ['@headlessui/react', '@dnd-kit/core', '@dnd-kit/sortable', '@dnd-kit/utilities'],
-          'vendor-charts': ['recharts'],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-        },
-      },
-    },
+    target: 'esnext',
+    minify: true,
+    cssCodeSplit: false,
+    // Module Federation controls chunk splitting for shared modules.
+    // manualChunks is incompatible — the federation plugin handles this.
   },
   test: {
     globals: true,
