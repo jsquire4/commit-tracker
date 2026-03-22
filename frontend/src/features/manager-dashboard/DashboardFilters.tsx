@@ -8,13 +8,6 @@ interface DashboardFiltersProps {
   rcdoOptions?: { id: string; title: string }[];
 }
 
-const CATEGORY_OPTIONS: { value: string; label: string }[] = [
-  { value: 'STRATEGIC', label: 'Strategic' },
-  { value: 'OPERATIONAL', label: 'Operational' },
-  { value: 'DEFENSIVE', label: 'Defensive' },
-  { value: 'CAPABILITY_BUILDING', label: 'Capability Building' },
-];
-
 export function DashboardFilters({
   filters,
   onChange,
@@ -52,14 +45,6 @@ export function DashboardFilters({
       onChange({ cycleWeekStart: value });
     } else {
       onChange({});
-    }
-  }
-
-  function handleCategoryToggle(catValue: string) {
-    if (filters.rcdoId === catValue) {
-      onChange({});
-    } else {
-      onChange({ rcdoId: catValue });
     }
   }
 
@@ -125,29 +110,6 @@ export function DashboardFilters({
           value={filters.cycleWeekStart ?? ''}
           onChange={(e) => { handleWeekChange(e.target.value); }}
         />
-      </div>
-
-      {/* Category filter */}
-      <div className="flex flex-col gap-1 min-w-[180px]">
-        <label className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
-          Category
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {CATEGORY_OPTIONS.map((cat) => (
-            <button
-              key={cat.value}
-              type="button"
-              className={`px-2 py-1 rounded text-xs font-medium border transition-colors duration-[var(--duration-fast)] ${
-                filters.rcdoId === cat.value
-                  ? 'bg-accent text-white border-accent'
-                  : 'bg-surface-lowest text-on-surface-variant border-outline-variant hover:border-accent'
-              }`}
-              onClick={() => { handleCategoryToggle(cat.value); }}
-            >
-              {cat.label}
-            </button>
-          ))}
-        </div>
       </div>
 
       {/* Include subtree toggle */}
