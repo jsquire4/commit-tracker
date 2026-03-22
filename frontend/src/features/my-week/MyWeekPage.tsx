@@ -299,7 +299,7 @@ export function MyWeekPage() {
                     </p>
                     {reconSummary && reconSummary.totalCommitments > 0 && (
                       <p className="mt-1 text-body text-on-surface-variant">
-                        Completion rate: {Math.round(reconSummary.completionRate * 100)}%
+                        Completion rate: {Math.round(reconSummary.completionRate)}%
                       </p>
                     )}
                   </div>

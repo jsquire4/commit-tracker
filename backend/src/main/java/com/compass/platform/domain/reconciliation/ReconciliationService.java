@@ -324,8 +324,9 @@ public class ReconciliationService {
                 .count();
 
         // Inclusive completion rate: COMPLETED + PARTIALLY_COMPLETED, matching AnalyticsService.
+        // Scale: 0-100 (percentage), consistent with AnalyticsService.pct() and all other rate fields.
         double completionRate = totalCommitments == 0 ? 0.0
-                : (double) (completedCount + partiallyCompletedCount) / totalCommitments;
+                : (double) (completedCount + partiallyCompletedCount) / totalCommitments * 100.0;
 
         // Bullet completion rate scoped to this user's commitments
         List<TaskBullet> allBullets = userCommitmentIds.isEmpty()
@@ -335,7 +336,7 @@ public class ReconciliationService {
         int completedBullets = (int) allBullets.stream().filter(TaskBullet::isCompleted).count();
 
         double bulletCompletionRate = totalBullets == 0 ? 0.0
-                : (double) completedBullets / totalBullets;
+                : (double) completedBullets / totalBullets * 100.0;
 
         return new ReconciliationSummary(
                 totalCommitments,
