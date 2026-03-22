@@ -33,7 +33,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <div key={entry.dataKey} className="flex items-center gap-2 text-sm">
           <span className="inline-block w-3 h-3 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.color }} />
           <span className="text-on-surface-variant">
-            {entry.dataKey === 'completionRate' ? 'Completion' : 'Carry-Forward'}: {entry.value}%
+            {entry.dataKey === 'completionRate' ? 'Completion' : 'Carry-Forward'}: {(entry.value * 100).toFixed(0)}%
           </span>
         </div>
       ))}

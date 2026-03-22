@@ -1,11 +1,12 @@
 import { useState } from 'react';
-import { useMe } from '@/hooks/useUsers';
+import { useMe, useUpdateUser } from '@/hooks/useUsers';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Card from '@/components/Card';
 import { Badge } from '@/components/Badge';
 
 export function ProfileTab() {
   const { data: user, isLoading, isError } = useMe();
+  const updateMutation = useUpdateUser();
   const [editing, setEditing] = useState(false);
   const [displayName, setDisplayName] = useState('');
 
@@ -19,7 +20,18 @@ export function ProfileTab() {
 
   function startEditing() {
     setDisplayName(user!.displayName);
+    updateMutation.reset();
     setEditing(true);
+  }
+
+  async function handleSave() {
+    if (!user) return;
+    try {
+      await updateMutation.mutateAsync({ id: user.id, request: { displayName, role: user.role } });
+      setEditing(false);
+    } catch {
+      // Error visible via mutation state
+    }
   }
 
   const roleLabel: Record<string, string> = {
@@ -53,10 +65,11 @@ export function ProfileTab() {
                   />
                   <button
                     type="button"
-                    onClick={() => { setEditing(false); }}
-                    className="text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-accent hover:text-accent-dark transition-colors duration-[150ms]"
+                    disabled={updateMutation.isPending}
+                    onClick={() => { void handleSave(); }}
+                    className="text-[0.6875rem] font-medium uppercase tracking-[0.04em] text-accent hover:text-accent-dark transition-colors duration-[150ms] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Save
+                    {updateMutation.isPending ? 'Saving…' : 'Save'}
                   </button>
                   <button
                     type="button"
@@ -65,6 +78,9 @@ export function ProfileTab() {
                   >
                     Cancel
                   </button>
+                  {updateMutation.isError && (
+                    <p className="text-[0.75rem] text-error mt-1">Failed to save. Please try again.</p>
+                  )}
                 </div>
               ) : (
                 <dd className="text-body text-on-surface">{user.displayName}</dd>

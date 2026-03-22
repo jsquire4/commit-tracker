@@ -134,13 +134,14 @@ export function PersonCard({ member, commitments, index: _index, onAssign }: Per
               >
                 <span className="text-[0.8125rem] text-on-surface flex-1 min-w-0 truncate">{c.title}</span>
                 <div className="flex items-center gap-2 flex-shrink-0 ml-3">
-                  {c.chessCategoryId && (
-                    <span
-                      className={`text-[0.625rem] uppercase tracking-[0.04rem] px-2 py-0.5 rounded-sm font-medium whitespace-nowrap ${CHESS_CHIP_STYLES[c.chessCategoryId] ?? 'bg-surface-container text-on-surface-variant'}`}
-                    >
-                      {CHESS_LABEL[c.chessCategoryId] ?? c.chessCategoryId}
-                    </span>
-                  )}
+                  {c.chessCategoryName && (() => {
+                    const catKey = c.chessCategoryName.toUpperCase().replace(/ /g, '_');
+                    return (
+                      <span className={`text-[0.625rem] uppercase tracking-[0.04rem] px-2 py-0.5 rounded-sm font-medium whitespace-nowrap ${CHESS_CHIP_STYLES[catKey] ?? 'bg-surface-container text-on-surface-variant'}`}>
+                        {CHESS_LABEL[catKey] ?? c.chessCategoryName}
+                      </span>
+                    );
+                  })()}
                   {c.rcdoLink?.rallyCryTitle ? (
                     <span className="text-[0.625rem] px-2 py-0.5 rounded-sm bg-accent/[0.08] text-accent whitespace-nowrap">
                       {c.rcdoLink.rallyCryTitle}

@@ -77,6 +77,7 @@ export function useReorderCommitments() {
       const previous = queryClient.getQueryData<Commitment[]>([
         'commitments',
         cycleId,
+        undefined,
       ]);
 
       // Optimistically reorder
@@ -85,7 +86,7 @@ export function useReorderCommitments() {
           .map((id) => previous.find((c) => c.id === id))
           .filter((c): c is Commitment => c !== undefined);
 
-        queryClient.setQueryData(['commitments', cycleId], reordered);
+        queryClient.setQueryData(['commitments', cycleId, undefined], reordered);
       }
 
       return { previous, cycleId };
@@ -97,7 +98,7 @@ export function useReorderCommitments() {
     ) => {
       if (context?.previous) {
         queryClient.setQueryData(
-          ['commitments', context.cycleId],
+          ['commitments', context.cycleId, undefined],
           context.previous
         );
       }

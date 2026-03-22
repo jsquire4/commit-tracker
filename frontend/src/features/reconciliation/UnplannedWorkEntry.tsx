@@ -18,7 +18,6 @@ interface UnplannedFormState {
   completionHorizon: CompletionHorizon;
   rallyCryId: string;
   reconciliationStatus: ReconciliationStatus | null;
-  requestedBy: string;
 }
 
 const HORIZON_OPTIONS: { value: CompletionHorizon; label: string }[] = [
@@ -35,7 +34,6 @@ const EMPTY_FORM: UnplannedFormState = {
   completionHorizon: 'EOW',
   rallyCryId: '',
   reconciliationStatus: null,
-  requestedBy: '',
 };
 
 const selectClass = [
@@ -286,30 +284,6 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
                   </option>
                 ))}
               </select>
-            </div>
-
-            {/* Who requested this? */}
-            <div className="flex flex-col gap-1">
-              <label htmlFor="unplanned-requested-by" className="text-sm font-medium text-on-surface-variant">
-                Who requested this? <span className="text-error">*</span>
-              </label>
-              <select
-                id="unplanned-requested-by"
-                value={form.requestedBy}
-                onChange={(e) => {
-                  setForm((prev) => ({ ...prev, requestedBy: e.target.value }));
-                }}
-                className={selectClass}
-              >
-                <option value="">&mdash; Select &mdash;</option>
-                <option value="self">Self-initiated</option>
-                <option value="manager">Manager</option>
-                <option value="director">Director</option>
-                <option value="external">External stakeholder</option>
-              </select>
-              <p className="text-[11px] text-muted mt-1">
-                Tracks where unplanned work originates to identify patterns.
-              </p>
             </div>
 
             {/* Reconciliation Status */}

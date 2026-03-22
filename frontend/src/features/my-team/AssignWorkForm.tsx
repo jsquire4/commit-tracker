@@ -1,16 +1,10 @@
-import { useState, Fragment } from 'react';
+import { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { useCreateCommitment } from '@/hooks/useCommitments';
+import { useChessCategories } from '@/hooks/useChessCategories';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
-import type { TeamMemberSummary, ChessCategoryType, CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
-
-const CHESS_CATEGORIES: { value: ChessCategoryType; label: string }[] = [
-  { value: 'STRATEGIC', label: 'Strategic' },
-  { value: 'OPERATIONAL', label: 'Operational' },
-  { value: 'DEFENSIVE', label: 'Defensive' },
-  { value: 'CAPABILITY_BUILDING', label: 'Capability' },
-];
+import type { TeamMemberSummary, CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
 
 const DAYS: { value: CompletionDay; label: string }[] = [
   { value: 'MONDAY', label: 'Mon' },
@@ -33,7 +27,7 @@ export interface AssignmentFormState {
   rallyCryId: string;
   rallyCryTitle: string;
   definingObjectiveId: string;
-  chessCategoryId: ChessCategoryType | '';
+  chessCategoryId: string;
   completionDay: CompletionDay | '';
   completionTimeBlock: CompletionTimeBlock | '';
   bullets: string[];
@@ -61,10 +55,15 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
   const [form, setForm] = useState<AssignmentFormState>(initialState);
   const [formError, setFormError] = useState<string | null>(null);
   const createMutation = useCreateCommitment(cycleId);
+  const { data: chessCategories = [] } = useChessCategories();
 
-  const [prevOpen, setPrevOpen] = useState(false);
-  if (open && !prevOpen) { setForm(initialState); setFormError(null); createMutation.reset(); }
-  if (open !== prevOpen) setPrevOpen(open);
+  useEffect(() => {
+    if (open) {
+      setForm(initialState);
+      setFormError(null);
+      createMutation.reset();
+    }
+  }, [open]);
 
   function updateBullet(index: number, value: string) {
     setForm((prev) => { const next = [...prev.bullets]; next[index] = value; return { ...prev, bullets: next }; });
@@ -223,20 +222,20 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
                     CHESS Category
                   </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {CHESS_CATEGORIES.map((cat) => (
+                    {chessCategories.map((cat) => (
                       <button
-                        key={cat.value}
+                        key={cat.id}
                         type="button"
-                        onClick={() => setForm((prev) => ({ ...prev, chessCategoryId: prev.chessCategoryId === cat.value ? '' : cat.value }))}
+                        onClick={() => setForm((prev) => ({ ...prev, chessCategoryId: prev.chessCategoryId === cat.id ? '' : cat.id }))}
                         className={[
                           'px-3 py-2 text-label font-medium rounded-sm border-[1.5px] text-center',
                           'transition-all duration-[var(--duration-fast)]',
-                          form.chessCategoryId === cat.value
+                          form.chessCategoryId === cat.id
                             ? 'border-accent bg-accent/[0.06] text-accent'
                             : 'border-outline-variant text-on-surface-variant hover:border-accent hover:text-accent',
                         ].join(' ')}
                       >
-                        {cat.label}
+                        {cat.name}
                       </button>
                     ))}
                   </div>
