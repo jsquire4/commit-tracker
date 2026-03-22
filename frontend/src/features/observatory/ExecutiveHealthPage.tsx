@@ -405,6 +405,9 @@ interface ManagerCardProps {
 }
 
 function ManagerCard({ unit, index, onClick }: ManagerCardProps) {
+  // TODO: Lift this into the parent OrgHealthMap and pass sparkline data as props
+  // to avoid N per-card API calls. Low priority — only reachable via Briefing Health Map tab.
+  // Tracked: complexity-sweep-2026-03-22 (#42)
   const { data: trendData } = useAlignmentTrend(8, unit.managerId);
 
   // Build sparkline data from trend response

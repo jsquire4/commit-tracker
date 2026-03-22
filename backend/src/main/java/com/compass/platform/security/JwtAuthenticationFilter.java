@@ -75,6 +75,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
             filterChain.doFilter(request, response);
         } finally {
+            // Request-scoped auth: clear context after each request to prevent leaks.
+            // If @Async methods are added in the future, they must propagate
+            // SecurityContext manually (e.g., via DelegatingSecurityContextRunnable
+            // or a custom TaskDecorator) since this cleanup runs before async work starts.
             SecurityContextHolder.clearContext();
             MDC.clear();
         }

@@ -1,4 +1,4 @@
-import { lazy, Suspense, useMemo } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ErrorBoundary } from './components/ErrorBoundary';
@@ -34,17 +34,19 @@ interface AppProps {
   authContext: AuthContext;
 }
 
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      refetchOnWindowFocus: true,
-      retry: 1,
-    },
-  },
-});
-
 export default function App({ basename, authContext }: AppProps) {
+  // QueryClient inside the component ensures one instance per mount (not per module load).
+  // Prevents stale cache surviving HMR and is SSR-safe.
+  const [queryClient] = useState(() => new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+        refetchOnWindowFocus: true,
+        retry: 1,
+      },
+    },
+  }));
+
   setTokenProvider(() => authContext.token);
 
   const authValue = useMemo<AuthContextValue>(() => ({
