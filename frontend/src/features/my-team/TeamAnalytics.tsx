@@ -1,21 +1,27 @@
 import { useState } from 'react';
 import Card from '@/components/Card';
 import { AlignmentGapChart } from '@/features/manager-dashboard/AlignmentGapChart';
-import { CarryForwardVelocity } from '@/features/manager-dashboard/CarryForwardVelocity';
-import type { DashboardResponse } from '@/types/dashboard.types';
+import type { DashboardResponse, MemberAlignment } from '@/types/dashboard.types';
 
 interface TeamAnalyticsProps {
   dashboard: DashboardResponse;
-  cycleId: string;
 }
 
-export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
+export function TeamAnalytics({ dashboard }: TeamAnalyticsProps) {
   const [expanded, setExpanded] = useState(false);
 
   // Show Rally Cry Coverage in the collapsed header — NOT strategic alignment.
-  // Rally cry coverage = % of commitments linked to any rally cry.
   const rcCoverage = dashboard.rcdoCoverage?.linkedPercentage ?? 0;
-  const teamMemberIds = (dashboard.teamRollup?.members ?? []).map((m) => m.userId);
+
+  // Filter alignment chart to team leads only (MANAGER, DIRECTOR, VP, EXECUTIVE)
+  const LEAD_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
+  const leadUserIds = new Set(
+    (dashboard.teamRollup?.members ?? [])
+      .filter((m) => LEAD_ROLES.has(m.role))
+      .map((m) => m.userId)
+  );
+  const leadMembers: MemberAlignment[] = (dashboard.alignmentSignal?.byTeamMember ?? [])
+    .filter((m) => leadUserIds.has(m.userId));
 
   return (
     <Card padding="compact" className="overflow-hidden">
@@ -44,26 +50,16 @@ export function TeamAnalytics({ dashboard, cycleId }: TeamAnalyticsProps) {
 
       {/* Expandable content — only mount charts when expanded to avoid Recharts DOM conflicts */}
       {expanded && (
-        <div className="px-5 pb-5 space-y-6 border-t border-outline-variant animate-fade-up">
-          {/* Alignment Distribution */}
+        <div className="px-5 pb-5 border-t border-outline-variant animate-fade-up">
           <div className="pt-4">
-            <h3 className="text-title text-on-surface mb-2">Alignment Distribution</h3>
+            <h3 className="text-title text-on-surface mb-2">Alignment by Team Lead</h3>
             <p className="text-body text-on-surface-variant mb-3">
-              How your team&rsquo;s work breaks down by category.
+              How each team lead&rsquo;s group breaks down by category.
             </p>
             <AlignmentGapChart
               aggregate={dashboard.alignmentSignal}
-              members={dashboard.alignmentSignal?.byTeamMember ?? []}
+              members={leadMembers}
             />
-          </div>
-
-          {/* Carry-Forward Velocity */}
-          <div>
-            <h3 className="text-title text-on-surface mb-2">Carry-Forward Velocity</h3>
-            <p className="text-body text-on-surface-variant mb-3">
-              Items carried forward from previous weeks.
-            </p>
-            <CarryForwardVelocity cycleId={cycleId} teamMemberIds={teamMemberIds} />
           </div>
         </div>
       )}

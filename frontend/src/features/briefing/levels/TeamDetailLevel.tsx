@@ -10,7 +10,6 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import {
   useAlignmentTrend,
   useCompletionTrend,
-  useCostImpact,
   useDisplacementReport,
   useCarryChains,
   useExecutiveHealth,
@@ -19,7 +18,6 @@ import { useCommitments } from '@/hooks/useCommitments';
 import { useUserList } from '@/hooks/useUsers';
 import { AlignmentTrendChart } from '@/features/observatory/AlignmentTrendChart';
 import { CompletionTrendChart } from '@/features/observatory/CompletionTrendChart';
-import { CostImpactTable } from '@/features/observatory/CostImpactTable';
 import { DisplacementReport } from '@/features/observatory/DisplacementReport';
 import { CarryForwardChainList } from '@/features/observatory/CarryForwardChainList';
 import { DarkWorkAttribution } from '@/features/observatory/DarkWorkAttribution';
@@ -44,7 +42,6 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   const alignmentQuery = useAlignmentTrend(12, isManager ? teamId : undefined);
   // H9: Scope completion trend to this manager's team when the backend supports it.
   const completionQuery = useCompletionTrend(12, isManager ? teamId : undefined);
-  const costQuery = useCostImpact(cycleId || undefined);
   // H9: Displacement endpoint does not yet accept a managerId filter — data shown is org-wide.
   // TODO: add managerId support to GET /api/v1/observatory/displacement and pass teamId here.
   const displacementQuery = useDisplacementReport(12);
@@ -57,7 +54,7 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
 
   const isLoading =
     healthQuery.isLoading || alignmentQuery.isLoading || completionQuery.isLoading ||
-    costQuery.isLoading || displacementQuery.isLoading || carryQuery.isLoading ||
+    displacementQuery.isLoading || carryQuery.isLoading ||
     commitmentsQuery.isLoading || usersQuery.isLoading;
 
   if (isLoading) {
@@ -75,7 +72,6 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
 
   const alignmentData = alignmentQuery.data ?? [];
   const completionData = completionQuery.data ?? [];
-  const costSignals = costQuery.data ?? [];
   const displacementData = displacementQuery.data ?? { totalDisplacements: 0, byCategory: [], weeklyTrend: {} };
   const carryChains = carryQuery.data ?? [];
 
@@ -168,11 +164,6 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
       </Card>
 
       <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '160ms' }}>
-        <p className="text-small text-muted mb-2">Cost-weighted misalignment.</p>
-        <CostImpactTable signals={costSignals} />
-      </Card>
-
-      <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '200ms' }}>
         <p className="text-small text-muted mb-2">Displacement patterns.</p>
         <DisplacementReport summary={displacementData} />
       </Card>

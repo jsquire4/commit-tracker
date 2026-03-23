@@ -117,7 +117,6 @@ export function MyTeamPage() {
   const carriedCount = allCommitments.filter((c) => c.carriedFromCommitmentId != null).length;
   const totalCommitments = allCommitments.length;
   const linkedPct = Math.round(rcdoCoverage?.linkedPercentage ?? 0);
-  const carryPct = totalCommitments > 0 ? Math.round((carriedCount / totalCommitments) * 100) : 0;
   const unlinkedCount = rcdoCoverage?.unlinkedCount ?? 0;
 
   function openAssignFromPerson(member: TeamMemberSummary) {
@@ -161,7 +160,8 @@ export function MyTeamPage() {
       <TeamMetricsStrip
         teamSize={members.length}
         rallyCryCoverage={linkedPct}
-        carryForwardRate={carryPct}
+        carriedForwardCount={carriedCount}
+        totalCommitments={totalCommitments}
         unlinkedCommitments={unlinkedCount}
       />
 
@@ -208,7 +208,7 @@ export function MyTeamPage() {
 
       {/* Team Analytics — collapsible */}
       <ErrorBoundary>
-        <TeamAnalytics dashboard={dashboard} cycleId={activeCycleId} />
+        <TeamAnalytics dashboard={dashboard} />
       </ErrorBoundary>
 
       {/* Assign Work Slide-Over */}
