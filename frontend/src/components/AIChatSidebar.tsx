@@ -86,7 +86,7 @@ export function AIChatSidebar({
 
   return (
     <div className="bg-surface-lowest rounded-sm flex flex-col overflow-hidden transition-all duration-300"
-      style={{ maxHeight: hasConversation ? '100%' : '280px' }}
+      style={{ maxHeight: hasConversation ? '100%' : '340px' }}
     >
       {/* Header */}
       <div className="flex items-center gap-2 px-5 py-3 border-b border-outline-variant">

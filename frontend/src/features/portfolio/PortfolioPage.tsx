@@ -120,7 +120,7 @@ export function PortfolioPage() {
       </div>
 
       {/* Sidebar — AI Chat */}
-      <div className="sticky top-[120px]" style={{ maxHeight: 'calc(100vh - 140px)' }}>
+      <div className="flex flex-col justify-end sticky top-[120px]" style={{ height: 'calc(100vh - 140px)' }}>
         <div
           className="animate-fade-up"
           style={{ animationDelay: '200ms' }}
