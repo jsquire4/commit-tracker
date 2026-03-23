@@ -71,7 +71,7 @@ export function PortfolioPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-start">
+    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-stretch">
       {/* Main column */}
       <div className="flex flex-col gap-8">
         {/* Page header with week selector */}
@@ -120,9 +120,9 @@ export function PortfolioPage() {
       </div>
 
       {/* Sidebar — AI Chat */}
-      <div className="flex flex-col justify-end sticky top-[120px]" style={{ height: 'calc(100vh - 140px)' }}>
+      <div className="relative">
         <div
-          className="animate-fade-up"
+          className="sticky bottom-8 animate-fade-up"
           style={{ animationDelay: '200ms' }}
         >
           <AIChatSidebar

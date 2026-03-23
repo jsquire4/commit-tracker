@@ -148,7 +148,7 @@ export function BriefingView() {
 
       {/* Briefing home: two-column layout */}
       {showBriefingHome && (
-        <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-start">
+        <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-stretch">
           {/* Main column */}
           <div ref={mainColumnRef} className="flex flex-col gap-8">
             {/* Narrative card */}
@@ -179,9 +179,9 @@ export function BriefingView() {
             )}
           </div>
 
-          {/* Sidebar — AI Chat, anchored to bottom of viewport */}
-          <div className="flex flex-col justify-end sticky top-[120px]" style={{ height: 'calc(100vh - 140px)' }}>
-            <div className="animate-fade-up" style={{ animationDelay: '200ms' }}>
+          {/* Sidebar — AI Chat, bottom-aligned within viewport bounds */}
+          <div className="relative">
+            <div className="sticky bottom-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
               <AIChatSidebar
                 context="briefing"
                 placeholder="Ask about this week..."
