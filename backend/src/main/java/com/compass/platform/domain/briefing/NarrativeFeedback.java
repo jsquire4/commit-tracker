@@ -30,7 +30,7 @@ public class NarrativeFeedback {
     private String scope;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cycle_id")
+    @JoinColumn(name = "cycle_id", nullable = false)
     private Cycle cycle;
 
     /** "up" or "down" */
@@ -39,6 +39,9 @@ public class NarrativeFeedback {
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
+
+    @Column(name = "updated_at")
+    private Instant updatedAt;
 
     protected NarrativeFeedback() {}
 
@@ -49,6 +52,7 @@ public class NarrativeFeedback {
         this.cycle = cycle;
         this.vote = vote;
         this.createdAt = Instant.now();
+        this.updatedAt = this.createdAt;
     }
 
     public UUID getId() { return id; }
@@ -57,6 +61,7 @@ public class NarrativeFeedback {
     public String getScope() { return scope; }
     public Cycle getCycle() { return cycle; }
     public String getVote() { return vote; }
-    public void setVote(String vote) { this.vote = vote; this.createdAt = Instant.now(); }
+    public void setVote(String vote) { this.vote = vote; this.updatedAt = Instant.now(); }
     public Instant getCreatedAt() { return createdAt; }
+    public Instant getUpdatedAt() { return updatedAt; }
 }

@@ -43,7 +43,7 @@ export function AIAttribution({ scope, cycleId }: AIAttributionProps) {
         <button
           type="button"
           onClick={() => { handleVote('up'); }}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || !cycleId}
           className={`p-1 rounded transition-colors ${
             currentVote === 'up'
               ? 'text-accent bg-accent/10'
@@ -58,7 +58,7 @@ export function AIAttribution({ scope, cycleId }: AIAttributionProps) {
         <button
           type="button"
           onClick={() => { handleVote('down'); }}
-          disabled={mutation.isPending}
+          disabled={mutation.isPending || !cycleId}
           className={`p-1 rounded transition-colors ${
             currentVote === 'down'
               ? 'text-error bg-error/10'

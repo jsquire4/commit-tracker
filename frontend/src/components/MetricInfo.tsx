@@ -10,7 +10,7 @@ interface MetricInfoProps {
 export function MetricInfo({ formula }: MetricInfoProps) {
   return (
     <Tooltip
-      content={<span className="text-xs max-w-[240px] block">{formula}</span>}
+      content={<span className="text-xs max-w-[240px] block whitespace-normal">{formula}</span>}
       side="top"
     >
       <button

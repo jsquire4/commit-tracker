@@ -3,6 +3,8 @@ import Card from '@/components/Card';
 import { AlignmentGapChart } from '@/features/manager-dashboard/AlignmentGapChart';
 import type { DashboardResponse, MemberAlignment } from '@/types/dashboard.types';
 
+const LEAD_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
+
 interface TeamAnalyticsProps {
   dashboard: DashboardResponse;
 }
@@ -10,11 +12,8 @@ interface TeamAnalyticsProps {
 export function TeamAnalytics({ dashboard }: TeamAnalyticsProps) {
   const [expanded, setExpanded] = useState(false);
 
-  // Show Rally Cry Coverage in the collapsed header — NOT strategic alignment.
   const rcCoverage = dashboard.rcdoCoverage?.linkedPercentage ?? 0;
 
-  // Filter alignment chart to team leads only (MANAGER, DIRECTOR, VP, EXECUTIVE)
-  const LEAD_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
   const leadUserIds = new Set(
     (dashboard.teamRollup?.members ?? [])
       .filter((m) => LEAD_ROLES.has(m.role))
