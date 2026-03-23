@@ -179,8 +179,11 @@ export function BriefingView() {
             )}
           </div>
 
-          {/* Sidebar — AI Chat, bottom-aligned within viewport bounds */}
-          <div className="relative">
+          {/* Sidebar — AI Chat, bottom-aligned within viewport bounds.
+              The flex-grow spacer pushes the chat to the bottom of the column.
+              sticky bottom-8 keeps it pinned to the viewport bottom while scrolling. */}
+          <div className="flex flex-col">
+            <div className="flex-grow" />
             <div className="sticky bottom-8 animate-fade-up" style={{ animationDelay: '200ms' }}>
               <AIChatSidebar
                 context="briefing"

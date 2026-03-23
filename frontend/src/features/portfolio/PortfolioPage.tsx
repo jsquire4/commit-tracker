@@ -120,7 +120,8 @@ export function PortfolioPage() {
       </div>
 
       {/* Sidebar — AI Chat */}
-      <div className="relative">
+      <div className="flex flex-col">
+        <div className="flex-grow" />
         <div
           className="sticky bottom-8 animate-fade-up"
           style={{ animationDelay: '200ms' }}
