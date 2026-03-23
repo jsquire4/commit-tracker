@@ -153,6 +153,7 @@ export function MyTeamPage() {
       <TeamSummaryCard
         dashboard={dashboard}
         commitments={allCommitments}
+        cycleId={activeCycleId}
         {...(filters.cycleWeekStart !== undefined && { cycleWeekStart: filters.cycleWeekStart })}
       />
 

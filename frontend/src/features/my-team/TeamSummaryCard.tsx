@@ -1,11 +1,13 @@
 import Card from '@/components/Card';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { AIAttribution } from '@/components/AIAttribution';
 import { useTeamSummary } from '@/hooks/useTeamSummary';
 import type { DashboardResponse, Commitment } from '@/types';
 
 interface TeamSummaryCardProps {
   dashboard: DashboardResponse;
   commitments: Commitment[];
+  cycleId: string;
   cycleWeekStart?: string;
 }
 
@@ -66,7 +68,7 @@ function buildSummary(dashboard: DashboardResponse, commitments: Commitment[]): 
   return { headline, narrative, actions };
 }
 
-export function TeamSummaryCard({ dashboard, commitments, cycleWeekStart }: TeamSummaryCardProps) {
+export function TeamSummaryCard({ dashboard, commitments, cycleId, cycleWeekStart }: TeamSummaryCardProps) {
   const { data: llmSummary, isLoading } = useTeamSummary(cycleWeekStart);
 
   // Use LLM response when available; fall back to deterministic while loading or when null
@@ -104,6 +106,7 @@ export function TeamSummaryCard({ dashboard, commitments, cycleWeekStart }: Team
           </li>
         ))}
       </ul>
+      <AIAttribution scope="TEAM_SUMMARY" cycleId={cycleId} />
     </Card>
   );
 }

@@ -18,6 +18,7 @@ const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(
 const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
 const PortfolioPage = lazy(() => import('./features/portfolio/PortfolioPage').then(m => ({ default: m.PortfolioPage })));
 const ObservatoryPage = lazy(() => import('./features/observatory/ObservatoryPage').then(m => ({ default: m.ObservatoryPage })));
+const MethodologyPage = lazy(() => import('./features/methodology/MethodologyPage').then(m => ({ default: m.MethodologyPage })));
 const LandingPage = lazy(() => import('./features/landing/LandingPage').then(m => ({ default: m.LandingPage })));
 const ArchitecturePage = lazy(() => import('./features/architecture/ArchitecturePage').then(m => ({ default: m.ArchitecturePage })));
 
@@ -84,6 +85,7 @@ export default function App({ basename, authContext }: AppProps) {
 
                       {/* Observatory — VP/EXECUTIVE only */}
                       <Route path="/observatory" element={<ObservatoryPage />} />
+                      <Route path="/methodology" element={<MethodologyPage />} />
 
                       {/* Backward-compat redirects */}
                       <Route path="/cycle" element={<Navigate to="/" replace />} />

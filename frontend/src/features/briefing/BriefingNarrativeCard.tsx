@@ -5,14 +5,16 @@
 import { useState } from 'react';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
+import { AIAttribution } from '@/components/AIAttribution';
 import type { BriefingResponse } from '@/types/briefing.types';
 
 interface BriefingNarrativeCardProps {
   briefing: BriefingResponse;
+  cycleId: string;
   onExportPdf?: () => void;
 }
 
-export function BriefingNarrativeCard({ briefing, onExportPdf }: BriefingNarrativeCardProps) {
+export function BriefingNarrativeCard({ briefing, cycleId, onExportPdf }: BriefingNarrativeCardProps) {
   const [sourcesExpanded, setSourcesExpanded] = useState(false);
 
   const generatedDate = new Date(briefing.generatedAt);
@@ -108,6 +110,7 @@ export function BriefingNarrativeCard({ briefing, onExportPdf }: BriefingNarrati
           </ul>
         </>
       )}
+      <AIAttribution scope="BRIEFING" cycleId={cycleId} />
     </Card>
   );
 }

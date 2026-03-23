@@ -153,7 +153,7 @@ export function BriefingView() {
           <div ref={mainColumnRef} className="flex flex-col gap-8">
             {/* Narrative card */}
             {briefing && (
-              <BriefingNarrativeCard briefing={briefing} onExportPdf={handleExportPdf} />
+              <BriefingNarrativeCard briefing={briefing} cycleId={cycle?.id ?? ''} onExportPdf={handleExportPdf} />
             )}
 
             {/* Metrics strip */}
