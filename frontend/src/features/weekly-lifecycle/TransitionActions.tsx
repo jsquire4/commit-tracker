@@ -1,6 +1,8 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { Cycle } from '@/types';
 import { useTransitionCycle } from '@/hooks/useCycle';
+import { startNextCycle } from '@/api/cycles.api';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
 import Tooltip from '@/components/Tooltip';
@@ -8,6 +10,7 @@ import Tooltip from '@/components/Tooltip';
 interface TransitionActionsProps {
   cycle: Cycle;
   commitmentCount: number;
+  onStartNextWeek?: () => void;
 }
 
 interface TransitionConfig {
@@ -52,14 +55,40 @@ function getTransitionConfig(
   }
 }
 
-export function TransitionActions({ cycle, commitmentCount }: TransitionActionsProps) {
+export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: TransitionActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [startingNextWeek, setStartingNextWeek] = useState(false);
   const { mutate: transitionCycle, isPending } = useTransitionCycle();
+  const queryClient = useQueryClient();
 
   const config = getTransitionConfig(cycle, commitmentCount);
 
   if (cycle.state === 'RECONCILED') {
-    return null;
+    return (
+      <Button
+        variant="primary"
+        loading={startingNextWeek}
+        onClick={async () => {
+          setStartingNextWeek(true);
+          try {
+            // Create the next week's DRAFT cycle from this RECONCILED cycle
+            await startNextCycle(cycle.id);
+            await queryClient.invalidateQueries({ queryKey: ['cycle'] });
+            await queryClient.invalidateQueries({ queryKey: ['commitments'] });
+            onStartNextWeek?.();
+          } finally {
+            setStartingNextWeek(false);
+          }
+        }}
+        icon={
+          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+          </svg>
+        }
+      >
+        Start Next Week
+      </Button>
+    );
   }
 
   if (!config) {

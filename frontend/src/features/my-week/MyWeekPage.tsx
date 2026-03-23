@@ -145,7 +145,11 @@ export function MyWeekPage() {
                 }}
               />
             </div>
-            <TransitionActions cycle={cycle} commitmentCount={myCommitments.length} />
+            <TransitionActions
+              cycle={cycle}
+              commitmentCount={myCommitments.length}
+              onStartNextWeek={() => { setSelectedCycleId(null); }}
+            />
           </div>
 
           {myCommitments.length > 0 && (

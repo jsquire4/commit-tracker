@@ -284,6 +284,26 @@ public class CycleService {
                 .toList();
     }
 
+    /**
+     * Start the next week's cycle from a given RECONCILED cycle.
+     * Creates a new DRAFT cycle for the week following the given cycle.
+     * If a cycle already exists for that week, returns it.
+     */
+    public Cycle startNextCycle(UUID fromCycleId, AppUser actor) {
+        Cycle fromCycle = getCycle(fromCycleId, actor);
+        if (fromCycle.getState() != CycleState.RECONCILED) {
+            throw new IllegalStateException("Can only start next week from a RECONCILED cycle (current state: " + fromCycle.getState() + ")");
+        }
+
+        String timezone = actor.getOrg().getTimezone() != null ? actor.getOrg().getTimezone() : "UTC";
+        Instant nextWeekStart = computeWeekStart(fromCycle.getEndsAt().plusSeconds(1), timezone);
+        Instant nextWeekEnd = computeWeekEnd(nextWeekStart);
+        String label = computeLabel(nextWeekStart, timezone);
+
+        return cycleRepository.findByOrgIdAndStartsAt(actor.getOrg().getId(), nextWeekStart)
+                .orElseGet(() -> createDraftCycle(actor.getOrg(), nextWeekStart, nextWeekEnd, label));
+    }
+
     // === Internal helpers ===
 
     Cycle createDraftCycle(Org org, Instant weekStart, Instant weekEnd, String label) {

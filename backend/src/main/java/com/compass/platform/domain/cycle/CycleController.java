@@ -102,4 +102,13 @@ public class CycleController {
         int count = cycleService.getCommitmentCount(actor.getOrg().getId(), id);
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(updated, count)));
     }
+
+    @PostMapping("/{id}/next")
+    @Transactional
+    public ResponseEntity<ApiResponse<CycleResponse>> startNextCycle(@PathVariable UUID id) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        Cycle next = cycleService.startNextCycle(id, actor);
+        int count = cycleService.getCommitmentCount(actor.getOrg().getId(), next.getId());
+        return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(next, count)));
+    }
 }

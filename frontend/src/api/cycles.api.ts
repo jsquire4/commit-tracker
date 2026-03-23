@@ -29,3 +29,8 @@ export async function transitionCycle(
   const response = await apiClient.post<{ data: Cycle }>(`${BASE}/${id}/transition`, req);
   return response.data.data;
 }
+
+export async function startNextCycle(fromCycleId: string): Promise<Cycle> {
+  const response = await apiClient.post<{ data: Cycle }>(`${BASE}/${fromCycleId}/next`);
+  return response.data.data;
+}
