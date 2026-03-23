@@ -10,7 +10,7 @@ import Tooltip from '@/components/Tooltip';
 interface TransitionActionsProps {
   cycle: Cycle;
   commitmentCount: number;
-  onStartNextWeek?: () => void;
+  onStartNextWeek?: (newCycleId: string) => void;
 }
 
 interface TransitionConfig {
@@ -72,10 +72,10 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
           setStartingNextWeek(true);
           try {
             // Create the next week's DRAFT cycle from this RECONCILED cycle
-            await startNextCycle(cycle.id);
+            const newCycle = await startNextCycle(cycle.id);
             await queryClient.invalidateQueries({ queryKey: ['cycle'] });
             await queryClient.invalidateQueries({ queryKey: ['commitments'] });
-            onStartNextWeek?.();
+            onStartNextWeek?.(newCycle.id);
           } finally {
             setStartingNextWeek(false);
           }
