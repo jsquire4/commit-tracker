@@ -183,20 +183,7 @@ public class StubBriefingService implements BriefingService {
     // Private helpers
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * Compute the percentage of commitments that lack a CHESS category from the latest alignment data point.
-     * The sum of all category percentages equals 100% when all commitments are categorized;
-     * any gap from 100% represents uncategorized work.
-     */
-    private double computeUncategorizedPct(List<AlignmentDataPoint> trend) {
-        if (trend.isEmpty()) {
-            return 100.0;
-        }
-        AlignmentDataPoint latest = trend.get(trend.size() - 1);
-        double categorizedPct = latest.strategicPct() + latest.operationalPct()
-                + latest.defensivePct() + latest.capabilityBuildingPct();
-        return Math.max(0.0, 100.0 - categorizedPct);
-    }
+
 
     /**
      * Describe the carry-forward trend by comparing the two most recent data points.
