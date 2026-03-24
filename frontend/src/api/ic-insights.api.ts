@@ -11,9 +11,18 @@ export async function getMyStory(weeks?: number): Promise<MyStoryResponse> {
   return fetchData<MyStoryResponse>('/api/v1/my-story', weeks != null ? { weeks } : undefined);
 }
 
-export async function getRollingHistory(weeks?: number): Promise<RollingHistoryResponse> {
-  return fetchData<RollingHistoryResponse>(
-    '/api/v1/my-week/rolling-history',
-    weeks != null ? { weeks } : undefined,
-  );
+export async function getRollingHistory(offset: number, limit: number): Promise<RollingHistoryResponse> {
+  return fetchData<RollingHistoryResponse>('/api/v1/my-week/rolling-history', { offset, limit });
+}
+
+export async function getTeamMemberHistory(
+  userId: string,
+  offset: number,
+  limit: number,
+): Promise<RollingHistoryResponse> {
+  return fetchData<RollingHistoryResponse>('/api/v1/my-week/team-member-history', {
+    userId,
+    offset,
+    limit,
+  });
 }

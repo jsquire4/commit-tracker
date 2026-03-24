@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect } from 'react';
+import { getRollingHistory } from '@/api/ic-insights.api';
 import { useRollingHistory } from '@/hooks/useIcInsights';
 import type { HistoryCommitment, WeekGroup } from '@/types';
 
@@ -53,7 +54,7 @@ function StatusBadge({ status }: { status: string | null }) {
 
 // ── Commitment card ───────────────────────────────────────────────────────────
 
-function CommitmentCard({ commitment }: { commitment: HistoryCommitment }) {
+export function CommitmentCard({ commitment }: { commitment: HistoryCommitment }) {
   const hasChess = Boolean(commitment.chessCategoryName);
   const hasRallyCry = Boolean(commitment.rallyCryTitle);
   const hasGrowthAreas = commitment.growthAreaLabels.length > 0;
@@ -113,7 +114,7 @@ function CommitmentCard({ commitment }: { commitment: HistoryCommitment }) {
 
 // ── Week group ────────────────────────────────────────────────────────────────
 
-function WeekGroupCard({ group, defaultExpanded }: { group: WeekGroup; defaultExpanded: boolean }) {
+export function WeekGroupCard({ group, defaultExpanded }: { group: WeekGroup; defaultExpanded: boolean }) {
   const [expanded, setExpanded] = useState(defaultExpanded);
 
   const completedCount = group.commitments.filter(
@@ -171,7 +172,7 @@ function WeekGroupCard({ group, defaultExpanded }: { group: WeekGroup; defaultEx
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
-function RollingWorkHistorySkeleton() {
+export function RollingWorkHistorySkeleton() {
   return (
     <div className="flex flex-col gap-3" aria-busy="true" aria-label="Loading work history">
       {[1, 2, 3].map((i) => (
@@ -189,58 +190,114 @@ function RollingWorkHistorySkeleton() {
   );
 }
 
-// ── Week toggle ───────────────────────────────────────────────────────────────
+// ── Pagination constants ──────────────────────────────────────────────────────
 
-type WeekOption = 4 | 8 | 12;
-const WEEK_OPTIONS: WeekOption[] = [4, 8, 12];
+const INITIAL_OFFSET = 0;
+const INITIAL_LIMIT = 7;
+const PAGE_LIMIT = 12;
+
+// ── Week list with load-more ──────────────────────────────────────────────────
+// Reusable across My Week and My Team / PersonCard
+
+export interface WeekListProps {
+  /** Pre-loaded initial weeks (from the first page fetch) */
+  initialWeeks: WeekGroup[];
+  initialHasMore: boolean;
+  initialNextOffset: number;
+  /** Fetch function — callers supply their own (getRollingHistory or getTeamMemberHistory) */
+  fetcher: (offset: number, limit: number) => Promise<{ weeks: WeekGroup[]; hasMore: boolean; nextOffset: number }>;
+}
+
+export function WeekList({ initialWeeks, initialHasMore, initialNextOffset, fetcher }: WeekListProps) {
+  const [allWeeks, setAllWeeks] = useState<WeekGroup[]>(initialWeeks);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [nextOffset, setNextOffset] = useState(initialNextOffset);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [loadMoreError, setLoadMoreError] = useState(false);
+
+  // Sync if parent refreshes initialWeeks (e.g. query cache invalidation)
+  useEffect(() => {
+    setAllWeeks(initialWeeks);
+    setHasMore(initialHasMore);
+    setNextOffset(initialNextOffset);
+  }, [initialWeeks, initialHasMore, initialNextOffset]);
+
+  const handleLoadMore = useCallback(async () => {
+    if (loadingMore) return;
+    setLoadingMore(true);
+    setLoadMoreError(false);
+    try {
+      const page = await fetcher(nextOffset, PAGE_LIMIT);
+      setAllWeeks((prev) => [...prev, ...page.weeks]);
+      setHasMore(page.hasMore);
+      setNextOffset(page.nextOffset);
+    } catch {
+      setLoadMoreError(true);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [nextOffset, loadingMore, fetcher]);
+
+  if (allWeeks.length === 0) {
+    return (
+      <p className="text-body text-on-surface-variant">
+        No completed weeks yet.
+      </p>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex flex-col gap-3">
+        {allWeeks.map((group, idx) => (
+          <WeekGroupCard
+            key={group.cycleId}
+            group={group}
+            defaultExpanded={idx === 0}
+          />
+        ))}
+      </div>
+
+      {hasMore && (
+        <div className="mt-4 flex flex-col items-center gap-2">
+          {loadMoreError && (
+            <p className="text-small text-error" role="alert">
+              Failed to load more weeks. Try again.
+            </p>
+          )}
+          <button
+            type="button"
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="text-small font-medium text-accent border border-accent/30 rounded-sm px-4 py-1.5 hover:bg-accent/5 transition-colors duration-[var(--duration-fast)] disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {loadingMore ? 'Loading…' : 'Load more weeks'}
+          </button>
+        </div>
+      )}
+    </>
+  );
+}
 
 // ── Main component ────────────────────────────────────────────────────────────
 
 export function RollingWorkHistory() {
-  const [weeksOption, setWeeksOption] = useState<WeekOption>(4);
-  const { data, isLoading, isError } = useRollingHistory(weeksOption);
+  const { data, isLoading, isError } = useRollingHistory(INITIAL_OFFSET, INITIAL_LIMIT);
 
   return (
     <section
       className="border-t border-outline-variant/15 pt-6 mt-6"
       aria-labelledby="rolling-history-heading"
     >
-      {/* Header */}
-      <div className="flex items-center justify-between gap-4 mb-4 flex-wrap">
+      <div className="mb-4">
         <h2
           id="rolling-history-heading"
           className="font-serif text-lg text-on-surface"
         >
           Recent Work
         </h2>
-
-        {/* Week selector */}
-        <div
-          className="flex items-center rounded-sm border border-outline-variant/20 overflow-hidden"
-          role="group"
-          aria-label="History window"
-        >
-          {WEEK_OPTIONS.map((opt) => (
-            <button
-              key={opt}
-              type="button"
-              onClick={() => setWeeksOption(opt)}
-              className={[
-                'px-3 py-1 text-small font-medium transition-colors duration-[var(--duration-fast)]',
-                'border-r border-outline-variant/20 last:border-r-0',
-                opt === weeksOption
-                  ? 'bg-accent/10 text-accent'
-                  : 'text-on-surface-variant hover:bg-surface-container/60',
-              ].join(' ')}
-              aria-pressed={opt === weeksOption}
-            >
-              {opt}w
-            </button>
-          ))}
-        </div>
       </div>
 
-      {/* Content */}
       {isLoading ? (
         <RollingWorkHistorySkeleton />
       ) : isError ? (
@@ -252,15 +309,12 @@ export function RollingWorkHistory() {
           No completed weeks yet. Your work history will build here.
         </p>
       ) : (
-        <div className="flex flex-col gap-3">
-          {data.weeks.map((group, idx) => (
-            <WeekGroupCard
-              key={group.cycleId}
-              group={group}
-              defaultExpanded={idx === 0}
-            />
-          ))}
-        </div>
+        <WeekList
+          initialWeeks={data.weeks}
+          initialHasMore={data.hasMore}
+          initialNextOffset={data.nextOffset}
+          fetcher={getRollingHistory}
+        />
       )}
     </section>
   );

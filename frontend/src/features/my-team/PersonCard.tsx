@@ -1,6 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { ChessMiniBar } from './ChessMiniBar';
 import { CHESS_LABELS } from '@/constants/chess-colors';
+import { getTeamMemberHistory } from '@/api/ic-insights.api';
+import { useTeamMemberHistory } from '@/hooks/useIcInsights';
+import { WeekList, RollingWorkHistorySkeleton } from '@/features/commitment-history/RollingWorkHistory';
 import type { Commitment, TeamMemberSummary } from '@/types';
 
 interface PersonCardProps {
@@ -46,6 +49,58 @@ const statusDotClass: Record<string, string> = {
   amber: 'bg-warning',
   rose: 'bg-error',
 };
+
+// ── Past Work section (lazy-loaded when card is expanded) ─────────────────────
+
+const TEAM_MEMBER_INITIAL_LIMIT = 7;
+
+function PastWorkSection({ userId }: { userId: string }) {
+  const { data, isLoading, isError } = useTeamMemberHistory(userId, 0, TEAM_MEMBER_INITIAL_LIMIT);
+
+  const fetcher = useCallback(
+    (offset: number, limit: number) => getTeamMemberHistory(userId, offset, limit),
+    [userId],
+  );
+
+  if (isLoading) {
+    return (
+      <div className="mt-3 pt-3 border-t border-outline-variant">
+        <div className="text-small uppercase tracking-[0.04rem] text-muted mb-2">Past Work</div>
+        <RollingWorkHistorySkeleton />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="mt-3 pt-3 border-t border-outline-variant">
+        <div className="text-small uppercase tracking-[0.04rem] text-muted mb-2">Past Work</div>
+        <p className="text-small text-error" role="alert">Failed to load past work.</p>
+      </div>
+    );
+  }
+
+  if (!data || data.weeks.length === 0) {
+    return (
+      <div className="mt-3 pt-3 border-t border-outline-variant">
+        <div className="text-small uppercase tracking-[0.04rem] text-muted mb-2">Past Work</div>
+        <p className="text-small text-on-surface-variant">No completed weeks yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3 pt-3 border-t border-outline-variant">
+      <div className="text-small uppercase tracking-[0.04rem] text-muted mb-2">Past Work</div>
+      <WeekList
+        initialWeeks={data.weeks}
+        initialHasMore={data.hasMore}
+        initialNextOffset={data.nextOffset}
+        fetcher={fetcher}
+      />
+    </div>
+  );
+}
 
 export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
   const [expanded, setExpanded] = useState(false);
@@ -118,7 +173,7 @@ export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
       {/* Expandable content */}
       <div
         className="overflow-hidden transition-all duration-[var(--duration-entrance)] ease-[var(--ease-entrance)]"
-        style={{ maxHeight: expanded ? '800px' : '0px' }}
+        style={{ maxHeight: expanded ? '4000px' : '0px' }}
       >
         <div className="px-5 pb-5">
           {/* Commitment list */}
@@ -186,6 +241,9 @@ export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
               ))}
             </div>
           </div>
+
+          {/* Past work — rolling history for this team member */}
+          {expanded && <PastWorkSection userId={member.userId} />}
         </div>
       </div>
     </div>

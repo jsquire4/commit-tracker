@@ -94,6 +94,8 @@ export interface WeekGroup {
 
 export interface RollingHistoryResponse {
   weeks: WeekGroup[];
+  hasMore: boolean;
+  nextOffset: number;
 }
 
 export interface MyStoryResponse {

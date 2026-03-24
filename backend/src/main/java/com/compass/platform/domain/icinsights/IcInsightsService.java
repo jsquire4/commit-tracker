@@ -508,27 +508,32 @@ public class IcInsightsService {
     // ═══════════════════════════════════════════════════════════════
 
     /**
-     * Compute rolling work history for the authenticated IC across the last
-     * {@code weeks} RECONCILED cycles (most-recent first).
+     * Compute rolling work history for the given user across a paginated window
+     * of RECONCILED cycles (most-recent first).
      *
      * <p>N+1 prevention: commitments and reconciliation records are loaded in
      * two batch queries; growth areas are loaded eagerly via Hibernate BatchSize.
      *
-     * @param userId the authenticated user's ID
-     * @param orgId  the user's org (for cycle scoping)
-     * @param weeks  number of recent reconciled cycles to include (capped 1–12)
+     * @param userId  the target user's ID
+     * @param orgId   the user's org (for cycle scoping)
+     * @param offset  zero-based index into the full list of reconciled cycles
+     * @param limit   number of cycles to return starting at offset
      */
-    public RollingHistoryResponse computeRollingHistory(UUID userId, UUID orgId, int weeks) {
-        // Load last N reconciled cycles for the org, most-recent first
+    public RollingHistoryResponse computeRollingHistory(UUID userId, UUID orgId, int offset, int limit) {
+        // Load ALL reconciled cycles for the org, most-recent first
         List<Cycle> reconciledCycles = cycleRepository
                 .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
 
-        List<Cycle> window = reconciledCycles.stream()
-                .limit(weeks)
-                .collect(Collectors.toList());
+        int totalCycles = reconciledCycles.size();
+        int fromIndex = Math.min(offset, totalCycles);
+        int toIndex = Math.min(offset + limit, totalCycles);
+        boolean hasMore = toIndex < totalCycles;
+        int nextOffset = offset + limit;
+
+        List<Cycle> window = reconciledCycles.subList(fromIndex, toIndex);
 
         if (window.isEmpty()) {
-            return new RollingHistoryResponse(List.of());
+            return new RollingHistoryResponse(List.of(), false, nextOffset);
         }
 
         List<UUID> cycleIds = window.stream().map(Cycle::getId).collect(Collectors.toList());
@@ -605,7 +610,7 @@ public class IcInsightsService {
             ));
         }
 
-        return new RollingHistoryResponse(weekGroups);
+        return new RollingHistoryResponse(weekGroups, hasMore, nextOffset);
     }
 
     // ═══════════════════════════════════════════════════════════════

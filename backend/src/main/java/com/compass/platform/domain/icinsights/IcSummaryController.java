@@ -8,6 +8,7 @@ import com.compass.platform.domain.icinsights.dto.PersonalReflectionRequest;
 import com.compass.platform.domain.icinsights.dto.PersonalReflectionResponse;
 import com.compass.platform.domain.icinsights.dto.RollingHistoryResponse;
 import com.compass.platform.domain.user.AppUser;
+import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
 import com.compass.platform.shared.EntityNotFoundException;
@@ -23,7 +24,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URI;
+import java.util.EnumSet;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -38,16 +41,23 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class IcSummaryController {
 
+    /** Roles that can view any team member's history without a direct manager relationship. */
+    private static final Set<UserRole> ELEVATED_ROLES = EnumSet.of(
+            UserRole.DIRECTOR, UserRole.VP, UserRole.EXECUTIVE);
+
     private final IcInsightsService icInsightsService;
     private final PersonalReflectionRepository reflectionRepository;
     private final CycleRepository cycleRepository;
+    private final AppUserRepository userRepository;
 
     public IcSummaryController(IcInsightsService icInsightsService,
                                PersonalReflectionRepository reflectionRepository,
-                               CycleRepository cycleRepository) {
+                               CycleRepository cycleRepository,
+                               AppUserRepository userRepository) {
         this.icInsightsService = icInsightsService;
         this.reflectionRepository = reflectionRepository;
         this.cycleRepository = cycleRepository;
+        this.userRepository = userRepository;
     }
 
     @GetMapping("/summary")
@@ -63,12 +73,42 @@ public class IcSummaryController {
 
     @GetMapping("/rolling-history")
     public ResponseEntity<ApiResponse<RollingHistoryResponse>> getRollingHistory(
-            @RequestParam(defaultValue = "4") int weeks) {
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "7") int limit) {
 
         AppUser actor = SecurityContextHelper.getCurrentUser();
-        int cappedWeeks = Math.max(1, Math.min(weeks, 12));
+        int safeOffset = Math.max(0, offset);
+        int safeLimit = Math.max(1, Math.min(limit, 26));
         RollingHistoryResponse response = icInsightsService.computeRollingHistory(
-                actor.getId(), actor.getOrg().getId(), cappedWeeks);
+                actor.getId(), actor.getOrg().getId(), safeOffset, safeLimit);
+        return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    @GetMapping("/team-member-history")
+    public ResponseEntity<ApiResponse<RollingHistoryResponse>> getTeamMemberHistory(
+            @RequestParam UUID userId,
+            @RequestParam(defaultValue = "0") int offset,
+            @RequestParam(defaultValue = "7") int limit) {
+
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+
+        // Elevated roles (Director+) can view any team member's history
+        if (!ELEVATED_ROLES.contains(actor.getRole())) {
+            // Verify actor is in the target user's reportsTo chain
+            AppUser target = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User", userId));
+            if (!target.getOrg().getId().equals(actor.getOrg().getId())) {
+                throw new AccessDeniedException("User does not belong to the same org");
+            }
+            if (!isManagerOf(actor.getId(), target)) {
+                throw new AccessDeniedException("You are not a manager of the requested user");
+            }
+        }
+
+        int safeOffset = Math.max(0, offset);
+        int safeLimit = Math.max(1, Math.min(limit, 26));
+        RollingHistoryResponse response = icInsightsService.computeRollingHistory(
+                userId, actor.getOrg().getId(), safeOffset, safeLimit);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -131,6 +171,24 @@ public class IcSummaryController {
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────
+
+    /**
+     * Returns true if {@code actorId} appears anywhere in the reportsTo chain
+     * of the given target user (i.e. actor is a direct or indirect manager).
+     */
+    private boolean isManagerOf(UUID actorId, AppUser target) {
+        AppUser current = target.getReportsTo();
+        // Walk up to prevent infinite loops in malformed data (max 20 levels)
+        int depth = 0;
+        while (current != null && depth < 20) {
+            if (current.getId().equals(actorId)) {
+                return true;
+            }
+            current = current.getReportsTo();
+            depth++;
+        }
+        return false;
+    }
 
     private static PersonalReflectionResponse toResponse(PersonalReflection r) {
         return new PersonalReflectionResponse(
