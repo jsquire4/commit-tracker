@@ -127,8 +127,8 @@ public class CycleService {
 
         Cycle cycle = getCycle(cycleId, actor);
 
-        int commitmentCount = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId).size();
+        int commitmentCount = (int) commitmentRepository
+                .countByOrgIdAndCycleId(actor.getOrg().getId(), cycleId);
 
         List<Object[]> statusCounts = reconciliationRecordRepository
                 .countByOrgIdAndCycleIdGroupByStatus(actor.getOrg().getId(), cycleId);

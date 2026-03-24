@@ -13,6 +13,7 @@ import java.util.UUID;
 public interface ReconciliationRecordRepository extends JpaRepository<ReconciliationRecord, UUID> {
     Optional<ReconciliationRecord> findByCommitmentIdAndCycleId(UUID commitmentId, UUID cycleId);
     List<ReconciliationRecord> findByOrgIdAndCycleId(UUID orgId, UUID cycleId);
+    List<ReconciliationRecord> findByCommitmentIdIn(Collection<UUID> commitmentIds);
     List<ReconciliationRecord> findByOrgIdAndCycleIdIn(UUID orgId, Collection<UUID> cycleIds);
     long countByOrgIdAndCycleIdAndStatus(UUID orgId, UUID cycleId, ReconciliationStatus status);
 
