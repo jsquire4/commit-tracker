@@ -87,7 +87,8 @@ public class StubBriefingService implements BriefingService {
         }
 
         // 4. Compute rally cry coverage: % of commitments linked to a rally cry
-        // Load commitments for the target cycle (or the most recent cycle if cycleId is null)
+        // NOTE: Same computation exists in BriefingDataGatherer.gatherData() — kept separate
+        // here to avoid coupling the stub to the full data-gathering pipeline.
         double rallyCryCoveragePct = 0.0;
         int unlinkedCount = 0;
         UUID resolvedCycleId = cycleId;
