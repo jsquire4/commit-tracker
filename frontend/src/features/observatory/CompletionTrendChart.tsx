@@ -53,11 +53,11 @@ export function CompletionTrendChart({ data }: CompletionTrendChartProps) {
 
       <div className="flex flex-wrap gap-4 mb-4">
         <div className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: '#036A6A' }} />
+          <span className="inline-block w-3 h-3 rounded-sm bg-accent" />
           <span className="text-xs text-on-surface-variant">Completion Rate</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="inline-block w-3 h-3 rounded-sm" style={{ backgroundColor: '#C2860B' }} />
+          <span className="inline-block w-3 h-3 rounded-sm bg-warning" />
           <span className="text-xs text-on-surface-variant">Carry-Forward Rate</span>
         </div>
       </div>

@@ -70,8 +70,8 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
           style={{ width: `${String(strategicW)}%`, backgroundColor: CHESS_ACCENT.strategic }}
         />
         <div
-          className="h-full transition-all duration-500"
-          style={{ width: `${String(remainingW)}%`, backgroundColor: '#64748B' }}
+          className="h-full transition-all duration-500 bg-surface-container"
+          style={{ width: `${String(remainingW)}%` }}
         />
       </div>
 
