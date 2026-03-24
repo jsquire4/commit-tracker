@@ -30,7 +30,7 @@ import java.util.UUID;
  * must be active in the Railway production environment.
  */
 @Component
-@Profile("!local & !test")
+@Profile("!local & !test & !simulation")
 public class Rs256TokenValidator implements TokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(Rs256TokenValidator.class);
