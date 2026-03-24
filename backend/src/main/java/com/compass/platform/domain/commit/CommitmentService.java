@@ -341,39 +341,23 @@ public class CommitmentService {
 
     /**
      * Get commitments for a cycle with filters and pagination.
-     * Pushes userId and rallyCryId filters to the DB when set; remaining filters
-     * (chessCategoryId, assignedBy) are applied in-memory after visibility enforcement.
+     * All filter criteria (userId, rallyCryId, chessCategoryId, assignedBy) are
+     * pushed to the database. Visibility enforcement still runs in-memory because
+     * it depends on role-based and RCDO-owner logic that can't be expressed in JPQL,
+     * so pagination is applied after the visibility pass.
      */
     @Transactional(readOnly = true)
     public Page<Commitment> getForCycle(UUID cycleId, CommitmentFilters filters, Pageable pageable, AppUser actor) {
-        List<Commitment> allCommitments;
+        UUID userId = filters != null ? filters.userId() : null;
+        UUID rallyCryId = filters != null ? filters.rallyCryId() : null;
+        UUID chessCategoryId = filters != null ? filters.chessCategoryId() : null;
+        UUID assignedById = filters != null ? filters.assignedBy() : null;
 
-        if (filters != null && filters.userId() != null) {
-            allCommitments = commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(filters.userId(), cycleId);
-        } else if (filters != null && filters.rallyCryId() != null) {
-            allCommitments = commitmentRepository.findByRallyCryIdAndCycleId(filters.rallyCryId(), cycleId);
-        } else {
-            allCommitments = commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId);
-        }
+        List<Commitment> dbFiltered = commitmentRepository.findByCycleIdWithFilters(
+                actor.getOrg().getId(), cycleId, userId, rallyCryId, chessCategoryId, assignedById);
 
-        // Apply visibility filter
-        List<Commitment> visible = visibilityEnforcer.filterVisible(actor, allCommitments);
-
-        // Apply remaining in-memory filters (no dedicated repo method)
-        if (filters != null) {
-            if (filters.chessCategoryId() != null) {
-                UUID catId = filters.chessCategoryId();
-                visible = visible.stream()
-                        .filter(c -> c.getChessCategory() != null && c.getChessCategory().getId().equals(catId))
-                        .collect(Collectors.toList());
-            }
-            if (filters.assignedBy() != null) {
-                UUID assignedById = filters.assignedBy();
-                visible = visible.stream()
-                        .filter(c -> c.getAssignedBy() != null && c.getAssignedBy().getId().equals(assignedById))
-                        .collect(Collectors.toList());
-            }
-        }
+        // Apply visibility filter (role-based + RCDO-owner — cannot be pushed to DB)
+        List<Commitment> visible = visibilityEnforcer.filterVisible(actor, dbFiltered);
 
         int total = visible.size();
         int offset = (int) pageable.getOffset();

@@ -27,6 +27,8 @@ export interface VPSectionProps {
 export function buildVPGroups(
   units: OrgUnitHealth[],
   orgTree: User[] | undefined,
+  alignmentTarget = 50,
+  warningPct = 30,
 ): VPGroup[] {
   if (!orgTree || orgTree.length === 0) {
     const vps = units.filter((u) => u.role === 'VP');
@@ -37,7 +39,7 @@ export function buildVPGroups(
         vpId: '__all__',
         vpName: 'All Teams',
         vpGrade: nonVps.length > 0
-          ? gradeFromAlignment(nonVps.reduce((s, u) => s + u.strategicAlignmentPct, 0) / nonVps.length)
+          ? gradeFromAlignment(nonVps.reduce((s, u) => s + u.strategicAlignmentPct, 0) / nonVps.length, alignmentTarget, warningPct)
           : 'GREEN',
         vpTrend: 'FLAT',
         vpAlignment: nonVps.length > 0
@@ -61,7 +63,7 @@ export function buildVPGroups(
       result.push({
         vpId: '__all_teams__',
         vpName: 'All Teams',
-        vpGrade: gradeFromAlignment(avg),
+        vpGrade: gradeFromAlignment(avg, alignmentTarget, warningPct),
         vpTrend: 'FLAT',
         vpAlignment: avg,
         managers: allManagers,
@@ -121,7 +123,7 @@ export function buildVPGroups(
     groups.push({
       vpId,
       vpName: vp.displayName,
-      vpGrade: vpUnit?.grade ?? gradeFromAlignment(avgAlignment),
+      vpGrade: vpUnit?.grade ?? gradeFromAlignment(avgAlignment, alignmentTarget, warningPct),
       vpTrend: vpUnit?.trendDirection ?? 'FLAT',
       vpAlignment: vpUnit?.strategicAlignmentPct ?? avgAlignment,
       managers: managers.sort((a, b) => a.strategicAlignmentPct - b.strategicAlignmentPct),
@@ -133,7 +135,7 @@ export function buildVPGroups(
     groups.push({
       vpId: '__ungrouped__',
       vpName: 'Other Teams',
-      vpGrade: gradeFromAlignment(avg),
+      vpGrade: gradeFromAlignment(avg, alignmentTarget, warningPct),
       vpTrend: 'FLAT',
       vpAlignment: avg,
       managers: ungrouped.sort((a, b) => a.strategicAlignmentPct - b.strategicAlignmentPct),

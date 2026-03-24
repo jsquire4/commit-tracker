@@ -251,19 +251,26 @@ public class LlmBriefingService implements BriefingService {
 
     @Override
     public String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId) {
+        // Load all org commitments fresh — used when called standalone (not in a batch loop)
+        List<Commitment> allOrgCommitments =
+                commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+        return generateTeamSummary(orgId, cycleId, managerId, allOrgCommitments);
+    }
+
+    @Override
+    public String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId,
+                                       List<Commitment> allOrgCommitments) {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — skipping sealed team summary for managerId={}", managerId);
             return String.format("Team summary for manager %s is unavailable — no LLM configured.", managerId);
         }
 
-        // Gather commitments belonging to this manager's direct reports
-        List<Commitment> teamCommitments =
-                commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId)
-                        .stream()
-                        .filter(c -> c.getUser() != null
-                                && c.getUser().getReportsTo() != null
-                                && managerId.equals(c.getUser().getReportsTo().getId()))
-                        .collect(Collectors.toList());
+        // Filter pre-loaded commitments to this manager's direct reports
+        List<Commitment> teamCommitments = allOrgCommitments.stream()
+                .filter(c -> c.getUser() != null
+                        && c.getUser().getReportsTo() != null
+                        && managerId.equals(c.getUser().getReportsTo().getId()))
+                .collect(Collectors.toList());
 
         int total = teamCommitments.size();
         long linked = teamCommitments.stream()

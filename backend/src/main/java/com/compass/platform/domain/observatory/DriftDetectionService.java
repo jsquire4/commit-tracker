@@ -100,10 +100,18 @@ public class DriftDetectionService {
 
         List<DriftSignal> signals = new ArrayList<>();
 
+        // Pre-compute subtree user IDs for all managers to avoid N+1 queries
+        Map<UUID, List<UUID>> subtreeMap = new HashMap<>();
         for (AppUser manager : managers) {
+            subtreeMap.put(manager.getId(), userRepository.findSubtreeUserIds(manager.getId()));
+        }
+
+        for (AppUser manager : managers) {
+            List<UUID> teamUserIds = subtreeMap.get(manager.getId());
+
             // ── ALIGNMENT drift ──────────────────────────────────────────────
             TeamAlignmentTrend alignmentTrend =
-                    analyticsService.computeTeamAlignmentTrend(orgId, manager.getId(), weekCount);
+                    analyticsService.computeTeamAlignmentTrend(orgId, manager.getId(), weekCount, teamUserIds);
 
             List<Double> strategicPcts = alignmentTrend.dataPoints().stream()
                     .map(AlignmentDataPoint::strategicPct)
@@ -132,7 +140,7 @@ public class DriftDetectionService {
 
             // ── VELOCITY drift ───────────────────────────────────────────────
             List<CompletionDataPoint> completionPoints =
-                    analyticsService.computeTeamCompletionTrend(orgId, manager.getId(), weekCount);
+                    analyticsService.computeTeamCompletionTrend(orgId, manager.getId(), weekCount, teamUserIds);
 
             List<Double> completionRates = completionPoints.stream()
                     .map(CompletionDataPoint::completionRate)
@@ -202,19 +210,39 @@ public class DriftDetectionService {
 
         List<IntegrityFlag> flags = new ArrayList<>();
 
+        // Pre-compute subtree user IDs for all managers to avoid N+1 queries
+        Map<UUID, List<UUID>> subtreeMap = new HashMap<>();
         for (AppUser manager : managers) {
-            List<UUID> teamUserIds = userRepository.findSubtreeUserIds(manager.getId());
+            subtreeMap.put(manager.getId(), userRepository.findSubtreeUserIds(manager.getId()));
+        }
+
+        // Batch-load all commitments for the cycle once, then filter per-manager in memory
+        Set<UUID> allTeamUserIds = new java.util.HashSet<>();
+        for (AppUser manager : managers) {
+            allTeamUserIds.addAll(subtreeMap.get(manager.getId()));
+            allTeamUserIds.add(manager.getId());
+        }
+        List<Commitment> allCycleCommitments = allTeamUserIds.isEmpty()
+                ? List.of()
+                : commitmentRepository.findByUserIdInAndCycleId(new ArrayList<>(allTeamUserIds), resolvedCycleId);
+        Map<UUID, List<Commitment>> commitmentsByUserId = allCycleCommitments.stream()
+                .collect(Collectors.groupingBy(c -> c.getUser().getId()));
+
+        for (AppUser manager : managers) {
+            List<UUID> teamUserIds = subtreeMap.get(manager.getId());
             List<UUID> allUserIds = new ArrayList<>(teamUserIds);
             allUserIds.add(manager.getId());
 
-            List<Commitment> teamCommitments =
-                    commitmentRepository.findByUserIdInAndCycleId(allUserIds, resolvedCycleId);
+            // Filter from pre-loaded commitments instead of querying per manager
+            List<Commitment> teamCommitments = allUserIds.stream()
+                    .flatMap(uid -> commitmentsByUserId.getOrDefault(uid, List.of()).stream())
+                    .collect(Collectors.toList());
 
             // ── UNIFORM_CATEGORIZATION ────────────────────────────────────────
             detectUniformCategorization(manager, teamCommitments, config, flags);
 
             // ── COMPLETION_MISMATCH ───────────────────────────────────────────
-            detectCompletionMismatch(manager, teamUserIds, resolvedCycleId, flags);
+            detectCompletionMismatch(manager, teamUserIds, resolvedCycleId, commitmentsByUserId, flags);
         }
 
         // ── DUPLICATE_NOTES ───────────────────────────────────────────────────
@@ -367,14 +395,16 @@ public class DriftDetectionService {
      * more than 20 percentage points.
      */
     private void detectCompletionMismatch(AppUser manager, List<UUID> teamUserIds,
-                                          UUID cycleId, List<IntegrityFlag> flags) {
+                                          UUID cycleId, Map<UUID, List<Commitment>> commitmentsByUserId,
+                                          List<IntegrityFlag> flags) {
         List<Commitment> managerCommitments =
-                commitmentRepository.findByUserIdInAndCycleId(List.of(manager.getId()), cycleId);
+                commitmentsByUserId.getOrDefault(manager.getId(), List.of());
 
         if (managerCommitments.isEmpty() || teamUserIds.isEmpty()) return;
 
-        List<Commitment> reportCommitments =
-                commitmentRepository.findByUserIdInAndCycleId(teamUserIds, cycleId);
+        List<Commitment> reportCommitments = teamUserIds.stream()
+                .flatMap(uid -> commitmentsByUserId.getOrDefault(uid, List.of()).stream())
+                .collect(Collectors.toList());
 
         if (reportCommitments.isEmpty()) return;
 

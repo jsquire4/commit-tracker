@@ -55,6 +55,21 @@ public interface BriefingService {
     String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId);
 
     /**
+     * Generate a team-level summary for a specific manager's team using pre-loaded commitments.
+     * Avoids re-querying all org commitments per manager when called in a loop.
+     *
+     * @param orgId              the organization
+     * @param cycleId            the completed cycle to summarise
+     * @param managerId          the manager whose team should be summarised
+     * @param allOrgCommitments  pre-loaded commitments for the org and cycle
+     * @return narrative text (never null; may be a template fallback if LLM is unavailable)
+     */
+    default String generateTeamSummary(UUID orgId, UUID cycleId, UUID managerId,
+                                        java.util.List<com.compass.platform.domain.commit.Commitment> allOrgCommitments) {
+        return generateTeamSummary(orgId, cycleId, managerId);
+    }
+
+    /**
      * Process a chat message sequence and return a response.
      *
      * @param orgId    the organization context

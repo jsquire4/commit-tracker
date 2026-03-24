@@ -2,6 +2,8 @@ package com.compass.platform.domain.briefing;
 
 import com.compass.platform.config.LlmConfig;
 import com.compass.platform.domain.UserRole;
+import com.compass.platform.domain.commit.Commitment;
+import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.AppUserRepository;
 import org.slf4j.Logger;
@@ -35,13 +37,16 @@ public class NarrativeGenerationService {
 
     private final BriefingService briefingService;
     private final AppUserRepository userRepository;
+    private final CommitmentRepository commitmentRepository;
     private final LlmConfig llmConfig;
 
     public NarrativeGenerationService(BriefingService briefingService,
                                       AppUserRepository userRepository,
+                                      CommitmentRepository commitmentRepository,
                                       LlmConfig llmConfig) {
         this.briefingService = briefingService;
         this.userRepository = userRepository;
+        this.commitmentRepository = commitmentRepository;
         this.llmConfig = llmConfig;
     }
 
@@ -83,9 +88,13 @@ public class NarrativeGenerationService {
         List<AppUser> managers = userRepository.findByOrgIdAndRoleIn(orgId, MANAGER_ROLES);
         log.info("Generating S4 team summaries for {} managers in org={} cycle={}", managers.size(), orgId, cycleId);
 
+        // Pre-load all org commitments once to avoid N+1 queries (one per manager)
+        List<Commitment> allOrgCommitments =
+                commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
+
         for (AppUser manager : managers) {
             try {
-                briefingService.generateTeamSummary(orgId, cycleId, manager.getId());
+                briefingService.generateTeamSummary(orgId, cycleId, manager.getId(), allOrgCommitments);
                 log.info("S4 team summary generated for manager={} cycle={}", manager.getId(), cycleId);
             } catch (Exception e) {
                 log.error("S4 team summary failed for manager={} cycle={}: {}",

@@ -1,4 +1,4 @@
-import { useAlignmentTrend, useCompletionTrend, useDisplacementReport, useDriftReport } from '@/hooks/useObservatory';
+import { useAlignmentTrend, useCompletionTrend, useDisplacementReport, useDriftReport, useObservatoryConfig } from '@/hooks/useObservatory';
 import type { AlignmentDataPoint, CompletionDataPoint, DisplacementSummary, DriftReport } from '@/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -50,7 +50,7 @@ function deriveDriftSignal(drift: DriftReport | undefined): SignalCard | null {
   };
 }
 
-function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined): SignalCard | null {
+function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined, strategicAlignmentTarget: number): SignalCard | null {
   if (!alignment || alignment.length < 2) return null;
 
   const recent = alignment.slice(-4);
@@ -60,9 +60,7 @@ function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined): S
     recent.reduce((sum, p) => sum + p.operationalPct, 0) / recent.length;
   const avgTotal = recent.reduce((sum, p) => sum + p.totalCommitments, 0) / recent.length;
 
-  // TODO: read from ObservatoryConfig.strategicAlignmentTarget when passed as prop
-  const SPECIFICITY_THRESHOLD = 50;
-  if (avgStrategic >= SPECIFICITY_THRESHOLD) return null;
+  if (avgStrategic >= strategicAlignmentTarget) return null;
 
   const weekLabel = alignment[alignment.length - 1]?.cycleLabel ?? 'recent';
 
@@ -81,6 +79,7 @@ function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined): S
 
 function deriveWorkDistributionSignal(
   completion: CompletionDataPoint[] | undefined,
+  darkWorkWarningPct: number,
 ): SignalCard | null {
   if (!completion || completion.length < 2) return null;
 
@@ -92,9 +91,7 @@ function deriveWorkDistributionSignal(
   const avgCompletion =
     recent.reduce((sum, p) => sum + p.completionRate, 0) / recent.length;
 
-  // TODO: read from ObservatoryConfig.darkWorkWarningPct when passed as prop
-  const DARK_WORK_THRESHOLD = 20;
-  if (avgCarry + avgNotStarted < DARK_WORK_THRESHOLD) return null;
+  if (avgCarry + avgNotStarted < darkWorkWarningPct) return null;
 
   const weekLabel = completion[completion.length - 1]?.cycleLabel ?? 'recent';
 
@@ -233,14 +230,18 @@ export function ObservatorySignals({ weekCount }: ObservatorySignalsProps) {
   const { data: alignment, isLoading: alignmentLoading } = useAlignmentTrend(weekCount);
   const { data: completion, isLoading: completionLoading } = useCompletionTrend(weekCount);
   const { data: displacement, isLoading: displacementLoading } = useDisplacementReport(weekCount);
+  const { data: config } = useObservatoryConfig();
+
+  const strategicAlignmentTarget = config ? parseFloat(config.strategicAlignmentTarget) : 50;
+  const darkWorkWarningPct = config ? parseFloat(config.darkWorkWarningPct) : 20;
 
   const isLoading = driftLoading || alignmentLoading || completionLoading || displacementLoading;
 
   const cards: SignalCard[] = [];
   if (!isLoading) {
     const driftCard = deriveDriftSignal(drift);
-    const specificityCard = deriveSpecificitySignal(alignment);
-    const distributionCard = deriveWorkDistributionSignal(completion);
+    const specificityCard = deriveSpecificitySignal(alignment, strategicAlignmentTarget);
+    const distributionCard = deriveWorkDistributionSignal(completion, darkWorkWarningPct);
     const displacementCard = deriveDisplacementSignal(displacement);
 
     if (driftCard) cards.push(driftCard);

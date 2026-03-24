@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { useQuery, useQueries } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
-import { useExecutiveHealth, useDriftReport } from '@/hooks/useObservatory';
+import { useExecutiveHealth, useDriftReport, useObservatoryConfig } from '@/hooks/useObservatory';
 import { getAlignmentTrend } from '@/api/observatory.api';
 import { getOrgTree } from '@/api/users.api';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -20,12 +20,14 @@ interface OrgHealthMapProps {
   health: ExecutiveHealthResponse;
   orgTree: User[] | undefined;
   onSelectTeam?: ((managerId: string) => void) | undefined;
+  alignmentTarget?: number;
+  warningPct?: number;
 }
 
-function OrgHealthMap({ health, orgTree, onSelectTeam }: OrgHealthMapProps) {
+function OrgHealthMap({ health, orgTree, onSelectTeam, alignmentTarget = 50, warningPct = 30 }: OrgHealthMapProps) {
   const vpGroups: VPGroup[] = useMemo(
-    () => buildVPGroups(health.units, orgTree),
-    [health.units, orgTree],
+    () => buildVPGroups(health.units, orgTree, alignmentTarget, warningPct),
+    [health.units, orgTree, alignmentTarget, warningPct],
   );
 
   const managerIds = useMemo(
@@ -100,6 +102,10 @@ export function ExecutiveHealthPage({ onSelectTeam }: ExecutiveHealthPageProps =
   } = useExecutiveHealth();
 
   const { data: driftReport } = useDriftReport();
+  const { data: obsConfig } = useObservatoryConfig();
+
+  const alignmentTarget = obsConfig ? parseFloat(obsConfig.strategicAlignmentTarget) : 50;
+  const warningPct = obsConfig ? parseFloat(obsConfig.misalignmentWarningPct) : 30;
 
   const orgTreeQuery = useQuery({
     queryKey: ['users', 'org-tree'],
@@ -185,10 +191,10 @@ export function ExecutiveHealthPage({ onSelectTeam }: ExecutiveHealthPageProps =
   return (
     <div className="flex flex-col h-screen bg-surface text-on-surface animate-fade-in">
       {/* Zone 1: Headline Strip */}
-      <HeadlineStrip health={health} />
+      <HeadlineStrip health={health} alignmentTarget={alignmentTarget} warningPct={warningPct} />
 
       {/* Zone 2: Org Health Map */}
-      <OrgHealthMap health={health} orgTree={orgTreeQuery.data} onSelectTeam={onSelectTeam} />
+      <OrgHealthMap health={health} orgTree={orgTreeQuery.data} onSelectTeam={onSelectTeam} alignmentTarget={alignmentTarget} warningPct={warningPct} />
 
       {/* Zone 3: Exception Alerts */}
       <ExceptionAlerts alerts={alerts} />

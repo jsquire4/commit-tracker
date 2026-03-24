@@ -143,6 +143,21 @@ public class AnalyticsService {
      */
     public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, int weekCount) {
         List<UUID> teamUserIds = userRepository.findSubtreeUserIds(managerId);
+        return computeTeamAlignmentTrend(orgId, managerId, weekCount, teamUserIds);
+    }
+
+    /**
+     * Compute alignment trend scoped to a manager's team using pre-computed subtree user IDs.
+     * Avoids the N+1 query pattern when called in a loop over managers.
+     *
+     * @param orgId       organization ID
+     * @param managerId   manager whose subtree defines the team
+     * @param weekCount   number of most-recent cycles to include
+     * @param teamUserIds pre-computed subtree user IDs for the manager
+     * @return {@link TeamAlignmentTrend} containing per-cycle alignment data for the team
+     */
+    public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, int weekCount,
+                                                         List<UUID> teamUserIds) {
         AppUser manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found: " + managerId));
 
@@ -209,9 +224,15 @@ public class AnalyticsService {
         // Resolve all MANAGER-role users in the org
         List<AppUser> managers = userRepository.findByOrgIdAndRoleIn(orgId, List.of(UserRole.MANAGER));
 
+        // Pre-compute subtree user IDs for all managers to avoid N+1 queries
+        Map<UUID, List<UUID>> subtreeMap = new HashMap<>();
+        for (AppUser manager : managers) {
+            subtreeMap.put(manager.getId(), userRepository.findSubtreeUserIds(manager.getId()));
+        }
+
         List<ManagerHeatmapRow> managerRows = new ArrayList<>();
         for (AppUser manager : managers) {
-            List<UUID> teamUserIds = userRepository.findSubtreeUserIds(manager.getId());
+            List<UUID> teamUserIds = subtreeMap.get(manager.getId());
 
             // Build per-person rows
             // Collect unique AppUser instances for all team members encountered across cycles
@@ -279,7 +300,21 @@ public class AnalyticsService {
      */
     public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, int weekCount) {
         List<UUID> teamUserIds = userRepository.findSubtreeUserIds(managerId);
+        return computeTeamCompletionTrend(orgId, managerId, weekCount, teamUserIds);
+    }
 
+    /**
+     * Compute completion trend scoped to a manager's team using pre-computed subtree user IDs.
+     * Avoids the N+1 query pattern when called in a loop over managers.
+     *
+     * @param orgId       organization ID
+     * @param managerId   manager whose subtree defines the team
+     * @param weekCount   number of most-recent cycles to include
+     * @param teamUserIds pre-computed subtree user IDs for the manager
+     * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
+     */
+    public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, int weekCount,
+                                                                 List<UUID> teamUserIds) {
         List<Cycle> cycles = latestCycles(orgId, weekCount);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 

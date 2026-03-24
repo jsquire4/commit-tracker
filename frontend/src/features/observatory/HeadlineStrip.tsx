@@ -42,10 +42,14 @@ function StatPill({
 
 interface HeadlineStripProps {
   health: ExecutiveHealthResponse;
+  /** GREEN threshold — from ObservatoryConfig.strategicAlignmentTarget */
+  alignmentTarget?: number;
+  /** YELLOW threshold — from ObservatoryConfig.misalignmentWarningPct */
+  warningPct?: number;
 }
 
-export function HeadlineStrip({ health }: HeadlineStripProps) {
-  const alignGrade = gradeFromAlignment(health.strategicAlignmentPct);
+export function HeadlineStrip({ health, alignmentTarget = 50, warningPct = 30 }: HeadlineStripProps) {
+  const alignGrade = gradeFromAlignment(health.strategicAlignmentPct, alignmentTarget, warningPct);
   const alignColor = HEALTH_COLORS[alignGrade];
 
   const decliningCount = health.units.filter((u) => u.trendDirection.toUpperCase() === 'DECLINING').length;

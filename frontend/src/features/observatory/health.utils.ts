@@ -51,12 +51,20 @@ export function trendArrowColor(direction: string): string {
   }
 }
 
-// TODO: thresholds (50/30) are hardcoded here but are configurable on the backend via
-// ObservatoryConfig.strategicAlignmentTarget and misalignmentWarningPct. These should
-// be read from the /api/v1/observatory/config endpoint so they stay in sync.
-export function gradeFromAlignment(pct: number): HealthGrade {
-  if (pct >= 50) return 'GREEN';
-  if (pct >= 30) return 'YELLOW';
+/**
+ * Grade a strategic-alignment percentage.
+ *
+ * @param pct              The alignment percentage to grade.
+ * @param alignmentTarget  GREEN threshold (default 50) — maps to ObservatoryConfig.strategicAlignmentTarget.
+ * @param warningPct       YELLOW threshold (default 30) — maps to ObservatoryConfig.misalignmentWarningPct.
+ */
+export function gradeFromAlignment(
+  pct: number,
+  alignmentTarget = 50,
+  warningPct = 30,
+): HealthGrade {
+  if (pct >= alignmentTarget) return 'GREEN';
+  if (pct >= warningPct) return 'YELLOW';
   return 'RED';
 }
 

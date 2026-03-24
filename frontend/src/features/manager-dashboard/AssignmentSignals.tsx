@@ -2,6 +2,8 @@ import type { AssignmentAttributionResponse } from '@/types';
 
 interface AssignmentSignalsProps {
   signals: AssignmentAttributionResponse;
+  /** Concentration risk threshold (default 50) — from ObservatoryConfig.concentrationRiskPct */
+  concentrationRiskPct?: number;
 }
 
 interface SignalCardProps {
@@ -47,11 +49,10 @@ function SignalCard({ label, value, isAmber = false, sublabel }: SignalCardProps
   );
 }
 
-export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
+export function AssignmentSignals({ signals, concentrationRiskPct = 50 }: AssignmentSignalsProps) {
   const topConcentration = signals.concentrationRisks[0] ?? null;
   const topConcentrationPct = topConcentration?.percentageOfTotal ?? 0;
-  // TODO: read from ObservatoryConfig.concentrationRiskPct when passed as prop
-  const CONCENTRATION_THRESHOLD = 50;
+  const CONCENTRATION_THRESHOLD = concentrationRiskPct;
   const isConcentrationRisk = topConcentrationPct >= CONCENTRATION_THRESHOLD;
 
   return (

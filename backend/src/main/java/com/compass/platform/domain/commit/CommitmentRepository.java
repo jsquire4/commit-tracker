@@ -1,5 +1,7 @@
 package com.compass.platform.domain.commit;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -49,4 +51,31 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
 
     @Query("SELECT COALESCE(MAX(c.priorityRank), -1) FROM Commitment c WHERE c.org.id = :orgId AND c.cycle.id = :cycleId")
     int findMaxPriorityRank(@Param("orgId") UUID orgId, @Param("cycleId") UUID cycleId);
+
+    @Query("SELECT c FROM Commitment c WHERE c.cycle.id = :cycleId AND c.org.id = :orgId"
+         + " AND (:userId IS NULL OR c.user.id = :userId)"
+         + " AND (:rallyCryId IS NULL OR c.rallyCry.id = :rallyCryId)"
+         + " AND (:chessCategoryId IS NULL OR c.chessCategory.id = :chessCategoryId)"
+         + " AND (:assignedById IS NULL OR c.assignedBy.id = :assignedById)"
+         + " ORDER BY c.priorityRank ASC")
+    Page<Commitment> findByCycleIdWithFilters(@Param("orgId") UUID orgId,
+                                              @Param("cycleId") UUID cycleId,
+                                              @Param("userId") UUID userId,
+                                              @Param("rallyCryId") UUID rallyCryId,
+                                              @Param("chessCategoryId") UUID chessCategoryId,
+                                              @Param("assignedById") UUID assignedById,
+                                              Pageable pageable);
+
+    @Query("SELECT c FROM Commitment c WHERE c.cycle.id = :cycleId AND c.org.id = :orgId"
+         + " AND (:userId IS NULL OR c.user.id = :userId)"
+         + " AND (:rallyCryId IS NULL OR c.rallyCry.id = :rallyCryId)"
+         + " AND (:chessCategoryId IS NULL OR c.chessCategory.id = :chessCategoryId)"
+         + " AND (:assignedById IS NULL OR c.assignedBy.id = :assignedById)"
+         + " ORDER BY c.priorityRank ASC")
+    List<Commitment> findByCycleIdWithFilters(@Param("orgId") UUID orgId,
+                                              @Param("cycleId") UUID cycleId,
+                                              @Param("userId") UUID userId,
+                                              @Param("rallyCryId") UUID rallyCryId,
+                                              @Param("chessCategoryId") UUID chessCategoryId,
+                                              @Param("assignedById") UUID assignedById);
 }

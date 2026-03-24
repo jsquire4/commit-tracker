@@ -22,7 +22,6 @@ import com.compass.platform.shared.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -250,20 +249,12 @@ public class CycleService {
      * Queries only cycles belonging to the given org, then applies in-memory filters.
      */
     public Page<Cycle> listCycles(UUID orgId, CycleFilters filters, Pageable pageable) {
-        // TODO: Replace with DB-level pagination when cycle count grows
-        List<Cycle> orgCycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
-
-        List<Cycle> filtered = orgCycles.stream()
-                .filter(c -> filters.state() == null || c.getState() == filters.state())
-                .filter(c -> filters.dateFrom() == null || !c.getStartsAt().isBefore(filters.dateFrom()))
-                .filter(c -> filters.dateTo() == null || !c.getStartsAt().isAfter(filters.dateTo()))
-                .collect(Collectors.toList());
-
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), filtered.size());
-        List<Cycle> page = start >= filtered.size() ? List.of() : filtered.subList(start, end);
-
-        return new PageImpl<>(page, pageable, filtered.size());
+        return cycleRepository.findByOrgIdWithFilters(
+                orgId,
+                filters.state(),
+                filters.dateFrom(),
+                filters.dateTo(),
+                pageable);
     }
 
     /**
