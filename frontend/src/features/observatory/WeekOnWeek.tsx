@@ -246,16 +246,8 @@ export function WeekOnWeek({ weekCount }: WeekOnWeekProps) {
             <tr>
               {/* Sticky metric label header cell */}
               <th
-                className="text-left font-medium text-on-surface-variant bg-surface-lowest border-b"
-                style={{
-                  position: 'sticky',
-                  left: 0,
-                  zIndex: 2,
-                  borderColor: 'var(--color-surface-container)',
-                  padding: '8px 16px 8px 16px',
-                  minWidth: '176px',
-                  width: '176px',
-                }}
+                className="text-left font-medium text-on-surface-variant bg-surface-lowest border-b sticky left-0 z-[2] px-4 py-2 min-w-[176px] w-[176px]"
+                style={{ borderColor: 'var(--color-surface-container)' }}
               >
                 Metric
               </th>

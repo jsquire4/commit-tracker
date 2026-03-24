@@ -293,21 +293,14 @@ public class ReconciliationService {
 
         int totalCommitments = commitments.size();
 
-        // Filter org-wide records down to this user's commitment IDs
-        java.util.Set<UUID> userCommitmentIds = commitments.stream()
+        // Query only this user's reconciliation records (not org-wide)
+        List<UUID> userCommitmentIds = commitments.stream()
                 .map(Commitment::getId)
-                .collect(Collectors.toSet());
+                .toList();
 
-        Cycle cycle = commitments.isEmpty()
-                ? cycleRepository.findById(cycleId)
-                        .orElseThrow(() -> new EntityNotFoundException("Cycle", cycleId))
-                : commitments.get(0).getCycle();
-
-        List<ReconciliationRecord> records =
-                reconciliationRecordRepository.findByOrgIdAndCycleId(cycle.getOrg().getId(), cycleId)
-                        .stream()
-                        .filter(r -> userCommitmentIds.contains(r.getCommitment().getId()))
-                        .toList();
+        List<ReconciliationRecord> records = userCommitmentIds.isEmpty()
+                ? List.of()
+                : reconciliationRecordRepository.findByCommitmentIdIn(userCommitmentIds);
 
         int reconciledCount = records.size();
         int completedCount = (int) records.stream()

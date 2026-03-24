@@ -1,3 +1,4 @@
+import apiClient from './client';
 import { fetchData } from './client';
 import type { DashboardFilters, DashboardResponse } from '@/types';
 import type { TeamSummaryResponse } from '@/types/briefing.types';
@@ -19,12 +20,11 @@ export async function getTeamSummary(
 ): Promise<TeamSummaryResponse | null> {
   const params: Record<string, unknown> = {};
   if (cycleWeekStart) params.cycleWeekStart = cycleWeekStart;
-  try {
-    return await fetchData<TeamSummaryResponse>(`${BASE}/team-summary`, params);
-  } catch (err: unknown) {
-    // 204 No Content — LLM not configured; fall back gracefully
-    const status = (err as { response?: { status?: number } })?.response?.status;
-    if (status === 204) return null;
-    throw err;
-  }
+  const response = await apiClient.get<{ data: TeamSummaryResponse } | null>(
+    `${BASE}/team-summary`,
+    { params },
+  );
+  // 204 No Content — LLM not configured; fall back gracefully
+  if (response.status === 204 || response.data == null) return null;
+  return response.data.data;
 }

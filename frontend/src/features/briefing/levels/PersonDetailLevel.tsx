@@ -96,7 +96,16 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
       <div className="space-y-3">
         {personCommitments.map((c, i) => {
           const reconStatus = c.reconciliationStatus ? RECON_STATUS[c.reconciliationStatus] : null;
-          const chessCat = c.chessCategoryName?.toLowerCase() as 'strategic' | 'operational' | 'defensive' | 'capability' | undefined;
+          const CHESS_CATEGORY_MAP: Record<string, 'strategic' | 'operational' | 'defensive' | 'capability'> = {
+            strategic: 'strategic',
+            operational: 'operational',
+            defensive: 'defensive',
+            capability: 'capability',
+            'capability building': 'capability',
+          };
+          const chessCat = c.chessCategoryName
+            ? CHESS_CATEGORY_MAP[c.chessCategoryName.toLowerCase()]
+            : undefined;
           return (
             <Card
               key={c.id}

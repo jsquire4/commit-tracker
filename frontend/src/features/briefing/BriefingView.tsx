@@ -29,7 +29,6 @@ import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
-// ChatMessage type no longer needed — no seed messages
 
 const HealthMapContent = lazy(() =>
   import('@/features/observatory/ExecutiveHealthPage').then((m) => ({
@@ -47,8 +46,6 @@ const ConfigContent = lazy(() =>
   })),
 );
 
-
-// No seed messages — chat starts fresh each session
 
 const MODE_TABS: { mode: BriefingMode; label: string }[] = [
   { mode: 'briefing', label: 'Briefing' },
@@ -100,8 +97,6 @@ export function BriefingView() {
     }
     return names;
   }, [drill.rallyCryId, drill.teamId, drill.personId, rcdoTree, health, commitments]);
-
-  // Chat starts fresh — no seed messages
 
   // Role guard — after all hooks
   if (!role || !DIRECTOR_AND_ABOVE.has(role)) {

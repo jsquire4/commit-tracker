@@ -7,8 +7,9 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
+import { SelectField } from '@/components/SelectField';
 import { Badge } from '@/components/Badge';
-import { TIMEZONE_OPTIONS } from '@/constants/timezones';
+import { CreateOrgModal } from './CreateOrgModal';
 import type { User, UserRole } from '@/types';
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
@@ -77,8 +78,6 @@ export function AdminTab() {
 
   // Org creation
   const [orgFormOpen, setOrgFormOpen] = useState(false);
-  const [orgName, setOrgName] = useState('');
-  const [orgTimezone, setOrgTimezone] = useState('America/Chicago');
 
   // Mutations
   const createMutation = useCreateUser();
@@ -186,16 +185,9 @@ export function AdminTab() {
     }
   }
 
-  async function handleCreateOrg(e: React.FormEvent) {
-    e.preventDefault();
-    if (!orgName.trim()) return;
-    try {
-      await createOrgMutation.mutateAsync({ name: orgName.trim(), timezone: orgTimezone });
-      setOrgFormOpen(false);
-      setOrgName('');
-    } catch {
-      // error shown via mutation state
-    }
+  async function handleCreateOrg(name: string, timezone: string) {
+    await createOrgMutation.mutateAsync({ name, timezone });
+    setOrgFormOpen(false);
   }
 
   const isPending = createMutation.isPending || updateMutation.isPending;
@@ -411,63 +403,21 @@ export function AdminTab() {
                   />
 
                   {/* Role select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Role <span className="text-error ml-0.5">*</span>
-                    </label>
-                    <select
-                      value={form.role}
-                      onChange={(e) => { setForm({ ...form, role: e.target.value as UserRole }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Role" value={form.role} onChange={(v) => { setForm({ ...form, role: v as UserRole }); }} required>
+                    {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </SelectField>
 
                   {/* Reports To select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Reports To
-                    </label>
-                    <select
-                      value={form.reportsToId}
-                      onChange={(e) => { setForm({ ...form, reportsToId: e.target.value }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      <option value="">None (top-level)</option>
-                      {managers.map((m) => <option key={m.id} value={m.id}>{m.displayName} ({ROLE_LABEL[m.role]})</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Reports To" value={form.reportsToId} onChange={(v) => { setForm({ ...form, reportsToId: v }); }}>
+                    <option value="">None (top-level)</option>
+                    {managers.map((m) => <option key={m.id} value={m.id}>{m.displayName} ({ROLE_LABEL[m.role]})</option>)}
+                  </SelectField>
 
                   {/* Cost Band select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Level / Cost Band
-                    </label>
-                    <select
-                      value={form.costBandId}
-                      onChange={(e) => { setForm({ ...form, costBandId: e.target.value }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      <option value="">Not assigned</option>
-                      {(costBands ?? []).map((b) => <option key={b.id} value={b.id}>{b.name} (Tier {b.tier})</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Level / Cost Band" value={form.costBandId} onChange={(v) => { setForm({ ...form, costBandId: v }); }}>
+                    <option value="">Not assigned</option>
+                    {(costBands ?? []).map((b) => <option key={b.id} value={b.id}>{b.name} (Tier {b.tier})</option>)}
+                  </SelectField>
 
                   {formError && (
                     <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">
@@ -514,85 +464,14 @@ export function AdminTab() {
         loading={archiveMutation.isPending}
       />
 
-      {/* ─── Create Org Dialog ─────────────────────────────────────────────── */}
-      <Transition appear show={orgFormOpen} as={Fragment}>
-        <Dialog as="div" className="relative z-40" onClose={() => { setOrgFormOpen(false); }}>
-          <Transition.Child
-            as={Fragment}
-            enter="duration-[200ms] ease-[cubic-bezier(0.25,0.1,0.25,1)]"
-            enterFrom="opacity-0"
-            enterTo="opacity-100"
-            leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
-            leaveFrom="opacity-100"
-            leaveTo="opacity-0"
-          >
-            <div className="fixed inset-0 bg-on-surface/40" aria-hidden="true" />
-          </Transition.Child>
-          <div className="fixed inset-0 flex items-center justify-center p-4">
-            <Transition.Child
-              as={Fragment}
-              enter="duration-[300ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
-              enterFrom="opacity-0 translate-y-2"
-              enterTo="opacity-100 translate-y-0"
-              leave="duration-[200ms] ease-[cubic-bezier(0.4,0,1,1)]"
-              leaveFrom="opacity-100 translate-y-0"
-              leaveTo="opacity-0 translate-y-2"
-            >
-              <Dialog.Panel className="w-full max-w-[440px] bg-surface-lowest rounded-sm p-8 shadow-whisper">
-                <Dialog.Title className="font-serif text-[1.125rem] font-normal text-on-surface mb-6">
-                  Create Organization
-                </Dialog.Title>
-                <form onSubmit={(e) => { void handleCreateOrg(e); }} className="space-y-5">
-                  <Input
-                    label="Organization Name"
-                    required
-                    value={orgName}
-                    onChange={(e) => { setOrgName(e.target.value); }}
-                    placeholder="Acme Manufacturing Inc."
-                  />
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Timezone
-                    </label>
-                    <select
-                      value={orgTimezone}
-                      onChange={(e) => { setOrgTimezone(e.target.value); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      {TIMEZONE_OPTIONS.map((tz) => (
-                        <option key={tz.value} value={tz.value}>{tz.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  {createOrgMutation.isError && (
-                    <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">
-                      <p className="text-body text-error">{createOrgMutation.error instanceof Error ? createOrgMutation.error.message : 'Failed to create organization'}</p>
-                    </div>
-                  )}
-                  <div className="flex justify-end gap-3 pt-2">
-                    <Button variant="secondary" onClick={() => { setOrgFormOpen(false); }}>
-                      Cancel
-                    </Button>
-                    <Button
-                      variant="primary"
-                      type="submit"
-                      disabled={createOrgMutation.isPending || !orgName.trim()}
-                      loading={createOrgMutation.isPending}
-                    >
-                      Create
-                    </Button>
-                  </div>
-                </form>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition>
+      {/* ─── Create Org Dialog (shared component) ──────────────────────────── */}
+      <CreateOrgModal
+        open={orgFormOpen}
+        isPending={createOrgMutation.isPending}
+        error={createOrgMutation.isError ? (createOrgMutation.error instanceof Error ? createOrgMutation.error.message : 'Failed to create organization') : null}
+        onSave={(name, tz) => { void handleCreateOrg(name, tz); }}
+        onClose={() => { setOrgFormOpen(false); }}
+      />
     </div>
   );
 }

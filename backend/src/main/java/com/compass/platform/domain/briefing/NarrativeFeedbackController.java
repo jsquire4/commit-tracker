@@ -83,6 +83,10 @@ public class NarrativeFeedbackController {
     public ResponseEntity<ApiResponse<Map<String, String>>> getFeedback(
             @RequestParam String scope,
             @RequestParam String cycleId) {
+        if (!VALID_SCOPES.contains(scope)) {
+            return ResponseEntity.badRequest().body(ApiResponse.of(Map.of("error", "Invalid scope")));
+        }
+
         UUID cycleUuid;
         try {
             cycleUuid = UUID.fromString(cycleId);

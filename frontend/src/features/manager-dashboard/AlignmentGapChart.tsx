@@ -188,7 +188,7 @@ export function AlignmentGapChart({
                   y={y}
                   dy={4}
                   textAnchor="end"
-                  fill={isTotal ? '#1D4ED8' : '#374151'}
+                  fill={isTotal ? 'var(--color-accent)' : 'var(--color-on-surface)'}
                   fontWeight={isTotal ? 700 : 400}
                   fontSize={isTotal ? 13 : 12}
                 >

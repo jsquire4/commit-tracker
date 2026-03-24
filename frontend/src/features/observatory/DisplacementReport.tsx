@@ -129,8 +129,8 @@ export function DisplacementReport({ summary }: DisplacementReportProps) {
             </div>
           ) : (
             <ul className="space-y-4">
-              {clusters.map((cluster, idx) => (
-                <li key={idx} className="border-l-2 border-outline-variant pl-3">
+              {clusters.map((cluster) => (
+                <li key={cluster.theme} className="border-l-2 border-outline-variant pl-3">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-sm text-on-surface">
                       {cluster.theme}

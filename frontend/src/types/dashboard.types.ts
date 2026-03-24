@@ -3,6 +3,7 @@
  * See: TeamRollupResponse, AlignmentSignalResponse,
  * AssignmentAttributionResponse, RcdoCoverageResponse, DashboardResponse.
  */
+import type { CycleState } from './cycle.types';
 
 /** Mirrors backend DashboardResponse — composite response from GET /api/v1/dashboard */
 export interface DashboardResponse {
@@ -22,7 +23,7 @@ export interface TeamMemberSummary {
   displayName: string;
   role: string;
   totalCommitments: number;
-  cycleState: import('./cycle.types').CycleState;
+  cycleState: CycleState;
   reconciledCount: number;
   /** Count of COMPLETED + PARTIALLY_COMPLETED reconciliation records for this member. */
   completedCount: number;

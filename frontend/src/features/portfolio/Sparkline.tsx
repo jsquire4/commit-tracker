@@ -63,7 +63,7 @@ export function Sparkline({
   }).join(' ');
 
   const lastPoint = data[data.length - 1]!;
-  const lastX = padding + ((data.length - 1) / (data.length - 1)) * drawWidth;
+  const lastX = padding + drawWidth;
   const lastY = 2 + drawHeight - ((lastPoint.value - min) / range) * drawHeight;
 
   useEffect(() => {

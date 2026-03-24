@@ -13,7 +13,7 @@ import { ReconciliationBottomBar } from '@/features/reconciliation/Reconciliatio
 import { CoverageStrip } from './CoverageStrip';
 import { CommitmentSummaryStrip } from './CommitmentSummaryStrip';
 import { RallyCrySidebar } from './RallyCrySidebar';
-import { CycleHistorySelector } from './CycleHistorySelector';
+import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';
@@ -21,6 +21,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
+import { SummaryCard } from './SummaryCard';
+import { ReconStatusBadge } from './ReconStatusBadge';
 import type { CycleState, ReconciliationStatus } from '@/types';
 
 export function MyWeekPage() {
@@ -232,7 +234,7 @@ export function MyWeekPage() {
 
                   {/* Section header */}
                   <div>
-                    <h2 className="font-serif text-3xl tracking-tight text-on-surface" style={{ fontWeight: 400 }}>
+                    <h2 className="font-serif text-3xl tracking-tight text-on-surface font-normal">
                       Planned vs. Actual
                     </h2>
                     <p className="text-body text-on-surface-variant mt-1">
@@ -248,21 +250,20 @@ export function MyWeekPage() {
 
                   {/* Inline progress warning */}
                   {!allReconciled && (
-                    <div className="p-4 rounded-sm bg-[#FFF8E1] border border-[#F0D9A8]">
+                    <div className="p-4 rounded-sm bg-warning/10 border border-warning/30">
                       <div className="flex items-center justify-between mb-2">
-                        <span className="text-body font-medium text-[#92650A]">
+                        <span className="text-body font-medium text-warning">
                           Reconcile all remaining commitments before submitting.
                         </span>
-                        <span className="text-small font-bold text-[#92650A] tabular-nums">
+                        <span className="text-small font-bold text-warning tabular-nums">
                           {reconSummary?.reconciledCount ?? 0} of {reconSummary?.totalCommitments ?? 0} reconciled
                         </span>
                       </div>
                       <div className="h-1.5 bg-surface-container rounded-full overflow-hidden">
                         <div
-                          className="h-full rounded-full transition-all duration-300"
+                          className="h-full rounded-full bg-warning transition-all duration-300"
                           style={{
                             width: `${reconSummary ? (reconSummary.reconciledCount / Math.max(reconSummary.totalCommitments, 1)) * 100 : 0}%`,
-                            background: '#C2860B',
                           }}
                         />
                       </div>
@@ -380,28 +381,3 @@ export function MyWeekPage() {
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-sm bg-surface-lowest p-3">
-      <dt className="text-small font-medium uppercase tracking-wide text-muted">{label}</dt>
-      <dd className="text-headline font-bold mt-0.5 text-on-surface tabular-nums">{value}</dd>
-    </div>
-  );
-}
-
-const RECON_STYLE: Record<ReconciliationStatus, { icon: string; label: string }> = {
-  COMPLETED: { icon: '\u2713', label: 'Completed' },
-  PARTIALLY_COMPLETED: { icon: '\u25D1', label: 'Partial' },
-  NOT_STARTED: { icon: '\u2717', label: 'Not Started' },
-  CARRIED_FORWARD: { icon: '\u21B3', label: 'Carried' },
-};
-
-function ReconStatusBadge({ status }: { status: ReconciliationStatus }) {
-  const info = RECON_STYLE[status];
-  return (
-    <span className="flex-shrink-0 inline-flex items-center gap-1 text-small font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-      <span aria-hidden="true">{info.icon}</span>
-      {info.label}
-    </span>
-  );
-}

@@ -1,4 +1,7 @@
 import type { CompletionHorizon, ReconciliationStatus } from './enums';
+import type { DisplacementCategory } from './observatory.types';
+import type { Cycle } from './cycle.types';
+import type { Commitment } from './commitment.types';
 
 export interface ReconciliationRecord {
   id: string;
@@ -9,7 +12,7 @@ export interface ReconciliationRecord {
   plannedHorizon: CompletionHorizon | null;
   reconciledAt: string;
   reconciledByUserId: string;
-  displacementCategory: import('./observatory.types').DisplacementCategory | null;
+  displacementCategory: DisplacementCategory | null;
   displacementDetail: string | null;
   displacingCommitmentId: string | null;
   displacingCommitmentTitle: string | null;
@@ -20,7 +23,7 @@ export interface ReconcileCommitmentRequest {
   completionNotes?: string;
   carryForward: boolean;
   bulletStatuses: BulletStatus[];
-  displacementCategory?: import('./observatory.types').DisplacementCategory;
+  displacementCategory?: DisplacementCategory;
   displacementDetail?: string;
   displacingCommitmentId?: string;
 }
@@ -32,7 +35,7 @@ export interface BulletStatus {
 
 /** Mirrors backend ReconciliationViewResponse */
 export interface ReconciliationViewResponse {
-  cycle: import('./cycle.types').Cycle;
+  cycle: Cycle;
   commitments: CommitmentReconciliationDetail[];
   summary: ReconciliationSummary;
   /** True when every user in the org has reconciled all their commitments (org-wide gate). */
@@ -40,7 +43,7 @@ export interface ReconciliationViewResponse {
 }
 
 export interface CommitmentReconciliationDetail {
-  commitment: import('./commitment.types').Commitment;
+  commitment: Commitment;
   reconciliation: ReconciliationRecord | null;
 }
 

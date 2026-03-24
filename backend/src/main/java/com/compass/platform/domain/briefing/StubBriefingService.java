@@ -87,7 +87,8 @@ public class StubBriefingService implements BriefingService {
         }
 
         // 4. Compute rally cry coverage: % of commitments linked to a rally cry
-        // Load commitments for the target cycle (or the most recent cycle if cycleId is null)
+        // NOTE: Same computation exists in BriefingDataGatherer.gatherData() — kept separate
+        // here to avoid coupling the stub to the full data-gathering pipeline.
         double rallyCryCoveragePct = 0.0;
         int unlinkedCount = 0;
         UUID resolvedCycleId = cycleId;
@@ -183,20 +184,7 @@ public class StubBriefingService implements BriefingService {
     // Private helpers
     // ═══════════════════════════════════════════════════════════════
 
-    /**
-     * Compute the percentage of commitments that lack a CHESS category from the latest alignment data point.
-     * The sum of all category percentages equals 100% when all commitments are categorized;
-     * any gap from 100% represents uncategorized work.
-     */
-    private double computeUncategorizedPct(List<AlignmentDataPoint> trend) {
-        if (trend.isEmpty()) {
-            return 100.0;
-        }
-        AlignmentDataPoint latest = trend.get(trend.size() - 1);
-        double categorizedPct = latest.strategicPct() + latest.operationalPct()
-                + latest.defensivePct() + latest.capabilityBuildingPct();
-        return Math.max(0.0, 100.0 - categorizedPct);
-    }
+
 
     /**
      * Describe the carry-forward trend by comparing the two most recent data points.

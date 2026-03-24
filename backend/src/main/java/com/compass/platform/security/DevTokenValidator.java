@@ -20,6 +20,8 @@ import java.util.UUID;
  */
 @Component
 @Profile({"local", "test", "railway"})
+// TODO(security): Remove "railway" once RS256 auth is configured for production.
+// Currently Railway uses dev tokens because no JWT public key is deployed.
 public class DevTokenValidator implements TokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(DevTokenValidator.class);

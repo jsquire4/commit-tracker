@@ -74,8 +74,10 @@ export function ObservatoryPage() {
     );
   }
 
-  // Load ALL available reconciled cycles (large cap so we get the full history)
-  const { data: allCycles } = useAlignmentTrend(999);
+  // Sentinel value: fetch all available reconciled cycles regardless of count.
+  // The API treats any value larger than the total cycle count as "return all".
+  const ALL_WEEKS = 999;
+  const { data: allCycles } = useAlignmentTrend(ALL_WEEKS);
 
   // Sorted ascending list of available cycle start dates
   const availableCycles = useMemo(() => {
@@ -159,8 +161,7 @@ export function ObservatoryPage() {
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1
-            className="text-2xl text-on-surface"
-            style={{ fontFamily: 'Newsreader, Georgia, serif' }}
+            className="text-2xl text-on-surface font-serif"
           >
             Observatory
           </h1>

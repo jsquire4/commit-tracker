@@ -30,8 +30,11 @@ function TrendArrow({ direction }: { direction: string }) {
   return <span className="text-muted font-bold text-base">{'\u2192'}</span>;
 }
 
+/** Number of recent weeks to show in the sparkline trend. */
+const SPARKLINE_WEEK_COUNT = 8;
+
 function Sparkline({ managerId }: { managerId: string }) {
-  const { data } = useAlignmentTrend(8, managerId);
+  const { data } = useAlignmentTrend(SPARKLINE_WEEK_COUNT, managerId);
 
   if (!data || data.length === 0) {
     return <div className="w-20 h-8 bg-surface-container-low rounded" />;

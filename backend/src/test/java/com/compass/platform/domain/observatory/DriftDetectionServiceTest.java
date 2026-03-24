@@ -10,7 +10,6 @@ import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
-import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.DriftMetric;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSeverity;
@@ -433,16 +432,6 @@ class DriftDetectionServiceTest {
                 Instant.now().minusSeconds(weekOffset * 604800L),
                 strategicPct,
                 0.0, 0.0, 0.0, 0.0, 10
-        );
-    }
-
-    private CompletionDataPoint completionPoint(double completionRate, int weekOffset) {
-        return new CompletionDataPoint(
-                UUID.randomUUID(),
-                "Week " + weekOffset,
-                Instant.now().minusSeconds(weekOffset * 604800L),
-                completionRate,
-                0.0, 0.0, 10, 8
         );
     }
 

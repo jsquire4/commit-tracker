@@ -36,3 +36,15 @@ export const CHESS_NAME_TO_KEY: Record<string, keyof typeof CHESS_MUTED> = {
   Defensive: 'defensive',
   'Capability Building': 'capability',
 };
+
+/**
+ * Bar-indicator colors keyed by display name (from API chessCategoryName).
+ * Used in CommitmentRow and similar list-view indicators.
+ * Deliberately different from CHESS_ACCENT — tuned for small bar swatches.
+ */
+export const CHESS_BAR_COLORS: Record<string, string> = {
+  Strategic: '#036A6A',
+  Operational: '#DCD9D4',
+  Defensive: '#C2860B',
+  'Capability Building': '#455F87',
+};

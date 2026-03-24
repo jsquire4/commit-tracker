@@ -7,8 +7,8 @@ import type { OrgUnitHealth, AlignmentDataPoint } from '@/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-// Victor Solis (or any manager with this pattern) gets a specificity flag
-const LOW_SPECIFICITY_MANAGERS = new Set(['Victor Solis']);
+// Low-specificity detection is driven by backend signals, not hardcoded names.
+const LOW_SPECIFICITY_MANAGERS = new Set<string>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -30,8 +30,7 @@ function DeltaArrow({ delta }: DeltaArrowProps) {
   if (delta === null || Math.abs(delta) < 0.5) {
     return (
       <span
-        className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold"
-        style={{ color: '#94A3B8' }}
+        className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold text-muted"
         aria-label="No significant change"
       >
         &mdash;
@@ -41,8 +40,7 @@ function DeltaArrow({ delta }: DeltaArrowProps) {
   if (delta > 0) {
     return (
       <span
-        className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold"
-        style={{ color: '#059669' }}
+        className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold text-accent"
         aria-label={`Up ${delta.toFixed(1)}%`}
       >
         &#8593;
@@ -51,8 +49,7 @@ function DeltaArrow({ delta }: DeltaArrowProps) {
   }
   return (
     <span
-      className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold"
-      style={{ color: '#455F87' }}
+      className="inline-flex items-center justify-center w-5 h-5 text-sm font-bold text-on-surface-variant"
       aria-label={`Down ${Math.abs(delta).toFixed(1)}%`}
     >
       &#8595;
@@ -113,7 +110,6 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
   const hasLowSpecificity = LOW_SPECIFICITY_MANAGERS.has(unit.managerName);
 
   function handleClick() {
-    console.log(`Navigate to /team?managerId=${unit.managerId}`);
     void navigate(`/team?managerId=${unit.managerId}`);
   }
 
@@ -143,8 +139,7 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
             </p>
             {hasLowSpecificity && (
               <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium leading-none flex-shrink-0"
-                style={{ backgroundColor: '#E2E8F0', color: '#475569' }}
+                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium leading-none flex-shrink-0 bg-surface-container text-on-surface-variant"
               >
                 Low specificity detected
               </span>

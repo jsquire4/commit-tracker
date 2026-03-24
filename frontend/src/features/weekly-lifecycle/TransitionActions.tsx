@@ -58,6 +58,7 @@ function getTransitionConfig(
 export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: TransitionActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [startingNextWeek, setStartingNextWeek] = useState(false);
+  const [startNextWeekError, setStartNextWeekError] = useState<string | null>(null);
   const { mutate: transitionCycle, isPending } = useTransitionCycle();
   const queryClient = useQueryClient();
 
@@ -65,29 +66,37 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
 
   if (cycle.state === 'RECONCILED') {
     return (
-      <Button
-        variant="primary"
-        loading={startingNextWeek}
-        onClick={async () => {
-          setStartingNextWeek(true);
-          try {
-            // Create the next week's DRAFT cycle from this RECONCILED cycle
-            const newCycle = await startNextCycle(cycle.id);
-            await queryClient.invalidateQueries({ queryKey: ['cycle'] });
-            await queryClient.invalidateQueries({ queryKey: ['commitments'] });
-            onStartNextWeek?.(newCycle.id);
-          } finally {
-            setStartingNextWeek(false);
+      <div className="flex flex-col items-start gap-1">
+        <Button
+          variant="primary"
+          loading={startingNextWeek}
+          onClick={async () => {
+            setStartingNextWeek(true);
+            setStartNextWeekError(null);
+            try {
+              // Create the next week's DRAFT cycle from this RECONCILED cycle
+              const newCycle = await startNextCycle(cycle.id);
+              await queryClient.invalidateQueries({ queryKey: ['cycle'] });
+              await queryClient.invalidateQueries({ queryKey: ['commitments'] });
+              onStartNextWeek?.(newCycle.id);
+            } catch {
+              setStartNextWeekError('Failed to start next week. Please try again.');
+            } finally {
+              setStartingNextWeek(false);
+            }
+          }}
+          icon={
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           }
-        }}
-        icon={
-          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} aria-hidden="true">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        }
-      >
-        Start Next Week
-      </Button>
+        >
+          Start Next Week
+        </Button>
+        {startNextWeekError && (
+          <p role="alert" className="text-sm text-error mt-1">{startNextWeekError}</p>
+        )}
+      </div>
     );
   }
 

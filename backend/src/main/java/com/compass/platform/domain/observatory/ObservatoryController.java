@@ -405,7 +405,7 @@ public class ObservatoryController {
         assertObservatoryAccess(actor);
         Org org = actor.getOrg();
         if (org.getPortfolio() == null) {
-            throw new IllegalStateException("Org " + org.getId() + " does not belong to a portfolio");
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
         UUID portfolioId = org.getPortfolio().getId();
         return ResponseEntity.ok(ApiResponse.of(portfolioService.getPortfolioHealth(portfolioId)));
@@ -421,7 +421,7 @@ public class ObservatoryController {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         if (actor.getOrg().getPortfolio() == null) {
-            throw new IllegalStateException("Org " + actor.getOrg().getId() + " does not belong to a portfolio");
+            return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
         UUID portfolioId = actor.getOrg().getPortfolio().getId();
         PortfolioComparisonResponse response = portfolioService.getPortfolioComparison(portfolioId, weekCount);

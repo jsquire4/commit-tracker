@@ -16,7 +16,7 @@ import { AssignmentAttribution } from './AssignmentAttribution';
 import { TaskBulletEditor } from './TaskBulletEditor';
 import { StrategyLinker } from '@/features/shared/StrategyLinker';
 import Button from '@/components/Button';
-import type { CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
+import type { Commitment, CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
 
 type FormValues = z.infer<typeof CreateCommitmentFormSchema>;
 
@@ -28,6 +28,40 @@ interface CommitmentFormProps {
 }
 
 const DEFAULT_BULLETS = ['', ''];
+
+function getDefaultValues(commitment?: Commitment): FormValues {
+  if (commitment) {
+    return {
+      title: commitment.title,
+      description: commitment.description ?? '',
+      bullets: commitment.bullets.map((b) => b.body),
+      completionHorizon: commitment.completionHorizon,
+      completionDay: commitment.completionDay ?? undefined,
+      completionTimeBlock: commitment.completionTimeBlock ?? undefined,
+      chessCategoryId: commitment.chessCategoryId ?? undefined,
+      rallyCryId: commitment.rcdoLink.rallyCryId ?? undefined,
+      definingObjectiveId: commitment.rcdoLink.definingObjectiveId ?? undefined,
+      outcomeId: commitment.rcdoLink.outcomeId ?? undefined,
+      assignedBy:
+        commitment.attribution.kind === 'ASSIGNED_BY'
+          ? commitment.attribution.assignedById
+          : undefined,
+    };
+  }
+  return {
+    title: '',
+    description: '',
+    bullets: DEFAULT_BULLETS,
+    completionHorizon: 'EOD' as CompletionHorizon,
+    completionDay: undefined,
+    completionTimeBlock: undefined,
+    chessCategoryId: undefined,
+    rallyCryId: undefined,
+    definingObjectiveId: undefined,
+    outcomeId: undefined,
+    assignedBy: undefined,
+  };
+}
 
 export function CommitmentForm({ open, commitmentId, cycleId, onClose }: CommitmentFormProps) {
   const isEdit = Boolean(commitmentId);
@@ -51,54 +85,13 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(CreateCommitmentFormSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      bullets: DEFAULT_BULLETS,
-      completionHorizon: 'EOD' as CompletionHorizon,
-      completionDay: undefined,
-      completionTimeBlock: undefined,
-      chessCategoryId: undefined,
-      rallyCryId: undefined,
-      definingObjectiveId: undefined,
-      outcomeId: undefined,
-      assignedBy: undefined,
-    },
+    defaultValues: getDefaultValues(),
   });
 
-  // Populate form when editing
+  // Populate form when editing or resetting for new commitment
   useEffect(() => {
-    if (open && existingCommitment) {
-      reset({
-        title: existingCommitment.title,
-        description: existingCommitment.description ?? '',
-        bullets: existingCommitment.bullets.map((b) => b.body),
-        completionHorizon: existingCommitment.completionHorizon,
-        completionDay: existingCommitment.completionDay ?? undefined,
-        completionTimeBlock: existingCommitment.completionTimeBlock ?? undefined,
-        chessCategoryId: existingCommitment.chessCategoryId ?? undefined,
-        rallyCryId: existingCommitment.rcdoLink.rallyCryId ?? undefined,
-        definingObjectiveId: existingCommitment.rcdoLink.definingObjectiveId ?? undefined,
-        outcomeId: existingCommitment.rcdoLink.outcomeId ?? undefined,
-        assignedBy:
-          existingCommitment.attribution.kind === 'ASSIGNED_BY'
-            ? existingCommitment.attribution.assignedById
-            : undefined,
-      });
-    } else if (open && !existingCommitment) {
-      reset({
-        title: '',
-        description: '',
-        bullets: DEFAULT_BULLETS,
-        completionHorizon: 'EOD',
-        completionDay: undefined,
-        completionTimeBlock: undefined,
-        chessCategoryId: undefined,
-        rallyCryId: undefined,
-        definingObjectiveId: undefined,
-        outcomeId: undefined,
-        assignedBy: undefined,
-      });
+    if (open) {
+      reset(getDefaultValues(existingCommitment));
     }
   }, [open, existingCommitment, reset]);
 

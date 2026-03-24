@@ -1,5 +1,6 @@
 package com.compass.platform.domain.dashboard;
 
+import com.compass.platform.domain.briefing.BriefingService;
 import com.compass.platform.domain.briefing.LlmBriefingService;
 import com.compass.platform.domain.dashboard.dto.DashboardFilters;
 import com.compass.platform.domain.dashboard.dto.DashboardResponse;
@@ -27,12 +28,14 @@ import java.util.UUID;
 public class DashboardController {
 
     private final DashboardService dashboardService;
-    private final LlmBriefingService llmBriefingService;
+    // TODO: Move generateTeamSummary(AppUser, Instant) to BriefingService interface
+    // so this can inject BriefingService instead of the concrete class.
+    private final LlmBriefingService briefingService;
 
     public DashboardController(DashboardService dashboardService,
-                               LlmBriefingService llmBriefingService) {
+                               LlmBriefingService briefingService) {
         this.dashboardService = dashboardService;
-        this.llmBriefingService = llmBriefingService;
+        this.briefingService = briefingService;
     }
 
     @GetMapping
@@ -63,7 +66,9 @@ public class DashboardController {
             @RequestParam(required = false) Instant cycleWeekStart) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
 
-        TeamSummaryResponse summary = llmBriefingService.generateTeamSummary(actor, cycleWeekStart);
+        TeamSummaryResponse summary = briefingService != null
+                ? briefingService.generateTeamSummary(actor, cycleWeekStart)
+                : null;
 
         if (summary == null) {
             return ResponseEntity.noContent().build();

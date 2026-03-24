@@ -1,6 +1,10 @@
 import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
 
+// Landing page section transition colors
+const BG_WARM = '#F5F0EB';
+const BG_SURFACE = '#F9F9F7';
+
 const PROBLEMS = [
   {
     title: 'Information Asymmetry',
@@ -46,9 +50,9 @@ export function ProblemSection() {
   return (
     <>
       {/* Gradient transition into warm */}
-      <div className="h-[60px]" style={{ background: 'linear-gradient(to bottom, #F9F9F7, #F5F0EB)' }} />
+      <div className="h-[60px]" style={{ background: `linear-gradient(to bottom, ${BG_SURFACE}, ${BG_WARM})` }} />
 
-      <section className="py-20" style={{ background: '#F5F0EB' }}>
+      <section className="py-20" style={{ background: BG_WARM }}>
         <div className="mx-auto max-w-[1080px] px-10">
           <h2
             ref={headlineRef}
@@ -66,7 +70,7 @@ export function ProblemSection() {
       </section>
 
       {/* Gradient transition out of warm */}
-      <div className="h-[60px]" style={{ background: 'linear-gradient(to bottom, #F5F0EB, #F9F9F7)' }} />
+      <div className="h-[60px]" style={{ background: `linear-gradient(to bottom, ${BG_WARM}, ${BG_SURFACE})` }} />
     </>
   );
 }

@@ -441,10 +441,8 @@ public class DashboardService {
      */
     private Optional<Cycle> resolveCycle(UUID orgId, DashboardFilters filters) {
         if (filters.cycleWeekStart() != null) {
-            // Find cycle whose startsAt matches the requested week
-            return cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId).stream()
-                    .filter(c -> c.getStartsAt().equals(filters.cycleWeekStart()))
-                    .findFirst();
+            // Direct lookup by org + startsAt (avoids loading all cycles)
+            return cycleRepository.findByOrgIdAndStartsAt(orgId, filters.cycleWeekStart());
         }
         return cycleRepository.findByOrgIdAndIsActiveTrue(orgId);
     }

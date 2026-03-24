@@ -1,6 +1,9 @@
 import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
 
+const BG_COOL = '#F0F7F7';
+const BG_SURFACE = '#F9F9F7';
+
 const ROLES = [
   {
     title: 'Individual Contributors',
@@ -107,9 +110,9 @@ export function RoleCardsSection() {
   return (
     <>
       {/* Gradient transition into teal-tint */}
-      <div className="h-[60px]" style={{ background: 'linear-gradient(to bottom, #F9F9F7, #F0F7F7)' }} />
+      <div className="h-[60px]" style={{ background: `linear-gradient(to bottom, ${BG_SURFACE}, ${BG_COOL})` }} />
 
-      <section className="py-20" style={{ background: '#F0F7F7' }}>
+      <section className="py-20" style={{ background: BG_COOL }}>
         <div className="mx-auto max-w-[1080px] px-10">
           <h2
             ref={headlineRef}
@@ -127,7 +130,7 @@ export function RoleCardsSection() {
       </section>
 
       {/* Gradient transition out of teal-tint */}
-      <div className="h-[60px]" style={{ background: 'linear-gradient(to bottom, #F0F7F7, #F9F9F7)' }} />
+      <div className="h-[60px]" style={{ background: `linear-gradient(to bottom, ${BG_COOL}, ${BG_SURFACE})` }} />
     </>
   );
 }

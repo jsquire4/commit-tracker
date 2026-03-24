@@ -1,6 +1,6 @@
-import { useContext, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
-import { AuthContext } from '@/hooks/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { VP_AND_ABOVE, DIRECTOR_AND_ABOVE, MANAGER_AND_ABOVE } from '@/constants/roles';
 
@@ -37,16 +37,16 @@ const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
   ].join(' ');
 
 export function Layout({ children }: LayoutProps) {
-  const auth = useContext(AuthContext);
+  const auth = useAuth();
   const { data: cycle } = useCurrentCycle();
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const role = auth?.role ?? null;
+  const role = auth.role;
   const isManager = role != null && MANAGER_AND_ABOVE.has(role);
   const isDirector = role != null && DIRECTOR_AND_ABOVE.has(role);
   const isVP = role != null && VP_AND_ABOVE.has(role);
 
-  const initials = getInitials(auth?.displayName);
+  const initials = getInitials(auth.displayName);
 
   const tabs = [
     { to: '/', label: 'My Week', show: true },
@@ -81,7 +81,7 @@ export function Layout({ children }: LayoutProps) {
               {/* Avatar initials */}
               <div
                 className="flex items-center justify-center w-8 h-8 rounded-sm bg-accent text-white text-label font-medium select-none"
-                title={auth?.displayName ?? 'User'}
+                title={auth.displayName ?? 'User'}
               >
                 {initials}
               </div>

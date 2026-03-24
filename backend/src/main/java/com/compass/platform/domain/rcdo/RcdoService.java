@@ -8,6 +8,7 @@ import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.shared.ConflictException;
 import com.compass.platform.shared.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+/** Container for the three bulk-loaded RCDO entity lists. */
+record RcdoEntities(
+    List<RallyCry> rallyCries,
+    List<DefiningObjective> definingObjectives,
+    List<Outcome> outcomes
+) {}
 
 @Service
 @Transactional
@@ -68,6 +76,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Rally cry");
         RallyCry rallyCry = rallyCryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", id));
+        requireSameOrg(rallyCry.getOrg(), actor);
         if (rallyCry.isArchived()) {
             throw new ConflictException("Cannot update archived RallyCry: " + id);
         }
@@ -85,6 +94,7 @@ public class RcdoService {
     public int archiveRallyCry(UUID id, AppUser actor) {
         RallyCry rallyCry = rallyCryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", id));
+        requireSameOrg(rallyCry.getOrg(), actor);
         rallyCry.setArchivedAt(Instant.now());
         rallyCryRepository.save(rallyCry);
         int warningCount = countReferencingCommitments("RallyCry", id);
@@ -122,6 +132,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Defining objective");
         DefiningObjective definingObjective = definingObjectiveRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", id));
+        requireSameOrg(definingObjective.getOrg(), actor);
         if (definingObjective.isArchived()) {
             throw new ConflictException("Cannot update archived DefiningObjective: " + id);
         }
@@ -137,6 +148,7 @@ public class RcdoService {
     public int archiveDefiningObjective(UUID id, AppUser actor) {
         DefiningObjective definingObjective = definingObjectiveRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", id));
+        requireSameOrg(definingObjective.getOrg(), actor);
         definingObjective.setArchivedAt(Instant.now());
         definingObjectiveRepository.save(definingObjective);
         int warningCount = countReferencingCommitments("DefiningObjective", id);
@@ -174,6 +186,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Outcome");
         Outcome outcome = outcomeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Outcome", id));
+        requireSameOrg(outcome.getOrg(), actor);
         if (outcome.isArchived()) {
             throw new ConflictException("Cannot update archived Outcome: " + id);
         }
@@ -188,6 +201,7 @@ public class RcdoService {
     public int archiveOutcome(UUID id, AppUser actor) {
         Outcome outcome = outcomeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Outcome", id));
+        requireSameOrg(outcome.getOrg(), actor);
         outcome.setArchivedAt(Instant.now());
         outcomeRepository.save(outcome);
         int warningCount = countReferencingCommitments("Outcome", id);
@@ -202,6 +216,21 @@ public class RcdoService {
     // === Tree query ===
 
     /**
+     * Bulk-loads all non-archived rally cries, defining objectives, and outcomes
+     * for the given org in three queries (no N+1). Used by both getTree and searchTree.
+     */
+    @Transactional(readOnly = true)
+    RcdoEntities loadRcdoEntities(UUID orgId) {
+        List<RallyCry> rallyCries = rallyCryRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        List<DefiningObjective> definingObjectives = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        List<Outcome> outcomes = outcomeRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        return new RcdoEntities(rallyCries, definingObjectives, outcomes);
+    }
+
+    /**
      * Returns full RCDO hierarchy for an org, excluding archived.
      * Structure: List&lt;RallyCry&gt; each with nested List&lt;DefiningObjective&gt;
      * each with nested List&lt;Outcome&gt;.
@@ -210,15 +239,10 @@ public class RcdoService {
      */
     @Transactional(readOnly = true)
     public RcdoTreeResponse getTree(UUID orgId) {
-        // Load all 3 levels in bulk — no N+1
-        List<RallyCry> rallyCries = rallyCryRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<DefiningObjective> allDos = definingObjectiveRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<Outcome> allOutcomes = outcomeRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        RcdoEntities entities = loadRcdoEntities(orgId);
+        List<RallyCry> rallyCries = entities.rallyCries();
+        List<DefiningObjective> allDos = entities.definingObjectives();
+        List<Outcome> allOutcomes = entities.outcomes();
 
         // Group DOs and Outcomes by their parent IDs
         Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
@@ -285,14 +309,10 @@ public class RcdoService {
     public RcdoTreeResponse searchTree(UUID orgId, String query) {
         String lowerQuery = query.toLowerCase();
 
-        List<RallyCry> rallyCries = rallyCryRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<DefiningObjective> allDos = definingObjectiveRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<Outcome> allOutcomes = outcomeRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        RcdoEntities entities = loadRcdoEntities(orgId);
+        List<RallyCry> rallyCries = entities.rallyCries();
+        List<DefiningObjective> allDos = entities.definingObjectives();
+        List<Outcome> allOutcomes = entities.outcomes();
 
         Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
                 .collect(Collectors.groupingBy(d -> d.getRallyCry().getId()));
@@ -367,6 +387,12 @@ public class RcdoService {
      * Validates that a title field is not null or blank.
      * Throws {@link IllegalArgumentException} if the check fails.
      */
+    private void requireSameOrg(Org entityOrg, AppUser actor) {
+        if (!entityOrg.getId().equals(actor.getOrg().getId())) {
+            throw new AccessDeniedException("Access denied: entity belongs to a different org");
+        }
+    }
+
     private void validateTitleNotBlank(String title, String entityLabel) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException(entityLabel + " title must not be blank");

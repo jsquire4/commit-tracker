@@ -8,13 +8,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Commitment } from '@/types';
-import { CHESS_ACCENT } from '@/constants/chess-colors';
-import { CHESS_LABELS } from '@/constants/chess-colors';
+import { CHESS_ACCENT, CHESS_LABELS } from '@/constants/chess-colors';
 
 interface DarkWorkAttributionProps {
   commitments: Commitment[];
 }
 
+/** Uppercase-keyed colors derived from the shared accent palette */
 const CATEGORY_COLORS: Record<string, string> = {
   STRATEGIC: CHESS_ACCENT.strategic,
   OPERATIONAL: CHESS_ACCENT.operational,
@@ -22,6 +22,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   CAPABILITY_BUILDING: CHESS_ACCENT.capability,
 };
 
+/** Short labels for the chart legend — 'Capability Building' truncated to 'Capability' */
 const CATEGORY_LABELS: Record<string, string> = {
   ...CHESS_LABELS,
   CAPABILITY_BUILDING: 'Capability',
@@ -133,12 +134,12 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
               return [value, CATEGORY_LABELS[label] ?? label];
             }}
             contentStyle={{
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E8E5E0',
+              backgroundColor: 'var(--color-surface-lowest)',
+              border: '1px solid var(--color-outline-variant)',
               borderRadius: '4px',
             }}
-            labelStyle={{ color: '#2D3432', fontWeight: 600 }}
-            itemStyle={{ color: '#5A605E' }}
+            labelStyle={{ color: 'var(--color-on-surface)', fontWeight: 600 }}
+            itemStyle={{ color: 'var(--color-on-surface-variant)' }}
           />
           <Legend wrapperStyle={{ display: 'none' }} />
           {/* Manager-Assigned bars */}

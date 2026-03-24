@@ -30,14 +30,14 @@ export function SortableHeader<T extends string>({
         {label}
         <span className="inline-flex flex-col leading-none" aria-hidden="true">
           <svg
-            className={`w-2.5 h-2.5 -mb-0.5 ${isActive && direction === 'asc' ? 'text-blue-600' : 'text-gray-300'}`}
+            className={`w-2.5 h-2.5 -mb-0.5 ${isActive && direction === 'asc' ? 'text-accent' : 'text-muted'}`}
             viewBox="0 0 10 6"
             fill="currentColor"
           >
             <path d="M5 0L10 6H0L5 0Z" />
           </svg>
           <svg
-            className={`w-2.5 h-2.5 ${isActive && direction === 'desc' ? 'text-blue-600' : 'text-gray-300'}`}
+            className={`w-2.5 h-2.5 ${isActive && direction === 'desc' ? 'text-accent' : 'text-muted'}`}
             viewBox="0 0 10 6"
             fill="currentColor"
           >

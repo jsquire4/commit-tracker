@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { VP_AND_ABOVE } from '@/constants/roles';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useCurrentCycle } from '@/hooks/useCycle';
-import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
+import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
@@ -71,7 +71,7 @@ export function PortfolioPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-stretch">
+    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-[70%_30%] gap-8 items-stretch">
       {/* Main column */}
       <div className="flex flex-col gap-8">
         {/* Page header with week selector */}

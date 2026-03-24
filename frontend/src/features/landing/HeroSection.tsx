@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GridCanvas } from './GridCanvas';
 
 export function HeroSection() {
@@ -10,12 +10,12 @@ export function HeroSection() {
     return () => clearTimeout(timer);
   }, []);
 
-  const stagger = (index: number) => ({
+  const stagger = useMemo(() => (index: number) => ({
     opacity: visible ? 1 : 0,
     transform: visible ? 'translateY(0)' : 'translateY(12px)',
     transition: `opacity 300ms cubic-bezier(0.16,1,0.3,1), transform 300ms cubic-bezier(0.16,1,0.3,1)`,
     transitionDelay: `${index * 120}ms`,
-  });
+  }), [visible]);
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-surface py-[140px] pb-[100px]">

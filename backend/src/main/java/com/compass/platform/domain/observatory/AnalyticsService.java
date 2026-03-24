@@ -115,10 +115,14 @@ public class AnalyticsService {
         Map<UUID, List<ReconciliationRecord>> recordsByCycle = allRecords.stream()
                 .collect(Collectors.groupingBy(r -> r.getCycle().getId()));
 
+        // Bulk-load all commitments for the cycle range in one query
+        List<Commitment> allCommitments = commitmentRepository.findByOrgIdAndCycleIdIn(orgId, cycleIds);
+        Map<UUID, List<Commitment>> commitmentsByCycle = allCommitments.stream()
+                .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
+
         List<CompletionDataPoint> results = new ArrayList<>();
         for (Cycle cycle : cycles) {
-            List<Commitment> commitments =
-                    commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycle.getId());
+            List<Commitment> commitments = commitmentsByCycle.getOrDefault(cycle.getId(), List.of());
             List<ReconciliationRecord> records =
                     recordsByCycle.getOrDefault(cycle.getId(), List.of());
             results.add(buildCompletionDataPoint(cycle, commitments, records));
@@ -143,12 +147,22 @@ public class AnalyticsService {
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found: " + managerId));
 
         List<Cycle> cycles = latestCycles(orgId, weekCount);
+        List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
+
+        // Bulk-load all team commitments for the cycle range in one query, then group by cycleId
+        Map<UUID, List<Commitment>> teamCommitmentsByCycle;
+        if (teamUserIds.isEmpty()) {
+            teamCommitmentsByCycle = Map.of();
+        } else {
+            List<Commitment> allTeamCommitments =
+                    commitmentRepository.findByUserIdInAndCycleIdIn(teamUserIds, cycleIds);
+            teamCommitmentsByCycle = allTeamCommitments.stream()
+                    .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
+        }
 
         List<AlignmentDataPoint> dataPoints = new ArrayList<>();
         for (Cycle cycle : cycles) {
-            List<Commitment> commitments = teamUserIds.isEmpty()
-                    ? List.of()
-                    : commitmentRepository.findByUserIdInAndCycleId(teamUserIds, cycle.getId());
+            List<Commitment> commitments = teamCommitmentsByCycle.getOrDefault(cycle.getId(), List.of());
             dataPoints.add(buildAlignmentDataPoint(cycle, commitments));
         }
 
@@ -178,13 +192,10 @@ public class AnalyticsService {
         List<Cycle> cycles = latestCycles(orgId, weekCount);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 
-        // Bulk-load all commitments for the cycle range in one pass
-        Map<UUID, List<Commitment>> commitmentsByCycle = new HashMap<>();
-        for (UUID cycleId : cycleIds) {
-            List<Commitment> cycleCmts =
-                    commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
-            commitmentsByCycle.put(cycleId, cycleCmts);
-        }
+        // Bulk-load all commitments for the cycle range in one query
+        List<Commitment> allOrgCommitments = commitmentRepository.findByOrgIdAndCycleIdIn(orgId, cycleIds);
+        Map<UUID, List<Commitment>> commitmentsByCycle = allOrgCommitments.stream()
+                .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
 
         // Index commitments by (cycleId, userId) for fast per-person lookup
         Map<UUID, Map<UUID, List<Commitment>>> byUserByCycle = new HashMap<>();
@@ -276,27 +287,29 @@ public class AnalyticsService {
         List<ReconciliationRecord> allRecords =
                 reconciliationRecordRepository.findByOrgIdAndCycleIdIn(orgId, cycleIds);
 
+        // Bulk-load all team commitments for the cycle range in one query, then group by cycleId
+        Map<UUID, List<Commitment>> teamCommitmentsByCycle;
         Set<UUID> teamCommitmentIds;
         if (teamUserIds.isEmpty()) {
+            teamCommitmentsByCycle = Map.of();
             teamCommitmentIds = Set.of();
         } else {
-            // Collect commitment IDs belonging to the team across all cycles
-            teamCommitmentIds = cycles.stream()
-                    .flatMap(c -> commitmentRepository.findByUserIdInAndCycleId(teamUserIds, c.getId()).stream())
+            List<Commitment> allTeamCommitments =
+                    commitmentRepository.findByUserIdInAndCycleIdIn(teamUserIds, cycleIds);
+            teamCommitmentsByCycle = allTeamCommitments.stream()
+                    .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
+            teamCommitmentIds = allTeamCommitments.stream()
                     .map(Commitment::getId)
                     .collect(Collectors.toSet());
         }
 
-        final Set<UUID> finalTeamCommitmentIds = teamCommitmentIds;
         Map<UUID, List<ReconciliationRecord>> recordsByCycle = allRecords.stream()
-                .filter(r -> finalTeamCommitmentIds.contains(r.getCommitment().getId()))
+                .filter(r -> teamCommitmentIds.contains(r.getCommitment().getId()))
                 .collect(Collectors.groupingBy(r -> r.getCycle().getId()));
 
         List<CompletionDataPoint> results = new ArrayList<>();
         for (Cycle cycle : cycles) {
-            List<Commitment> commitments = teamUserIds.isEmpty()
-                    ? List.of()
-                    : commitmentRepository.findByUserIdInAndCycleId(teamUserIds, cycle.getId());
+            List<Commitment> commitments = teamCommitmentsByCycle.getOrDefault(cycle.getId(), List.of());
             List<ReconciliationRecord> records =
                     recordsByCycle.getOrDefault(cycle.getId(), List.of());
             results.add(buildCompletionDataPoint(cycle, commitments, records));
