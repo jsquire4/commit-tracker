@@ -1,3 +1,5 @@
+import { Fragment } from 'react';
+
 type HttpMethod = 'GET' | 'POST' | 'PUT' | 'DELETE';
 
 interface ApiEndpoint {
@@ -98,24 +100,24 @@ export function ApiReferenceTable() {
       <table className="w-full border-collapse text-small">
         <thead>
           <tr>
-            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant" style={{ width: 70 }}>
+            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant w-[70px]">
               Method
             </th>
-            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant" style={{ width: 280 }}>
+            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant w-[280px]">
               Path
             </th>
             <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant">
               Description
             </th>
-            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant" style={{ width: 90 }}>
+            <th className="text-left label-caps text-muted font-semibold py-2 px-3 border-b border-outline-variant w-[90px]">
               Auth
             </th>
           </tr>
         </thead>
         <tbody>
           {API_GROUPS.map((group) => (
-            <>
-              <tr key={`group-${group.name}`}>
+            <Fragment key={group.name}>
+              <tr>
                 <td
                   colSpan={4}
                   className="pt-4 pb-1 px-3 font-semibold text-on-surface text-label uppercase tracking-wide"
@@ -145,7 +147,7 @@ export function ApiReferenceTable() {
                   </td>
                 </tr>
               ))}
-            </>
+            </Fragment>
           ))}
         </tbody>
       </table>
