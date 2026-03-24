@@ -202,6 +202,7 @@ class CommitmentServiceTest {
                 null, null,
                 category.getId(),
                 null, null, null, null,
+                null,
                 List.of("bullet 1", "bullet 2"),
                 null
         );
@@ -245,6 +246,7 @@ class CommitmentServiceTest {
                 null, // missing definingObjectiveId
                 outcomeId,
                 null,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -273,6 +275,7 @@ class CommitmentServiceTest {
                 null,
                 rallyCryId,
                 null, null, null,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -305,6 +308,7 @@ class CommitmentServiceTest {
                 null, null,
                 inactiveCatId,
                 null, null, null, null,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -341,6 +345,7 @@ class CommitmentServiceTest {
                 null, null,
                 category.getId(),
                 null, null, null, null,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -366,6 +371,7 @@ class CommitmentServiceTest {
                 null,
                 null, null, null,
                 assignedById,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -387,6 +393,7 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 null, null,
                 null, null, null, null, null,
+                null,
                 List.of("only one bullet"),
                 null
         );
@@ -408,6 +415,7 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 null, null,
                 null, null, null, null, null,
+                null,
                 List.of("b1", "b2", "b3", "b4", "b5", "b6"),
                 null
         );
@@ -439,6 +447,7 @@ class CommitmentServiceTest {
                 null, null,
                 category.getId(),
                 null, null, null, null,
+                null,
                 List.of("b1", "b2"),
                 null
         );
@@ -1035,6 +1044,7 @@ class CommitmentServiceTest {
                 CompletionHorizon.EOD,
                 null, null,
                 null, null, null, null, null,
+                null,
                 bullets,
                 null
         );

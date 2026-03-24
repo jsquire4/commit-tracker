@@ -6,16 +6,23 @@ import { HorizonSelector } from '../HorizonSelector';
 import type { CompletionHorizon } from '@/types';
 
 describe('HorizonSelector', () => {
-  it('renders all 5 horizon options', () => {
+  it('renders day and time block options', () => {
     renderWithProviders(
       <HorizonSelector value="EOD" onChange={vi.fn()} />
     );
 
+    // Day buttons
+    expect(screen.getByRole('button', { name: /mon/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /tue/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /wed/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /thu/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /fri/i })).toBeInTheDocument();
+
+    // Time block buttons
     expect(screen.getByRole('button', { name: /morning/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /midday/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /afternoon/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /eod/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /eow/i })).toBeInTheDocument();
   });
 
   it('highlights the selected option with aria-pressed=true', () => {

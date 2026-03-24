@@ -51,7 +51,7 @@ describe('CommitmentList', () => {
       />
     );
 
-    expect(screen.getByRole('list', { name: /commitment list/i })).toBeInTheDocument();
+    expect(screen.getByRole('list', { name: /own commitments/i })).toBeInTheDocument();
   });
 
   it('renders without drag context when cycle is not DRAFT', () => {

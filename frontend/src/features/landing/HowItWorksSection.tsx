@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
 import { RevealCard } from '../../components/RevealCard';
 
@@ -76,14 +76,17 @@ const STEPS = [
   },
 ];
 
-function StepConnector({ drawn }: { drawn: boolean }) {
+function StepConnector({ index }: { index: number }) {
   return (
     <div className="absolute top-[36px] right-[-1px] w-[calc(100%-72px)] h-px translate-x-1/2">
       <div
-        className="w-full h-px bg-accent opacity-30 origin-left transition-transform duration-[400ms]"
+        className="step-connector w-full h-px bg-accent opacity-30 origin-left"
         style={{
           transitionTimingFunction: 'cubic-bezier(0.16, 1, 0.3, 1)',
-          transform: drawn ? 'scaleX(1)' : 'scaleX(0)',
+          transitionProperty: 'transform',
+          transitionDuration: '400ms',
+          transitionDelay: `${200 + index * 150}ms`,
+          transform: 'scaleX(0)',
         }}
       />
     </div>
@@ -99,28 +102,8 @@ function StepCard({
   index: number;
   isLast: boolean;
 }) {
-  const observerRef = useRef<HTMLDivElement>(null);
-  const [drawn, setDrawn] = useState(false);
-
-  useEffect(() => {
-    const el = observerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setTimeout(() => setDrawn(true), 200 + index * 150);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [index]);
-
   return (
     <RevealCard index={index} className="text-center px-6 relative">
-      <div ref={observerRef}>
       <div className="font-sans text-small font-medium text-muted uppercase tracking-[0.05rem] mb-4">
         {step.number}
       </div>
@@ -140,8 +123,7 @@ function StepCard({
         {step.detail}
       </p>
 
-      </div>
-      {!isLast && <StepConnector drawn={drawn} />}
+      {!isLast && <StepConnector index={index} />}
     </RevealCard>
   );
 }

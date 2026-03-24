@@ -11,16 +11,17 @@ import {
 import { useAlignmentTrend, useObservatoryConfig } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { AlignmentDataPoint } from '@/types';
+import { CHESS_MUTED } from '@/constants/chess-colors';
 
 const WEEK_OPTIONS = [4, 8, 12, 26, 52] as const;
 type WeekOption = (typeof WEEK_OPTIONS)[number];
 
 const AREA_CONFIG = [
-  { key: 'strategicPct', label: 'Strategic', color: '#036A6A' },
-  { key: 'operationalPct', label: 'Operational', color: '#455F87' },
-  { key: 'defensivePct', label: 'Defensive', color: '#9F403D' },
-  { key: 'capabilityBuildingPct', label: 'Capability Building', color: '#94A3B8' },
-  { key: 'uncategorizedPct', label: 'Not Categorized', color: '#CBD5E1' },
+  { key: 'strategicPct', label: 'Strategic', color: CHESS_MUTED.strategic },
+  { key: 'operationalPct', label: 'Operational', color: CHESS_MUTED.operational },
+  { key: 'defensivePct', label: 'Defensive', color: CHESS_MUTED.defensive },
+  { key: 'capabilityBuildingPct', label: 'Capability Building', color: CHESS_MUTED.capability },
+  { key: 'uncategorizedPct', label: 'Not Categorized', color: CHESS_MUTED.uncategorized },
 ] as const;
 
 interface ChartDataPoint {

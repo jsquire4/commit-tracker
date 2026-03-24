@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ChessMiniBar } from './ChessMiniBar';
+import { CHESS_LABELS } from '@/constants/chess-colors';
 import type { Commitment, TeamMemberSummary } from '@/types';
 
 interface PersonCardProps {
@@ -13,13 +14,6 @@ const CHESS_CHIP_STYLES: Record<string, string> = {
   OPERATIONAL: 'bg-surface-container text-on-surface-variant',
   DEFENSIVE: 'bg-[#F5ECE8] text-[#6B4A3A]',
   CAPABILITY_BUILDING: 'bg-[#E8F0E8] text-[#2D5A2D]',
-};
-
-const CHESS_LABEL: Record<string, string> = {
-  STRATEGIC: 'Strategic',
-  OPERATIONAL: 'Operational',
-  DEFENSIVE: 'Defensive',
-  CAPABILITY_BUILDING: 'Capability',
 };
 
 function getStatusColor(_member: TeamMemberSummary, commitments: Commitment[]): 'teal' | 'amber' | 'rose' {
@@ -138,7 +132,7 @@ export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
                     const catKey = c.chessCategoryName.toUpperCase().replace(/ /g, '_');
                     return (
                       <span className={`text-[0.625rem] uppercase tracking-[0.04rem] px-2 py-0.5 rounded-sm font-medium whitespace-nowrap ${CHESS_CHIP_STYLES[catKey] ?? 'bg-surface-container text-on-surface-variant'}`}>
-                        {CHESS_LABEL[catKey] ?? c.chessCategoryName}
+                        {CHESS_LABELS[catKey] ?? c.chessCategoryName}
                       </span>
                     );
                   })()}

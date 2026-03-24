@@ -18,15 +18,15 @@ function renderForm(props?: Partial<Parameters<typeof CommitmentForm>[0]>) {
 describe('CommitmentForm', () => {
   it('renders all key fields', () => {
     renderForm();
-    expect(screen.getByLabelText(/title/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/what are you working on/i)).toBeInTheDocument();
     expect(screen.getByLabelText(/notes/i)).toBeInTheDocument();
     expect(screen.getByRole('group', { name: /completion horizon/i })).toBeInTheDocument();
-    expect(screen.getByText(/task bullets/i)).toBeInTheDocument();
+    expect(screen.getByText(/break it down/i)).toBeInTheDocument();
   });
 
-  it('shows Add Commitment button', () => {
+  it('shows Save Commitment button', () => {
     renderForm();
-    expect(screen.getByRole('button', { name: /add commitment/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /save commitment/i })).toBeInTheDocument();
   });
 
   it('shows edit header when commitmentId is provided', () => {
@@ -38,7 +38,7 @@ describe('CommitmentForm', () => {
     const user = userEvent.setup();
     renderForm();
 
-    const submitBtn = screen.getByRole('button', { name: /add commitment/i });
+    const submitBtn = screen.getByRole('button', { name: /save commitment/i });
     await user.click(submitBtn);
 
     await waitFor(() => {

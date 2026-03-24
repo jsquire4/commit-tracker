@@ -3,7 +3,12 @@ package com.compass.platform.domain.briefing;
 import com.compass.platform.domain.briefing.dto.BriefingResponse;
 import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
 import com.compass.platform.domain.briefing.dto.ChatResponse;
+import com.compass.platform.domain.briefing.dto.ProgramSummaryResponse;
+import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
+import com.compass.platform.domain.observatory.dto.WeekNarrativeResponse;
+import com.compass.platform.domain.user.AppUser;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -57,4 +62,32 @@ public interface BriefingService {
      * @return chat response
      */
     ChatResponse generateChat(UUID orgId, List<ChatMessage> messages);
+
+    /**
+     * Generate an LLM team summary for the My Team AI Summary card.
+     *
+     * @param actor          the authenticated manager making the request
+     * @param cycleWeekStart optional cycle filter
+     * @return team summary response, or {@code null} when the LLM is not configured
+     */
+    TeamSummaryResponse generateTeamSummary(AppUser actor, Instant cycleWeekStart);
+
+    /**
+     * Generate a program-level summary of execution trajectory over
+     * the last {@code weekCount} reconciled cycles.
+     *
+     * @param orgId     the organization
+     * @param weekCount number of trailing weeks to summarise
+     * @return program summary with narrative and timestamp
+     */
+    ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount);
+
+    /**
+     * Generate a 2-sentence narrative for a single week's execution data.
+     *
+     * @param orgId   the organization
+     * @param cycleId the specific cycle to narrate
+     * @return week narrative with text and generation timestamp
+     */
+    WeekNarrativeResponse generateWeekNarrativeResponse(UUID orgId, UUID cycleId);
 }

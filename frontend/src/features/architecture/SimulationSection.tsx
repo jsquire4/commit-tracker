@@ -1,5 +1,3 @@
-import { useRef } from 'react';
-import { useFadeUp } from '@/hooks/useMotion';
 import { RevealCard } from '@/components/RevealCard';
 
 interface CompanyNarrative {
@@ -44,13 +42,9 @@ function CompanyCard({ company, index }: { company: CompanyNarrative; index: num
 }
 
 export function SimulationSection() {
-  const sectionRef = useRef<HTMLElement>(null);
-  useFadeUp(sectionRef);
-
   return (
     <section
-      ref={sectionRef}
-      className="reveal -mx-8 mt-16 rounded-none bg-surface-container-low px-8 py-12 max-[640px]:-mx-4 max-[640px]:px-4"
+      className="-mx-8 mt-16 rounded-none bg-surface-container-low px-8 py-12 max-[640px]:-mx-4 max-[640px]:px-4"
     >
       <div className="max-w-[780px]">
         <h2 className="font-serif text-[1.75rem] leading-tight text-on-surface mb-6">

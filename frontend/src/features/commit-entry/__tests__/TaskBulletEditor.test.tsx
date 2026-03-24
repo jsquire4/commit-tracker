@@ -49,7 +49,7 @@ describe('TaskBulletEditor', () => {
       />
     );
 
-    await user.click(screen.getByRole('button', { name: /add bullet/i }));
+    await user.click(screen.getByRole('button', { name: /add subtask/i }));
     expect(onChange).toHaveBeenCalledWith(['First', 'Second', '']);
   });
 
@@ -65,7 +65,7 @@ describe('TaskBulletEditor', () => {
       />
     );
 
-    const addBtn = screen.getByRole('button', { name: /add bullet/i });
+    const addBtn = screen.getByRole('button', { name: /add subtask/i });
     expect(addBtn).toBeDisabled();
 
     await user.click(addBtn);

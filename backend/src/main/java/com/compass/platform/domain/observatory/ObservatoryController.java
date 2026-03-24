@@ -1,7 +1,7 @@
 package com.compass.platform.domain.observatory;
 
 import com.compass.platform.domain.UserRole;
-import com.compass.platform.domain.briefing.LlmBriefingService;
+import com.compass.platform.domain.briefing.BriefingService;
 import com.compass.platform.domain.briefing.dto.ProgramSummaryResponse;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
@@ -59,7 +59,7 @@ public class ObservatoryController {
     private final PortfolioService portfolioService;
     private final ObservatoryConfigRepository configRepository;
     private final OrgRepository orgRepository;
-    private final LlmBriefingService llmBriefingService;
+    private final BriefingService briefingService;
 
     public ObservatoryController(ExecutiveHealthComposer healthComposer,
                                  AnalyticsService analyticsService,
@@ -68,7 +68,7 @@ public class ObservatoryController {
                                  PortfolioService portfolioService,
                                  ObservatoryConfigRepository configRepository,
                                  OrgRepository orgRepository,
-                                 LlmBriefingService llmBriefingService) {
+                                 BriefingService briefingService) {
         this.healthComposer = healthComposer;
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
@@ -76,7 +76,7 @@ public class ObservatoryController {
         this.portfolioService = portfolioService;
         this.configRepository = configRepository;
         this.orgRepository = orgRepository;
-        this.llmBriefingService = llmBriefingService;
+        this.briefingService = briefingService;
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -304,7 +304,7 @@ public class ObservatoryController {
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
         return ResponseEntity.ok(ApiResponse.of(
-                llmBriefingService.generateProgramSummary(orgId, weekCount)));
+                briefingService.generateProgramSummary(orgId, weekCount)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -324,7 +324,7 @@ public class ObservatoryController {
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
         return ResponseEntity.ok(ApiResponse.of(
-                llmBriefingService.generateWeekNarrativeResponse(orgId, cycleId)));
+                briefingService.generateWeekNarrativeResponse(orgId, cycleId)));
     }
 
     // ═══════════════════════════════════════════════════════════════

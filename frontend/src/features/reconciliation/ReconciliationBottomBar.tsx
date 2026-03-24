@@ -37,7 +37,7 @@ export function ReconciliationBottomBar({
               className="h-full rounded-full transition-all duration-300 ease-[var(--ease-standard)]"
               style={{
                 width: `${pct}%`,
-                background: allReconciled ? '#036A6A' : '#C2860B',
+                background: allReconciled ? 'var(--color-accent)' : 'var(--color-warning)',
               }}
             />
           </div>

@@ -124,15 +124,15 @@ public class LlmBriefingService implements BriefingService {
 
     @Override
     public BriefingResponse generateBriefing(UUID orgId, UUID cycleId) {
-        if (!llmConfig.isConfigured()) {
-            log.debug("No LLM API key configured — using template fallback");
-            BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, resolveCycleId(orgId, cycleId));
-            return responseBuilder.buildResponse(promptBuilder.buildBriefingFallback(ctx), List.of(), ctx);
-        }
-
         UUID resolvedCycleId = resolveCycleId(orgId, cycleId);
         if (resolvedCycleId == null) {
             return responseBuilder.emptyBriefing();
+        }
+
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — using template fallback");
+            BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, resolvedCycleId);
+            return responseBuilder.buildResponse(promptBuilder.buildBriefingFallback(ctx), List.of(), ctx);
         }
 
         // Gather data

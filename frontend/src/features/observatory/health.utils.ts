@@ -1,11 +1,12 @@
 import type { HealthGrade } from '@/types/observatory.types';
+import { CHESS_ACCENT } from '@/constants/chess-colors';
 
 // ─── Shared Constants ────────────────────────────────────────────────────────
 
 export const HEALTH_COLORS: Record<HealthGrade, string> = {
-  GREEN: '#036A6A',
+  GREEN: CHESS_ACCENT.strategic,
   YELLOW: '#C2860B',
-  RED: '#9F403D',
+  RED: CHESS_ACCENT.defensive,
 };
 
 export const HEALTH_BG: Record<HealthGrade, string> = {

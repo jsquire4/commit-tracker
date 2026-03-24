@@ -172,6 +172,9 @@
     opacity: 1;
     transform: translateY(0);
   }
+  .reveal.visible .step-connector {
+    transform: scaleX(1);
+  }
 
   /* Label caps — uppercase metadata treatment */
   .label-caps {

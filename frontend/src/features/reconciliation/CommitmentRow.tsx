@@ -4,6 +4,7 @@ import type { ReconciliationStatus } from '@/types/enums';
 import type { Commitment } from '@/types/commitment.types';
 import { CHESS_BAR_COLORS } from '@/constants/chess-colors';
 import { HORIZON_LABELS } from '@/constants/horizon';
+import { STATUS_STYLES } from '@/constants/reconciliation-status';
 import { CommitmentStatusMarker } from './CommitmentStatusMarker';
 import { ChangeReasonCapture } from './ChangeReasonCapture';
 import { DisplacementCapture } from './DisplacementCapture';
@@ -16,13 +17,6 @@ const DISPLACEMENT_STATUSES: ReconciliationStatus[] = [
   'NOT_STARTED',
   'PARTIALLY_COMPLETED',
 ] as const;
-
-const STATUS_PILL: Record<ReconciliationStatus, { bg: string; text: string; label: string; icon: string }> = {
-  COMPLETED: { bg: 'bg-[#E0F2F1]', text: 'text-accent', label: 'Completed', icon: '\u2713' },
-  PARTIALLY_COMPLETED: { bg: 'bg-[#FFF8E1]', text: 'text-[#92650A]', label: 'Partial', icon: '\u00BD' },
-  NOT_STARTED: { bg: 'bg-[#FFF0EF]', text: 'text-error', label: 'Not Started', icon: '\u00D7' },
-  CARRIED_FORWARD: { bg: 'bg-[#EEF2F8]', text: 'text-navy', label: 'Carried Fwd', icon: '\u2192' },
-};
 
 /* ─── CommitmentRow ────────────────────────────────────────────────────────── */
 
@@ -56,7 +50,7 @@ export function CommitmentRow({ detail, cycleId, allCommitments, expanded, onTog
     : '#DCD9D4';
 
   // Status pill for collapsed view
-  const statusPill = row.status ? STATUS_PILL[row.status] : null;
+  const statusPill = row.status ? STATUS_STYLES[row.status] : null;
 
   // Other commitments for displacement quick signal
   const otherCommitments = allCommitments.filter((c) => c.id !== commitment.id);

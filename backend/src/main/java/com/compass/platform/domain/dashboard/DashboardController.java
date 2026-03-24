@@ -1,7 +1,6 @@
 package com.compass.platform.domain.dashboard;
 
 import com.compass.platform.domain.briefing.BriefingService;
-import com.compass.platform.domain.briefing.LlmBriefingService;
 import com.compass.platform.domain.dashboard.dto.DashboardFilters;
 import com.compass.platform.domain.dashboard.dto.DashboardResponse;
 import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
@@ -28,12 +27,10 @@ import java.util.UUID;
 public class DashboardController {
 
     private final DashboardService dashboardService;
-    // TODO: Move generateTeamSummary(AppUser, Instant) to BriefingService interface
-    // so this can inject BriefingService instead of the concrete class.
-    private final LlmBriefingService briefingService;
+    private final BriefingService briefingService;
 
     public DashboardController(DashboardService dashboardService,
-                               LlmBriefingService briefingService) {
+                               BriefingService briefingService) {
         this.dashboardService = dashboardService;
         this.briefingService = briefingService;
     }

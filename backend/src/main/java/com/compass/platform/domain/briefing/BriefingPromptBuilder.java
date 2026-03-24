@@ -149,7 +149,7 @@ public class BriefingPromptBuilder {
     public String buildWeekNarrativePrompt(AlignmentDataPoint alignment, CompletionDataPoint completion) {
         StringBuilder sb = new StringBuilder();
         sb.append("Week: ").append(alignment.cycleLabel()).append("\n\n");
-        sb.append("CHESS BREAKDOWN:\n");
+        sb.append("COMMITMENT CATEGORY BREAKDOWN:\n");
         sb.append(String.format("- Strategic: %.1f%%\n", alignment.strategicPct()));
         sb.append(String.format("- Operational: %.1f%%\n", alignment.operationalPct()));
         sb.append(String.format("- Defensive: %.1f%%\n", alignment.defensivePct()));
@@ -177,7 +177,7 @@ public class BriefingPromptBuilder {
         sb.append("TEAM SIZE: ").append(teamSize).append('\n');
         sb.append("TOTAL COMMITMENTS THIS CYCLE: ").append(totalCommitments).append("\n\n");
 
-        sb.append("CHESS DISTRIBUTION:\n");
+        sb.append("COMMITMENT CATEGORY DISTRIBUTION:\n");
         for (Map.Entry<String, AlignmentSignalResponse.CategoryDistribution> entry : dist.entrySet()) {
             sb.append(String.format("- %s: %.1f%%%n", entry.getKey(), entry.getValue().percentage()));
         }

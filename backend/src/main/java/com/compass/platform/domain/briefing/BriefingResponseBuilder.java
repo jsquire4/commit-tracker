@@ -21,13 +21,6 @@ public class BriefingResponseBuilder {
         return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, metrics, Instant.now());
     }
 
-    public BriefingResponse buildResponseFromCache(GeneratedNarrative cached, List<BriefingSuggestion> suggestions,
-                                                    BriefingDataGatherer.BriefingDataContext ctx) {
-        List<BriefingCitation> citations = buildCitations(ctx);
-        List<BriefingMetric> metrics = buildMetrics(ctx);
-        return new BriefingResponse("Weekly Intelligence Summary", cached.getContent(), suggestions, citations, metrics, cached.getGeneratedAt());
-    }
-
     public BriefingResponse emptyBriefing() {
         return new BriefingResponse("Weekly Intelligence Summary",
                 "No reconciled cycles available for briefing.", List.of(), List.of(), List.of(), Instant.now());
@@ -55,13 +48,11 @@ public class BriefingResponseBuilder {
     }
 
     public List<BriefingMetric> buildMetrics(BriefingDataGatherer.BriefingDataContext ctx) {
-        String alignTrend = ctx.referenceData().getOrDefault("A.delta", 0.0) > 0 ? "up"
-                : ctx.referenceData().getOrDefault("A.delta", 0.0) < -1 ? "down" : "flat";
         String carryTrend = ctx.carryForwardRate() > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up"
                 : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down" : "flat";
 
         return List.of(
-                new BriefingMetric("alignment", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", alignTrend),
+                new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", null),
                 new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate()), "%", carryTrend),
                 new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate()), "%", null),
                 new BriefingMetric("drift", "Active Drift Signals", ctx.driftCount(), null, null)

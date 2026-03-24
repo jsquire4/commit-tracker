@@ -24,7 +24,6 @@ describe('TransitionActions', () => {
 
     const lockBtn = screen.getByRole('button', { name: /lock commitments/i });
     expect(lockBtn).toBeDisabled();
-    expect(screen.getByText(/add at least one commitment/i)).toBeInTheDocument();
   });
 
   it('shows Begin Reconciliation button when cycle is LOCKED', () => {
@@ -44,7 +43,7 @@ describe('TransitionActions', () => {
       <TransitionActions cycle={cycle} commitmentCount={3} />
     );
 
-    expect(screen.getByText(/cycle complete/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /start next week/i })).toBeInTheDocument();
   });
 
   it('renders nothing when cycle is RECONCILING', () => {

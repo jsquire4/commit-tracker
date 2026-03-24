@@ -492,15 +492,14 @@ class ReconciliationServiceTest {
                 .notes("not started")
                 .reconciledAt(Instant.now()).reconciledBy(employee).build();
 
-        when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(reconcilingCycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), cycleId))
                 .thenReturn(List.of(commitment, c2, c3));
-        when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
+        when(reconciliationRecordRepository.findByCommitmentIdIn(any()))
                 .thenReturn(List.of(r1, r2, r3));
         when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of());
 
-        ReconciliationSummary summary = reconciliationService.computeSummary(cycleId);
+        ReconciliationSummary summary = reconciliationService.computeSummary(cycleId, employee.getId());
 
         assertThat(summary.totalCommitments()).isEqualTo(3);
         assertThat(summary.reconciledCount()).isEqualTo(3);
@@ -524,15 +523,14 @@ class ReconciliationServiceTest {
                 .notes("partial")
                 .reconciledAt(Instant.now()).reconciledBy(employee).build();
 
-        when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(reconcilingCycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), cycleId))
                 .thenReturn(List.of(commitment));
-        when(reconciliationRecordRepository.findByOrgIdAndCycleId(org.getId(), cycleId))
+        when(reconciliationRecordRepository.findByCommitmentIdIn(any()))
                 .thenReturn(List.of(record));
         when(taskBulletRepository.findByCommitmentIdIn(any(Collection.class)))
                 .thenReturn(List.of(completedBullet, pendingBullet));
 
-        ReconciliationSummary summary = reconciliationService.computeSummary(cycleId);
+        ReconciliationSummary summary = reconciliationService.computeSummary(cycleId, employee.getId());
 
         assertThat(summary.bulletCompletionRate()).isCloseTo(0.5, within(0.001));
     }
