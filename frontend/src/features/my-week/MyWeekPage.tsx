@@ -21,6 +21,8 @@ import { EmptyState } from '@/components/EmptyState';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
+import { SummaryCard } from './SummaryCard';
+import { ReconStatusBadge } from './ReconStatusBadge';
 import type { CycleState, ReconciliationStatus } from '@/types';
 
 export function MyWeekPage() {
@@ -380,28 +382,3 @@ export function MyWeekPage() {
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-sm bg-surface-lowest p-3">
-      <dt className="text-small font-medium uppercase tracking-wide text-muted">{label}</dt>
-      <dd className="text-headline font-bold mt-0.5 text-on-surface tabular-nums">{value}</dd>
-    </div>
-  );
-}
-
-const RECON_STYLE: Record<ReconciliationStatus, { icon: string; label: string }> = {
-  COMPLETED: { icon: '\u2713', label: 'Completed' },
-  PARTIALLY_COMPLETED: { icon: '\u25D1', label: 'Partial' },
-  NOT_STARTED: { icon: '\u2717', label: 'Not Started' },
-  CARRIED_FORWARD: { icon: '\u21B3', label: 'Carried' },
-};
-
-function ReconStatusBadge({ status }: { status: ReconciliationStatus }) {
-  const info = RECON_STYLE[status];
-  return (
-    <span className="flex-shrink-0 inline-flex items-center gap-1 text-small font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full">
-      <span aria-hidden="true">{info.icon}</span>
-      {info.label}
-    </span>
-  );
-}

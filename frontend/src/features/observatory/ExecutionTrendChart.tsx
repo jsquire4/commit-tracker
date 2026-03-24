@@ -133,16 +133,6 @@ function CustomLegend() {
   );
 }
 
-// ── AI narrative generator ────────────────────────────────────────────────────
-
-/**
- * Chart-specific wrapper around the shared generateWeekNarrative helper.
- * Delegates to the shared util while keeping the internal call-site unchanged.
- */
-function generateNarrative(data: ChartDataPoint, allData: ChartDataPoint[]): string {
-  return generateWeekNarrative(data, allData);
-}
-
 // ── Active bar state ──────────────────────────────────────────────────────────
 
 interface ActiveBar {
@@ -174,19 +164,8 @@ export function ExecutionTrendChart({
   const containerRef = useRef<HTMLDivElement>(null);
 
   // LLM narrative for the clicked bar — fires only when a bar is selected.
-  // While loading, the template fallback from generateNarrative() is shown.
+  // While loading, the template fallback from generateWeekNarrative() is shown.
   const { data: llmNarrativeData } = useWeekNarrative(activeBar?.data.cycleId ?? null);
-
-  // Dismiss when clicking outside the bubble
-  const handleContainerClick = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
-      if (activeBar === null) return;
-      // If the click target is inside the bubble itself, don't dismiss
-      const target = e.target as HTMLElement;
-      if (target.closest('[role="dialog"]')) return;
-    },
-    [activeBar],
-  );
 
   // Dismiss on outside click (document level)
   useEffect(() => {
@@ -242,7 +221,6 @@ export function ExecutionTrendChart({
       ref={containerRef}
       className="bg-surface-lowest border border-outline-variant rounded-lg p-6"
       style={{ position: 'relative' }}
-      onClick={handleContainerClick}
     >
 
       <div className="flex items-center justify-between mb-4">
@@ -306,34 +284,20 @@ export function ExecutionTrendChart({
               ))}
 
               {/* Stacked bars — CHESS categories + uncategorized */}
-              {BAR_CONFIG.map(({ key, color }, idx) =>
-                idx === BAR_CONFIG.length - 1 ? (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    stackId="chess"
-                    fill={color}
-                    stroke="none"
-                    radius={[2, 2, 0, 0]}
-                    style={{ cursor: 'pointer' }}
-                    onClick={(barData, index, event) =>
-                      handleBarClick(barData as ChartDataPoint, index, event as React.MouseEvent)
-                    }
-                  />
-                ) : (
-                  <Bar
-                    key={key}
-                    dataKey={key}
-                    stackId="chess"
-                    fill={color}
-                    stroke="none"
-                    style={{ cursor: 'pointer' }}
-                    onClick={(barData, index, event) =>
-                      handleBarClick(barData as ChartDataPoint, index, event as React.MouseEvent)
-                    }
-                  />
-                )
-              )}
+              {BAR_CONFIG.map(({ key, color }, idx) => (
+                <Bar
+                  key={key}
+                  dataKey={key}
+                  stackId="chess"
+                  fill={color}
+                  stroke="none"
+                  {...(idx === BAR_CONFIG.length - 1 ? { radius: [2, 2, 0, 0] as [number, number, number, number] } : {})}
+                  style={{ cursor: 'pointer' }}
+                  onClick={(barData, index, event) =>
+                    handleBarClick(barData as ChartDataPoint, index, event as React.MouseEvent)
+                  }
+                />
+              ))}
 
             </ComposedChart>
           </ResponsiveContainer>
@@ -354,7 +318,7 @@ export function ExecutionTrendChart({
               { label: 'Carry-Forward', value: carryPct },
             ];
             // Use LLM narrative when available; fall back to deterministic template while loading
-            const narrative = llmNarrativeData?.narrative ?? generateNarrative(data, chartData);
+            const narrative = llmNarrativeData?.narrative ?? generateWeekNarrative(data, chartData);
             return (
               <SpeechBubble
                 anchorX={activeBar.x}
