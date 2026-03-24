@@ -1,3 +1,6 @@
+# Compose project name — product is Compass (ST6 is the client org).
+name: compass
+
 services:
   db:
     image: postgres:16-alpine
