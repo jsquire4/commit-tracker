@@ -25,7 +25,7 @@ export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData
     },
     metrics: [
       { key: 'companies', label: 'Active Companies', value: 3 },
-      { key: 'alignment', label: 'Avg Strategic Alignment', value: 47, suffix: '%' },
+      { key: 'alignment', label: 'Avg Rally Cry Coverage', value: 47, suffix: '%' },
       { key: 'carry', label: 'Portfolio Carry-Forward', value: 19, suffix: '%' },
       { key: 'drift', label: 'Active Drift Signals', value: 4, trend: 'down' },
     ],

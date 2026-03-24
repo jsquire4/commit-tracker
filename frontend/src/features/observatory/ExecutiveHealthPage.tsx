@@ -270,7 +270,7 @@ function generateAlerts(
       alerts.push({
         id: `red-${unit.managerId}`,
         icon: 'red',
-        message: `${unit.managerName}'s team: ${String(Math.round(unit.strategicAlignmentPct))}% strategic alignment${weekNote}`,
+        message: `${unit.managerName}'s team: ${String(Math.round(unit.strategicAlignmentPct))}% rally cry coverage${weekNote}`,
       });
     }
   }
@@ -323,7 +323,7 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
 
   return (
     <div className="flex items-center justify-between h-20 px-6 bg-surface-lowest/85 backdrop-blur-sm border-b border-outline-variant">
-      {/* Left: Strategic Alignment headline */}
+      {/* Left: Rally Cry Coverage headline */}
       <div className="flex items-center gap-3">
         <span
           className="text-5xl font-bold tabular-nums tracking-tight"
@@ -336,7 +336,7 @@ function HeadlineStrip({ health }: HeadlineStripProps) {
             {trendArrow(overallTrend)}
           </span>
           <span className="text-xs text-muted uppercase tracking-wider">
-            Strategic Alignment
+            Rally Cry Coverage
           </span>
         </div>
       </div>
@@ -433,7 +433,7 @@ function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCardProps) 
         animationDelay: `${index * 60}ms`,
         animationFillMode: 'backwards',
       }}
-      aria-label={`View ${unit.managerName}'s team — ${String(Math.round(unit.strategicAlignmentPct))}% strategic alignment, grade ${unit.grade}`}
+      aria-label={`View ${unit.managerName}'s team — ${String(Math.round(unit.strategicAlignmentPct))}% rally cry coverage, grade ${unit.grade}`}
     >
       {/* Header row: name + trend */}
       <div className="flex items-center justify-between">

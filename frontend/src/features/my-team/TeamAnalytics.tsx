@@ -51,7 +51,7 @@ export function TeamAnalytics({ dashboard }: TeamAnalyticsProps) {
       {expanded && (
         <div className="px-5 pb-5 border-t border-outline-variant animate-fade-up">
           <div className="pt-4">
-            <h3 className="text-title text-on-surface mb-2">Alignment by Team Lead</h3>
+            <h3 className="text-title text-on-surface mb-2">Work Type by Team Lead</h3>
             <p className="text-body text-on-surface-variant mb-3">
               How each team lead&rsquo;s group breaks down by category.
             </p>

@@ -103,9 +103,10 @@ export function ObservatoryPage() {
 
   const orgName = health?.orgName ?? '';
 
-  // Average strategic alignment across all weeks in the selected period.
+  // Average rally cry coverage across all weeks in the selected period.
   // TODO: Replace with a real per-cycle rallyCoveragePct field once the
-  // alignment trend endpoint exposes % of commitments linked to any rally cry.
+  // backend exposes % of commitments linked to any rally cry (currently
+  // this still averages strategicPct from the alignment trend endpoint).
   const avgStrategicAlignment = useMemo(() => {
     if (!alignmentTrend || alignmentTrend.length === 0) return null;
     const sum = alignmentTrend.reduce((acc, p) => acc + p.strategicPct, 0);
@@ -207,7 +208,7 @@ export function ObservatoryPage() {
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         {/* Strategic % averaged over selected period. TODO: replace with real RC coverage once
             the alignment trend endpoint exposes a per-cycle rallyCoveragePct field. */}
-        <KpiTile label="Strategic Alignment" value={strategicAlignment} unit="%" />
+        <KpiTile label="Rally Cry Coverage" value={strategicAlignment} unit="%" />
         <KpiTile label="Completion Rate" value={completion} unit="%" />
         <KpiTile label="Carry-Forward Rate" value={carryForward} unit="%" />
         <KpiTile label="Active Drift Signals" value={driftSignals} />

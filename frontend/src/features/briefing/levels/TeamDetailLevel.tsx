@@ -120,7 +120,7 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
           )}
         </div>
         <p className="mt-2 text-body text-on-surface-variant">
-          {strategicPct != null ? `${Math.round(strategicPct)}% strategic alignment` : 'Strategic alignment: N/A'}
+          {strategicPct != null ? `${Math.round(strategicPct)}% rally cry coverage` : 'Rally cry coverage: N/A'}
           {' \u00B7 '}
           {commitments.length} commitments
           {' \u00B7 '}

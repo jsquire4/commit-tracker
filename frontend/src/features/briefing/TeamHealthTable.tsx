@@ -35,7 +35,7 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
         <caption className="sr-only">Team Health — metrics exclude the team lead&apos;s own commitments</caption>
         <thead>
           <tr>
-            {['Team Lead', 'Headcount', 'Alignment %', 'Completion', 'Drift Signal', 'Trending', ''].map(
+            {['Team Lead', 'Headcount', 'Rally Cry Coverage', 'Completion', 'Drift Signal', 'Trending', ''].map(
               (h, i) => (
                 <th
                   key={h || `empty-${i}`}

@@ -79,6 +79,7 @@ public class ExecutiveHealthComposer {
         // is the authoritative alignment number; the per-team table shows only subordinate coverage.
         List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
         double strategicAlignmentPct = mostRecentStrategicPct(alignmentTrend);
+        double rallyCoveragePct = mostRecentRallyCoveragePct(alignmentTrend);
 
         // 4. Completion trend — extract most recent data point for completion + carry-forward rate
         List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
@@ -107,6 +108,7 @@ public class ExecutiveHealthComposer {
                 org.getName(),
                 overallGrade,
                 strategicAlignmentPct,
+                rallyCoveragePct,
                 completionRate,
                 carryForwardRate,
                 activeDriftSignals,
@@ -142,6 +144,13 @@ public class ExecutiveHealthComposer {
             return 0.0;
         }
         return trend.get(trend.size() - 1).strategicPct();
+    }
+
+    private double mostRecentRallyCoveragePct(List<AlignmentDataPoint> trend) {
+        if (trend == null || trend.isEmpty()) {
+            return 0.0;
+        }
+        return trend.get(trend.size() - 1).rallyCoveragePct();
     }
 
     private double mostRecentCompletionRate(List<CompletionDataPoint> trend) {
@@ -200,6 +209,7 @@ public class ExecutiveHealthComposer {
         TeamAlignmentTrend teamTrend = analyticsService.computeTeamAlignmentTrend(orgId, managerId, weekCount);
         List<AlignmentDataPoint> teamAlignment = (teamTrend != null) ? teamTrend.dataPoints() : List.of();
         double unitStrategicPct = mostRecentStrategicPct(teamAlignment);
+        double unitRallyCoveragePct = mostRecentRallyCoveragePct(teamAlignment);
 
         // Team-scoped completion
         List<CompletionDataPoint> teamCompletion = analyticsService.computeTeamCompletionTrend(
@@ -223,6 +233,7 @@ public class ExecutiveHealthComposer {
                 costBandWeightedHeadcount,
                 grade,
                 unitStrategicPct,
+                unitRallyCoveragePct,
                 unitCompletionRate,
                 trendDirection,
                 weeksTrending

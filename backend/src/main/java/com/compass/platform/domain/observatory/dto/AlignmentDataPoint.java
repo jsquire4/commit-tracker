@@ -11,5 +11,6 @@ public record AlignmentDataPoint(
         double operationalPct,
         double defensivePct,
         double capabilityBuildingPct,
+        double rallyCoveragePct,
         int totalCommitments
 ) {}

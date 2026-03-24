@@ -119,7 +119,7 @@ export function AlignmentTrendChart({
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-lg font-semibold text-on-surface">
-          Alignment Trend
+          Work Type Distribution
         </h2>
         {showWeekSelector && (
           <select

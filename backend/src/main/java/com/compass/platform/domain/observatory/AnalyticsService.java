@@ -690,17 +690,22 @@ public class AnalyticsService {
     private WeekCell buildWeekCell(Cycle cycle, List<Commitment> commitments) {
         int total = commitments.size();
         Map<String, Integer> counts = new HashMap<>();
+        long linkedToRallyCry = 0;
         for (Commitment c : commitments) {
             String key = c.getChessCategory() != null
                     ? CategoryUtils.normalizeCategoryName(c.getChessCategory().getName())
                     : "Uncategorized";
             counts.merge(key, 1, Integer::sum);
+            if (c.getRallyCry() != null) {
+                linkedToRallyCry++;
+            }
         }
 
         double strategicPct = pct(counts.getOrDefault("Strategic", 0), total);
         double operationalPct = pct(counts.getOrDefault("Operational", 0), total);
         double defensivePct = pct(counts.getOrDefault("Defensive", 0), total);
         double capabilityPct = pct(counts.getOrDefault("Capability Building", 0), total);
+        double rallyCoveragePct = total > 0 ? (linkedToRallyCry * 100.0 / total) : 0.0;
 
         String dominantCategory = null;
         if (total > 0) {
@@ -720,6 +725,7 @@ public class AnalyticsService {
                 operationalPct,
                 defensivePct,
                 capabilityPct,
+                rallyCoveragePct,
                 total
         );
     }
@@ -732,12 +738,18 @@ public class AnalyticsService {
         int total = commitments.size();
         Map<String, Integer> counts = new HashMap<>();
 
+        long linkedToRallyCry = 0;
         for (Commitment c : commitments) {
             String key = c.getChessCategory() != null
                     ? CategoryUtils.normalizeCategoryName(c.getChessCategory().getName())
                     : "Uncategorized";
             counts.merge(key, 1, Integer::sum);
+            if (c.getRallyCry() != null) {
+                linkedToRallyCry++;
+            }
         }
+
+        double rallyCoveragePct = total > 0 ? (linkedToRallyCry * 100.0 / total) : 0.0;
 
         return new AlignmentDataPoint(
                 cycle.getId(),
@@ -747,6 +759,7 @@ public class AnalyticsService {
                 pct(counts.getOrDefault("Operational", 0), total),
                 pct(counts.getOrDefault("Defensive", 0), total),
                 pct(counts.getOrDefault("Capability Building", 0), total),
+                rallyCoveragePct,
                 total
         );
     }

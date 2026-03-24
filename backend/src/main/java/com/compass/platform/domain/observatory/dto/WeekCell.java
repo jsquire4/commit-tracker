@@ -10,5 +10,6 @@ public record WeekCell(
         double operationalPct,
         double defensivePct,
         double capabilityBuildingPct,
+        double rallyCoveragePct,
         int totalCommitments
 ) {}

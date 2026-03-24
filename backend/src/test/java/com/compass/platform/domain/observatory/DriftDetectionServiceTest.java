@@ -432,7 +432,7 @@ class DriftDetectionServiceTest {
                 "Week " + weekOffset,
                 Instant.now().minusSeconds(weekOffset * 604800L),
                 strategicPct,
-                0.0, 0.0, 0.0, 10
+                0.0, 0.0, 0.0, 0.0, 10
         );
     }
 

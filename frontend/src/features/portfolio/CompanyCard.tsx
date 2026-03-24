@@ -63,7 +63,7 @@ export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
       {/* Metrics row */}
       <div className="grid grid-cols-4 gap-4 mb-5 pb-5 border-b border-outline-variant/15">
         {[
-          { label: 'Strategic Alignment', value: company.metrics.strategicAlignment, suffix: '%' },
+          { label: 'Rally Cry Coverage', value: company.metrics.strategicAlignment, suffix: '%' },
           { label: 'Coverage', value: company.metrics.coverage, suffix: '%' },
           { label: 'Carry-Forward', value: company.metrics.carryForward, suffix: '%' },
           { label: 'Completion Rate', value: company.metrics.completionRate, suffix: '%' },
@@ -79,7 +79,7 @@ export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
 
       {/* Sparkline row */}
       <div className="flex items-center gap-3 mb-5">
-        <span className="label-caps text-muted flex-shrink-0">Alignment Trend</span>
+        <span className="label-caps text-muted flex-shrink-0">Work Type Distribution</span>
         <Sparkline data={company.alignmentTrend} />
       </div>
 

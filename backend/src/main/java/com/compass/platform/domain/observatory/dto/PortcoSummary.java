@@ -7,6 +7,7 @@ public record PortcoSummary(
         String orgName,
         HealthGrade overallGrade,
         double strategicAlignmentPct,
+        double rallyCoveragePct,
         double completionRate,
         int activeDriftSignals,
         long headcount

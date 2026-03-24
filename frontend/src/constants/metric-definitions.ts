@@ -24,9 +24,9 @@ export const METRIC_DEFINITIONS: Record<string, { label: string; formula: string
     description: 'Work that exists but is not connected to any strategic priority. This isn\'t inherently bad (operational work is valid), but high numbers may indicate a visibility gap.',
   },
   strategicAlignment: {
-    label: 'Strategic Alignment',
-    formula: 'Commitments in the "Strategic" CHESS category ÷ total commitments × 100',
-    description: 'The percentage of commitments categorized as Strategic work. This measures how much of the team\'s capacity is directed toward long-term, strategy-driving initiatives.',
+    label: 'Work Type Distribution',
+    formula: 'Commitment count per CHESS category (Strategic, Operational, Defensive, Capability Building, Unlinked Work) ÷ total commitments × 100',
+    description: 'Shows how commitments break down across the four CHESS categories plus unlinked work. This is a distribution metric — not rally cry coverage. Rally cry coverage is tracked separately as the % of commitments linked to any rally cry.',
   },
   completionRate: {
     label: 'Completion Rate',
@@ -45,7 +45,7 @@ export const METRIC_DEFINITIONS: Record<string, { label: string; formula: string
   },
   driftSignal: {
     label: 'Drift Signal',
-    formula: 'Detected when strategic alignment drops ≥5 percentage points week-over-week',
+    formula: 'Detected when the Strategic category share drops ≥5 percentage points week-over-week',
     description: 'An early warning that a team is shifting away from strategic work. Triggered by a significant drop in the Strategic category percentage compared to the prior week.',
   },
   headcount: {

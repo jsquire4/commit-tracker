@@ -317,10 +317,10 @@ export function generateWeekNarrative(
     const completionStr = completionRate.toFixed(0);
     const rcStr = strategicAlignment.toFixed(0);
     sentences.push(
-      `Completion rate was ${completionStr}% and strategic alignment stood at ${rcStr}%.`,
+      `Completion rate was ${completionStr}% and rally cry coverage was ${rcStr}%.`,
     );
   } else {
-    sentences.push(`Strategic alignment was at ${strategicAlignment.toFixed(0)}% for the week.`);
+    sentences.push(`Rally cry coverage was ${strategicAlignment.toFixed(0)}% for the week.`);
   }
 
   return sentences.join(' ');

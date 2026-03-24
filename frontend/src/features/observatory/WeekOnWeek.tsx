@@ -93,7 +93,7 @@ function buildRows(
 
   const rows: TableRow[] = [
     {
-      metricName: 'Strategic Alignment %',
+      metricName: 'Rally Cry Coverage %',
       values: columns.map((col) => {
         const p = alignMap.get(col.cycleId);
         if (!p) return null;

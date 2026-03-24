@@ -268,8 +268,7 @@ public class StubBriefingService implements BriefingService {
                                                double carryForwardRate, double completionRate,
                                                int driftCount) {
         return List.of(
-                new BriefingMetric("alignment", "Strategic Alignment", Math.round(alignmentPct), "%", null),
-                new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(rallyCryCoveragePct), "%", null),
+                new BriefingMetric("alignment", "Rally Cry Coverage", Math.round(rallyCryCoveragePct), "%", null),
                 new BriefingMetric("carry", "Carry-Forward Rate", Math.round(carryForwardRate), "%", null),
                 new BriefingMetric("completion", "Completion Rate", Math.round(completionRate), "%", null),
                 new BriefingMetric("drift", "Active Drift Signals", driftCount, null, null)

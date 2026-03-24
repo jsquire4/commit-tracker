@@ -10,6 +10,7 @@ public record OrgUnitHealth(
         int costBandWeightedHeadcount,
         HealthGrade grade,
         double strategicAlignmentPct,
+        double rallyCoveragePct,
         double completionRate,
         String trendDirection,
         int weeksTrending

@@ -149,6 +149,7 @@ public class PortfolioService {
                 org.getName(),
                 health.overallGrade(),
                 health.strategicAlignmentPct(),
+                health.rallyCoveragePct(),
                 health.completionRate(),
                 health.activeDriftSignals(),
                 headcount

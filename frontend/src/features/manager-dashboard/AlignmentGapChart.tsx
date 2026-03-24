@@ -21,7 +21,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const CATEGORY_LABELS: Record<string, string> = {
   ...CHESS_LABELS,
-  UNLINKED: 'Unlinked',
+  UNLINKED: 'Unlinked Work',
 };
 
 const CATEGORY_KEYS = ['STRATEGIC', 'OPERATIONAL', 'DEFENSIVE', 'CAPABILITY_BUILDING', 'UNLINKED'] as const;
@@ -142,10 +142,10 @@ export function AlignmentGapChart({
   return (
     <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6">
       <h2 className="text-lg font-semibold text-on-surface mb-1">
-        Alignment Gap
+        Work Type Distribution
       </h2>
       <p className="text-sm text-muted mb-4">
-        Commitment distribution by chess category across the team
+        How work breaks down by category across team leads
       </p>
 
       {/* Legend */}

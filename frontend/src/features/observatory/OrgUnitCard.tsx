@@ -96,7 +96,7 @@ export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
           aria-label={`Grade: ${unit.grade}`}
         />
         <span className="text-sm font-medium text-on-surface">
-          {String(Math.round(unit.strategicAlignmentPct))}% strategic
+          {String(Math.round(unit.strategicAlignmentPct))}% RC coverage
         </span>
       </div>
 

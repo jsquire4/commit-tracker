@@ -9,6 +9,7 @@ public record ExecutiveHealthResponse(
         String orgName,
         HealthGrade overallGrade,
         double strategicAlignmentPct,
+        double rallyCoveragePct,
         double completionRate,
         double carryForwardRate,
         int activeDriftSignals,

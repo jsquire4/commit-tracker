@@ -732,8 +732,7 @@ public class LlmBriefingService implements BriefingService {
                 : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down" : "flat";
 
         return List.of(
-                new BriefingMetric("alignment", "Strategic Alignment", Math.round(ctx.alignmentPct()), "%", alignTrend),
-                new BriefingMetric("coverage", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", null),
+                new BriefingMetric("alignment", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", alignTrend),
                 new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate()), "%", carryTrend),
                 new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate()), "%", null),
                 new BriefingMetric("drift", "Active Drift Signals", ctx.driftCount(), null, null)
