@@ -134,12 +134,12 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
               return [value, CATEGORY_LABELS[label] ?? label];
             }}
             contentStyle={{
-              backgroundColor: '#FFFFFF',
-              border: '1px solid #E8E5E0',
+              backgroundColor: 'var(--color-surface-lowest)',
+              border: '1px solid var(--color-outline-variant)',
               borderRadius: '4px',
             }}
-            labelStyle={{ color: '#2D3432', fontWeight: 600 }}
-            itemStyle={{ color: '#5A605E' }}
+            labelStyle={{ color: 'var(--color-on-surface)', fontWeight: 600 }}
+            itemStyle={{ color: 'var(--color-on-surface-variant)' }}
           />
           <Legend wrapperStyle={{ display: 'none' }} />
           {/* Manager-Assigned bars */}

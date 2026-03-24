@@ -161,8 +161,7 @@ export function ObservatoryPage() {
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1
-            className="text-2xl text-on-surface"
-            style={{ fontFamily: 'Newsreader, Georgia, serif' }}
+            className="text-2xl text-on-surface font-serif"
           >
             Observatory
           </h1>
