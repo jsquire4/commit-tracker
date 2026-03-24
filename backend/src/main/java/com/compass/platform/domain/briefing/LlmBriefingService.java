@@ -41,6 +41,11 @@ import java.util.stream.Collectors;
 /**
  * LLM-backed implementation of {@link BriefingService}.
  *
+ * <p>TODO(complexity-sweep): This class is 967 lines with 9 dependencies.
+ * Extract to: BriefingDataGatherer (gatherData + BriefingDataContext),
+ * BriefingPromptBuilder (all build*Prompt/build*Fallback methods),
+ * and keep LlmBriefingService as the orchestrator (~300 lines).
+ *
  * <p>Model-agnostic — the LLM provider, model name, and base URL are all
  * configurable via {@link LlmConfig}. Swap from OpenAI to Anthropic or any
  * OpenAI-compatible API by changing environment variables.

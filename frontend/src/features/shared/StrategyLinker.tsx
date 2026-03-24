@@ -133,8 +133,18 @@ export function StrategyLinker({
         setFilter('');
       }
     }
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        setOpen(false);
+        setFilter('');
+      }
+    }
     document.addEventListener('mousedown', handleClick);
-    return () => { document.removeEventListener('mousedown', handleClick); };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, [open]);
 
   // Focus input when popover opens
@@ -279,6 +289,8 @@ export function StrategyLinker({
       {open && (
         <div
           ref={popoverRef}
+          role="listbox"
+          aria-label="Link to strategy"
           className="absolute z-40 mt-2 w-full max-w-md max-h-80 overflow-hidden rounded-sm border border-outline-variant bg-surface-lowest shadow-whisper flex flex-col"
           style={{ boxShadow: 'var(--whisper-shadow, 0 12px 32px -4px rgba(45,52,50,0.06)), 0 4px 16px rgba(45,52,50,0.10)' }}
         >

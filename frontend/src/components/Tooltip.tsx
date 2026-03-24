@@ -49,7 +49,6 @@ export default function Tooltip({ content, side = 'top', children }: TooltipProp
   return (
     <span
       className="relative inline-flex"
-      tabIndex={0}
       aria-describedby={visible ? tooltipId : undefined}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
