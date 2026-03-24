@@ -49,6 +49,7 @@ export function ChessMiniBar({
           key={seg.key}
           className={segmentColors[seg.key]}
           style={{ width: `${(seg.value / denominator) * 100}%` }}
+          aria-label={`${seg.key}: ${Math.round((seg.value / denominator) * 100)}%`}
         />
       ))}
     </div>

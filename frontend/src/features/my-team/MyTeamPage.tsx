@@ -7,7 +7,7 @@ import { useUIStore } from '@/stores/ui.store';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Button from '@/components/Button';
-import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
+import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { DashboardFilters } from '@/features/manager-dashboard/DashboardFilters';
 import { TeamSummaryCard } from './TeamSummaryCard';
 import { TeamMetricsStrip } from './TeamMetricsStrip';

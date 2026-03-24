@@ -2,6 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import type { CommitmentReconciliationDetail } from '@/types/reconciliation.types';
 import type { ReconciliationStatus } from '@/types/enums';
 import type { Commitment } from '@/types/commitment.types';
+import { CHESS_BAR_COLORS } from '@/constants/chess-colors';
+import { HORIZON_LABELS } from '@/constants/horizon';
 import { CommitmentStatusMarker } from './CommitmentStatusMarker';
 import { ChangeReasonCapture } from './ChangeReasonCapture';
 import { DisplacementCapture } from './DisplacementCapture';
@@ -14,21 +16,6 @@ const DISPLACEMENT_STATUSES: ReconciliationStatus[] = [
   'NOT_STARTED',
   'PARTIALLY_COMPLETED',
 ] as const;
-
-const HORIZON_LABELS: Record<string, string> = {
-  MORNING: 'Morning',
-  MIDDAY: 'Midday',
-  AFTERNOON: 'Afternoon',
-  EOD: 'End of Day',
-  EOW: 'End of Week',
-};
-
-const CHESS_BAR_COLORS: Record<string, string> = {
-  Strategic: '#036A6A',
-  Operational: '#DCD9D4',
-  Defensive: '#C2860B',
-  'Capability Building': '#455F87',
-};
 
 const STATUS_PILL: Record<ReconciliationStatus, { bg: string; text: string; label: string; icon: string }> = {
   COMPLETED: { bg: 'bg-[#E0F2F1]', text: 'text-accent', label: 'Completed', icon: '\u2713' },

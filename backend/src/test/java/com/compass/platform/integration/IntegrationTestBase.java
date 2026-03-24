@@ -90,7 +90,7 @@ public abstract class IntegrationTestBase {
         // This is safe because tests run against a disposable Testcontainers instance.
         jdbc.execute("TRUNCATE TABLE audit_entries, analyst_scopes, reconciliation_records, "
                 + "task_bullets, commitments, cycles, outcomes, defining_objectives, "
-                + "rally_cries, chess_categories, users, orgs CASCADE");
+                + "rally_cries, chess_categories, users, portfolios, orgs CASCADE");
     }
 
     /**

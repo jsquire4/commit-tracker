@@ -12,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { VP_AND_ABOVE } from '@/constants/roles';
 import { usePortfolio } from '@/hooks/usePortfolio';
 import { useCurrentCycle } from '@/hooks/useCycle';
-import { CycleHistorySelector } from '@/features/my-week/CycleHistorySelector';
+import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Button from '@/components/Button';

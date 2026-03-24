@@ -74,8 +74,10 @@ export function ObservatoryPage() {
     );
   }
 
-  // Load ALL available reconciled cycles (large cap so we get the full history)
-  const { data: allCycles } = useAlignmentTrend(999);
+  // Sentinel value: fetch all available reconciled cycles regardless of count.
+  // The API treats any value larger than the total cycle count as "return all".
+  const ALL_WEEKS = 999;
+  const { data: allCycles } = useAlignmentTrend(ALL_WEEKS);
 
   // Sorted ascending list of available cycle start dates
   const availableCycles = useMemo(() => {

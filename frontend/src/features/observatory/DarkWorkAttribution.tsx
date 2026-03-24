@@ -8,13 +8,13 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import type { Commitment } from '@/types';
-import { CHESS_ACCENT } from '@/constants/chess-colors';
-import { CHESS_LABELS } from '@/constants/chess-colors';
+import { CHESS_ACCENT, CHESS_LABELS } from '@/constants/chess-colors';
 
 interface DarkWorkAttributionProps {
   commitments: Commitment[];
 }
 
+/** Uppercase-keyed colors derived from the shared accent palette */
 const CATEGORY_COLORS: Record<string, string> = {
   STRATEGIC: CHESS_ACCENT.strategic,
   OPERATIONAL: CHESS_ACCENT.operational,
@@ -22,6 +22,7 @@ const CATEGORY_COLORS: Record<string, string> = {
   CAPABILITY_BUILDING: CHESS_ACCENT.capability,
 };
 
+/** Short labels for the chart legend — 'Capability Building' truncated to 'Capability' */
 const CATEGORY_LABELS: Record<string, string> = {
   ...CHESS_LABELS,
   CAPABILITY_BUILDING: 'Capability',

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Badge } from '@/components/Badge';
+import { HORIZON_LABELS } from '@/constants/horizon';
 import type { Commitment, CycleState } from '@/types';
 
 interface CommitmentCardProps {
@@ -11,14 +12,6 @@ interface CommitmentCardProps {
   onDelete: (id: string) => void;
   isAssigned?: boolean;
 }
-
-const HORIZON_LABELS: Record<string, string> = {
-  MORNING: 'Morning',
-  MIDDAY: 'Midday',
-  AFTERNOON: 'Afternoon',
-  EOD: 'EOD',
-  EOW: 'EOW',
-};
 
 /** Maps display names from the API (chessCategoryName) to Badge category colors */
 const DISPLAY_NAME_TO_VARIANT: Record<string, 'strategic' | 'operational' | 'defensive' | 'capability'> = {
@@ -121,13 +114,12 @@ export function CommitmentCard({ commitment, cycleState, onEdit, onDelete, isAss
               )}
 
               {commitment.rcdoLink.rallyCryId ? (
-                <a
-                  href="#"
+                <button
+                  type="button"
                   className="text-small text-accent font-medium hover:text-accent-dark transition-colors duration-[var(--duration-fast)]"
-                  onClick={(e) => e.preventDefault()}
                 >
                   &rarr; {commitment.rcdoLink.rallyCryTitle}
-                </a>
+                </button>
               ) : (
                 <span className="text-small text-muted italic">Unlinked</span>
               )}

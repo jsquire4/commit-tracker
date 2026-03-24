@@ -8,7 +8,6 @@ export interface StateTransition {
 
 interface CycleStateIndicatorProps {
   currentState: CycleState;
-  transitions?: StateTransition[];
 }
 
 const STATE_LABELS: Record<CycleState, string> = {

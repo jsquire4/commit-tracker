@@ -189,7 +189,7 @@ export function SpeechBubble({
         {/* AI label */}
         <div className="flex items-center gap-[5px] mb-1.5">
           <span className="text-[10px] font-semibold tracking-[0.08em] text-accent font-sans uppercase">
-            ✦ AI Summary
+            <span aria-hidden="true">✦</span> AI Summary
           </span>
         </div>
 

@@ -20,6 +20,13 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+/** Container for the three bulk-loaded RCDO entity lists. */
+record RcdoEntities(
+    List<RallyCry> rallyCries,
+    List<DefiningObjective> definingObjectives,
+    List<Outcome> outcomes
+) {}
+
 @Service
 @Transactional
 public class RcdoService {
@@ -209,6 +216,21 @@ public class RcdoService {
     // === Tree query ===
 
     /**
+     * Bulk-loads all non-archived rally cries, defining objectives, and outcomes
+     * for the given org in three queries (no N+1). Used by both getTree and searchTree.
+     */
+    @Transactional(readOnly = true)
+    RcdoEntities loadRcdoEntities(UUID orgId) {
+        List<RallyCry> rallyCries = rallyCryRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        List<DefiningObjective> definingObjectives = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        List<Outcome> outcomes = outcomeRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        return new RcdoEntities(rallyCries, definingObjectives, outcomes);
+    }
+
+    /**
      * Returns full RCDO hierarchy for an org, excluding archived.
      * Structure: List&lt;RallyCry&gt; each with nested List&lt;DefiningObjective&gt;
      * each with nested List&lt;Outcome&gt;.
@@ -217,15 +239,10 @@ public class RcdoService {
      */
     @Transactional(readOnly = true)
     public RcdoTreeResponse getTree(UUID orgId) {
-        // Load all 3 levels in bulk — no N+1
-        List<RallyCry> rallyCries = rallyCryRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<DefiningObjective> allDos = definingObjectiveRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<Outcome> allOutcomes = outcomeRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        RcdoEntities entities = loadRcdoEntities(orgId);
+        List<RallyCry> rallyCries = entities.rallyCries();
+        List<DefiningObjective> allDos = entities.definingObjectives();
+        List<Outcome> allOutcomes = entities.outcomes();
 
         // Group DOs and Outcomes by their parent IDs
         Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
@@ -292,14 +309,10 @@ public class RcdoService {
     public RcdoTreeResponse searchTree(UUID orgId, String query) {
         String lowerQuery = query.toLowerCase();
 
-        List<RallyCry> rallyCries = rallyCryRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<DefiningObjective> allDos = definingObjectiveRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-
-        List<Outcome> allOutcomes = outcomeRepository
-                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        RcdoEntities entities = loadRcdoEntities(orgId);
+        List<RallyCry> rallyCries = entities.rallyCries();
+        List<DefiningObjective> allDos = entities.definingObjectives();
+        List<Outcome> allOutcomes = entities.outcomes();
 
         Map<UUID, List<DefiningObjective>> dosByRallyCryId = allDos.stream()
                 .collect(Collectors.groupingBy(d -> d.getRallyCry().getId()));

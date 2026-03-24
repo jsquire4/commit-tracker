@@ -7,8 +7,8 @@ import type { OrgUnitHealth, AlignmentDataPoint } from '@/types';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-// Victor Solis (or any manager with this pattern) gets a specificity flag
-const LOW_SPECIFICITY_MANAGERS = new Set(['Victor Solis']);
+// Low-specificity detection is driven by backend signals, not hardcoded names.
+const LOW_SPECIFICITY_MANAGERS = new Set<string>();
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -113,7 +113,6 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
   const hasLowSpecificity = LOW_SPECIFICITY_MANAGERS.has(unit.managerName);
 
   function handleClick() {
-    console.log(`Navigate to /team?managerId=${unit.managerId}`);
     void navigate(`/team?managerId=${unit.managerId}`);
   }
 
