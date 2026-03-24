@@ -14,7 +14,6 @@ import { usePortfolio } from '@/hooks/usePortfolio';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 import Button from '@/components/Button';
 import Card from '@/components/Card';
 import { PortfolioNarrativeCard } from './PortfolioNarrativeCard';
@@ -44,7 +43,21 @@ export function PortfolioPage() {
   const { data: portfolio, isLoading, isError, error } = usePortfolio(activeCycleId);
 
   if (isLoading) {
-    return <LoadingSpinner size="lg" fullPage label="Loading portfolio..." />;
+    return (
+      <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-[70%_30%] gap-8">
+        <div className="flex flex-col gap-8">
+          <div className="h-8 w-40 bg-surface-lowest rounded animate-pulse" />
+          <div className="h-48 bg-surface-lowest rounded-sm animate-pulse" />
+          <div className="grid grid-cols-4 gap-4">
+            {[0,1,2,3].map(i => <div key={i} className="h-20 bg-surface-lowest rounded-sm animate-pulse" />)}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            {[0,1,2].map(i => <div key={i} className="h-64 bg-surface-lowest rounded-sm animate-pulse" />)}
+          </div>
+        </div>
+        <div className="h-96 bg-surface-lowest rounded-sm animate-pulse" />
+      </div>
+    );
   }
 
   if (isError) {

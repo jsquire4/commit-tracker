@@ -27,6 +27,7 @@ import { TeamDetailLevel } from './levels/TeamDetailLevel';
 import { PersonDetailLevel } from './levels/PersonDetailLevel';
 import { lazy, Suspense } from 'react';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { AIChatSidebar } from '@/components/AIChatSidebar';
 import { DIRECTOR_AND_ABOVE } from '@/constants/roles';
 
@@ -67,7 +68,7 @@ export function BriefingView() {
   const { data: health } = useExecutiveHealth();
   const { data: cycle } = useCurrentCycle();
   const { data: commitments } = useCommitments(cycle?.id ?? '');
-  const { data: briefing } = useBriefing(cycle?.id);
+  const { data: briefing, isLoading: briefingLoading } = useBriefing(cycle?.id);
 
   const handleExportPdf = useCallback(() => {
     if (!mainColumnRef.current) return;
@@ -147,14 +148,20 @@ export function BriefingView() {
           {/* Main column */}
           <div ref={mainColumnRef} className="flex flex-col gap-8">
             {/* Narrative card */}
-            {briefing && (
+            {briefingLoading ? (
+              <SkeletonLoader variant="card" count={1} />
+            ) : briefing ? (
               <BriefingNarrativeCard briefing={briefing} cycleId={cycle?.id ?? ''} onExportPdf={handleExportPdf} />
-            )}
+            ) : null}
 
             {/* Metrics strip */}
-            {briefing && (
+            {briefingLoading ? (
+              <div className="grid grid-cols-4 gap-4">
+                {[0,1,2,3].map(i => <div key={i} className="h-20 bg-surface-lowest rounded-sm animate-pulse" />)}
+              </div>
+            ) : briefing ? (
               <BriefingMetricsStrip metrics={briefing.metrics} />
-            )}
+            ) : null}
 
             {/* Rally Cry Coverage */}
             <RallyCryLevel
@@ -163,6 +170,9 @@ export function BriefingView() {
             />
 
             {/* Team Health Table */}
+            {!health && (
+              <SkeletonLoader variant="card" count={1} />
+            )}
             {health?.units && health.units.length > 0 && (
               <div className="animate-fade-up" style={{ animationDelay: '400ms' }}>
                 <h2 className="font-serif text-[1.25rem] text-on-surface mb-4 font-normal">Team Health</h2>
