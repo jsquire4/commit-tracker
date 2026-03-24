@@ -6,6 +6,7 @@ import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,6 +85,27 @@ public class BriefingPromptBuilder {
             carry-forward rate, and active drift signals.
             - Do not use bullet points or headers. Write flowing prose.
             - Return only the narrative text. No JSON, no markdown, no extra commentary.""";
+
+    public static final String IC_WEEK_SUMMARY_SYSTEM_PROMPT = """
+            You are a personal execution coach. Given one person's week data, write 2-3 sentences \
+            describing what they accomplished, what changed, and how it connected to their growth areas. \
+            Use second-person language ("You completed...", "Your week included..."). \
+            Be specific about the work — reference task titles and growth areas by name. \
+            Do not evaluate quality or performance. Report what happened. \
+            If they handled displacement or unplanned work, acknowledge it as navigating complexity. \
+            If no growth areas were touched this week, acknowledge the work without fabricating development connections. \
+            Return plain text only — no JSON, no markdown.""";
+
+    public static final String IC_MY_STORY_SYSTEM_PROMPT = """
+            You are a career development coach. Given longitudinal commitment data spanning multiple \
+            weeks, produce a growth narrative and resume-ready bullet points. \
+            Use second-person language. Be specific — cite growth areas, task titles, and patterns. \
+            Do not use generic language. Every bullet point must reference specific work. \
+            Each bullet must start with a strong past-tense action verb (Delivered, Led, Reduced, Built, Drove, Navigated). \
+            Format: Action verb + context + measurable result or outcome. \
+            OUTPUT FORMAT (JSON): \
+            { "narrative": "2-3 sentences about the growth pattern", \
+              "resumeBullets": ["specific bullet 1", "specific bullet 2", "specific bullet 3"] }""";
 
     private static final String TEAM_SUMMARY_SYSTEM_PROMPT = """
             Summarize this manager's team execution data. Include 2-4 specific suggested \
@@ -211,6 +233,79 @@ public class BriefingPromptBuilder {
         sb.append(String.format("CARRY-FORWARD: avg carry-forward %.1f%% [P.avg_carry]\n",
                 avgCarryForwardRate));
         sb.append(String.format("DRIFT: %d [P.drift] active drift signals\n", driftCount));
+        return sb.toString();
+    }
+
+    /**
+     * Builds a tagged user prompt for the IC week summary narrative.
+     *
+     * @param userName            display name or user ID (used as context label)
+     * @param totalPlanned        total planned commitments this week
+     * @param completed           count with COMPLETED status
+     * @param partiallyCompleted  count with PARTIALLY_COMPLETED status
+     * @param notStarted          count with NOT_STARTED status
+     * @param carriedForward      count with CARRIED_FORWARD status
+     * @param unplanned           count of unplanned commitments added during the week
+     * @param displacementCount   number of commitments displaced
+     * @param commitmentTitles    titles of the user's commitments this week (up to 15)
+     * @param growthAreaLabels    all of the user's active growth area labels
+     * @param growthAreasHitThisWeek growth area labels touched by at least one commitment
+     */
+    public String buildIcWeekSummaryPrompt(String userName, int totalPlanned, int completed,
+                                            int partiallyCompleted, int notStarted, int carriedForward,
+                                            int unplanned, int displacementCount,
+                                            List<String> commitmentTitles,
+                                            List<String> growthAreaLabels,
+                                            List<String> growthAreasHitThisWeek) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("USER: ").append(userName).append("\n\n");
+        sb.append("COMMITMENTS THIS WEEK:\n");
+        for (String title : commitmentTitles) {
+            sb.append("- ").append(title).append("\n");
+        }
+        sb.append("\nSTATUS SUMMARY:\n");
+        sb.append("  Planned: ").append(totalPlanned).append("\n");
+        sb.append("  Completed: ").append(completed).append("\n");
+        sb.append("  Partially completed: ").append(partiallyCompleted).append("\n");
+        sb.append("  Not started: ").append(notStarted).append("\n");
+        sb.append("  Carried forward: ").append(carriedForward).append("\n");
+        sb.append("  Unplanned (added during week): ").append(unplanned).append("\n");
+        sb.append("  Displacements: ").append(displacementCount).append("\n");
+        sb.append("\nGROWTH AREAS ACTIVE: ").append(String.join(", ", growthAreaLabels)).append("\n");
+        sb.append("GROWTH AREAS TOUCHED THIS WEEK: ")
+                .append(growthAreasHitThisWeek.isEmpty() ? "none" : String.join(", ", growthAreasHitThisWeek))
+                .append("\n");
+        return sb.toString();
+    }
+
+    /**
+     * Builds a tagged user prompt for the IC My Story longitudinal narrative.
+     *
+     * @param userName          display name or user ID
+     * @param totalWeeks        number of cycles included in the window
+     * @param totalCommitments  total commitments across all cycles
+     * @param growthAreaHits    map of growth area label to total commitment count
+     * @param recentTitles      sample of recent commitment titles (up to 20)
+     * @param completionRate    overall completion rate across the window (0-100)
+     * @param totalDisplacements total displacement count across the window
+     */
+    public String buildIcMyStoryPrompt(String userName, int totalWeeks, int totalCommitments,
+                                        Map<String, Integer> growthAreaHits,
+                                        List<String> recentTitles, double completionRate,
+                                        int totalDisplacements) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("USER: ").append(userName).append("\n\n");
+        sb.append("ANALYSIS WINDOW: last ").append(totalWeeks).append(" reconciled weeks\n");
+        sb.append("TOTAL COMMITMENTS: ").append(totalCommitments).append("\n");
+        sb.append(String.format("OVERALL COMPLETION RATE: %.1f%%\n", completionRate));
+        sb.append("TOTAL DISPLACEMENTS: ").append(totalDisplacements).append("\n\n");
+        sb.append("GROWTH AREA ENGAGEMENT (label → total commitments):\n");
+        growthAreaHits.forEach((label, count) ->
+                sb.append("  ").append(label).append(": ").append(count).append("\n"));
+        sb.append("\nSAMPLE RECENT COMMITMENT TITLES:\n");
+        for (String title : recentTitles) {
+            sb.append("- ").append(title).append("\n");
+        }
         return sb.toString();
     }
 

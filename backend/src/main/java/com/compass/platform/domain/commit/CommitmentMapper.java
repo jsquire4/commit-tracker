@@ -3,9 +3,11 @@ package com.compass.platform.domain.commit;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.commit.dto.CommitmentLineageNode;
 import com.compass.platform.domain.commit.dto.CommitmentResponse;
+import com.compass.platform.domain.growth.GrowthArea;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.UUID;
 
 @Component
 public class CommitmentMapper {
@@ -45,6 +47,10 @@ public class CommitmentMapper {
                     b.getId(), b.getBody(), b.getSortOrder(), b.isCompleted()))
                 .toList();
 
+        List<UUID> growthAreaIds = entity.getGrowthAreas() != null
+            ? entity.getGrowthAreas().stream().map(GrowthArea::getId).toList()
+            : List.of();
+
         return new CommitmentResponse(
             entity.getId(),
             entity.getCycle().getId(),
@@ -66,6 +72,7 @@ public class CommitmentMapper {
             entity.getEstimatedHours(),
             reconStatus,
             null,   // reconciliationNote — loaded separately when needed
+            growthAreaIds,
             entity.getCreatedAt(),
             entity.getUpdatedAt()
         );

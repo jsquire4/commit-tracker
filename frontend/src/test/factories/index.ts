@@ -44,6 +44,7 @@ export function commitmentFactory(overrides: Partial<Commitment> = {}): Commitme
     estimatedHours: null,
     reconciliationStatus: null,
     reconciliationNote: null,
+    growthAreaIds: [],
     createdAt: '2026-03-16T00:00:00Z',
     updatedAt: '2026-03-16T00:00:00Z',
     ...overrides,

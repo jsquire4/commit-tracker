@@ -207,6 +207,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 null,
                 List.of("bullet 1", "bullet 2"),
+                null,
                 null
         );
 
@@ -253,6 +254,7 @@ class CommitmentServiceTest {
                 null,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -282,6 +284,7 @@ class CommitmentServiceTest {
                 null, null, null,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -315,6 +318,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -352,6 +356,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -378,6 +383,7 @@ class CommitmentServiceTest {
                 assignedById,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -400,6 +406,7 @@ class CommitmentServiceTest {
                 null, null, null, null, null,
                 null,
                 List.of("only one bullet"),
+                null,
                 null
         );
 
@@ -422,6 +429,7 @@ class CommitmentServiceTest {
                 null, null, null, null, null,
                 null,
                 List.of("b1", "b2", "b3", "b4", "b5", "b6"),
+                null,
                 null
         );
 
@@ -454,6 +462,7 @@ class CommitmentServiceTest {
                 null, null, null, null,
                 null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -486,6 +495,7 @@ class CommitmentServiceTest {
                 category.getId(),
                 null, null, null, null,
                 List.of("new bullet 1", "new bullet 2"),
+                null,
                 null
         );
 
@@ -560,6 +570,7 @@ class CommitmentServiceTest {
                 category.getId(),
                 null, null, null, null,
                 List.of("b1", "b2"),
+                null,
                 null
         );
 
@@ -1051,6 +1062,7 @@ class CommitmentServiceTest {
                 null, null, null, null, null,
                 null,
                 bullets,
+                null,
                 null
         );
     }
@@ -1063,6 +1075,7 @@ class CommitmentServiceTest {
                 null, null,
                 null, null, null, null, null,
                 bullets,
+                null,
                 null
         );
     }

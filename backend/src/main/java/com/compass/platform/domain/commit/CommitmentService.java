@@ -14,6 +14,8 @@ import com.compass.platform.domain.commit.dto.CreateCommitmentRequest;
 import com.compass.platform.domain.commit.dto.CreateUnplannedCommitmentRequest;
 import com.compass.platform.domain.commit.dto.UpdateCommitmentRequest;
 import com.compass.platform.domain.cycle.Cycle;
+import com.compass.platform.domain.growth.GrowthArea;
+import com.compass.platform.domain.growth.GrowthAreaRepository;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.rcdo.DefiningObjectiveRepository;
 import com.compass.platform.domain.rcdo.OutcomeRepository;
@@ -66,6 +68,7 @@ public class CommitmentService {
     private final TeamActivationService teamActivationService;
     private final RcdoValidator rcdoValidator;
     private final CommitmentMapper commitmentMapper;
+    private final GrowthAreaRepository growthAreaRepository;
 
     public CommitmentService(CommitmentRepository commitmentRepository,
                              TaskBulletRepository taskBulletRepository,
@@ -80,7 +83,8 @@ public class CommitmentService {
                              ReconciliationRecordRepository reconciliationRecordRepository,
                              TeamActivationService teamActivationService,
                              RcdoValidator rcdoValidator,
-                             CommitmentMapper commitmentMapper) {
+                             CommitmentMapper commitmentMapper,
+                             GrowthAreaRepository growthAreaRepository) {
         this.commitmentRepository = commitmentRepository;
         this.taskBulletRepository = taskBulletRepository;
         this.cycleRepository = cycleRepository;
@@ -95,6 +99,7 @@ public class CommitmentService {
         this.teamActivationService = teamActivationService;
         this.rcdoValidator = rcdoValidator;
         this.commitmentMapper = commitmentMapper;
+        this.growthAreaRepository = growthAreaRepository;
     }
 
     /**
@@ -155,6 +160,7 @@ public class CommitmentService {
         }
 
         Commitment saved = buildAndSaveCommitment(request, targetUser, cycle, assignedBy, false);
+        resolveAndSetGrowthAreas(saved, request.growthAreaIds(), targetUser);
 
         String rcdoLink = buildRcdoLinkDescription(request.rallyCryId(), request.definingObjectiveId(), request.outcomeId());
         String categoryName = saved.getChessCategory() != null ? saved.getChessCategory().getName() : "none";
@@ -273,6 +279,11 @@ public class CommitmentService {
         // Replace task bullets
         taskBulletRepository.deleteAll(taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(commitmentId));
         saveBullets(commitment, request.bullets());
+
+        // Update growth area links if provided
+        if (request.growthAreaIds() != null) {
+            resolveAndSetGrowthAreas(commitment, request.growthAreaIds(), commitment.getUser());
+        }
 
         Commitment saved = commitmentRepository.save(commitment);
 
@@ -501,6 +512,11 @@ public class CommitmentService {
                 .estimatedHours(source.getEstimatedHours())
                 .build();
 
+        // Copy growth areas from source to clone
+        if (source.getGrowthAreas() != null && !source.getGrowthAreas().isEmpty()) {
+            clone.setGrowthAreas(new HashSet<>(source.getGrowthAreas()));
+        }
+
         Commitment saved = commitmentRepository.save(clone);
 
         // Clone task bullets
@@ -655,6 +671,27 @@ public class CommitmentService {
             bullets.add(new TaskBullet(commitment, commitment.getOrg(), bulletTexts.get(i), i));
         }
         taskBulletRepository.saveAll(bullets);
+    }
+
+    private void resolveAndSetGrowthAreas(Commitment commitment, List<UUID> growthAreaIds, AppUser owner) {
+        if (growthAreaIds == null || growthAreaIds.isEmpty()) {
+            return;
+        }
+        List<UUID> deduped = growthAreaIds.stream().distinct().toList();
+        List<GrowthArea> areas = growthAreaRepository.findAllById(deduped);
+        if (areas.size() != deduped.size()) {
+            throw new IllegalArgumentException("One or more growth area IDs not found");
+        }
+        for (GrowthArea area : areas) {
+            if (!area.getUser().getId().equals(owner.getId())) {
+                throw new AccessDeniedException("Growth area " + area.getId() + " does not belong to user");
+            }
+            if (!area.isActive()) {
+                throw new IllegalArgumentException("Growth area " + area.getId() + " is not active");
+            }
+        }
+        commitment.setGrowthAreas(new HashSet<>(areas));
+        commitmentRepository.save(commitment);
     }
 
     private String buildRcdoLinkDescription(UUID rallyCryId, UUID definingObjectiveId, UUID outcomeId) {

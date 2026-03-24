@@ -495,6 +495,84 @@ public class LlmBriefingService implements BriefingService {
 
 
     // ═══════════════════════════════════════════════════════════════
+    // IC Insights — public LLM wrappers
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Result type for {@link #generateMyStoryInsights}.
+     *
+     * <p>Declared here so {@code IcInsightsService} can reference it without
+     * a separate file — it is a thin data carrier, not a domain type.
+     */
+    public record IcMyStoryLlmResult(String narrative, List<String> resumeBullets) {}
+
+    /**
+     * Generate a 2-3 sentence IC week narrative.
+     *
+     * <p>Uses a 300-token cap — sufficient for 2-3 sentences of plain text.
+     * Returns {@code null} on LLM failure; the caller falls back to no narrative.
+     *
+     * @param systemPrompt the system prompt (from {@link BriefingPromptBuilder#IC_WEEK_SUMMARY_SYSTEM_PROMPT})
+     * @param userPrompt   the user prompt built by {@link BriefingPromptBuilder#buildIcWeekSummaryPrompt}
+     */
+    public String generateIcWeekSummary(String systemPrompt, String userPrompt) {
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — skipping IC week summary narrative");
+            return null;
+        }
+        try {
+            String raw = callLlmWithMaxTokens(systemPrompt, userPrompt, 300);
+            String narrative = raw == null ? null : raw.trim();
+            if (narrative == null || narrative.isBlank()) return null;
+            return narrative;
+        } catch (Exception e) {
+            log.warn("generateIcWeekSummary LLM call failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * Generate a longitudinal growth narrative and resume bullets for the IC My Story page.
+     *
+     * <p>Expects JSON output matching {@code { "narrative": "...", "resumeBullets": [...] }}.
+     * Returns {@code null} on LLM failure or parse failure; the caller omits LLM fields gracefully.
+     *
+     * @param systemPrompt the system prompt (from {@link BriefingPromptBuilder#IC_MY_STORY_SYSTEM_PROMPT})
+     * @param userPrompt   the user prompt built by {@link BriefingPromptBuilder#buildIcMyStoryPrompt}
+     */
+    public IcMyStoryLlmResult generateMyStoryInsights(String systemPrompt, String userPrompt) {
+        if (!llmConfig.isConfigured()) {
+            log.debug("No LLM API key configured — skipping My Story LLM insights");
+            return null;
+        }
+        try {
+            String raw = callLlm(systemPrompt, userPrompt);
+            if (raw == null || raw.isBlank()) return null;
+
+            String cleaned = raw.strip();
+            if (cleaned.startsWith("```")) {
+                cleaned = cleaned.replaceAll("^```(?:json)?\\s*", "").replaceAll("\\s*```$", "");
+            }
+
+            JsonNode root = objectMapper.readTree(cleaned);
+            String narrative = root.has("narrative") ? root.get("narrative").asText() : null;
+
+            List<String> bullets = new ArrayList<>();
+            if (root.has("resumeBullets") && root.get("resumeBullets").isArray()) {
+                for (JsonNode node : root.get("resumeBullets")) {
+                    bullets.add(node.asText());
+                }
+            }
+
+            if (narrative == null || narrative.isBlank()) return null;
+            return new IcMyStoryLlmResult(narrative, bullets.isEmpty() ? null : bullets);
+        } catch (Exception e) {
+            log.warn("generateMyStoryInsights LLM call or parse failed: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
     // LLM call
     // ═══════════════════════════════════════════════════════════════
 

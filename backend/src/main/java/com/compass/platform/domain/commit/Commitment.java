@@ -9,6 +9,7 @@ import com.compass.platform.domain.rcdo.Outcome;
 import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.Org;
+import com.compass.platform.domain.growth.GrowthArea;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -19,6 +20,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
@@ -30,8 +33,10 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -114,6 +119,13 @@ public class Commitment {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "commitment_growth_areas",
+            joinColumns = @JoinColumn(name = "commitment_id"),
+            inverseJoinColumns = @JoinColumn(name = "growth_area_id"))
+    @BatchSize(size = 50)
+    private Set<GrowthArea> growthAreas = new HashSet<>();
+
     @OneToMany(mappedBy = "commitment", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC")
     private List<TaskBullet> taskBullets = new ArrayList<>();
@@ -185,6 +197,9 @@ public class Commitment {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 
+    public Set<GrowthArea> getGrowthAreas() { return growthAreas; }
+    public void setGrowthAreas(Set<GrowthArea> growthAreas) { this.growthAreas = growthAreas; }
+
     public List<TaskBullet> getTaskBullets() { return taskBullets; }
 
     @Override
@@ -229,6 +244,7 @@ public class Commitment {
         private Commitment carriedFrom;
         private boolean isUnplanned = false;
         private BigDecimal estimatedHours;
+        private Set<GrowthArea> growthAreas = new HashSet<>();
 
         public Builder org(Org org) { this.org = org; return this; }
         public Builder user(AppUser user) { this.user = user; return this; }
@@ -247,6 +263,7 @@ public class Commitment {
         public Builder carriedFrom(Commitment carriedFrom) { this.carriedFrom = carriedFrom; return this; }
         public Builder isUnplanned(boolean isUnplanned) { this.isUnplanned = isUnplanned; return this; }
         public Builder estimatedHours(BigDecimal estimatedHours) { this.estimatedHours = estimatedHours; return this; }
+        public Builder growthAreas(Set<GrowthArea> growthAreas) { this.growthAreas = growthAreas != null ? growthAreas : new HashSet<>(); return this; }
 
         public Commitment build() {
             Commitment c = new Commitment(org, user, cycle, title, completionHorizon);
@@ -262,6 +279,7 @@ public class Commitment {
             c.carriedFrom = carriedFrom;
             c.isUnplanned = isUnplanned;
             c.estimatedHours = estimatedHours;
+            c.growthAreas = growthAreas;
             return c;
         }
     }

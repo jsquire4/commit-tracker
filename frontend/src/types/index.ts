@@ -11,3 +11,5 @@ export * from './enums';
 export * from './dashboard.types';
 export * from './observatory.types';
 export * from './portfolio.types';
+export * from './growth-area.types';
+export * from './ic-insights.types';

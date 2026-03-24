@@ -234,6 +234,14 @@
     to   { width: 0%; }
   }
 
+  /* Week close summary — SVG checkmark draw animation */
+  @keyframes checkCircleDraw {
+    to { stroke-dashoffset: 0; }
+  }
+  @keyframes checkPathDraw {
+    to { stroke-dashoffset: 0; }
+  }
+
   /* Tooltip entrance animation */
   @keyframes tooltipIn {
     from { opacity: 0; transform: translateY(-4px); }

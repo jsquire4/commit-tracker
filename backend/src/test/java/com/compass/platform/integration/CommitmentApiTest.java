@@ -89,6 +89,7 @@ class CommitmentApiTest extends IntegrationTestBase {
                 null, null, null, null,
                 null,
                 List.of("Bullet one", "Bullet two"),
+                null,
                 null
         );
 
@@ -115,6 +116,7 @@ class CommitmentApiTest extends IntegrationTestBase {
                 null, null, null, null,
                 null,
                 List.of("Bullet one", "Bullet two"),
+                null,
                 null
         );
 
@@ -146,6 +148,7 @@ class CommitmentApiTest extends IntegrationTestBase {
                 null,
                 null, null, null, null,
                 List.of("New bullet one", "New bullet two"),
+                null,
                 null
         );
 
@@ -272,6 +275,7 @@ class CommitmentApiTest extends IntegrationTestBase {
                 null, null, null, null,
                 null,
                 List.of("Bullet one", "Bullet two"),
+                null,
                 null
         );
 

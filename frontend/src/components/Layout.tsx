@@ -48,8 +48,12 @@ export function Layout({ children }: LayoutProps) {
 
   const initials = getInitials(auth.displayName);
 
-  const tabs = [
+  const primaryTabs = [
     { to: '/', label: 'My Week', show: true },
+    { to: '/my-story', label: 'My Story', show: true },
+  ].filter((t) => t.show);
+
+  const orgTabs = [
     { to: '/team', label: 'My Team', show: isManager },
     { to: '/briefing', label: 'The Briefing', show: isDirector },
     { to: '/strategy', label: 'Strategy', show: isDirector },
@@ -121,13 +125,23 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          {/* Bottom row: tab bar (desktop) */}
+          {/* Bottom row: tab bar (desktop) — two tiers */}
           <div className="hidden min-[900px]:flex items-center gap-1 -mb-px overflow-x-auto scrollbar-thin">
-            {tabs.map(({ to, label }) => (
+            {primaryTabs.map(({ to, label }) => (
               <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
                 {label}
               </NavLink>
             ))}
+            {orgTabs.length > 0 && (
+              <>
+                <span className="mx-2 text-outline-variant/40 select-none" aria-hidden="true">|</span>
+                {orgTabs.map(({ to, label }) => (
+                  <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
+                    {label}
+                  </NavLink>
+                ))}
+              </>
+            )}
           </div>
         </div>
 
@@ -135,7 +149,7 @@ export function Layout({ children }: LayoutProps) {
         {menuOpen && (
           <div className="min-[900px]:hidden border-t border-outline-variant/15 bg-surface/95 backdrop-blur-[20px]">
             <div className="max-w-7xl mx-auto px-4 py-2 flex flex-col gap-1">
-              {tabs.map(({ to, label }) => (
+              {primaryTabs.map(({ to, label }) => (
                 <NavLink
                   key={to}
                   to={to}
@@ -153,6 +167,29 @@ export function Layout({ children }: LayoutProps) {
                   {label}
                 </NavLink>
               ))}
+              {orgTabs.length > 0 && (
+                <>
+                  <span className="px-3 py-1 text-small text-muted uppercase tracking-widest font-medium">Organization</span>
+                  {orgTabs.map(({ to, label }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === '/'}
+                      className={({ isActive }) =>
+                        [
+                          'px-3 py-2 text-body font-medium rounded-sm transition-colors',
+                          isActive
+                            ? 'text-accent bg-surface-container'
+                            : 'text-on-surface-variant hover:text-on-surface',
+                        ].join(' ')
+                      }
+                      onClick={() => setMenuOpen(false)}
+                    >
+                      {label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
             </div>
           </div>
         )}

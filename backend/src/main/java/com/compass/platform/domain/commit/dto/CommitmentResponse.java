@@ -31,6 +31,7 @@ public record CommitmentResponse(
     BigDecimal estimatedHours,
     ReconciliationStatus reconciliationStatus,
     String reconciliationNote,
+    List<UUID> growthAreaIds,
     Instant createdAt,
     Instant updatedAt
 ) {

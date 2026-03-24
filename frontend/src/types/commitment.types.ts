@@ -41,6 +41,7 @@ export interface Commitment {
   estimatedHours: number | null;
   reconciliationStatus: ReconciliationStatus | null;
   reconciliationNote: string | null;
+  growthAreaIds: string[];
   createdAt: string;
   updatedAt: string;
 }
@@ -60,6 +61,7 @@ export interface CreateCommitmentRequest {
   assignedBy?: string;
   /** Optional: assign this commitment to a direct report instead of the authenticated user. */
   forUserId?: string;
+  growthAreaIds?: string[];
 }
 
 export interface UpdateCommitmentRequest extends Partial<CreateCommitmentRequest> {

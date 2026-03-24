@@ -10,9 +10,13 @@ import type { AuthContextValue } from './hooks/useAuth';
 
 // 3-view architecture
 const MyWeekPage = lazy(() => import('./features/my-week/MyWeekPage').then(m => ({ default: m.MyWeekPage })));
+const MyWeekV2Page = lazy(() => import('./features/my-week/MyWeekV2Page').then(m => ({ default: m.MyWeekV2Page })));
 const MyTeamPage = lazy(() => import('./features/my-team/MyTeamPage').then(m => ({ default: m.MyTeamPage })));
 const BriefingView = lazy(() => import('./features/briefing/BriefingView').then(m => ({ default: m.BriefingView })));
 const SettingsPage = lazy(() => import('./features/settings/SettingsPage').then(m => ({ default: m.SettingsPage })));
+
+// IC personal pages
+const MyStoryPage = lazy(() => import('./features/my-story/MyStoryPage').then(m => ({ default: m.MyStoryPage })));
 
 // New pages
 const StrategyPage = lazy(() => import('./features/strategy/StrategyPage').then(m => ({ default: m.StrategyPage })));
@@ -76,8 +80,10 @@ export default function App({ basename, authContext }: AppProps) {
                 <Route path="/*" element={
                   <Layout>
                     <Routes>
-                      {/* Core views */}
-                      <Route path="/" element={<MyWeekPage />} />
+                      {/* Core views — V2 IC experience */}
+                      <Route path="/" element={<MyWeekV2Page />} />
+                      <Route path="/legacy-my-week" element={<MyWeekPage />} />
+                      <Route path="/my-story" element={<MyStoryPage />} />
                       <Route path="/team" element={<MyTeamPage />} />
                       <Route path="/briefing" element={<BriefingView />} />
                       <Route path="/settings" element={<SettingsPage />} />

@@ -28,5 +28,6 @@ public record CreateCommitmentRequest(
     /** Optional: create the commitment on behalf of this user (manager assigning work to a direct report). */
     UUID forUserId,
     @NotNull @Size(min = 2, max = 5) List<@NotBlank @Size(max = 1000) String> bullets,
-    @DecimalMin(value = "0.01") @DecimalMax(value = "999.99") BigDecimal estimatedHours
+    @DecimalMin(value = "0.01") @DecimalMax(value = "999.99") BigDecimal estimatedHours,
+    @Size(max = 5) List<UUID> growthAreaIds
 ) {}
