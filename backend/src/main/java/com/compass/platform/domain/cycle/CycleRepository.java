@@ -19,13 +19,18 @@ public interface CycleRepository extends JpaRepository<Cycle, UUID> {
     List<Cycle> findByOrgIdAndStateOrderByStartsAtDesc(UUID orgId, CycleState state);
     Optional<Cycle> findByOrgIdAndStartsAt(UUID orgId, Instant startsAt);
 
-    @Query("SELECT c FROM Cycle c WHERE c.org.id = :orgId"
-         + " AND (:state IS NULL OR c.state = :state)"
-         + " AND (CAST(:dateFrom AS timestamp) IS NULL OR c.startsAt >= :dateFrom)"
-         + " AND (CAST(:dateTo AS timestamp) IS NULL OR c.startsAt <= :dateTo)"
-         + " ORDER BY c.startsAt DESC")
+    @Query(value = "SELECT * FROM cycles WHERE org_id = :orgId"
+         + " AND (CAST(:state AS text) IS NULL OR state = :state)"
+         + " AND (:dateFrom IS NULL OR starts_at >= :dateFrom)"
+         + " AND (:dateTo IS NULL OR starts_at <= :dateTo)"
+         + " ORDER BY starts_at DESC",
+         countQuery = "SELECT COUNT(*) FROM cycles WHERE org_id = :orgId"
+         + " AND (CAST(:state AS text) IS NULL OR state = :state)"
+         + " AND (:dateFrom IS NULL OR starts_at >= :dateFrom)"
+         + " AND (:dateTo IS NULL OR starts_at <= :dateTo)",
+         nativeQuery = true)
     Page<Cycle> findByOrgIdWithFilters(@Param("orgId") UUID orgId,
-                                       @Param("state") CycleState state,
+                                       @Param("state") String state,
                                        @Param("dateFrom") Instant dateFrom,
                                        @Param("dateTo") Instant dateTo,
                                        Pageable pageable);

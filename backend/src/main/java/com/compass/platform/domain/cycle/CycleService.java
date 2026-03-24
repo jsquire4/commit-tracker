@@ -251,7 +251,7 @@ public class CycleService {
     public Page<Cycle> listCycles(UUID orgId, CycleFilters filters, Pageable pageable) {
         return cycleRepository.findByOrgIdWithFilters(
                 orgId,
-                filters.state(),
+                filters.state() != null ? filters.state().name() : null,
                 filters.dateFrom(),
                 filters.dateTo(),
                 pageable);
