@@ -72,6 +72,7 @@ public class LlmBriefingService implements BriefingService {
     private final ObjectMapper objectMapper;
     private final DashboardService dashboardService;
     private final BriefingDataGatherer dataGatherer;
+    private final BriefingResponseBuilder responseBuilder;
     private final NarrativeVerifier verifier = new NarrativeVerifier();
 
     private volatile OpenAIClient client;
@@ -85,7 +86,8 @@ public class LlmBriefingService implements BriefingService {
                               LlmConfig llmConfig,
                               ObjectMapper objectMapper,
                               DashboardService dashboardService,
-                              BriefingDataGatherer dataGatherer) {
+                              BriefingDataGatherer dataGatherer,
+                              BriefingResponseBuilder responseBuilder) {
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
         this.cycleRepository = cycleRepository;
@@ -96,6 +98,7 @@ public class LlmBriefingService implements BriefingService {
         this.objectMapper = objectMapper;
         this.dashboardService = dashboardService;
         this.dataGatherer = dataGatherer;
+        this.responseBuilder = responseBuilder;
     }
 
     private OpenAIClient getClient() {
@@ -125,12 +128,12 @@ public class LlmBriefingService implements BriefingService {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback");
             BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, resolveCycleId(orgId, cycleId));
-            return buildResponse(buildTemplateFallback(ctx), "[]", ctx);
+            return responseBuilder.buildResponse(responseBuilder.buildTemplateFallback(ctx), List.of(), ctx);
         }
 
         UUID resolvedCycleId = resolveCycleId(orgId, cycleId);
         if (resolvedCycleId == null) {
-            return emptyBriefing();
+            return responseBuilder.emptyBriefing();
         }
 
         // Gather data
@@ -174,7 +177,7 @@ public class LlmBriefingService implements BriefingService {
             } else {
                 // Fall back to deterministic template
                 log.warn("Retry also failed. Using deterministic fallback for cycle={}", resolvedCycleId);
-                narrative = buildTemplateFallback(ctx);
+                narrative = responseBuilder.buildTemplateFallback(ctx);
                 suggestionsJson = "[]";
             }
         }
@@ -184,7 +187,7 @@ public class LlmBriefingService implements BriefingService {
         log.info("Verification result: passed={}, checks={}, violations={}",
                 verification.passed(), verification.checks().size(), verification.violations());
 
-        return buildResponse(narrative, suggestionsJson, ctx);
+        return responseBuilder.buildResponse(narrative, parseSuggestions(suggestionsJson), ctx);
     }
 
     @Override
@@ -415,7 +418,7 @@ public class LlmBriefingService implements BriefingService {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback for program summary");
             return new ProgramSummaryResponse(
-                    buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                    responseBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
                             avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
                     Instant.now());
         }
@@ -448,7 +451,7 @@ public class LlmBriefingService implements BriefingService {
         } catch (Exception e) {
             log.warn("LLM call failed for program summary, using fallback: {}", e.getMessage());
             return new ProgramSummaryResponse(
-                    buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                    responseBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
                             avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
                     Instant.now());
         }
@@ -468,21 +471,6 @@ public class LlmBriefingService implements BriefingService {
         if (delta > 2.0) return "improving";
         if (delta < -2.0) return "declining";
         return "flat";
-    }
-
-    private String buildProgramSummaryFallback(int weekCount, double avgStrategicPct,
-                                                double avgCompletionRate, double avgCarryForwardRate,
-                                                String alignTrendDir, String completionTrendDir,
-                                                int driftCount) {
-        return String.format(
-                "Over the last %d weeks, strategic alignment averaged %.0f%% (%s). " +
-                "Completion rate averaged %.0f%% (%s) with a carry-forward rate of %.0f%%. " +
-                "%d active drift signal%s detected.",
-                weekCount,
-                avgStrategicPct, alignTrendDir,
-                avgCompletionRate, completionTrendDir,
-                avgCarryForwardRate,
-                driftCount, driftCount == 1 ? "" : "s");
     }
 
     /**
@@ -506,7 +494,7 @@ public class LlmBriefingService implements BriefingService {
         }
 
         // Build template fallback (used when LLM is not configured or call fails)
-        String templateNarrative = buildWeekTemplateFallback(alignment, completion);
+        String templateNarrative = responseBuilder.buildWeekTemplateFallback(alignment, completion);
 
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback for week narrative");
@@ -514,7 +502,7 @@ public class LlmBriefingService implements BriefingService {
         }
 
         try {
-            String userPrompt = buildWeekNarrativePrompt(alignment, completion);
+            String userPrompt = responseBuilder.buildWeekNarrativePrompt(alignment, completion);
             log.info("Generating WEEK narrative for org={} cycle={} label={} model={}",
                     orgId, cycleId, alignment.cycleLabel(), llmConfig.getResolvedModel());
             String raw = callLlmWithMaxTokens(WEEK_NARRATIVE_SYSTEM_PROMPT, userPrompt, 200);
@@ -573,65 +561,6 @@ public class LlmBriefingService implements BriefingService {
     }
 
     // ═══════════════════════════════════════════════════════════════
-    // Response builders
-    // ═══════════════════════════════════════════════════════════════
-
-    private BriefingResponse buildResponse(String narrative, String suggestionsJson, BriefingDataGatherer.BriefingDataContext ctx) {
-        List<BriefingSuggestion> suggestions = parseSuggestions(suggestionsJson);
-        List<BriefingCitation> citations = buildCitations(ctx);
-        List<BriefingMetric> metrics = buildMetrics(ctx);
-        return new BriefingResponse("Weekly Intelligence Summary", narrative, suggestions, citations, metrics, Instant.now());
-    }
-
-    private BriefingResponse buildResponseFromCache(GeneratedNarrative cached, BriefingDataGatherer.BriefingDataContext ctx) {
-        List<BriefingSuggestion> suggestions = parseSuggestions(cached.getSuggestions());
-        List<BriefingCitation> citations = buildCitations(ctx);
-        List<BriefingMetric> metrics = buildMetrics(ctx);
-        return new BriefingResponse("Weekly Intelligence Summary", cached.getContent(), suggestions, citations, metrics, cached.getGeneratedAt());
-    }
-
-    private BriefingResponse emptyBriefing() {
-        return new BriefingResponse("Weekly Intelligence Summary", "No reconciled cycles available for briefing.", List.of(), List.of(), List.of(), Instant.now());
-    }
-
-    /** Deterministic citations — always computed from data, never LLM-generated. */
-    private List<BriefingCitation> buildCitations(BriefingDataGatherer.BriefingDataContext ctx) {
-        List<BriefingCitation> citations = new ArrayList<>();
-        citations.add(new BriefingCitation("c1",
-                String.format("Strategic alignment: %.0f%%", ctx.alignmentPct()),
-                "Computed from " + ctx.totalCommitments() + " commitments",
-                "View breakdown"));
-        citations.add(new BriefingCitation("c2",
-                String.format("Rally Cry Coverage: %.0f%%", ctx.rallyCryCoveragePct()),
-                "Commitments linked to a Rally Cry / total commitments",
-                "View details"));
-        citations.add(new BriefingCitation("c3",
-                String.format("Carry-Forward Rate: %.0f%%", ctx.carryForwardRate()),
-                "From reconciliation records",
-                "View list"));
-        citations.add(new BriefingCitation("c4",
-                String.format("Active Drift Signals: %d", ctx.driftCount()),
-                "Observatory Drift Detection",
-                "View signals"));
-        return citations;
-    }
-
-    /** Deterministic metrics — always computed from data, never LLM-generated. */
-    private List<BriefingMetric> buildMetrics(BriefingDataGatherer.BriefingDataContext ctx) {
-        String alignTrend = ctx.referenceData().getOrDefault("A.delta", 0.0) > 0 ? "up"
-                : ctx.referenceData().getOrDefault("A.delta", 0.0) < -1 ? "down" : "flat";
-        String carryTrend = ctx.carryForwardRate() > ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "up"
-                : ctx.carryForwardRate() < ctx.referenceData().getOrDefault("E.prev_carry_forward", 0.0) ? "down" : "flat";
-
-        return List.of(
-                new BriefingMetric("alignment", "Rally Cry Coverage", Math.round(ctx.rallyCryCoveragePct()), "%", alignTrend),
-                new BriefingMetric("carry", "Carry-Forward Rate", Math.round(ctx.carryForwardRate()), "%", carryTrend),
-                new BriefingMetric("completion", "Completion Rate", Math.round(ctx.completionRate()), "%", null),
-                new BriefingMetric("drift", "Active Drift Signals", ctx.driftCount(), null, null)
-        );
-    }
-
-    // ═══════════════════════════════════════════════════════════════
     // Parsing helpers
     // ═══════════════════════════════════════════════════════════════
 
@@ -672,62 +601,6 @@ public class LlmBriefingService implements BriefingService {
             log.warn("Failed to parse suggestions JSON: {}", e.getMessage());
             return List.of();
         }
-    }
-
-    private String buildWeekNarrativePrompt(AlignmentDataPoint alignment, CompletionDataPoint completion) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Week: ").append(alignment.cycleLabel()).append("\n\n");
-        sb.append("CHESS BREAKDOWN:\n");
-        sb.append(String.format("- Strategic: %.1f%%\n", alignment.strategicPct()));
-        sb.append(String.format("- Operational: %.1f%%\n", alignment.operationalPct()));
-        sb.append(String.format("- Defensive: %.1f%%\n", alignment.defensivePct()));
-        sb.append(String.format("- Capability Building: %.1f%%\n", alignment.capabilityBuildingPct()));
-        double uncategorized = Math.max(0, 100 - alignment.strategicPct() - alignment.operationalPct()
-                - alignment.defensivePct() - alignment.capabilityBuildingPct());
-        sb.append(String.format("- Not Categorized: %.1f%%\n", uncategorized));
-        sb.append(String.format("- Total commitments: %d\n\n", alignment.totalCommitments()));
-
-        if (completion != null) {
-            sb.append("EXECUTION:\n");
-            sb.append(String.format("- Completion rate: %.1f%%\n", completion.completionRate()));
-            sb.append(String.format("- Carry-forward rate: %.1f%%\n", completion.carryForwardRate()));
-            sb.append(String.format("- Not started rate: %.1f%%\n", completion.notStartedRate()));
-        }
-        return sb.toString();
-    }
-
-    private String buildWeekTemplateFallback(AlignmentDataPoint alignment, CompletionDataPoint completion) {
-        double defensivePct = alignment.defensivePct();
-        String sentence1;
-        if (defensivePct > 15) {
-            sentence1 = String.format("Defensive work was elevated at %.0f%% this week, pulling capacity away from strategic initiatives.",
-                    defensivePct);
-        } else {
-            sentence1 = String.format("Strategic work made up %.0f%% of commitments this week, with a balanced mix across operational and capability categories.",
-                    alignment.strategicPct());
-        }
-        String sentence2;
-        if (completion != null) {
-            sentence2 = String.format("Completion rate was %.0f%% and carry-forward rate stood at %.0f%%.",
-                    completion.completionRate(), completion.carryForwardRate());
-        } else {
-            sentence2 = String.format("Strategic alignment was at %.0f%% for the week.", alignment.strategicPct());
-        }
-        return sentence1 + " " + sentence2;
-    }
-
-    private String buildTemplateFallback(BriefingDataGatherer.BriefingDataContext ctx) {
-        return String.format(
-                "Strategic alignment is at %.0f%% this cycle. " +
-                "Rally cry coverage stands at %.0f%% with %.0f unlinked commitments. " +
-                "Carry-forward rate is %.0f%%. " +
-                "%.0f active drift signal%s detected.",
-                ctx.alignmentPct(),
-                ctx.rallyCryCoveragePct(),
-                ctx.referenceData().get("R.unlinked"),
-                ctx.carryForwardRate(),
-                ctx.referenceData().get("D.count"),
-                ctx.driftCount() == 1 ? "" : "s");
     }
 
     // ═══════════════════════════════════════════════════════════════
