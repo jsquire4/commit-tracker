@@ -9,6 +9,8 @@ export function useCommitmentLineage(commitmentId: string | null, enabled: boole
     queryKey: ['commitment-lineage', commitmentId],
     enabled: enabled && Boolean(commitmentId),
     initialPageParam: undefined as string | undefined,
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
     queryFn: async ({ pageParam }) => {
       const cursor = pageParam as string | undefined;
       const limit = cursor ? 12 : 7;

@@ -1,5 +1,6 @@
-import { Fragment } from 'react';
+import { Fragment, useCallback } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useCommitmentLineage } from '@/hooks/useCommitmentLineage';
 import { CommitmentLineageTimeline } from './CommitmentLineageTimeline';
 
@@ -12,15 +13,23 @@ interface HistoryDrawerProps {
 }
 
 export function HistoryDrawer({ open, commitmentId, commitmentTitle, onClose }: HistoryDrawerProps) {
+  const queryClient = useQueryClient();
   const q = useCommitmentLineage(commitmentId, open);
   const pages = q.data?.pages ?? [];
   const nodes = pages.flatMap((p) => p.nodes);
   const lastPage = pages[pages.length - 1];
   const hasMore = lastPage?.hasMore ?? false;
 
+  const handleClose = useCallback(() => {
+    if (commitmentId) {
+      queryClient.removeQueries({ queryKey: ['commitment-lineage', commitmentId] });
+    }
+    onClose();
+  }, [commitmentId, onClose, queryClient]);
+
   return (
     <Transition show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-50" onClose={onClose}>
+      <Dialog as="div" className="relative z-50" onClose={handleClose}>
         <Transition.Child
           as={Fragment}
           enter="ease-out duration-200"
@@ -55,7 +64,7 @@ export function HistoryDrawer({ open, commitmentId, commitmentTitle, onClose }: 
                 </div>
                 <button
                   type="button"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="p-1 rounded-sm text-muted hover:text-on-surface transition-colors"
                   aria-label="Close"
                 >
@@ -65,18 +74,18 @@ export function HistoryDrawer({ open, commitmentId, commitmentTitle, onClose }: 
                 </button>
               </div>
 
-              <CommitmentLineageTimeline
-                nodes={nodes}
-                isLoading={q.isLoading}
-                hasMore={hasMore}
-                onLoadMore={() => { void q.fetchNextPage(); }}
-                loadMoreLoading={q.isFetchingNextPage}
-              />
-
-              {q.isError && (
-                <p role="alert" className="text-body text-error mt-4">
+              {q.isError ? (
+                <p role="alert" className="text-body text-error py-4">
                   {q.error instanceof Error ? q.error.message : 'Could not load history.'}
                 </p>
+              ) : (
+                <CommitmentLineageTimeline
+                  nodes={nodes}
+                  isLoading={q.isLoading}
+                  hasMore={hasMore}
+                  onLoadMore={() => { void q.fetchNextPage(); }}
+                  loadMoreLoading={q.isFetchingNextPage}
+                />
               )}
             </Dialog.Panel>
           </Transition.Child>

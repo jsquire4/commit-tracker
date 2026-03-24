@@ -421,7 +421,9 @@ public class CommitmentService {
             if (!visited.add(cur.getId())) {
                 throw new ConflictException("Commitment chain contains a cycle");
             }
-            if (!visibilityEnforcer.canViewCommitment(actor, cur)) {
+            // Anchor is already authorized via getById; enforce visibility on ancestors only.
+            if (!cur.getId().equals(anchorCommitmentId)
+                    && !visibilityEnforcer.canViewCommitment(actor, cur)) {
                 throw new AccessDeniedException("Access denied to commitment " + cur.getId());
             }
             newestFirst.add(cur);
