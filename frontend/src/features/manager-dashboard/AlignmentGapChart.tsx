@@ -67,10 +67,8 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
       <p className="font-semibold text-on-surface mb-2">{label}</p>
       {payload.map((entry) => {
         const key = entry.dataKey;
-        const pct =
-          row.totalCommitments > 0
-            ? Math.round((entry.value / row.totalCommitments) * 100)
-            : 0;
+        const pct = entry.value;
+        if (pct === 0) return null;
         return (
           <div key={key} className="flex items-center gap-2 text-sm">
             <span
@@ -78,7 +76,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
               style={{ backgroundColor: CATEGORY_COLORS[key] ?? '#ccc' }}
             />
             <span className="text-on-surface-variant">
-              {CATEGORY_LABELS[key] ?? key}: {pct}% ({entry.value} of {row.totalCommitments})
+              {CATEGORY_LABELS[key] ?? key}: {pct}% ({row.totalCommitments} total)
             </span>
           </div>
         );
@@ -95,41 +93,54 @@ function catCount(dist: Record<string, { count: number; percentage: number }>, .
   return 0;
 }
 
+/** Convert raw counts to percentages (0-100) so every bar fills the same width */
+function toPercentRow(
+  name: string,
+  userId: string | null,
+  isTeamTotal: boolean,
+  strategic: number,
+  operational: number,
+  defensive: number,
+  capabilityBuilding: number,
+  unlinked: number,
+): ChartRow {
+  const total = strategic + operational + defensive + capabilityBuilding + unlinked;
+  const pct = (v: number) => (total > 0 ? Math.round((v / total) * 100) : 0);
+  return {
+    name, userId, isTeamTotal,
+    STRATEGIC: pct(strategic),
+    OPERATIONAL: pct(operational),
+    DEFENSIVE: pct(defensive),
+    CAPABILITY_BUILDING: pct(capabilityBuilding),
+    UNLINKED: pct(unlinked),
+    totalCommitments: total,
+  };
+}
+
 function buildChartData(
   aggregate: AlignmentSignalResponse,
   members: MemberAlignment[]
 ): ChartRow[] {
-  const teamCategorized = Object.values(aggregate.distribution).reduce(
-    (sum, d) => sum + d.count,
-    0
-  );
   const ad = aggregate.distribution;
-  const teamTotal: ChartRow = {
-    name: 'Team Total',
-    userId: null,
-    isTeamTotal: true,
-    STRATEGIC: catCount(ad, 'STRATEGIC', 'Strategic'),
-    OPERATIONAL: catCount(ad, 'OPERATIONAL', 'Operational'),
-    DEFENSIVE: catCount(ad, 'DEFENSIVE', 'Defensive'),
-    CAPABILITY_BUILDING: catCount(ad, 'CAPABILITY_BUILDING', 'Capability Building'),
-    UNLINKED: aggregate.unlinkedCount,
-    totalCommitments: teamCategorized + aggregate.unlinkedCount,
-  };
+  const teamTotal = toPercentRow(
+    'Team Total', null, true,
+    catCount(ad, 'STRATEGIC', 'Strategic'),
+    catCount(ad, 'OPERATIONAL', 'Operational'),
+    catCount(ad, 'DEFENSIVE', 'Defensive'),
+    catCount(ad, 'CAPABILITY_BUILDING', 'Capability Building'),
+    aggregate.unlinkedCount,
+  );
 
   const memberRows: ChartRow[] = members.map((m) => {
-    const memberCategorized = Object.values(m.distribution).reduce((sum, d) => sum + d.count, 0);
     const d = m.distribution;
-    return {
-      name: m.displayName,
-      userId: m.userId,
-      isTeamTotal: false,
-      STRATEGIC: catCount(d, 'STRATEGIC', 'Strategic'),
-      OPERATIONAL: catCount(d, 'OPERATIONAL', 'Operational'),
-      DEFENSIVE: catCount(d, 'DEFENSIVE', 'Defensive'),
-      CAPABILITY_BUILDING: catCount(d, 'CAPABILITY_BUILDING', 'Capability Building'),
-      UNLINKED: m.unlinkedCount,
-      totalCommitments: memberCategorized + m.unlinkedCount,
-    };
+    return toPercentRow(
+      m.displayName, m.userId, false,
+      catCount(d, 'STRATEGIC', 'Strategic'),
+      catCount(d, 'OPERATIONAL', 'Operational'),
+      catCount(d, 'DEFENSIVE', 'Defensive'),
+      catCount(d, 'CAPABILITY_BUILDING', 'Capability Building'),
+      m.unlinkedCount,
+    );
   });
 
   return [teamTotal, ...memberRows];
@@ -180,9 +191,11 @@ export function AlignmentGapChart({
         >
           <XAxis
             type="number"
+            domain={[0, 100]}
+            tickFormatter={(v) => `${v}%`}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: '#6B7280' }}
+            tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant, #6B7280)' }}
           />
           <YAxis
             type="category"
