@@ -106,13 +106,20 @@ export function MyStoryPage() {
         </div>
       </div>
 
-      {/* ── Growth Area Manager ── */}
-      {/* Only render here when there are growth areas; the empty state renders its own GrowthAreaManager */}
-      {hasGrowthAreas && (
-        <div className="animate-fade-up" style={{ animationDelay: '40ms' }}>
+      {/* ── Growth Areas — always visible, prominent ── */}
+      <section className="animate-fade-up" style={{ animationDelay: '40ms' }}>
+        <div className="bg-surface-lowest rounded-sm p-5 shadow-whisper">
+          <h2 className="font-serif text-title text-on-surface mb-1">
+            My Growth Areas
+          </h2>
+          <p className="text-small text-muted mb-4">
+            {hasGrowthAreas
+              ? 'These guide how your work connects to your development. Update anytime.'
+              : 'Define up to 5 directions you want to grow in — your work will be tracked against them.'}
+          </p>
           <GrowthAreaManager />
         </div>
-      )}
+      </section>
 
       {/* ── Loading State ── */}
       {isLoading && <MyStorySkeleton />}

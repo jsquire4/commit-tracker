@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import { GrowthAreaManager } from '@/features/growth-areas/GrowthAreaManager';
 
 interface MyStoryEmptyStateProps {
   hasGrowthAreas: boolean;
@@ -9,7 +8,7 @@ export function MyStoryEmptyState({ hasGrowthAreas }: MyStoryEmptyStateProps) {
   if (!hasGrowthAreas) {
     return (
       <div
-        className="flex flex-col items-center text-center py-16 px-6 animate-fade-up"
+        className="flex flex-col items-center text-center py-12 px-6 animate-fade-up"
         style={{ animationDelay: '80ms' }}
       >
         {/* Decorative icon */}
@@ -33,21 +32,17 @@ export function MyStoryEmptyState({ hasGrowthAreas }: MyStoryEmptyStateProps) {
         <h2 className="font-serif text-2xl text-on-surface font-normal mb-3">
           Your story starts with your goals
         </h2>
-        <p className="text-body text-on-surface-variant max-w-sm mb-8">
-          Add up to 5 personal growth areas to start tracking how your work connects to your
-          development. Your story builds from there.
+        <p className="text-body text-on-surface-variant max-w-sm">
+          Use the growth areas above to define where you want to grow.
+          Then head to My Week to start planning — your story builds from there.
         </p>
-
-        <div className="w-full max-w-sm text-left">
-          <GrowthAreaManager />
-        </div>
       </div>
     );
   }
 
   return (
     <div
-      className="flex flex-col items-center text-center py-16 px-6 animate-fade-up"
+      className="flex flex-col items-center text-center py-12 px-6 animate-fade-up"
       style={{ animationDelay: '80ms' }}
     >
       {/* Decorative icon */}
@@ -73,12 +68,13 @@ export function MyStoryEmptyState({ hasGrowthAreas }: MyStoryEmptyStateProps) {
       </h2>
       <p className="text-body text-on-surface-variant max-w-sm mb-6">
         As you complete and close weeks, your growth pattern will appear here — including
-        engagement trends, work mix, and AI-generated career highlights.
+        trends, work mix, and AI-generated career highlights.
       </p>
       <Link
         to="/"
         className="inline-flex items-center gap-2 px-4 py-2 rounded-sm bg-accent text-white text-body font-medium transition-colors hover:bg-accent-dark"
       >
+        Head to My Week
         <svg
           className="w-4 h-4"
           viewBox="0 0 24 24"
@@ -89,7 +85,6 @@ export function MyStoryEmptyState({ hasGrowthAreas }: MyStoryEmptyStateProps) {
         >
           <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
         </svg>
-        Head to My Week
       </Link>
     </div>
   );
