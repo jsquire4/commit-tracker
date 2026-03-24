@@ -19,13 +19,13 @@ export function generateAlerts(
   // RED-graded teams
   for (const unit of units) {
     if (unit.grade === 'RED') {
-      const weekNote = unit.weeksTrending > 1
-        ? `, trending down for ${String(unit.weeksTrending)} weeks`
+      const weekNote = Math.abs(unit.weeksTrending) > 1
+        ? `, trending down for ${String(Math.abs(unit.weeksTrending))} weeks`
         : '';
       alerts.push({
         id: `red-${unit.managerId}`,
         icon: 'red',
-        message: `${unit.managerName}'s team: ${String(Math.round(unit.strategicAlignmentPct))}% rally cry coverage${weekNote}`,
+        message: `${unit.managerName}'s team: ${String(Math.round(unit.rallyCoveragePct))}% rally cry coverage${weekNote}`,
       });
     }
   }
@@ -43,11 +43,11 @@ export function generateAlerts(
 
   // Declining teams that aren't already RED
   for (const unit of units) {
-    if (unit.trendDirection.toUpperCase() === 'DECLINING' && unit.grade !== 'RED' && unit.weeksTrending >= 3) {
+    if (unit.trendDirection.toUpperCase() === 'DECLINING' && unit.grade !== 'RED' && Math.abs(unit.weeksTrending) >= 3) {
       alerts.push({
         id: `declining-${unit.managerId}`,
         icon: 'declining',
-        message: `${unit.managerName}'s team declining for ${String(unit.weeksTrending)} consecutive weeks`,
+        message: `${unit.managerName}'s team declining for ${String(Math.abs(unit.weeksTrending))} consecutive weeks`,
       });
     }
   }
@@ -64,10 +64,10 @@ interface ExceptionAlertsProps {
 export function ExceptionAlerts({ alerts }: ExceptionAlertsProps) {
   if (alerts.length === 0) {
     return (
-      <div className="flex items-center justify-center h-10 px-6 bg-green-500/5 border-t border-green-500/20">
+      <div className="flex items-center justify-center h-10 px-6 bg-accent/5 border-t border-accent/20">
         <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          <span className="text-xs text-green-600">All teams on course</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-accent" />
+          <span className="text-xs text-accent">All teams on course</span>
         </div>
       </div>
     );
@@ -83,10 +83,10 @@ export function ExceptionAlerts({ alerts }: ExceptionAlertsProps) {
               'flex items-center gap-2 px-3 py-2 rounded-lg border flex-shrink-0',
               'bg-surface-container backdrop-blur text-xs max-w-xs',
               alert.icon === 'red'
-                ? 'border-red-500/30 text-red-300'
+                ? 'border-error/30 text-error'
                 : alert.icon === 'drift'
-                  ? 'border-amber-500/30 text-amber-300'
-                  : 'border-yellow-500/30 text-yellow-300',
+                  ? 'border-warning/30 text-warning'
+                  : 'border-warning/20 text-on-surface-variant',
             ].join(' ')}
           >
             {/* Icon */}

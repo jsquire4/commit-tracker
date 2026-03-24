@@ -3,6 +3,8 @@ package com.compass.platform.domain.rcdo;
 import com.compass.platform.domain.rcdo.dto.CreateDefiningObjectiveRequest;
 import com.compass.platform.domain.rcdo.dto.CreateOutcomeRequest;
 import com.compass.platform.domain.rcdo.dto.CreateRallyCryRequest;
+import com.compass.platform.domain.rcdo.dto.DefiningObjectiveResponse;
+import com.compass.platform.domain.rcdo.dto.OutcomeResponse;
 import com.compass.platform.domain.rcdo.dto.RallyCryResponse;
 import com.compass.platform.domain.rcdo.dto.RcdoTreeResponse;
 import com.compass.platform.domain.rcdo.dto.UpdateRcdoRequest;
@@ -83,35 +85,53 @@ public class RcdoController {
     }
 
     @PostMapping("/defining-objectives")
-    public ResponseEntity<ApiResponse<Object>> createDefiningObjective(
+    public ResponseEntity<ApiResponse<DefiningObjectiveResponse>> createDefiningObjective(
             @Valid @RequestBody CreateDefiningObjectiveRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         DefiningObjective saved = rcdoService.createDefiningObjective(
                 actor.getOrg().getId(), request.rallyCryId(),
                 request.title(), request.description(), request.ownerUserId(), actor);
 
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/../defining-objectives/{id}")
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/rcdo/defining-objectives/{id}")
                 .buildAndExpand(saved.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(ApiResponse.of(saved));
+        DefiningObjectiveResponse response = new DefiningObjectiveResponse(
+                saved.getId(),
+                saved.getRallyCry().getId(),
+                saved.getTitle(),
+                saved.getDescription(),
+                saved.getOwner() != null ? saved.getOwner().getId() : null,
+                saved.getSortOrder(),
+                saved.getCreatedAt());
+
+        return ResponseEntity.created(location).body(ApiResponse.of(response));
     }
 
     @PostMapping("/outcomes")
-    public ResponseEntity<ApiResponse<Object>> createOutcome(
+    public ResponseEntity<ApiResponse<OutcomeResponse>> createOutcome(
             @Valid @RequestBody CreateOutcomeRequest request) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         Outcome saved = rcdoService.createOutcome(
                 actor.getOrg().getId(), request.definingObjectiveId(),
                 request.title(), request.description(), request.ownerUserId(), actor);
 
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-                .path("/../outcomes/{id}")
+        URI location = ServletUriComponentsBuilder.fromCurrentContextPath()
+                .path("/api/v1/rcdo/outcomes/{id}")
                 .buildAndExpand(saved.getId())
                 .toUri();
 
-        return ResponseEntity.created(location).body(ApiResponse.of(saved));
+        OutcomeResponse response = new OutcomeResponse(
+                saved.getId(),
+                saved.getDefiningObjective().getId(),
+                saved.getTitle(),
+                saved.getDescription(),
+                saved.getOwner() != null ? saved.getOwner().getId() : null,
+                saved.getSortOrder(),
+                saved.getCreatedAt());
+
+        return ResponseEntity.created(location).body(ApiResponse.of(response));
     }
 
     /**

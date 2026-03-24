@@ -45,6 +45,8 @@ compass:
     temperature: 0.3
     max-tokens: 1024
   cors:
+    # Blank default is intentional — set COMPASS_CORS_ALLOWED_ORIGINS env var in production
+    # (e.g. https://yourapp.up.railway.app) or CORS will reject all cross-origin requests.
     allowed-origins: ""
   jwt:
     issuer: ""
@@ -52,5 +54,5 @@ compass:
 
 logging:
   level:
-    com.compass.platform: DEBUG
+    com.compass.platform: INFO
     org.hibernate.SQL: WARN

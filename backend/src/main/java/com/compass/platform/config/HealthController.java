@@ -13,6 +13,8 @@ import java.util.Map;
 @RequestMapping("/api")
 public class HealthController {
 
+    // NOTE: spring.application.version resolves to "dev" unless explicitly set
+    // (e.g. via -Dspring.application.version=${GIT_SHA} in the Railway start command).
     @Value("${spring.application.version:dev}")
     private String version;
 

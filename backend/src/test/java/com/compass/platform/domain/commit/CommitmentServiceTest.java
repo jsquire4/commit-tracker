@@ -701,7 +701,7 @@ class CommitmentServiceTest {
         Commitment c2 = buildCommitment(employee, draftCycle, 1);
         c2.setId(UUID.randomUUID());
 
-        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any()))
+        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(c1, c2));
         when(visibilityEnforcer.filterVisible(eq(employee), any())).thenReturn(List.of(c1, c2));
 
@@ -722,7 +722,7 @@ class CommitmentServiceTest {
         Commitment c2 = buildCommitment(manager, draftCycle, 0);
         c2.setId(UUID.randomUUID());
 
-        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any()))
+        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any(), any(), any()))
                 .thenReturn(List.of(c1, c2));
         // Visibility filter hides c2
         when(visibilityEnforcer.filterVisible(eq(employee), any())).thenReturn(List.of(c1));

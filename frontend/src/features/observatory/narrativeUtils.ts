@@ -7,6 +7,7 @@ export interface WeekNarrativeData {
   operationalPct: number;
   defensivePct: number;
   capabilityBuildingPct: number;
+  rallyCoveragePct?: number;
   completionRate?: number | null;
   carryForwardRate?: number | null;
   weekLabel?: string;
@@ -26,8 +27,8 @@ export function generateWeekNarrative(
   allData?: WeekNarrativeData[],
 ): string {
   const { strategicPct, defensivePct, completionRate } = data;
-  // TODO: Replace with real rally cry coverage when backend exposes per-cycle rallyCoveragePct
-  const strategicAlignment = strategicPct;
+  // Use rallyCoveragePct when available; fall back to strategicPct for older data shapes
+  const strategicAlignment = data.rallyCoveragePct ?? strategicPct;
 
   const sentences: string[] = [];
 

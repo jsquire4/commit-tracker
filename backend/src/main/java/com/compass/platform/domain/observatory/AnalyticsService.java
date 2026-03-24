@@ -59,15 +59,18 @@ public class AnalyticsService {
     private final CycleRepository cycleRepository;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final AppUserRepository userRepository;
+    private final ObservatoryConfigRepository configRepository;
 
     public AnalyticsService(CommitmentRepository commitmentRepository,
                             CycleRepository cycleRepository,
                             ReconciliationRecordRepository reconciliationRecordRepository,
-                            AppUserRepository userRepository) {
+                            AppUserRepository userRepository,
+                            ObservatoryConfigRepository configRepository) {
         this.commitmentRepository = commitmentRepository;
         this.cycleRepository = cycleRepository;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.userRepository = userRepository;
+        this.configRepository = configRepository;
     }
 
     /**
@@ -221,8 +224,8 @@ public class AnalyticsService {
             byUserByCycle.put(cycleId, byUser);
         }
 
-        // Resolve all MANAGER-role users in the org
-        List<AppUser> managers = userRepository.findByOrgIdAndRoleIn(orgId, List.of(UserRole.MANAGER));
+        // Resolve all MANAGER, DIRECTOR, and VP-role users in the org
+        List<AppUser> managers = userRepository.findByOrgIdAndRoleIn(orgId, List.of(UserRole.MANAGER, UserRole.DIRECTOR, UserRole.VP));
 
         // Pre-compute subtree user IDs for all managers to avoid N+1 queries
         Map<UUID, List<UUID>> subtreeMap = new HashMap<>();
@@ -578,42 +581,105 @@ public class AnalyticsService {
             ));
         }
 
-        // ── SPECIFICITY_PATTERN signals ───────────────────────────────────────
+        // ── SPECIFICITY_PATTERN / COMPLETION_MISMATCH / DUPLICATE_NOTES signals ─────
         for (IntegrityFlag flag : integrityReport.flags()) {
-            if (flag.type() != IntegrityFlagType.UNIFORM_CATEGORIZATION) continue;
             Map<String, Object> d = flag.details();
-            String managerName = String.valueOf(d.getOrDefault("managerName", "Unknown"));
-            String dominantCat = String.valueOf(d.getOrDefault("dominantCategory", "unknown"));
-            Object pctObj = d.get("percentage");
-            String pctStr = pctObj != null ? pctObj + "%" : "unknown";
-            Object totalObj = d.get("totalCommitments");
-            String totalStr = totalObj != null ? String.valueOf(totalObj) : "unknown";
 
-            String title = String.format("Specificity pattern: %s's team over-indexed on %s",
-                    managerName, dominantCat);
-            String body = String.format(
-                    "%s's team has %s of commitments categorised as %s, " +
-                    "suggesting low-specificity or gaming of the CHESS taxonomy.",
-                    managerName, pctStr, dominantCat);
-            List<SignalMetric> metrics = List.of(
-                    new SignalMetric("Dominant category", dominantCat),
-                    new SignalMetric("Category share", pctStr),
-                    new SignalMetric("Total commitments", totalStr)
-            );
-            signals.add(new ObservatorySignal(
-                    "SPECIFICITY_PATTERN",
-                    "active",
-                    null,
-                    null,
-                    title,
-                    body,
-                    metrics
-            ));
+            if (flag.type() == IntegrityFlagType.UNIFORM_CATEGORIZATION) {
+                String managerName = String.valueOf(d.getOrDefault("managerName", "Unknown"));
+                String dominantCat = String.valueOf(d.getOrDefault("dominantCategory", "unknown"));
+                Object pctObj = d.get("percentage");
+                String pctStr = pctObj != null ? pctObj + "%" : "unknown";
+                Object totalObj = d.get("totalCommitments");
+                String totalStr = totalObj != null ? String.valueOf(totalObj) : "unknown";
+
+                String title = String.format("Specificity pattern: %s's team over-indexed on %s",
+                        managerName, dominantCat);
+                String body = String.format(
+                        "%s's team has %s of commitments categorised as %s, " +
+                        "suggesting low-specificity or gaming of the CHESS taxonomy.",
+                        managerName, pctStr, dominantCat);
+                List<SignalMetric> metrics = List.of(
+                        new SignalMetric("Dominant category", dominantCat),
+                        new SignalMetric("Category share", pctStr),
+                        new SignalMetric("Total commitments", totalStr)
+                );
+                signals.add(new ObservatorySignal(
+                        "SPECIFICITY_PATTERN",
+                        "active",
+                        null,
+                        null,
+                        title,
+                        body,
+                        metrics
+                ));
+
+            } else if (flag.type() == IntegrityFlagType.COMPLETION_MISMATCH) {
+                String managerName = String.valueOf(d.getOrDefault("managerName", "Unknown"));
+                Object managerPctObj = d.get("managerStrategicPct");
+                Object teamPctObj = d.get("teamStrategicPct");
+                Object divergenceObj = d.get("divergencePoints");
+                String managerPctStr = managerPctObj != null ? managerPctObj + "%" : "unknown";
+                String teamPctStr = teamPctObj != null ? teamPctObj + "%" : "unknown";
+                String divergenceStr = divergenceObj != null ? divergenceObj + " pts" : "unknown";
+
+                String title = String.format("Strategic divergence: %s vs. team (%s gap)",
+                        managerName, divergenceStr);
+                String body = String.format(
+                        "%s's own strategic commitment rate (%s) diverges from their team's rate (%s) " +
+                        "by %s, suggesting misaligned prioritisation.",
+                        managerName, managerPctStr, teamPctStr, divergenceStr);
+                List<SignalMetric> metrics = List.of(
+                        new SignalMetric("Manager strategic %", managerPctStr),
+                        new SignalMetric("Team strategic %", teamPctStr),
+                        new SignalMetric("Divergence", divergenceStr)
+                );
+                signals.add(new ObservatorySignal(
+                        "SPECIFICITY_PATTERN",
+                        "active",
+                        null,
+                        null,
+                        title,
+                        body,
+                        metrics
+                ));
+
+            } else if (flag.type() == IntegrityFlagType.DUPLICATE_NOTES) {
+                String userName = String.valueOf(d.getOrDefault("userName", "Unknown"));
+                Object notesObj = d.get("duplicateNotes");
+                int dupeCount = notesObj instanceof List<?> ? ((List<?>) notesObj).size() : 0;
+
+                String title = String.format("Duplicate notes: %s submitted %d repeated reconciliation note%s",
+                        userName, dupeCount, dupeCount != 1 ? "s" : "");
+                String body = String.format(
+                        "%s used the same reconciliation note text across multiple commitments in this cycle, " +
+                        "indicating copy-paste reconciliation rather than genuine per-commitment reflection.",
+                        userName);
+                List<SignalMetric> metrics = List.of(
+                        new SignalMetric("User", userName),
+                        new SignalMetric("Duplicate note patterns", String.valueOf(dupeCount))
+                );
+                signals.add(new ObservatorySignal(
+                        "SPECIFICITY_PATTERN",
+                        "active",
+                        null,
+                        null,
+                        title,
+                        body,
+                        metrics
+                ));
+            }
         }
 
         // ── WORK_DISTRIBUTION signals ─────────────────────────────────────────
         // Look at recent cycles: for each manager-assigned commitment, find managers
-        // where >50% of their assignments go to a single person.
+        // where the concentration threshold % of their assignments go to a single person.
+        ObservatoryConfig config = configRepository.findByOrgId(orgId).orElse(null);
+        double concentrationRiskPct = config != null
+                ? config.getConcentrationRiskPct().doubleValue()
+                : 50.0; // default matches ObservatoryConfig entity default
+        // darkWorkWarningPct is reserved for future use to flag unlinked-commitment thresholds.
+
         List<Cycle> recentCycles = latestCycles(orgId, weekCount);
         List<UUID> recentCycleIds = recentCycles.stream().map(Cycle::getId).toList();
 
@@ -623,12 +689,19 @@ public class AnalyticsService {
                 .filter(u -> managerRoles.contains(u.getRole()))
                 .toList();
 
+        // Pre-load all assigned commitments in a single batch query to avoid N+1
+        // (previously: one query per manager × cycle; now: one query for all managers × cycles)
+        List<UUID> managerIds = managers.stream().map(AppUser::getId).toList();
+        List<Commitment> allAssigned = managerIds.isEmpty() || recentCycleIds.isEmpty()
+                ? List.of()
+                : commitmentRepository.findByAssignedByIdInAndCycleIdIn(managerIds, recentCycleIds);
+        Map<UUID, List<Commitment>> assignedByManagerId = allAssigned.stream()
+                .filter(c -> c.getAssignedBy() != null)
+                .collect(Collectors.groupingBy(c -> c.getAssignedBy().getId()));
+
         for (AppUser manager : managers) {
-            // Collect all commitments assigned by this manager across recent cycles
-            List<Commitment> assigned = recentCycleIds.stream()
-                    .flatMap(cycleId -> commitmentRepository
-                            .findByAssignedByIdAndCycleId(manager.getId(), cycleId).stream())
-                    .toList();
+            // Retrieve pre-loaded assignments for this manager across recent cycles
+            List<Commitment> assigned = assignedByManagerId.getOrDefault(manager.getId(), List.of());
 
             if (assigned.size() < 3) continue; // not enough data
 
@@ -639,7 +712,7 @@ public class AnalyticsService {
             long total = assigned.size();
             for (Map.Entry<UUID, Long> entry : countByAssignee.entrySet()) {
                 double pct = (double) entry.getValue() / total * 100.0;
-                if (pct > 50.0) {
+                if (pct > concentrationRiskPct) {
                     // Find the assignee's name from the commitment list
                     String assigneeName = assigned.stream()
                             .filter(c -> c.getUser().getId().equals(entry.getKey()))
@@ -681,11 +754,6 @@ public class AnalyticsService {
     // ===== Internal helpers =====
 
     /**
-     * Returns the most-recent {@code limit} RECONCILED cycles for the org,
-     * fetched in descending order. Only reconciled cycles have meaningful data
-     * for analytics — DRAFT and in-progress cycles are excluded.
-     */
-    /**
      * Compute alignment data for a single specific cycle.
      *
      * @param orgId   organization ID
@@ -723,6 +791,11 @@ public class AnalyticsService {
                 .orElse(null);
     }
 
+    /**
+     * Returns the most-recent {@code limit} RECONCILED cycles for the org,
+     * fetched in descending order. Only reconciled cycles have meaningful data
+     * for analytics — DRAFT and in-progress cycles are excluded.
+     */
     private List<Cycle> latestCycles(UUID orgId, int limit) {
         List<Cycle> all = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
         List<Cycle> reconciled = all.stream()
@@ -757,6 +830,7 @@ public class AnalyticsService {
 
         String dominantCategory = null;
         if (total > 0) {
+            // Tie-breaking order: Strategic > Operational > Defensive > Capability Building
             double max = Math.max(Math.max(strategicPct, operationalPct),
                     Math.max(defensivePct, capabilityPct));
             if (max == strategicPct) dominantCategory = "Strategic";

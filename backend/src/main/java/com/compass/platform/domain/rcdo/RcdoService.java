@@ -384,8 +384,8 @@ public class RcdoService {
     }
 
     /**
-     * Validates that a title field is not null or blank.
-     * Throws {@link IllegalArgumentException} if the check fails.
+     * Validates that the actor belongs to the same org as the entity.
+     * Throws {@link org.springframework.security.access.AccessDeniedException} if they differ.
      */
     private void requireSameOrg(Org entityOrg, AppUser actor) {
         if (!entityOrg.getId().equals(actor.getOrg().getId())) {
@@ -393,6 +393,10 @@ public class RcdoService {
         }
     }
 
+    /**
+     * Validates that a title field is not null or blank.
+     * Throws {@link IllegalArgumentException} if the check fails.
+     */
     private void validateTitleNotBlank(String title, String entityLabel) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException(entityLabel + " title must not be blank");

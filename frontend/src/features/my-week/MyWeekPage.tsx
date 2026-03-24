@@ -45,8 +45,6 @@ export function MyWeekPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const userId = authUserId;
-
   // When a different cycle is selected via the pill selector, fetch it
   const { data: selectedCycleData } = useCycle(selectedCycleId ?? '');
 
@@ -55,10 +53,11 @@ export function MyWeekPage() {
   const cycleId = cycle?.id ?? '';
   const cycleState: CycleState = cycle?.state ?? 'DRAFT';
 
+  // Hook is guarded by enabled: Boolean(cycleId) internally — safe to call with empty string
   const { data: allCommitments = [], isLoading: commitmentsLoading } = useCommitments(cycleId);
   const myCommitments = useMemo(
-    () => allCommitments.filter((c) => c.userId === userId),
-    [allCommitments, userId],
+    () => allCommitments.filter((c) => c.userId === authUserId),
+    [allCommitments, authUserId],
   );
 
   const carriedItems = useMemo(

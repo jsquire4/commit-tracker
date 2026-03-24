@@ -55,7 +55,7 @@ function CarriedItemRow({ commitment, cycleId, onAccept, accepted }: CarriedItem
         <span className="text-body text-on-surface font-medium truncate">
           {commitment.title}
         </span>
-        <span className="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-small font-medium bg-[#FEF3C7] text-[#92400E] whitespace-nowrap">
+        <span className="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-full text-small font-medium bg-warning/10 text-warning whitespace-nowrap">
           {statusLabel}
         </span>
       </div>

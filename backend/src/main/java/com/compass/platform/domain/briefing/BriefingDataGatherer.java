@@ -10,6 +10,8 @@ import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSignal;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.domain.user.OrgRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
@@ -23,6 +25,8 @@ import java.util.UUID;
  */
 @Component
 public class BriefingDataGatherer {
+
+    private static final Logger log = LoggerFactory.getLogger(BriefingDataGatherer.class);
 
     private final AnalyticsService analyticsService;
     private final DriftDetectionService driftDetectionService;
@@ -83,7 +87,9 @@ public class BriefingDataGatherer {
         // Rally cry coverage
         double rallyCryCoveragePct = 0;
         int unlinkedCount = 0;
-        if (cycleId != null) {
+        if (cycleId == null) {
+            log.warn("cycleId is null for orgId={} — rally cry coverage data unavailable, reporting 0%", orgId);
+        } else {
             List<Commitment> cycleCommitments = commitmentRepository
                     .findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, cycleId);
             int cycleTotal = cycleCommitments.size();

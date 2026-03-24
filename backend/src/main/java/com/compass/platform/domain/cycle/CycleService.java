@@ -32,6 +32,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -242,6 +243,23 @@ public class CycleService {
      */
     public int getCommitmentCount(UUID orgId, UUID cycleId) {
         return (int) commitmentRepository.countByOrgIdAndCycleId(orgId, cycleId);
+    }
+
+    /**
+     * Returns commitment counts for multiple cycles in a single query.
+     * Keys are cycle IDs; missing entries imply a count of zero.
+     */
+    @Transactional(readOnly = true)
+    public Map<UUID, Long> getCommitmentCounts(UUID orgId, List<UUID> cycleIds) {
+        if (cycleIds.isEmpty()) {
+            return Map.of();
+        }
+        List<Object[]> rows = commitmentRepository.countByOrgIdAndCycleIdIn(orgId, cycleIds);
+        Map<UUID, Long> result = new HashMap<>();
+        for (Object[] row : rows) {
+            result.put((UUID) row[0], (Long) row[1]);
+        }
+        return result;
     }
 
     /**

@@ -222,7 +222,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                       type="text"
                       {...register('title')}
                       placeholder="Describe your commitment..."
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-[16px] text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[200ms]"
+                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[200ms]"
                     />
                     {errors.title && (
                       <p className="mt-1 text-small text-error">{errors.title.message}</p>
@@ -382,7 +382,7 @@ export function CommitmentForm({ open, commitmentId, cycleId, onClose }: Commitm
                   type="button"
                   onClick={handleClose}
                   disabled={isPending}
-                  className="text-[0.8125rem] text-muted hover:text-on-surface-variant transition-colors duration-[150ms] disabled:opacity-50"
+                  className="text-sm text-muted hover:text-on-surface-variant transition-colors duration-[150ms] disabled:opacity-50"
                 >
                   Cancel
                 </button>

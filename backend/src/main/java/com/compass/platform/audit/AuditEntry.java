@@ -40,7 +40,7 @@ public class AuditEntry {
     @Column(nullable = false)
     private String action;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.LAZY, optional = true)
     @JoinColumn(name = "actor_id")
     private AppUser actor;
 

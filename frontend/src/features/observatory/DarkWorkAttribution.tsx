@@ -118,7 +118,7 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
             type="number"
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 11, fill: '#5A605E' }}
+            tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
           />
           <YAxis
             type="category"
@@ -126,11 +126,11 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
             width={104}
             tickLine={false}
             axisLine={false}
-            tick={{ fontSize: 12, fill: '#5A605E' }}
+            tick={{ fontSize: 12, fill: 'var(--color-on-surface-variant)' }}
           />
           <Tooltip
             formatter={(value: number, name: string) => {
-              const label = name.replace(/_MANAGER|_SELF/, '');
+              const label = name.replace(/_(?:MANAGER|SELF)$/, '');
               return [value, CATEGORY_LABELS[label] ?? label];
             }}
             contentStyle={{

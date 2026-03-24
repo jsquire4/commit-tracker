@@ -98,8 +98,8 @@ public class RcdoCsvImporter {
         Org org = orgRepository.findById(orgId)
                 .orElseThrow(() -> new IllegalArgumentException("Org not found: " + orgId));
 
-        // Load existing rally cries for this org to deduplicate by title
-        List<RallyCry> existingRcs = rallyCryRepository.findByOrgIdOrderBySortOrderAsc(orgId);
+        // Load existing non-archived rally cries for this org to deduplicate by title
+        List<RallyCry> existingRcs = rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
         Map<String, RallyCry> rcByTitle = new LinkedHashMap<>();
         for (RallyCry rc : existingRcs) {
             rcByTitle.put(rc.getTitle(), rc);

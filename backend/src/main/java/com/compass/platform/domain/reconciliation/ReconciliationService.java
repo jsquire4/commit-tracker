@@ -278,7 +278,7 @@ public class ReconciliationService {
         List<ReconciliationRecord> records =
                 reconciliationRecordRepository.findByOrgIdAndCycleId(cycle.getOrg().getId(), cycleId);
 
-        return records.size() >= commitments.size();
+        return records.size() == commitments.size();
     }
 
     /**

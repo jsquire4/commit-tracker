@@ -21,7 +21,7 @@ export function useToast() {
       const next = [...prev, newToast];
       return next.length > 3 ? next.slice(-3) : next;
     });
-    // Stable callback — dismiss is a setState function (stable identity)
+    // toastCounter is a ref (stable) and setToasts is a stable setter — no deps needed
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

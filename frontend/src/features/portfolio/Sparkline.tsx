@@ -5,6 +5,7 @@
  */
 import { useRef, useEffect, useState } from 'react';
 import type { SparklinePoint } from '@/types/portfolio.types';
+import { CHESS_ACCENT, CHESS_MUTED } from '@/constants/chess-colors';
 
 interface SparklineProps {
   data: SparklinePoint[];
@@ -16,9 +17,9 @@ interface SparklineProps {
 }
 
 const colorMap = {
-  teal: '#036A6A',
-  rose: '#9F403D',
-  amber: '#C2860B',
+  teal: CHESS_ACCENT.strategic,
+  rose: CHESS_ACCENT.defensive,
+  amber: CHESS_MUTED.defensive,
 };
 
 function detectTrendColor(data: SparklinePoint[]): 'teal' | 'rose' | 'amber' {

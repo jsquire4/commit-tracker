@@ -34,6 +34,10 @@ export interface OrgUnitHealth {
   costBandWeightedHeadcount: number;
   grade: HealthGrade;
   strategicAlignmentPct: number;
+  operationalPct: number;
+  defensivePct: number;
+  capabilityBuildingPct: number;
+  rallyCoveragePct: number;
   completionRate: number;
   trendDirection: string;
   weeksTrending: number;
@@ -78,6 +82,7 @@ export interface AlignmentDataPoint {
   operationalPct: number;
   defensivePct: number;
   capabilityBuildingPct: number;
+  rallyCoveragePct: number;
   totalCommitments: number;
 }
 
@@ -169,6 +174,8 @@ export interface PortcoSummary {
   overallGrade: HealthGrade;
   strategicAlignmentPct: number;
   completionRate: number;
+  rallyCoveragePct: number;
+  carryForwardRate: number;
   activeDriftSignals: number;
   headcount: number;
 }

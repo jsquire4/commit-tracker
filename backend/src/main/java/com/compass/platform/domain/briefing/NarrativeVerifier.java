@@ -1,6 +1,5 @@
 package com.compass.platform.domain.briefing;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +28,6 @@ public class NarrativeVerifier {
             "(?<!\\d)(\\d+(?:\\.\\d+)?)%(?!\\s*\\[)"
     );
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record CitationCheck(
             String ref,
             String claimedValue,
@@ -38,7 +36,6 @@ public class NarrativeVerifier {
             String tolerance
     ) {}
 
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public record VerificationResult(
             boolean passed,
             List<CitationCheck> checks,

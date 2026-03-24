@@ -21,6 +21,11 @@ const TIME_BLOCKS: { value: CompletionTimeBlock; label: string }[] = [
   { value: 'EOD', label: 'EOD' },
 ];
 
+export interface BulletEntry {
+  id: string;
+  text: string;
+}
+
 export interface AssignmentFormState {
   employeeId: string;
   title: string;
@@ -30,7 +35,7 @@ export interface AssignmentFormState {
   chessCategoryId: string;
   completionDay: CompletionDay | '';
   completionTimeBlock: CompletionTimeBlock | '';
-  bullets: string[];
+  bullets: BulletEntry[];
   notes: string;
 }
 
@@ -38,8 +43,22 @@ export function createEmptyFormState(): AssignmentFormState {
   return {
     employeeId: '', title: '', rallyCryId: '', rallyCryTitle: '',
     definingObjectiveId: '', chessCategoryId: '', completionDay: '',
-    completionTimeBlock: '', bullets: ['', ''], notes: '',
+    completionTimeBlock: '', bullets: [
+      { id: crypto.randomUUID(), text: '' },
+      { id: crypto.randomUUID(), text: '' },
+    ], notes: '',
   };
+}
+
+/** Derive CompletionHorizon from day + time block selections */
+function deriveCompletionHorizon(day: CompletionDay | '', timeBlock: CompletionTimeBlock | ''): CompletionHorizon {
+  if (day && timeBlock) {
+    // Specific day + time block is the most precise — map to a named horizon if EOW, else EOD
+    if (day === 'FRIDAY' && timeBlock === 'EOD') return 'EOW' as CompletionHorizon;
+    return 'EOD' as CompletionHorizon;
+  }
+  if (day === 'FRIDAY' || (!day && !timeBlock)) return 'EOW' as CompletionHorizon;
+  return 'EOD' as CompletionHorizon;
 }
 
 interface AssignWorkFormProps {
@@ -66,22 +85,34 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
   }, [open, initialState]);
 
   function updateBullet(index: number, value: string) {
-    setForm((prev) => { const next = [...prev.bullets]; next[index] = value; return { ...prev, bullets: next }; });
+    setForm((prev) => {
+      const next = prev.bullets.map((b, i) => i === index ? { ...b, text: value } : b);
+      return { ...prev, bullets: next };
+    });
   }
-  function addBullet() { if (form.bullets.length < 5) setForm((prev) => ({ ...prev, bullets: [...prev.bullets, ''] })); }
-  function removeBullet(index: number) { if (form.bullets.length > 2) setForm((prev) => ({ ...prev, bullets: prev.bullets.filter((_, i) => i !== index) })); }
+  function addBullet() {
+    if (form.bullets.length < 5) {
+      setForm((prev) => ({ ...prev, bullets: [...prev.bullets, { id: crypto.randomUUID(), text: '' }] }));
+    }
+  }
+  function removeBullet(index: number) {
+    if (form.bullets.length > 2) {
+      setForm((prev) => ({ ...prev, bullets: prev.bullets.filter((_, i) => i !== index) }));
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
     if (!form.employeeId) { setFormError('Please select a team member.'); return; }
     if (!form.title.trim()) { setFormError('Title is required.'); return; }
-    const nonEmptyBullets = form.bullets.filter((b) => b.trim().length > 0);
+    const nonEmptyBullets = form.bullets.map((b) => b.text).filter((t) => t.trim().length > 0);
     if (nonEmptyBullets.length < 2) { setFormError('At least 2 task bullets are required.'); return; }
+    const completionHorizon = deriveCompletionHorizon(form.completionDay, form.completionTimeBlock);
     try {
       await createMutation.mutateAsync({
         cycleId, title: form.title.trim(), bullets: nonEmptyBullets,
-        completionHorizon: 'EOW' as CompletionHorizon, assignedBy: managerId,
+        completionHorizon, assignedBy: managerId,
         forUserId: form.employeeId,
         ...(form.chessCategoryId ? { chessCategoryId: form.chessCategoryId } : {}),
         ...(form.completionDay ? { completionDay: form.completionDay as CompletionDay } : {}),
@@ -179,11 +210,11 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
                   </label>
                   <div className="flex flex-col gap-2">
                     {form.bullets.map((bullet, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
+                      <div key={bullet.id} className="flex items-center gap-2">
                         <span className="text-small text-muted w-4 text-right flex-shrink-0">{idx + 1}.</span>
                         <input
                           type="text"
-                          value={bullet}
+                          value={bullet.text}
                           onChange={(e) => updateBullet(idx, e.target.value)}
                           placeholder={idx < 2 ? `Task ${idx + 1}` : 'Add another task...'}
                           className="flex-1 bg-transparent border-0 border-b border-b-outline-variant px-0 py-2 text-[0.8125rem] text-on-surface placeholder:text-muted focus:outline-none focus:border-b-accent transition-colors duration-[var(--duration-fast)]"

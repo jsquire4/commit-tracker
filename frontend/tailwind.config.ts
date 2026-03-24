@@ -48,6 +48,9 @@ export default {
       },
       boxShadow: {
         whisper: '0 12px 32px -4px rgba(45, 52, 50, 0.06)',
+        'glow-green': '0 0 8px rgba(5, 150, 105, 0.3)',
+        'glow-amber': '0 0 8px rgba(194, 134, 11, 0.3)',
+        'glow-red': '0 0 8px rgba(159, 64, 61, 0.3)',
       },
       fontSize: {
         display: ['3.5rem', { lineHeight: '1.15', fontWeight: '400' }],

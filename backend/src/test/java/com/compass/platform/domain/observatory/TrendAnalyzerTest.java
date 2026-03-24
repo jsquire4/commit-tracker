@@ -164,7 +164,7 @@ class TrendAnalyzerTest {
         TrendAnalyzer.TrendResult result = TrendAnalyzer.analyzeDecline(values, 2.0);
 
         assertThat(result.declineWeeks()).isEqualTo(0);
-        assertThat(result.baselineValue()).isCloseTo(60.0, within(0.001));
+        assertThat(result.baselineValue()).isCloseTo(70.0, within(0.001));
         assertThat(result.currentValue()).isCloseTo(70.0, within(0.001));
     }
 

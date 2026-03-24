@@ -82,7 +82,8 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) 
   // backend does not include the manager in the members list.
   const managerPersonalRow: PersonHeatmapRow = {
     userId: row.managerId,
-    displayName: `${row.managerName} (you)`,
+    // Asterisk denotes team-averaged data, not personal data (see legend note below)
+    displayName: `${row.managerName} (you)*`,
     weekCells: row.weekCells,
   };
   const memberIds = new Set(row.members.map((m) => m.userId));
@@ -208,6 +209,8 @@ function HeatmapLegend() {
         />
         <span className="text-[11px] text-muted">No data</span>
       </div>
+      {/* Asterisk note */}
+      <span className="text-[10px] text-muted ml-auto italic">* Team-averaged data, not personal</span>
     </div>
   );
 }

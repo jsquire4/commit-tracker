@@ -67,10 +67,10 @@ class RcdoServiceTest {
     @Test
     void updateRallyCry_existingAndNotArchived_updates() {
         UUID id = UUID.randomUUID();
-        UUID orgId = UUID.randomUUID();
         AppUser actor = buildActor();
-        RallyCry existing = buildRallyCry(orgId, "Old Title");
-        RallyCry updated = buildRallyCry(orgId, "New Title");
+        UUID orgId = actor.getOrg().getId();
+        RallyCry existing = buildRallyCryForOrg(actor.getOrg(), "Old Title");
+        RallyCry updated = buildRallyCryForOrg(actor.getOrg(), "New Title");
 
         when(rallyCryRepository.findById(id)).thenReturn(Optional.of(existing));
         when(rallyCryRepository.save(any(RallyCry.class))).thenReturn(updated);
@@ -86,7 +86,7 @@ class RcdoServiceTest {
     void updateRallyCry_archived_throwsConflict() {
         UUID id = UUID.randomUUID();
         AppUser actor = buildActor();
-        RallyCry archived = buildArchivedRallyCry(UUID.randomUUID(), "Archived");
+        RallyCry archived = buildArchivedRallyCryForOrg(actor.getOrg(), "Archived");
 
         when(rallyCryRepository.findById(id)).thenReturn(Optional.of(archived));
 
@@ -98,9 +98,9 @@ class RcdoServiceTest {
     @Test
     void archiveRallyCry_setsArchivedAt_andWarnsIfReferenced() {
         UUID id = UUID.randomUUID();
-        UUID orgId = UUID.randomUUID();
         AppUser actor = buildActor();
-        RallyCry existing = buildRallyCry(orgId, "Q2 Rally");
+        UUID orgId = actor.getOrg().getId();
+        RallyCry existing = buildRallyCryForOrg(actor.getOrg(), "Q2 Rally");
 
         when(rallyCryRepository.findById(id)).thenReturn(Optional.of(existing));
         when(rallyCryRepository.save(any(RallyCry.class))).thenReturn(existing);
@@ -116,9 +116,9 @@ class RcdoServiceTest {
     @Test
     void archiveRallyCry_noReferences_returnsZeroWarnings() {
         UUID id = UUID.randomUUID();
-        UUID orgId = UUID.randomUUID();
         AppUser actor = buildActor();
-        RallyCry existing = buildRallyCry(orgId, "Q2 Rally");
+        UUID orgId = actor.getOrg().getId();
+        RallyCry existing = buildRallyCryForOrg(actor.getOrg(), "Q2 Rally");
 
         when(rallyCryRepository.findById(id)).thenReturn(Optional.of(existing));
         when(rallyCryRepository.save(any(RallyCry.class))).thenReturn(existing);
@@ -257,8 +257,20 @@ class RcdoServiceTest {
         return rc;
     }
 
+    private RallyCry buildRallyCryForOrg(Org org, String title) {
+        RallyCry rc = new RallyCry(org, title, null, 0);
+        rc.setId(UUID.randomUUID());
+        return rc;
+    }
+
     private RallyCry buildArchivedRallyCry(UUID orgId, String title) {
         RallyCry rc = buildRallyCry(orgId, title);
+        rc.setArchivedAt(Instant.now());
+        return rc;
+    }
+
+    private RallyCry buildArchivedRallyCryForOrg(Org org, String title) {
+        RallyCry rc = buildRallyCryForOrg(org, title);
         rc.setArchivedAt(Instant.now());
         return rc;
     }

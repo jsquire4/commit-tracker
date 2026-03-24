@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import type { CommitmentReconciliationDetail } from '@/types/reconciliation.types';
 import type { ReconciliationStatus } from '@/types/enums';
 import type { Commitment } from '@/types/commitment.types';
-import { CHESS_BAR_COLORS } from '@/constants/chess-colors';
+import { CHESS_BAR_COLORS, CHESS_MUTED } from '@/constants/chess-colors';
 import { HORIZON_LABELS } from '@/constants/horizon';
 import { STATUS_STYLES } from '@/constants/reconciliation-status';
 import { CommitmentStatusMarker } from './CommitmentStatusMarker';
@@ -46,8 +46,8 @@ export function CommitmentRow({ detail, cycleId, allCommitments, expanded, onTog
 
   // CHESS bar color
   const chessColor = commitment.chessCategoryName
-    ? CHESS_BAR_COLORS[commitment.chessCategoryName] ?? '#DCD9D4'
-    : '#DCD9D4';
+    ? CHESS_BAR_COLORS[commitment.chessCategoryName] ?? CHESS_MUTED.uncategorized
+    : CHESS_MUTED.uncategorized;
 
   // Status pill for collapsed view
   const statusPill = row.status ? STATUS_STYLES[row.status] : null;

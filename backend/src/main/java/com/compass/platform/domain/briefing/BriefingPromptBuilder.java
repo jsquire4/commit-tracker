@@ -22,7 +22,7 @@ public class BriefingPromptBuilder {
     // System prompts
     // ═══════════════════════════════════════════════════════════════
 
-    static final String WEEK_NARRATIVE_SYSTEM_PROMPT = """
+    private static final String WEEK_NARRATIVE_SYSTEM_PROMPT = """
             Generate a 2-sentence summary of this week's execution data. \
             Report data and change only. Use directional language (increased, declined, \
             held steady) not judgmental language. Do not evaluate performance. \
@@ -31,7 +31,7 @@ public class BriefingPromptBuilder {
             "chess strategies" or "chess categories." \
             Return plain text only — no JSON, no markdown, no bullet points.""";
 
-    static final String BRIEFING_SYSTEM_PROMPT = """
+    private static final String BRIEFING_SYSTEM_PROMPT = """
             You are the intelligence layer for Compass, an execution management platform \
             used by PE portfolio companies. You produce executive briefings that summarize \
             a week of team execution data.
@@ -60,7 +60,7 @@ public class BriefingPromptBuilder {
 
             Return ONLY the JSON object. No markdown fences, no extra text.""";
 
-    static final String CHAT_SYSTEM_PROMPT = """
+    private static final String CHAT_SYSTEM_PROMPT = """
             You are the Compass Intelligence assistant for a PE portfolio company's execution \
             management platform. You answer questions about weekly execution data — alignment, \
             completion, carry-forward, drift signals, and rally cry coverage.
@@ -73,7 +73,7 @@ public class BriefingPromptBuilder {
             - Keep answers concise — 2-5 sentences unless the user asks for detail.
             - When citing numbers, use the exact values from the data.""";
 
-    static final String PROGRAM_SUMMARY_SYSTEM_PROMPT = """
+    private static final String PROGRAM_SUMMARY_SYSTEM_PROMPT = """
             Summarize the organization's execution trajectory over the last {N} weeks. \
             2-3 sentences. Report data and change, do not evaluate performance.
 
@@ -85,7 +85,7 @@ public class BriefingPromptBuilder {
             - Do not use bullet points or headers. Write flowing prose.
             - Return only the narrative text. No JSON, no markdown, no extra commentary.""";
 
-    static final String TEAM_SUMMARY_SYSTEM_PROMPT = """
+    private static final String TEAM_SUMMARY_SYSTEM_PROMPT = """
             Summarize this manager's team execution data. Include 2-4 specific suggested \
             actions. Report data and change only.
 

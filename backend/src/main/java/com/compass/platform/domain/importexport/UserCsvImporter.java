@@ -180,7 +180,6 @@ public class UserCsvImporter {
 
         // Pass 2: resolve reports_to references
         rowNum = 1;
-        int reportsToErrors = 0;
         for (String[] row : rows) {
             rowNum++;
 
@@ -207,7 +206,6 @@ public class UserCsvImporter {
             if (manager == null) {
                 errors.add(new ImportError(rowNum, "reports_to_email",
                         "reports_to_email not found: " + reportsToEmail));
-                reportsToErrors++;
                 continue;
             }
 

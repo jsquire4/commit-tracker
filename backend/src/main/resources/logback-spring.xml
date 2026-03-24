@@ -11,7 +11,7 @@
         </root>
     </springProfile>
 
-    <springProfile name="!local">
+    <springProfile name="railway">
         <appender name="JSON" class="ch.qos.logback.core.ConsoleAppender">
             <encoder class="net.logstash.logback.encoder.LogstashEncoder">
                 <includeMdc>true</includeMdc>

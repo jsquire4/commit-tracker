@@ -51,7 +51,7 @@ export function HealthGradeIndicator({ grade, percentage }: HealthGradeIndicator
           config.bg,
           config.shadow,
           config.ring,
-          config.pulse ? 'pulse-slow' : '',
+          config.pulse ? 'animate-pulse-subtle' : '',
         ].join(' ')}
         role="img"
         aria-label={`Health grade: ${config.label} at ${String(Math.round(percentage))}%`}

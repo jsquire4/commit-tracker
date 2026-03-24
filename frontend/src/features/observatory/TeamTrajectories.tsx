@@ -5,11 +5,6 @@ import { useExecutiveHealth, useAlignmentTrend } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { OrgUnitHealth, AlignmentDataPoint } from '@/types';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
-
-// Low-specificity detection is driven by backend signals, not hardcoded names.
-const LOW_SPECIFICITY_MANAGERS = new Set<string>();
-
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function computeDelta(data: AlignmentDataPoint[]): number | null {
@@ -107,7 +102,6 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
 
   const sparklineData = trendData ?? [];
   const delta = computeDelta(sparklineData);
-  const hasLowSpecificity = LOW_SPECIFICITY_MANAGERS.has(unit.managerName);
 
   function handleClick() {
     void navigate(`/team?managerId=${unit.managerId}`);
@@ -130,21 +124,12 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
       style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'backwards' }}
       aria-label={`View ${unit.managerName}'s team trajectories`}
     >
-      {/* Header: name + low specificity pill */}
+      {/* Header: name */}
       <div className="flex items-start justify-between gap-2 min-w-0">
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <p className="text-sm font-semibold text-on-surface truncate">
-              {unit.managerName}
-            </p>
-            {hasLowSpecificity && (
-              <span
-                className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium leading-none flex-shrink-0 bg-surface-container text-on-surface-variant"
-              >
-                Low specificity detected
-              </span>
-            )}
-          </div>
+          <p className="text-sm font-semibold text-on-surface truncate">
+            {unit.managerName}
+          </p>
           <p className="text-xs text-muted mt-0.5 truncate">{unit.role}</p>
         </div>
         <span className="text-xs text-muted flex-shrink-0 tabular-nums">
@@ -159,7 +144,7 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
           <span className="text-[10px] text-muted uppercase tracking-wide">RC Coverage</span>
           <div className="flex items-center gap-1">
             <span className="text-sm font-semibold text-on-surface tabular-nums">
-              {Math.round(unit.strategicAlignmentPct)}%
+              {Math.round(unit.rallyCoveragePct)}%
             </span>
             <DeltaArrow delta={delta} />
           </div>

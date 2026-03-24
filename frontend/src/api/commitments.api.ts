@@ -17,6 +17,7 @@ export async function getCommitments(
     cycleId,
     ...filters,
   });
+  // NOTE: Pagination data discarded — callers see at most `size` commitments per request
   return page.items;
 }
 
@@ -43,7 +44,7 @@ export async function reorderCommitments(
   cycleId: string,
   orderedIds: string[]
 ): Promise<void> {
-  await apiClient.put(`${BASE}/reorder`, { cycleId, commitmentIds: orderedIds });
+  await apiClient.put(`${BASE}/reorder?cycleId=${cycleId}`, { commitmentIds: orderedIds });
 }
 
 export async function createUnplannedCommitment(

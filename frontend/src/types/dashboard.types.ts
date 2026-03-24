@@ -71,6 +71,7 @@ export interface DashboardFilters {
   cycleWeekStart?: string;
   teamMemberId?: string;
   rcdoId?: string;
+  rcdoType?: string;
   includeSubtree?: boolean;
 }
 

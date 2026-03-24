@@ -57,10 +57,8 @@ class RcdoCsvImporterTest {
                 csv.getBytes(StandardCharsets.UTF_8));
 
         when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
-        when(rallyCryRepository.findByOrgIdOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
+        when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
         when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNull(orgId)).thenReturn(Collections.emptyList());
-        when(outcomeRepository.findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(any()))
-                .thenReturn(Collections.emptyList());
 
         RallyCry savedRc = RallyCry.builder().org(org).title("Dominate Market").sortOrder(0).build();
         when(rallyCryRepository.save(any(RallyCry.class))).thenReturn(savedRc);
@@ -91,7 +89,7 @@ class RcdoCsvImporterTest {
                 csv.getBytes(StandardCharsets.UTF_8));
 
         when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
-        when(rallyCryRepository.findByOrgIdOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
+        when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
         when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNull(orgId)).thenReturn(Collections.emptyList());
 
         RallyCry savedRc = RallyCry.builder().org(org).title("Win Together").sortOrder(0).build();
@@ -123,7 +121,7 @@ class RcdoCsvImporterTest {
         AppUser owner = new AppUser(org, "owner@example.com", "Owner", UserRole.DIRECTOR, null);
 
         when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
-        when(rallyCryRepository.findByOrgIdOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
+        when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
         when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNull(orgId)).thenReturn(Collections.emptyList());
         when(userRepository.findByOrgIdAndEmail(orgId, "owner@example.com")).thenReturn(Optional.of(owner));
 
@@ -151,7 +149,7 @@ class RcdoCsvImporterTest {
                 csv.getBytes(StandardCharsets.UTF_8));
 
         when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
-        when(rallyCryRepository.findByOrgIdOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
+        when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId)).thenReturn(Collections.emptyList());
         when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNull(orgId)).thenReturn(Collections.emptyList());
         when(userRepository.findByOrgIdAndEmail(orgId, "ghost@example.com")).thenReturn(Optional.empty());
 

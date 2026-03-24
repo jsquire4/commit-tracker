@@ -74,14 +74,6 @@ public class TeamActivationService {
         return freshUser.getOrg().isActive();
     }
 
-    /**
-     * Get all users in an org that have commit_module_enabled = TRUE.
-     */
-    @Transactional(readOnly = true)
-    public List<AppUser> getActivatedUsers(UUID orgId) {
-        return userRepository.findByOrgIdAndCommitModuleEnabledTrue(orgId);
-    }
-
     // -------------------------------------------------------------------------
     // Private helpers
     // -------------------------------------------------------------------------

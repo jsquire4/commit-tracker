@@ -22,12 +22,7 @@ export function ReconciliationBottomBar({
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 z-50 border-t border-outline-variant"
-      style={{
-        background: 'rgba(255, 255, 255, 0.92)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-      }}
+      className="fixed bottom-0 left-0 right-0 z-50 border-t border-outline-variant bg-white/[0.92] backdrop-blur-[20px]"
     >
       <div className="max-w-[960px] mx-auto px-8 py-3 flex items-center justify-between">
         {/* Progress */}

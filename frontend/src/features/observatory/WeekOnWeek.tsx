@@ -97,7 +97,7 @@ function buildRows(
       values: columns.map((col) => {
         const p = alignMap.get(col.cycleId);
         if (!p) return null;
-        return fmt(p.strategicPct, true);
+        return fmt(p.rallyCoveragePct, true);
       }),
     },
     {
@@ -261,7 +261,7 @@ export function WeekOnWeek({ weekCount }: WeekOnWeekProps) {
                     padding: '8px 4px',
                     minWidth: '48px',
                     whiteSpace: 'nowrap',
-                    background: col.isEventCycle ? '#F3F3F1' : 'var(--color-surface-lowest)',
+                    background: col.isEventCycle ? 'var(--color-surface-variant)' : 'var(--color-surface-lowest)',
                   }}
                   title={col.isEventCycle ? 'Significant event cycle' : undefined}
                 >
@@ -304,7 +304,7 @@ export function WeekOnWeek({ weekCount }: WeekOnWeekProps) {
                         padding: '8px 4px',
                         minWidth: '48px',
                         fontVariantNumeric: 'tabular-nums',
-                        background: col?.isEventCycle ? '#F3F3F1' : 'transparent',
+                        background: col?.isEventCycle ? 'var(--color-surface-variant)' : 'transparent',
                         color: 'var(--color-on-surface)',
                       }}
                     >

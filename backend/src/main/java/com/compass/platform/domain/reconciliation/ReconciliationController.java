@@ -64,8 +64,8 @@ public class ReconciliationController {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         ReconciliationView view = reconciliationService.getReconciliationView(cycleId, actor);
 
-        int commitmentCount = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId).size();
+        int commitmentCount = (int) commitmentRepository
+                .countByOrgIdAndCycleId(actor.getOrg().getId(), cycleId);
         CycleResponse cycleResponse = cycleMapper.toResponse(view.cycle(), commitmentCount);
 
         List<ReconciliationViewResponse.CommitmentReconciliationDetail> details =
@@ -138,8 +138,8 @@ public class ReconciliationController {
         // Transition to RECONCILED state
         TransitionRequest transitionRequest = new TransitionRequest(CycleState.RECONCILED, "Reconciliation complete");
         var cycle = cycleService.transition(cycleId, transitionRequest, actor);
-        int commitmentCount = commitmentRepository
-                .findByOrgIdAndCycleIdOrderByPriorityRankAsc(actor.getOrg().getId(), cycleId).size();
+        int commitmentCount = (int) commitmentRepository
+                .countByOrgIdAndCycleId(actor.getOrg().getId(), cycleId);
         return ResponseEntity.ok(ApiResponse.of(cycleMapper.toResponse(cycle, commitmentCount)));
     }
 }

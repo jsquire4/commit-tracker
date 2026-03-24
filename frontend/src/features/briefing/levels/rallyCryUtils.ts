@@ -107,7 +107,8 @@ export function buildRallyCryCards(
 
     const commitRatio = totalHeadcount > 0 ? rcCommitments.length / totalHeadcount : 0;
     let status: RallyCryStatus;
-    if (rcCommitments.length === 0 || commitRatio < 0.05) status = 'OFF_TRACK';
+    // OFF_TRACK when fewer than 15% of team members have commitments linked to this rally cry
+    if (rcCommitments.length === 0 || commitRatio < 0.15) status = 'OFF_TRACK';
     else if (deduplicatedUncovered.length > 0) status = 'AT_RISK';
     else status = 'ON_TRACK';
 

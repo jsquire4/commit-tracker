@@ -24,6 +24,31 @@ public class TrendAnalyzer {
     ) {}
 
     /**
+     * Count consecutive improving weeks from the most recent data point backward.
+     * Mirrors the logic of {@link #analyzeDecline} but in the upward direction.
+     *
+     * @param values    Chronological list of metric values (oldest → newest).
+     * @param tolerance Minimum absolute change that counts as an improvement.
+     * @return number of consecutive weeks where the metric improved (0 if no streak).
+     */
+    public static int countImprovingWeeks(List<Double> values, double tolerance) {
+        if (values == null || values.size() < 2) {
+            return 0;
+        }
+        int improvingWeeks = 0;
+        for (int i = values.size() - 2; i >= 0; i--) {
+            double prev = values.get(i);
+            double next = values.get(i + 1);
+            if (next - prev > tolerance) {
+                improvingWeeks++;
+            } else {
+                break;
+            }
+        }
+        return improvingWeeks;
+    }
+
+    /**
      * Analyse a chronological sequence of metric values (oldest first, newest last) for
      * consecutive decline.
      *
@@ -61,14 +86,11 @@ public class TrendAnalyzer {
             }
         }
 
-        // Baseline is the value at the start of the decline streak (or the first value if no
-        // decline was found — used to compare against the current level).
-        double baselineValue;
-        if (declineWeeks > 0) {
-            baselineValue = values.get(values.size() - 1 - declineWeeks);
-        } else {
-            baselineValue = values.get(0);
-        }
+        // Baseline is the value at the start of the decline streak.
+        // When there is no decline streak, use currentValue (the latest reading) as the baseline
+        // so that callers comparing baseline vs current see no delta rather than a misleading
+        // comparison against the oldest data point.
+        double baselineValue = declineWeeks > 0 ? values.get(values.size() - 1 - declineWeeks) : currentValue;
 
         // Determine overall direction based on first vs last value.
         TrendDirection direction;

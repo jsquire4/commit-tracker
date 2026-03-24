@@ -25,9 +25,12 @@ import java.util.UUID;
 /**
  * Production token validator — active for all profiles EXCEPT "local" and "test".
  * Validates JWT signature using RS256 (asymmetric) with the configured public key.
+ *
+ * <p>NOTE: The "railway" profile is intentionally NOT excluded here — RS256 validation
+ * must be active in the Railway production environment.
  */
 @Component
-@Profile("!local & !test & !railway")
+@Profile("!local & !test")
 public class Rs256TokenValidator implements TokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(Rs256TokenValidator.class);

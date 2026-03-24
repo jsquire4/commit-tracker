@@ -210,8 +210,14 @@ public class CommitmentService {
         if (!commitment.getOrg().getId().equals(actor.getOrg().getId())) {
             throw new AccessDeniedException("Access denied: commitment belongs to a different org");
         }
-        if (!commitment.getUser().getId().equals(actor.getId())) {
-            throw new AccessDeniedException("Only the commitment owner can update it");
+        boolean isOwner = commitment.getUser().getId().equals(actor.getId());
+        boolean isAssigner = commitment.getAssignedBy() != null
+                && commitment.getAssignedBy().getId().equals(actor.getId());
+        boolean isDirectorOrAbove = actor.getRole() == com.compass.platform.domain.UserRole.DIRECTOR
+                || actor.getRole() == com.compass.platform.domain.UserRole.VP
+                || actor.getRole() == com.compass.platform.domain.UserRole.EXECUTIVE;
+        if (!isOwner && !isAssigner && !isDirectorOrAbove) {
+            throw new AccessDeniedException("Only the commitment owner, the assigning manager, or a Director+ can update it");
         }
 
         if (commitment.getCycle().getState() != CycleState.DRAFT) {
@@ -280,8 +286,14 @@ public class CommitmentService {
         Commitment commitment = commitmentRepository.findById(commitmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Commitment", commitmentId));
 
-        if (!commitment.getUser().getId().equals(actor.getId())) {
-            throw new AccessDeniedException("Only the commitment owner can delete it");
+        boolean isOwner = commitment.getUser().getId().equals(actor.getId());
+        boolean isAssigner = commitment.getAssignedBy() != null
+                && commitment.getAssignedBy().getId().equals(actor.getId());
+        boolean isDirectorOrAbove = actor.getRole() == com.compass.platform.domain.UserRole.DIRECTOR
+                || actor.getRole() == com.compass.platform.domain.UserRole.VP
+                || actor.getRole() == com.compass.platform.domain.UserRole.EXECUTIVE;
+        if (!isOwner && !isAssigner && !isDirectorOrAbove) {
+            throw new AccessDeniedException("Only the commitment owner, the assigning manager, or a Director+ can delete it");
         }
 
         if (commitment.getCycle().getState() != CycleState.DRAFT) {
@@ -350,11 +362,14 @@ public class CommitmentService {
     public Page<Commitment> getForCycle(UUID cycleId, CommitmentFilters filters, Pageable pageable, AppUser actor) {
         UUID userId = filters != null ? filters.userId() : null;
         UUID rallyCryId = filters != null ? filters.rallyCryId() : null;
+        UUID definingObjectiveId = filters != null ? filters.definingObjectiveId() : null;
+        UUID outcomeId = filters != null ? filters.outcomeId() : null;
         UUID chessCategoryId = filters != null ? filters.chessCategoryId() : null;
         UUID assignedById = filters != null ? filters.assignedBy() : null;
 
         List<Commitment> dbFiltered = commitmentRepository.findByCycleIdWithFilters(
-                actor.getOrg().getId(), cycleId, userId, rallyCryId, chessCategoryId, assignedById);
+                actor.getOrg().getId(), cycleId, userId, rallyCryId, definingObjectiveId, outcomeId,
+                chessCategoryId, assignedById);
 
         // Apply visibility filter (role-based + RCDO-owner — cannot be pushed to DB)
         List<Commitment> visible = visibilityEnforcer.filterVisible(actor, dbFiltered);

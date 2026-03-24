@@ -50,7 +50,7 @@ function deriveDriftSignal(drift: DriftReport | undefined): SignalCard | null {
   };
 }
 
-function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined, strategicAlignmentTarget: number): SignalCard | null {
+function deriveLowStrategicSignal(alignment: AlignmentDataPoint[] | undefined, strategicAlignmentTarget: number): SignalCard | null {
   if (!alignment || alignment.length < 2) return null;
 
   const recent = alignment.slice(-4);
@@ -65,9 +65,9 @@ function deriveSpecificitySignal(alignment: AlignmentDataPoint[] | undefined, st
   const weekLabel = alignment[alignment.length - 1]?.cycleLabel ?? 'recent';
 
   return {
-    type: 'Specificity Pattern',
+    type: 'Strategic Alignment',
     detectedLabel: `Detected ${weekLabel} · Active`,
-    title: 'Low strategic specificity in recent cycles',
+    title: 'Low Strategic Alignment in recent cycles',
     body: 'A significant share of commitments fall outside strategic categories. Operational and defensive work is absorbing capacity.',
     metrics: [
       { value: `${Math.round(avgStrategic)}%`, label: 'Strategic avg' },
@@ -152,8 +152,7 @@ function MetricBox({ value, label }: SignalMetric) {
 function SignalCardView({ card }: { card: SignalCard }) {
   return (
     <div
-      className="bg-surface-lowest border border-outline-variant rounded-lg flex flex-col"
-      style={{ borderLeft: '3px solid var(--color-on-surface-variant)' }}
+      className="bg-surface-lowest border border-outline-variant rounded-lg flex flex-col border-l-[3px] border-l-on-surface-variant"
     >
       {/* Header */}
       <div className="flex flex-wrap items-center gap-2 px-4 pt-4 pb-0">
@@ -240,7 +239,7 @@ export function ObservatorySignals({ weekCount }: ObservatorySignalsProps) {
   const cards: SignalCard[] = [];
   if (!isLoading) {
     const driftCard = deriveDriftSignal(drift);
-    const specificityCard = deriveSpecificitySignal(alignment, strategicAlignmentTarget);
+    const specificityCard = deriveLowStrategicSignal(alignment, strategicAlignmentTarget);
     const distributionCard = deriveWorkDistributionSignal(completion, darkWorkWarningPct);
     const displacementCard = deriveDisplacementSignal(displacement);
 

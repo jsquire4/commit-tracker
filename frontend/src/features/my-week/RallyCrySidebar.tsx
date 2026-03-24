@@ -4,15 +4,14 @@ import type { Commitment } from '@/types';
 
 interface RallyCrySidebarProps {
   commitments: Commitment[];
-  onLinkClick?: (rallyCryId: string) => void;
 }
 
-// NOTE (M8 — known limitation): This sidebar always loads the current RCDO tree via
+// NOTE (known limitation): This sidebar always loads the current RCDO tree via
 // useRcdoTree(), which is not cycle-scoped. When viewing historical weeks, the rally
 // cries and defining objectives shown here reflect the current org structure, not the
 // structure that was active during that cycle. Fixing this requires a cycle-aware RCDO
-// API endpoint and is out of scope for the current implementation.
-export function RallyCrySidebar({ commitments, onLinkClick }: RallyCrySidebarProps) {
+// API endpoint and is deferred pending API support.
+export function RallyCrySidebar({ commitments }: RallyCrySidebarProps) {
   const { data: tree, isLoading } = useRcdoTree();
 
   if (isLoading) {
@@ -50,17 +49,10 @@ export function RallyCrySidebar({ commitments, onLinkClick }: RallyCrySidebarPro
       {rallyCries.map((rc) => {
         return (
           <div key={rc.id} className="bg-surface-lowest rounded-sm p-4">
-            <div className="flex items-center justify-between mb-2">
+            <div className="mb-2">
               <span className="text-[0.9375rem] font-medium text-on-surface">
                 {rc.title}
               </span>
-              <button
-                type="button"
-                onClick={() => onLinkClick?.(rc.id)}
-                className="text-small text-accent font-medium hover:text-accent-dark transition-colors duration-[var(--duration-fast)]"
-              >
-                Link &rarr;
-              </button>
             </div>
 
             {rc.description && (

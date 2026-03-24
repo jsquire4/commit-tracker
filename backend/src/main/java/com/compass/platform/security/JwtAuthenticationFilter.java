@@ -62,12 +62,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
 
                         // Set MDC fields for structured logging
-                        MDC.put("userId", user.getId().toString());
-                        MDC.put("orgId", user.getOrg().getId().toString());
+                        String userIdStr = user.getId().toString();
+                        String orgIdStr = user.getOrg().getId().toString();
+                        MDC.put("userId", userIdStr);
+                        MDC.put("orgId", orgIdStr);
                         String requestId = request.getHeader("X-Request-Id");
                         if (requestId != null) {
                             MDC.put("requestId", requestId);
                         }
+
+                        // Also store as request attributes so RequestLoggingFilter can read
+                        // them in its finally block after MDC and SecurityContext are cleared.
+                        request.setAttribute("_auth_userId", userIdStr);
+                        request.setAttribute("_auth_orgId", orgIdStr);
                     } else {
                         log.debug("JWT references unknown userId: {}", claims.userId());
                     }

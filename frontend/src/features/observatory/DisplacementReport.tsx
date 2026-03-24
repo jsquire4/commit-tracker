@@ -8,6 +8,7 @@ import {
   Cell,
 } from 'recharts';
 import type { DisplacementSummary, CategoryCount } from '@/types';
+import { CHESS_ACCENT, CHESS_MUTED } from '@/constants/chess-colors';
 
 interface DisplacementReportProps {
   summary: DisplacementSummary;
@@ -24,13 +25,13 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  MANAGER_REASSIGNED: '#036A6A',
-  PRODUCTION_EMERGENCY: '#9F403D',
-  RESOURCE_BLOCKED: '#C2860B',
-  SCOPE_CHANGE: '#455F87',
-  DEPRIORITIZED: '#5A605E',
-  EXTERNAL_DEPENDENCY: '#94A3B8',
-  OTHER: '#E8E8E6',
+  MANAGER_REASSIGNED: CHESS_ACCENT.strategic,
+  PRODUCTION_EMERGENCY: CHESS_ACCENT.defensive,
+  RESOURCE_BLOCKED: CHESS_ACCENT.operational,
+  SCOPE_CHANGE: CHESS_MUTED.operational,
+  DEPRIORITIZED: CHESS_MUTED.defensive,
+  EXTERNAL_DEPENDENCY: CHESS_MUTED.capability,
+  OTHER: CHESS_MUTED.uncategorized,
 };
 
 interface TooltipPayload {
@@ -96,7 +97,7 @@ export function DisplacementReport({ summary }: DisplacementReportProps) {
                   type="number"
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#5A605E' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
                 />
                 <YAxis
                   type="category"
@@ -104,7 +105,7 @@ export function DisplacementReport({ summary }: DisplacementReportProps) {
                   width={112}
                   tickLine={false}
                   axisLine={false}
-                  tick={{ fontSize: 11, fill: '#5A605E' }}
+                  tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="count" radius={[0, 4, 4, 0]}>

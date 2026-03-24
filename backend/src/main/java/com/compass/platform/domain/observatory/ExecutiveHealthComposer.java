@@ -241,6 +241,7 @@ public class ExecutiveHealthComposer {
     }
 
     private int computeCostBandWeightedHeadcount(AppUser leader) {
+        // NOTE: Only counts direct reports, not full subtree. Subtree headcount uses findSubtreeUserIds.
         if (leader.getDirectReports() == null) {
             return 0;
         }
@@ -264,13 +265,24 @@ public class ExecutiveHealthComposer {
 
     /**
      * Count consecutive weeks in the current trend direction using {@link TrendAnalyzer}.
+     *
+     * <p>Returns a signed integer representing the current streak:
+     * <ul>
+     *   <li>Positive — consecutive improving weeks (e.g. +3 means 3 weeks improving)</li>
+     *   <li>Negative — consecutive declining weeks (e.g. -2 means 2 weeks declining)</li>
+     *   <li>Zero — no streak / stable</li>
+     * </ul>
      */
     private int computeWeeksTrending(List<AlignmentDataPoint> dataPoints) {
         List<Double> values = dataPoints.stream()
                 .map(AlignmentDataPoint::strategicPct)
                 .toList();
         TrendAnalyzer.TrendResult result = TrendAnalyzer.analyzeDecline(values, 2.0);
-        return result.declineWeeks();
+        if (result.declineWeeks() > 0) {
+            return -result.declineWeeks(); // negative = declining
+        }
+        int improvingWeeks = TrendAnalyzer.countImprovingWeeks(values, 2.0);
+        return improvingWeeks; // positive = improving, 0 = stable
     }
 
     /**

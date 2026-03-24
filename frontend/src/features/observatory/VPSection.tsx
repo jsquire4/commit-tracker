@@ -49,27 +49,41 @@ export function buildVPGroups(
       }];
     }
 
-    const allManagers = [...nonVps].sort((a, b) => a.strategicAlignmentPct - b.strategicAlignmentPct);
+    // Without an orgTree we cannot walk the reportsTo chain to assign managers to VPs.
+    // Fall back to a single "All Teams" bucket for non-VP managers.
+    const vpGroupMap = new Map<string, OrgUnitHealth[]>();
+    for (const vp of vps) vpGroupMap.set(vp.managerId, []);
+
+    const ungrouped: OrgUnitHealth[] = [];
+    for (const mgr of nonVps) {
+      // OrgUnitHealth may carry a reportsTo field in future; for now fall back to ungrouped
+      ungrouped.push(mgr);
+    }
+
     const result: VPGroup[] = vps.map((vp) => ({
       vpId: vp.managerId,
       vpName: vp.managerName,
       vpGrade: vp.grade,
       vpTrend: vp.trendDirection,
       vpAlignment: vp.strategicAlignmentPct,
-      managers: [],
+      managers: vpGroupMap.get(vp.managerId) ?? [],
     }));
-    if (allManagers.length > 0) {
-      const avg = allManagers.reduce((s, u) => s + u.strategicAlignmentPct, 0) / allManagers.length;
+
+    if (ungrouped.length > 0) {
+      const sortedUngrouped = [...ungrouped].sort((a, b) => a.strategicAlignmentPct - b.strategicAlignmentPct);
+      const avg = sortedUngrouped.reduce((s, u) => s + u.strategicAlignmentPct, 0) / sortedUngrouped.length;
       result.push({
         vpId: '__all_teams__',
         vpName: 'All Teams',
         vpGrade: gradeFromAlignment(avg, alignmentTarget, warningPct),
         vpTrend: 'FLAT',
         vpAlignment: avg,
-        managers: allManagers,
+        managers: sortedUngrouped,
       });
     }
-    return result.filter((g) => g.managers.length > 0 || g.vpId.startsWith('__'));
+
+    // Remove VP header groups that have no managers (they appear as VP cards, not sections)
+    return result.filter((g) => g.managers.length > 0);
   }
 
   const userMap = new Map<string, User>();

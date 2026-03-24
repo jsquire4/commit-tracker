@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { Commitment } from '@/types/commitment.types';
 
 interface DisplacementQuickSignalProps {
@@ -21,8 +20,6 @@ export function DisplacementQuickSignal({
   onSelectedChange,
   disabled = false,
 }: DisplacementQuickSignalProps) {
-  const [expanded, setExpanded] = useState(false);
-
   function handleCheckbox(id: string, checked: boolean) {
     if (checked) {
       onSelectedChange([...selectedIds, id]);
@@ -32,7 +29,7 @@ export function DisplacementQuickSignal({
   }
 
   return (
-    <div className="mt-4 p-4 rounded-sm bg-[#FFF8E1] border border-[#F0D9A8]">
+    <div className="mt-4 p-4 rounded-sm bg-warning/10 border border-warning/30">
       <div className="flex items-center gap-2 mb-3">
         <svg
           className="w-4 h-4 flex-shrink-0 text-warning"
@@ -48,7 +45,7 @@ export function DisplacementQuickSignal({
           <line x1="17" y1="4" x2="7" y2="4" />
           <line x1="7" y1="20" x2="17" y2="20" />
         </svg>
-        <p className="text-sm font-semibold text-[#92650A]">
+        <p className="text-sm font-semibold text-warning">
           What took priority instead?
         </p>
       </div>
@@ -60,7 +57,6 @@ export function DisplacementQuickSignal({
           disabled={disabled}
           onClick={() => {
             onFlagChange(!flagged);
-            setExpanded(!flagged);
           }}
           className={[
             'inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-full',
@@ -69,7 +65,7 @@ export function DisplacementQuickSignal({
             disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer',
             flagged
               ? 'bg-error text-white border-error'
-              : 'bg-surface-lowest text-error border-[#E8B4B2] hover:bg-[#FFF0EF]',
+              : 'bg-surface-lowest text-error border-error/30 hover:bg-error/10',
           ].join(' ')}
           title="One-click signal: unplanned work displaced this commitment"
         >
@@ -95,7 +91,7 @@ export function DisplacementQuickSignal({
       </div>
 
       {/* Specific displacing commitment(s) selector */}
-      {(flagged || expanded) && otherCommitments.length > 0 && (
+      {flagged && otherCommitments.length > 0 && (
         <div>
           <label className="text-sm font-medium text-on-surface-variant block mb-1">
             Which specific work displaced this?
@@ -122,7 +118,7 @@ export function DisplacementQuickSignal({
                     className="w-4 h-4 rounded-sm border-[1.5px] border-outline-variant text-accent focus:ring-accent accent-accent"
                   />
                   {c.isUnplanned && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase rounded bg-[#EEF2F8] text-navy">
+                    <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-bold tracking-widest uppercase rounded bg-surface-container text-navy">
                       Unplanned
                     </span>
                   )}

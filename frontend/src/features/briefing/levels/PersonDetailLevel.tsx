@@ -53,7 +53,7 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
     return result;
   }, [personCommitments]);
 
-  const strategicCount = personCommitments.filter((c) => c.chessCategoryName?.toLowerCase() === 'strategic').length;
+  const strategicCount = personCommitments.filter((c) => c.chessCategoryName?.toUpperCase() === 'STRATEGIC').length;
 
   if (isLoading) {
     return (

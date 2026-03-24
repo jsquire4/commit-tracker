@@ -51,8 +51,6 @@ function buildReconcileRequest(
   // Wire quick-signal displacement data
   if (displacementFlagged && displacementSelectedIds.length > 0) {
     base.displacingCommitmentId = displacementSelectedIds[0]!;
-  }
-  if (displacementFlagged && displacementSelectedIds.length > 0) {
     base.displacementDetail = [
       base.displacementDetail ?? '',
       `Displaced by: ${displacementSelectedIds.join(', ')}`,

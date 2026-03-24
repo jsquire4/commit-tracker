@@ -27,7 +27,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(authorize -> authorize
                 .requestMatchers("/actuator/health", "/actuator/info", "/api/health").permitAll()
                 .requestMatchers("/api/**").authenticated()
-                .anyRequest().permitAll())
+                .anyRequest().authenticated())
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             // CORS handled by CorsConfig bean which reads allowed-origins from config

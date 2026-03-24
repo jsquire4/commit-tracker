@@ -34,8 +34,8 @@ public class CsvImportController {
     }
 
     /**
-     * Validates that the uploaded file has an acceptable CSV MIME type.
-     * Rejects other types with 415 Unsupported Media Type.
+     * Validates that the actor has DIRECTOR or above role.
+     * Throws {@link org.springframework.security.access.AccessDeniedException} otherwise.
      */
     private void requireDirectorOrAbove(AppUser actor) {
         UserRole role = actor.getRole();
@@ -44,6 +44,10 @@ public class CsvImportController {
         }
     }
 
+    /**
+     * Validates that the uploaded file has an acceptable CSV MIME type.
+     * Rejects other types with 415 Unsupported Media Type.
+     */
     private void validateCsvContentType(MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType != null

@@ -306,7 +306,7 @@ export function AdminTab() {
                       <button
                         type="button"
                         onClick={() => { setArchiveTarget(user); }}
-                        className="text-[0.75rem] font-medium text-error bg-transparent border-0 cursor-pointer relative transition-colors duration-[150ms] hover:text-[#8A3634] after:content-[''] after:absolute after:bottom-[-1px] after:left-0 after:w-0 after:h-px after:bg-current after:transition-[width] after:duration-[200ms] hover:after:w-full"
+                        className="text-[0.75rem] font-medium text-error bg-transparent border-0 cursor-pointer relative transition-colors duration-[150ms] hover:text-error/80 after:content-[''] after:absolute after:bottom-[-1px] after:left-0 after:w-0 after:h-px after:bg-current after:transition-[width] after:duration-[200ms] hover:after:w-full"
                       >
                         Deactivate
                       </button>

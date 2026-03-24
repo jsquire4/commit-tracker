@@ -120,10 +120,13 @@ class CommitmentCsvImporterTest {
         when(cycleRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(Optional.of(activeCycle));
         when(userRepository.findByOrgIdAndEmail(orgId, "user@example.com")).thenReturn(Optional.of(user));
         when(chessCategoryRepository.findByOrgIdAndName(orgId, "Bishop")).thenReturn(Optional.of(bishop));
+        // Pre-load stubs for RCDO maps (importer pre-loads all RCDO data once)
+        rc.setId(UUID.randomUUID());
+        doObj.setId(UUID.randomUUID());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId)).thenReturn(List.of(rc));
-        when(definingObjectiveRepository.findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(any()))
+        when(definingObjectiveRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of(doObj));
-        when(outcomeRepository.findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(any()))
+        when(outcomeRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of(outcome));
         when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> inv.getArgument(0));
 

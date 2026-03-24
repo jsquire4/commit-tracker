@@ -108,7 +108,7 @@ export function StrategyModal({
               {breadcrumb.length > 0 && (
                 <p className="mt-1 text-[0.8125rem] text-on-surface-variant">
                   {breadcrumb.map((part, i) => (
-                    <span key={i}>
+                    <span key={part.label}>
                       {i > 0 && <span className="mx-1 text-muted">&rsaquo;</span>}
                       <span className="text-muted">{part.label}: </span>
                       <strong className="text-accent">{part.value}</strong>

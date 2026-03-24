@@ -11,7 +11,7 @@ export interface User {
   costBandId: string | null;
   costBandName: string | null;
   costBandTier: number | null;
-  weeklyCapacityHours: number | null;
+  weeklyCapacityHours: number | null; // Backend: BigDecimal — serialized as JSON number
 }
 
 export interface TeamMember extends User {

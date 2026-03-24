@@ -74,34 +74,28 @@ export function useReorderCommitments() {
       // Cancel in-flight queries so they don't overwrite the optimistic update
       await queryClient.cancelQueries({ queryKey: ['commitments', cycleId] });
 
-      // Snapshot previous value
-      const previous = queryClient.getQueryData<Commitment[]>([
-        'commitments',
-        cycleId,
-        undefined,
-      ]);
+      // Snapshot previous value — use partial key match to find cached data regardless of filter values
+      const allCached = queryClient.getQueriesData<Commitment[]>({ queryKey: ['commitments', cycleId] });
+      const [firstKey, previous] = allCached[0] ?? [undefined, undefined];
 
       // Optimistically reorder
-      if (previous) {
+      if (previous && firstKey) {
         const reordered = orderedIds
           .map((id) => previous.find((c) => c.id === id))
           .filter((c): c is Commitment => c !== undefined);
 
-        queryClient.setQueryData(['commitments', cycleId, undefined], reordered);
+        queryClient.setQueryData(firstKey, reordered);
       }
 
-      return { previous, cycleId };
+      return { previous, firstKey, cycleId };
     },
     onError: (
       _err: unknown,
       _vars: ReorderVariables,
-      context: { previous: Commitment[] | undefined; cycleId: string } | undefined
+      context: { previous: Commitment[] | undefined; firstKey: readonly unknown[] | undefined; cycleId: string } | undefined
     ) => {
-      if (context?.previous) {
-        queryClient.setQueryData(
-          ['commitments', context.cycleId, undefined],
-          context.previous
-        );
+      if (context?.previous && context.firstKey) {
+        queryClient.setQueryData(context.firstKey, context.previous);
       }
     },
     onSettled: (

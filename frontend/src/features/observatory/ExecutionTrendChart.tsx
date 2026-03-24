@@ -252,14 +252,14 @@ export function ExecutionTrendChart({
                 dataKey="cycleLabel"
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#5A605E' }}
+                tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
                 interval="preserveStartEnd"
               />
               <YAxis
                 domain={[0, 100]}
                 tickLine={false}
                 axisLine={false}
-                tick={{ fontSize: 11, fill: '#5A605E' }}
+                tick={{ fontSize: 11, fill: 'var(--color-on-surface-variant)' }}
                 tickFormatter={(v: number) => `${Math.round(v)}%`}
                 width={Y_AXIS_WIDTH}
               />
@@ -278,7 +278,7 @@ export function ExecutionTrendChart({
                     value: marker.label,
                     position: 'top',
                     fontSize: 10,
-                    fill: '#5A605E',
+                    fill: 'var(--color-on-surface-variant)',
                   }}
                 />
               ))}

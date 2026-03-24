@@ -109,7 +109,7 @@ export function OrgUnitCard({ unit, onClick }: OrgUnitCardProps) {
         <div className="flex flex-col items-end gap-0.5">
           <TrendArrow direction={unit.trendDirection} />
           <span className="text-xs text-muted">
-            {unit.weeksTrending}w
+            {Math.abs(unit.weeksTrending)}w
           </span>
         </div>
       </div>

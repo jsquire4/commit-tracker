@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import type { ReconciliationStatus } from '@/types/enums';
 
 interface CommitmentStatusMarkerProps {
@@ -27,7 +26,7 @@ const STATUS_OPTIONS: StatusOption[] = [
     helperText: 'Done as planned',
     activeClass: 'bg-accent text-white border-accent',
     inactiveClass:
-      'bg-surface-lowest text-accent border-[#B2DFDB] hover:bg-[#E0F2F1]',
+      'bg-surface-lowest text-accent border-accent/30 hover:bg-accent/10',
   },
   {
     value: 'PARTIALLY_COMPLETED',
@@ -36,7 +35,7 @@ const STATUS_OPTIONS: StatusOption[] = [
     helperText: 'Some work done, some remains',
     activeClass: 'bg-warning text-white border-warning',
     inactiveClass:
-      'bg-surface-lowest text-[#92650A] border-[#F0D9A8] hover:bg-[#FFF8E1]',
+      'bg-surface-lowest text-warning-dark border-warning/30 hover:bg-warning/10',
   },
   {
     value: 'NOT_STARTED',
@@ -45,7 +44,7 @@ const STATUS_OPTIONS: StatusOption[] = [
     helperText: "Didn't get to it at all",
     activeClass: 'bg-error text-white border-error',
     inactiveClass:
-      'bg-surface-lowest text-error border-[#E8B4B2] hover:bg-[#FFF0EF]',
+      'bg-surface-lowest text-error border-error/30 hover:bg-error/10',
   },
 ];
 
@@ -56,14 +55,11 @@ export function CommitmentStatusMarker({
   onChange,
   disabled = false,
   onCarryForwardChange,
-  carryForward,
+  carryForward = false,
 }: CommitmentStatusMarkerProps) {
-  const [localCarry, setLocalCarry] = useState<boolean | null>(null);
   const showCarryToggle = value !== null && SHOWS_CARRY_TOGGLE.includes(value);
-  const carry = carryForward !== undefined ? carryForward : localCarry;
 
   function handleCarry(val: boolean) {
-    setLocalCarry(val);
     onCarryForwardChange?.(val);
   }
 
@@ -140,11 +136,11 @@ export function CommitmentStatusMarker({
             type="button"
             onClick={() => { handleCarry(true); }}
             className={[
-              'px-3 py-1 text-xs font-semibold rounded-sm border-[1.5px] border-[#B8C5D9]',
+              'px-3 py-1 text-xs font-semibold rounded-sm border-[1.5px] border-outline-variant',
               'transition-all duration-[150ms] ease-[var(--ease-standard)]',
-              carry === true
+              carryForward === true
                 ? 'bg-navy text-white border-navy'
-                : 'bg-surface-lowest text-navy hover:bg-[#EEF2F8]',
+                : 'bg-surface-lowest text-navy hover:bg-surface-container',
             ].join(' ')}
           >
             Yes
@@ -153,11 +149,11 @@ export function CommitmentStatusMarker({
             type="button"
             onClick={() => { handleCarry(false); }}
             className={[
-              'px-3 py-1 text-xs font-semibold rounded-sm border-[1.5px] border-[#B8C5D9]',
+              'px-3 py-1 text-xs font-semibold rounded-sm border-[1.5px] border-outline-variant',
               'transition-all duration-[150ms] ease-[var(--ease-standard)]',
-              carry === false
+              carryForward === false
                 ? 'bg-navy text-white border-navy'
-                : 'bg-surface-lowest text-navy hover:bg-[#EEF2F8]',
+                : 'bg-surface-lowest text-navy hover:bg-surface-container',
             ].join(' ')}
           >
             No

@@ -69,6 +69,9 @@ function buildSummary(dashboard: DashboardResponse, commitments: Commitment[]): 
 }
 
 export function TeamSummaryCard({ dashboard, commitments, cycleId, cycleWeekStart }: TeamSummaryCardProps) {
+  // cycleWeekStart is passed from MyTeamPage via DashboardFilters selection and forwarded here
+  // to scope the LLM summary to the selected historical cycle. When undefined, defaults to the
+  // current cycle (backend determines the current week from context).
   const { data: llmSummary, isLoading } = useTeamSummary(cycleWeekStart);
 
   // Use LLM response when available; fall back to deterministic while loading or when null

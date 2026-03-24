@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -77,8 +78,11 @@ public class CycleController {
         Page<Cycle> cyclePage = cycleService.listCycles(
                 actor.getOrg().getId(), filters, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startsAt")));
 
+        List<UUID> cycleIds = cyclePage.getContent().stream().map(Cycle::getId).toList();
+        Map<UUID, Long> countsByCycleId = cycleService.getCommitmentCounts(actor.getOrg().getId(), cycleIds);
+
         List<CycleResponse> responses = cyclePage.getContent().stream()
-                .map(c -> cycleMapper.toResponse(c, cycleService.getCommitmentCount(actor.getOrg().getId(), c.getId())))
+                .map(c -> cycleMapper.toResponse(c, countsByCycleId.getOrDefault(c.getId(), 0L).intValue()))
                 .toList();
 
         PagedResponse<CycleResponse> pagedResponse = new PagedResponse<>(

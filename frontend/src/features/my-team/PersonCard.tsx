@@ -9,11 +9,13 @@ interface PersonCardProps {
   onAssign: (m: TeamMemberSummary) => void;
 }
 
+// Chip styles use design token classes; color choices align with CHESS_ACCENT palette:
+//   STRATEGIC → navy, OPERATIONAL → muted, DEFENSIVE → error tone, CAPABILITY_BUILDING → accent (teal)
 const CHESS_CHIP_STYLES: Record<string, string> = {
-  STRATEGIC: 'bg-[#E8EDF5] text-[#3A4D6B]',
+  STRATEGIC: 'bg-surface-container text-navy',
   OPERATIONAL: 'bg-surface-container text-on-surface-variant',
-  DEFENSIVE: 'bg-[#F5ECE8] text-[#6B4A3A]',
-  CAPABILITY_BUILDING: 'bg-[#E8F0E8] text-[#2D5A2D]',
+  DEFENSIVE: 'bg-surface-container text-error',
+  CAPABILITY_BUILDING: 'bg-surface-container text-accent',
 };
 
 function getStatusColor(_member: TeamMemberSummary, commitments: Commitment[]): 'teal' | 'amber' | 'rose' {
@@ -159,8 +161,7 @@ export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
           <div className="mt-3 pt-3 border-t border-outline-variant">
             <button
               type="button"
-              className="text-[0.8125rem] font-medium text-accent bg-transparent border-0 cursor-pointer p-0 hover:text-accent-dark transition-colors"
-              style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
+              className="text-[0.8125rem] font-medium text-accent bg-transparent border-0 cursor-pointer p-0 hover:text-accent-dark transition-colors duration-[var(--duration-fast)]"
               onClick={() => onAssign(member)}
             >
               Assign work &rarr;

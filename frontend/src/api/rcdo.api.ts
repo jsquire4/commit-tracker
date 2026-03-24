@@ -86,8 +86,13 @@ export async function getRcdoTree(): Promise<RcdoTree> {
   return fetchData<RcdoTree>(`${BASE}/tree`);
 }
 
+// NOTE: The backend does not support server-side filtering for rally cries (?q is ignored).
+// This function fetches all rally cries and filters client-side by title.
 export async function searchRallyCries(query: string): Promise<RallyCryNode[]> {
-  return fetchData<RallyCryNode[]>(`${BASE}/rally-cries`, { q: query });
+  const all = await fetchData<RallyCryNode[]>(`${BASE}/rally-cries`);
+  if (!query) return all;
+  const lower = query.toLowerCase();
+  return all.filter((rc) => rc.title.toLowerCase().includes(lower));
 }
 
 export async function searchDefiningObjectives(

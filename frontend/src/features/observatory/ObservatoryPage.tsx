@@ -92,7 +92,10 @@ export function ObservatoryPage() {
 
   // Compute weekCount from the selected "from" position.
   // weekCount = number of cycles from "from" to the last available cycle (inclusive).
-  // The APIs accept a trailing-window count, so this keeps "to" as the most recent cycle.
+  // SEMANTIC NOTE: The APIs accept a trailing-window count (most-recent N cycles), not a
+  // start-date. We convert the "From" selector index into a count so the most-recent cycle
+  // is always the right boundary. This works correctly for sequential cycles but does not
+  // support arbitrary date ranges (e.g. skipping the most-recent cycle).
   const weekCount = useMemo(() => {
     if (availableCycles.length === 0) return 26;
     return Math.max(1, availableCycles.length - fromIdx);
@@ -106,12 +109,9 @@ export function ObservatoryPage() {
   const orgName = health?.orgName ?? '';
 
   // Average rally cry coverage across all weeks in the selected period.
-  // TODO: Replace with a real per-cycle rallyCoveragePct field once the
-  // backend exposes % of commitments linked to any rally cry (currently
-  // this still averages strategicPct from the alignment trend endpoint).
   const avgStrategicAlignment = useMemo(() => {
     if (!alignmentTrend || alignmentTrend.length === 0) return null;
-    const sum = alignmentTrend.reduce((acc, p) => acc + p.strategicPct, 0);
+    const sum = alignmentTrend.reduce((acc, p) => acc + p.rallyCoveragePct, 0);
     return sum / alignmentTrend.length;
   }, [alignmentTrend]);
 
@@ -207,8 +207,6 @@ export function ObservatoryPage() {
 
       {/* ── KPI strip ── */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {/* Strategic % averaged over selected period. TODO: replace with real RC coverage once
-            the alignment trend endpoint exposes a per-cycle rallyCoveragePct field. */}
         <KpiTile label="Rally Cry Coverage" value={strategicAlignment} unit="%" />
         <KpiTile label="Completion Rate" value={completion} unit="%" />
         <KpiTile label="Carry-Forward Rate" value={carryForward} unit="%" />

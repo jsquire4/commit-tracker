@@ -28,13 +28,19 @@ const mockCommitments = [
     description: null,
     rcdoLink: {
       rallyCryId: 'rc-1',
+      rallyCryTitle: 'Accelerate Growth',
       definingObjectiveId: 'do-1',
+      definingObjectiveTitle: 'Improve Developer Velocity',
       outcomeId: null,
+      outcomeTitle: null,
     },
     chessCategoryId: 'cat-strategic',
     chessCategoryName: 'Strategic',
     completionHorizon: 'EOD',
+    completionDay: null,
+    completionTimeBlock: null,
     priorityRank: 1,
+    estimatedHours: null,
     bullets: [
       { id: 'b-1', body: 'Write unit tests', sortOrder: 1, isCompleted: false },
       { id: 'b-2', body: 'Code review', sortOrder: 2, isCompleted: false },
@@ -56,13 +62,19 @@ const mockCommitments = [
     description: 'Clean up legacy code',
     rcdoLink: {
       rallyCryId: null,
+      rallyCryTitle: null,
       definingObjectiveId: null,
+      definingObjectiveTitle: null,
       outcomeId: null,
+      outcomeTitle: null,
     },
     chessCategoryId: 'cat-operational',
     chessCategoryName: 'Operational',
     completionHorizon: 'EOW',
+    completionDay: null,
+    completionTimeBlock: null,
     priorityRank: 2,
+    estimatedHours: null,
     bullets: [
       { id: 'b-3', body: 'Identify bottlenecks', sortOrder: 1, isCompleted: false },
       { id: 'b-4', body: 'Write migration scripts', sortOrder: 2, isCompleted: false },
@@ -110,15 +122,48 @@ const mockRcdoTree = {
 
 const mockUser = {
   id: 'user-1',
-  orgId: 'org-1',
   email: 'alice@example.com',
   displayName: 'Alice Smith',
   role: 'MANAGER',
-  reportsToId: null,
+  reportsTo: null,
+  reportsToDisplayName: null,
   isActive: true,
+  costBandId: null,
+  costBandName: null,
+  costBandTier: null,
+  weeklyCapacityHours: null,
 };
 
 const mockTeam = [
+  {
+    id: 'user-2',
+    email: 'bob@example.com',
+    displayName: 'Bob Jones',
+    role: 'EMPLOYEE',
+    reportsTo: 'user-1',
+    reportsToDisplayName: 'Alice Smith',
+    isActive: true,
+    costBandId: null,
+    costBandName: null,
+    costBandTier: null,
+    weeklyCapacityHours: null,
+  },
+  {
+    id: 'user-3',
+    email: 'carol@example.com',
+    displayName: 'Carol Lee',
+    role: 'EMPLOYEE',
+    reportsTo: 'user-1',
+    reportsToDisplayName: 'Alice Smith',
+    isActive: true,
+    costBandId: null,
+    costBandName: null,
+    costBandTier: null,
+    weeklyCapacityHours: null,
+  },
+];
+
+const mockTeamMemberSummaries = [
   {
     userId: 'user-2',
     displayName: 'Bob Jones',
@@ -126,6 +171,7 @@ const mockTeam = [
     totalCommitments: 3,
     cycleState: 'DRAFT',
     reconciledCount: 0,
+    completedCount: 0,
     categoryBreakdown: { STRATEGIC: 2, OPERATIONAL: 1 },
   },
   {
@@ -135,13 +181,14 @@ const mockTeam = [
     totalCommitments: 4,
     cycleState: 'DRAFT',
     reconciledCount: 0,
+    completedCount: 0,
     categoryBreakdown: { OPERATIONAL: 3, DEFENSIVE: 1 },
   },
 ];
 
 const mockDashboard = {
   teamRollup: {
-    members: mockTeam,
+    members: mockTeamMemberSummaries,
   },
   alignmentSignal: {
     teamSize: 2,
@@ -214,6 +261,7 @@ const mockReconciliationView = {
     completionRate: 0,
     bulletCompletionRate: 0,
   },
+  allReconciled: false,
 };
 
 export const handlers = [
@@ -222,7 +270,13 @@ export const handlers = [
   }),
 
   http.get('/api/v1/commitments', () => {
-    return apiResponse(mockCommitments);
+    return apiResponse({
+      items: mockCommitments,
+      page: 0,
+      size: mockCommitments.length,
+      totalElements: mockCommitments.length,
+      totalPages: 1,
+    });
   }),
 
   http.post('/api/v1/commitments', async ({ request }) => {
@@ -260,23 +314,73 @@ export const handlers = [
 
   http.put('/api/v1/reconciliation/commitments/:id', ({ params }) => {
     const { id } = params;
-    const commitment = mockCommitments.find((c) => c.id === id) ?? mockCommitments[0];
     return apiResponse({
-      commitment: { ...commitment, reconciliationStatus: 'COMPLETED' },
-      reconciliation: {
-        id: 'rec-1',
-        commitmentId: id as string,
-        cycleId: 'cycle-1',
-        status: 'COMPLETED',
-        notes: null,
-        plannedHorizon: 'EOD',
-        reconciledAt: '2026-03-20T17:00:00Z',
-        reconciledByUserId: 'user-1',
-      },
+      id: 'rec-1',
+      commitmentId: id as string,
+      cycleId: 'cycle-1',
+      status: 'COMPLETED',
+      notes: null,
+      plannedHorizon: 'EOD',
+      reconciledAt: '2026-03-20T17:00:00Z',
+      reconciledByUserId: 'user-1',
+      displacementCategory: null,
+      displacementDetail: null,
+      displacingCommitmentId: null,
+      displacingCommitmentTitle: null,
     });
   }),
 
   http.get('/api/v1/reconciliation/cycles/:id', () => {
     return apiResponse(mockReconciliationView);
+  }),
+
+  http.post('/api/v1/reconciliation/cycles/:id/complete', ({ params }) => {
+    const { id } = params;
+    return apiResponse({
+      ...mockCycle,
+      id: id as string,
+      state: 'RECONCILED',
+    });
+  }),
+
+  http.get('/api/v1/chess-categories', () => {
+    return apiResponse([
+      {
+        id: 'cat-strategic',
+        orgId: 'org-1',
+        name: 'Strategic',
+        description: null,
+        colorHex: null,
+        sortOrder: 1,
+        isActive: true,
+      },
+      {
+        id: 'cat-operational',
+        orgId: 'org-1',
+        name: 'Operational',
+        description: null,
+        colorHex: null,
+        sortOrder: 2,
+        isActive: true,
+      },
+      {
+        id: 'cat-defensive',
+        orgId: 'org-1',
+        name: 'Defensive',
+        description: null,
+        colorHex: null,
+        sortOrder: 3,
+        isActive: true,
+      },
+      {
+        id: 'cat-capability',
+        orgId: 'org-1',
+        name: 'Capability Building',
+        description: null,
+        colorHex: null,
+        sortOrder: 4,
+        isActive: true,
+      },
+    ]);
   }),
 ];

@@ -26,9 +26,13 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
   const gradeColor = HEALTH_COLORS[unit.grade];
   const isRed = unit.grade === 'RED';
 
-  // CHESS bar: use strategicAlignmentPct as strategic, distribute the rest
+  // CHESS bar: full 4-category breakdown
   const strategicW = unit.strategicAlignmentPct;
-  const remainingW = 100 - strategicW;
+  const operationalW = unit.operationalPct;
+  const defensiveW = unit.defensivePct;
+  const capabilityW = unit.capabilityBuildingPct;
+  const categorizedTotal = strategicW + operationalW + defensiveW + capabilityW;
+  const uncategorizedW = Math.max(0, 100 - categorizedTotal);
 
   return (
     <button
@@ -46,7 +50,7 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
         animationDelay: `${index * 60}ms`,
         animationFillMode: 'backwards',
       }}
-      aria-label={`View ${unit.managerName}'s team — ${String(Math.round(unit.strategicAlignmentPct))}% rally cry coverage, grade ${unit.grade}`}
+      aria-label={`View ${unit.managerName}'s team — ${String(Math.round(unit.rallyCoveragePct))}% rally cry coverage, grade ${unit.grade}`}
     >
       {/* Header row: name + trend */}
       <div className="flex items-center justify-between">
@@ -55,7 +59,7 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
         </span>
         <div className="flex items-center gap-1">
           <span className="text-sm font-semibold tabular-nums text-on-surface">
-            {Math.round(unit.strategicAlignmentPct)}%
+            {Math.round(unit.rallyCoveragePct)}%
           </span>
           <span className={`text-sm font-bold ${trendArrowColor(unit.trendDirection)}`}>
             {trendArrow(unit.trendDirection)}
@@ -63,16 +67,30 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
         </div>
       </div>
 
-      {/* CHESS distribution bar: Strategic vs Other (only real data available) */}
-      <div className="w-full h-2 rounded-full bg-outline-variant overflow-hidden flex">
+      {/* CHESS distribution bar: 4-category breakdown */}
+      <div className="w-full h-2 rounded-full bg-outline-variant overflow-hidden flex" title={`Strategic ${Math.round(strategicW)}% · Operational ${Math.round(operationalW)}% · Defensive ${Math.round(defensiveW)}% · Capability ${Math.round(capabilityW)}%`}>
         <div
           className="h-full transition-all duration-500"
           style={{ width: `${String(strategicW)}%`, backgroundColor: CHESS_ACCENT.strategic }}
         />
         <div
-          className="h-full transition-all duration-500 bg-surface-container"
-          style={{ width: `${String(remainingW)}%` }}
+          className="h-full transition-all duration-500"
+          style={{ width: `${String(operationalW)}%`, backgroundColor: CHESS_ACCENT.operational }}
         />
+        <div
+          className="h-full transition-all duration-500"
+          style={{ width: `${String(defensiveW)}%`, backgroundColor: CHESS_ACCENT.defensive }}
+        />
+        <div
+          className="h-full transition-all duration-500"
+          style={{ width: `${String(capabilityW)}%`, backgroundColor: CHESS_ACCENT.capability }}
+        />
+        {uncategorizedW > 0 && (
+          <div
+            className="h-full transition-all duration-500 bg-surface-container"
+            style={{ width: `${String(uncategorizedW)}%` }}
+          />
+        )}
       </div>
 
       {/* Bottom row: grade label + sparkline */}

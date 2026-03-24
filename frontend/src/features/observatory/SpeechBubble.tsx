@@ -50,7 +50,7 @@ function Caret({ position }: CaretProps) {
   if (position === 'above') {
     return (
       <>
-        {/* White fill caret */}
+        {/* Surface fill caret */}
         <div
           style={{
             position: 'absolute',
@@ -61,11 +61,11 @@ function Caret({ position }: CaretProps) {
             height: 0,
             borderLeft: '7px solid transparent',
             borderRight: '7px solid transparent',
-            borderTop: '7px solid #FFFFFF',
+            borderTop: '7px solid var(--color-surface-lowest)',
             filter: 'drop-shadow(0 2px 1px rgba(0,0,0,0.08))',
           }}
         />
-        {/* Border layer caret (sits just behind the white caret) */}
+        {/* Border layer caret (sits just behind the fill caret) */}
         <div
           style={{
             position: 'absolute',
@@ -76,7 +76,7 @@ function Caret({ position }: CaretProps) {
             height: 0,
             borderLeft: '8px solid transparent',
             borderRight: '8px solid transparent',
-            borderTop: '8px solid #E2E2E0',
+            borderTop: '8px solid var(--color-outline-variant)',
             zIndex: -1,
           }}
         />
@@ -86,7 +86,7 @@ function Caret({ position }: CaretProps) {
 
   return (
     <>
-      {/* White fill caret pointing up */}
+      {/* Surface fill caret pointing up */}
       <div
         style={{
           position: 'absolute',
@@ -97,7 +97,7 @@ function Caret({ position }: CaretProps) {
           height: 0,
           borderLeft: '7px solid transparent',
           borderRight: '7px solid transparent',
-          borderBottom: '7px solid #FFFFFF',
+          borderBottom: '7px solid var(--color-surface-lowest)',
           filter: 'drop-shadow(0 -2px 1px rgba(0,0,0,0.08))',
         }}
       />
@@ -112,7 +112,7 @@ function Caret({ position }: CaretProps) {
           height: 0,
           borderLeft: '8px solid transparent',
           borderRight: '8px solid transparent',
-          borderBottom: '8px solid #E2E2E0',
+          borderBottom: '8px solid var(--color-outline-variant)',
           zIndex: -1,
         }}
       />
@@ -185,7 +185,7 @@ export function SpeechBubble({
       }}
     >
       {/* Bubble body */}
-      <div className="bg-white border border-outline-variant rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06)] px-3.5 py-3">
+      <div className="bg-surface-lowest border border-outline-variant rounded-lg shadow-[0_4px_16px_rgba(0,0,0,0.12),0_1px_4px_rgba(0,0,0,0.06)] px-3.5 py-3">
         {/* AI label */}
         <div className="flex items-center gap-[5px] mb-1.5">
           <span className="text-[10px] font-semibold tracking-[0.08em] text-accent font-sans uppercase">

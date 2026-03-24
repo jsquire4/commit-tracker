@@ -13,6 +13,7 @@ import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.ObservatoryConfigResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioComparisonResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
+import com.compass.platform.domain.observatory.dto.ObservatoryDashboardResponse;
 import com.compass.platform.domain.observatory.dto.SignalsSummaryResponse;
 import com.compass.platform.domain.observatory.dto.UpdateObservatoryConfigRequest;
 import com.compass.platform.domain.observatory.dto.WeekNarrativeResponse;
@@ -117,12 +118,6 @@ public class ObservatoryController {
 
         return ResponseEntity.ok(ApiResponse.of(new ObservatoryDashboardResponse(health, alignmentTrend, completionTrend)));
     }
-
-    public record ObservatoryDashboardResponse(
-        ExecutiveHealthResponse health,
-        List<com.compass.platform.domain.observatory.dto.AlignmentDataPoint> alignmentTrend,
-        List<com.compass.platform.domain.observatory.dto.CompletionDataPoint> completionTrend
-    ) {}
 
     // ═══════════════════════════════════════════════════════════════
     // Drift

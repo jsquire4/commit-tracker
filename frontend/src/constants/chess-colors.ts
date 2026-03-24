@@ -18,7 +18,7 @@ export const CHESS_ACCENT = {
   strategic: '#036A6A',
   operational: '#455F87',
   defensive: '#9F403D',
-  capability: '#94A3B8',
+  capability: '#059669', // Matches Tailwind `capability` token
 } as const;
 
 /** Display labels keyed by uppercase enum name */

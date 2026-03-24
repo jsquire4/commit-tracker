@@ -33,9 +33,12 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Import commitments from CSV. SYNCHRONOUS.
@@ -124,11 +127,32 @@ public class CommitmentCsvImporter {
         Cycle activeCycle = cycleRepository.findByOrgIdAndIsActiveTrue(orgId)
                 .orElseThrow(() -> new IllegalArgumentException("No active cycle found for org: " + orgId));
 
+        // Pre-load all RCDO data for this org once to avoid N+1 queries in resolveRcdoReferences
+        Map<String, RallyCry> rcByTitle = rallyCryRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId).stream()
+                .collect(Collectors.toMap(RallyCry::getTitle, Function.identity(), (a, b) -> a));
+        List<DefiningObjective> allDos = definingObjectiveRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        // Key: rallyCryId + "||" + doTitle
+        Map<String, DefiningObjective> doByKey = allDos.stream()
+                .collect(Collectors.toMap(
+                        d -> d.getRallyCry().getId() + "||" + d.getTitle(),
+                        Function.identity(), (a, b) -> a));
+        List<Outcome> allOutcomes = outcomeRepository
+                .findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        // Key: definingObjectiveId + "||" + outcomeTitle
+        Map<String, Outcome> outcomeByKey = allOutcomes.stream()
+                .collect(Collectors.toMap(
+                        o -> o.getDefiningObjective().getId() + "||" + o.getTitle(),
+                        Function.identity(), (a, b) -> a));
+
         int importedRows = 0;
         int rowNum = 1;
+        int rowIndex = 0;
 
         for (String[] row : rows) {
             rowNum++;
+            rowIndex++;
 
             if (row.length < 4) {
                 errors.add(new ImportError(rowNum, "row", "Too few columns; need at least: user_email, title, bullets, completion_horizon"));
@@ -178,8 +202,8 @@ public class CommitmentCsvImporter {
                 }
             }
 
-            // Resolve RCDO (optional, hierarchical)
-            RcdoRefs rcdo = resolveRcdoReferences(row, orgId, rowNum, errors);
+            // Resolve RCDO (optional, hierarchical) — uses pre-loaded maps to avoid N+1
+            RcdoRefs rcdo = resolveRcdoReferences(row, rowNum, errors, rcByTitle, doByKey, outcomeByKey);
             if (rcdo == null) {
                 continue; // error already added
             }
@@ -209,6 +233,7 @@ public class CommitmentCsvImporter {
                     .definingObjective(definingObjective)
                     .outcome(outcome)
                     .assignedBy(assignedBy)
+                    .priorityRank(rowIndex)
                     .build();
 
             commitment = commitmentRepository.save(commitment);
@@ -246,10 +271,14 @@ public class CommitmentCsvImporter {
 
     /**
      * Resolves the rally_cry, defining_objective, and outcome columns for one CSV row.
+     * Uses pre-loaded Maps (keyed by title / composite key) to avoid per-row DB queries (N+1).
      * Returns a {@link RcdoRefs} with the resolved entities (null if not supplied),
      * or {@code null} if a validation error was found (error is added to {@code errors}).
      */
-    private RcdoRefs resolveRcdoReferences(String[] row, UUID orgId, int rowNum, List<ImportError> errors) {
+    private RcdoRefs resolveRcdoReferences(String[] row, int rowNum, List<ImportError> errors,
+                                            Map<String, RallyCry> rcByTitle,
+                                            Map<String, DefiningObjective> doByKey,
+                                            Map<String, Outcome> outcomeByKey) {
         String rcTitle = trim(row, COL_RALLY_CRY);
         String doTitle = trim(row, COL_DEFINING_OBJECTIVE);
         String outcomeTitle = trim(row, COL_OUTCOME);
@@ -258,8 +287,7 @@ public class CommitmentCsvImporter {
             return new RcdoRefs(null, null, null);
         }
 
-        List<RallyCry> rcs = rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
-        RallyCry rallyCry = rcs.stream().filter(rc -> rc.getTitle().equals(rcTitle)).findFirst().orElse(null);
+        RallyCry rallyCry = rcByTitle.get(rcTitle);
         if (rallyCry == null) {
             errors.add(new ImportError(rowNum, "rally_cry", "RallyCry not found: " + rcTitle));
             return null;
@@ -269,10 +297,7 @@ public class CommitmentCsvImporter {
             return new RcdoRefs(rallyCry, null, null);
         }
 
-        List<DefiningObjective> dos = definingObjectiveRepository
-                .findByRallyCryIdAndArchivedAtIsNullOrderBySortOrderAsc(rallyCry.getId());
-        DefiningObjective definingObjective = dos.stream()
-                .filter(d -> d.getTitle().equals(doTitle)).findFirst().orElse(null);
+        DefiningObjective definingObjective = doByKey.get(rallyCry.getId() + "||" + doTitle);
         if (definingObjective == null) {
             errors.add(new ImportError(rowNum, "defining_objective", "DefiningObjective not found: " + doTitle));
             return null;
@@ -282,10 +307,7 @@ public class CommitmentCsvImporter {
             return new RcdoRefs(rallyCry, definingObjective, null);
         }
 
-        List<Outcome> outcomes = outcomeRepository
-                .findByDefiningObjectiveIdAndArchivedAtIsNullOrderBySortOrderAsc(definingObjective.getId());
-        Outcome outcome = outcomes.stream()
-                .filter(o -> o.getTitle().equals(outcomeTitle)).findFirst().orElse(null);
+        Outcome outcome = outcomeByKey.get(definingObjective.getId() + "||" + outcomeTitle);
         if (outcome == null) {
             errors.add(new ImportError(rowNum, "outcome", "Outcome not found: " + outcomeTitle));
             return null;

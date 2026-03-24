@@ -243,7 +243,10 @@ public class LlmBriefingService implements BriefingService {
 
         BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, cycleId);
         String systemPrompt = """
-                You are the intelligence layer for Compass, an execution management platform.                 Write a 2-3 sentence week-in-review narrative summarising the completed cycle.                 Use directional language (increased, declined, held steady). Do not evaluate performance.                 Return ONLY plain text — no JSON, no markdown.""";
+                You are the intelligence layer for Compass, an execution management platform. \
+                Write a 2-3 sentence week-in-review narrative summarising the completed cycle. \
+                Use directional language (increased, declined, held steady). Do not evaluate performance. \
+                Return ONLY plain text — no JSON, no markdown.""";
         log.info("Generating WEEK_NARRATIVE for org={} cycle={} model={}", orgId, cycleId, llmConfig.getResolvedModel());
         String rawOutput = callLlm(systemPrompt, ctx.userPrompt());
         return verifier.stripCitations(rawOutput.strip());
@@ -287,7 +290,10 @@ public class LlmBriefingService implements BriefingService {
                 + "Be factual and directional. Return only plain text.",
                 managerName, total, coveragePct);
         String sealedSystemPrompt = """
-                You are the intelligence layer for Compass. Write a concise team summary                 for a single manager's team based on the provided data.                 Use directional language. Do not evaluate performance. Do not name individuals.                 Return ONLY plain text — no JSON, no markdown.""";
+                You are the intelligence layer for Compass. Write a concise team summary \
+                for a single manager's team based on the provided data. \
+                Use directional language. Do not evaluate performance. Do not name individuals. \
+                Return ONLY plain text — no JSON, no markdown.""";
         log.info("Generating SEALED TEAM_SUMMARY for org={} cycle={} manager={} model={}",
                 orgId, cycleId, managerId, llmConfig.getResolvedModel());
         String rawOutput = callLlm(sealedSystemPrompt, userPrompt);
@@ -576,7 +582,8 @@ public class LlmBriefingService implements BriefingService {
 
     private UUID resolveCycleId(UUID orgId, UUID cycleId) {
         if (cycleId != null) return cycleId;
-        List<Cycle> cycles = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
+        // Use Top12 (bounded query) and take the first — avoids loading the full unbounded list
+        List<Cycle> cycles = cycleRepository.findTop12ByOrgIdOrderByStartsAtDesc(orgId);
         return cycles.isEmpty() ? null : cycles.get(0).getId();
     }
 

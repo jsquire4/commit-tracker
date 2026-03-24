@@ -7,8 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import org.springframework.stereotype.Component;
@@ -41,15 +39,10 @@ public class RequestLoggingFilter extends OncePerRequestFilter {
         try {
             filterChain.doFilter(request, response);
         } finally {
-            // Extract userId and orgId from security context if authenticated
-            String userId = null;
-            String orgId = null;
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            if (auth != null && auth.isAuthenticated()
-                    && auth.getPrincipal() instanceof com.compass.platform.security.AppUserPrincipal principal) {
-                userId = principal.user().getId().toString();
-                orgId = principal.user().getOrg().getId().toString();
-            }
+            // Read userId/orgId from request attributes set by JwtAuthenticationFilter,
+            // which survive across the full request lifecycle regardless of filter ordering.
+            String userId = (String) request.getAttribute("_auth_userId");
+            String orgId = (String) request.getAttribute("_auth_orgId");
 
             if (userId != null) {
                 MDC.put("userId", userId);

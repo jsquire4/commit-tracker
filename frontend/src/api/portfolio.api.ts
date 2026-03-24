@@ -72,7 +72,7 @@ export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData
   // Fetch health data and trend data in parallel
   const [health, comparison] = await Promise.all([
     fetchData<BackendPortfolioHealth>(`${OBSERVATORY_BASE}/portfolio`),
-    fetchData<BackendPortfolioComparison>(`${OBSERVATORY_BASE}/portfolio/comparison?weekCount=12`)
+    fetchData<BackendPortfolioComparison>(`${OBSERVATORY_BASE}/portfolio/comparison`, { weekCount: 12 })
       .catch(() => null), // graceful fallback if comparison endpoint not available
   ]);
 

@@ -122,7 +122,8 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
         <p className="mt-2 text-body text-on-surface-variant">
           {strategicPct != null ? `${Math.round(strategicPct)}% rally cry coverage` : 'Rally cry coverage: N/A'}
           {' \u00B7 '}
-          {commitments.length} commitments
+          {/* Show only this team's commitments, not all cycle commitments */}
+          {commitments.filter((c) => teamMemberIds.has(c.userId)).length} commitments
           {' \u00B7 '}
           {carryForwardCount} carry-forward chain{carryForwardCount !== 1 ? 's' : ''}
         </p>
@@ -164,7 +165,10 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
       </Card>
 
       <Card padding="normal" className="animate-fade-up" style={{ animationDelay: '160ms' }}>
-        <p className="text-small text-muted mb-2">Displacement patterns.</p>
+        <p className="text-small text-muted mb-2">
+          Displacement patterns.
+          <span className="ml-1 text-on-surface-variant italic">(Organization-wide data)</span>
+        </p>
         <DisplacementReport summary={displacementData} />
       </Card>
 

@@ -17,6 +17,8 @@ export function OrganizationsTab() {
   const { orgId, orgName } = useAuth();
   const { data: me } = useMe();
   const { data: users } = useUserList();
+  // Note: AdminTab also mounts useCreateOrg() independently. This is intentional —
+  // each tab owns its mutation state separately so their loading/error states don't interfere.
   const createOrgMutation = useCreateOrg();
 
   const [createModalOpen, setCreateModalOpen] = useState(false);

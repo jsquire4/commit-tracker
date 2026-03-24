@@ -27,9 +27,15 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
 
     long countByOrgIdAndCycleId(UUID orgId, UUID cycleId);
 
+    @Query("SELECT c.cycle.id, COUNT(c) FROM Commitment c WHERE c.org.id = :orgId AND c.cycle.id IN :cycleIds GROUP BY c.cycle.id")
+    List<Object[]> countByOrgIdAndCycleIdIn(@Param("orgId") UUID orgId, @Param("cycleIds") Collection<UUID> cycleIds);
+
     long countByOrgIdAndCycleIdAndChessCategoryId(UUID orgId, UUID cycleId, UUID chessCategoryId);
 
     List<Commitment> findByAssignedByIdAndCycleId(UUID assignedById, UUID cycleId);
+
+    @Query("SELECT c FROM Commitment c WHERE c.assignedBy.id IN :assignedByIds AND c.cycle.id IN :cycleIds ORDER BY c.assignedBy.id, c.cycle.id, c.priorityRank")
+    List<Commitment> findByAssignedByIdInAndCycleIdIn(@Param("assignedByIds") Collection<UUID> assignedByIds, @Param("cycleIds") Collection<UUID> cycleIds);
 
     long countByUserIdAndCycleId(UUID userId, UUID cycleId);
 
@@ -55,6 +61,8 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     @Query("SELECT c FROM Commitment c WHERE c.cycle.id = :cycleId AND c.org.id = :orgId"
          + " AND (:userId IS NULL OR c.user.id = :userId)"
          + " AND (:rallyCryId IS NULL OR c.rallyCry.id = :rallyCryId)"
+         + " AND (:definingObjectiveId IS NULL OR c.definingObjective.id = :definingObjectiveId)"
+         + " AND (:outcomeId IS NULL OR c.outcome.id = :outcomeId)"
          + " AND (:chessCategoryId IS NULL OR c.chessCategory.id = :chessCategoryId)"
          + " AND (:assignedById IS NULL OR c.assignedBy.id = :assignedById)"
          + " ORDER BY c.priorityRank ASC")
@@ -62,6 +70,8 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
                                               @Param("cycleId") UUID cycleId,
                                               @Param("userId") UUID userId,
                                               @Param("rallyCryId") UUID rallyCryId,
+                                              @Param("definingObjectiveId") UUID definingObjectiveId,
+                                              @Param("outcomeId") UUID outcomeId,
                                               @Param("chessCategoryId") UUID chessCategoryId,
                                               @Param("assignedById") UUID assignedById,
                                               Pageable pageable);
@@ -69,6 +79,8 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     @Query("SELECT c FROM Commitment c WHERE c.cycle.id = :cycleId AND c.org.id = :orgId"
          + " AND (:userId IS NULL OR c.user.id = :userId)"
          + " AND (:rallyCryId IS NULL OR c.rallyCry.id = :rallyCryId)"
+         + " AND (:definingObjectiveId IS NULL OR c.definingObjective.id = :definingObjectiveId)"
+         + " AND (:outcomeId IS NULL OR c.outcome.id = :outcomeId)"
          + " AND (:chessCategoryId IS NULL OR c.chessCategory.id = :chessCategoryId)"
          + " AND (:assignedById IS NULL OR c.assignedBy.id = :assignedById)"
          + " ORDER BY c.priorityRank ASC")
@@ -76,6 +88,8 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
                                               @Param("cycleId") UUID cycleId,
                                               @Param("userId") UUID userId,
                                               @Param("rallyCryId") UUID rallyCryId,
+                                              @Param("definingObjectiveId") UUID definingObjectiveId,
+                                              @Param("outcomeId") UUID outcomeId,
                                               @Param("chessCategoryId") UUID chessCategoryId,
                                               @Param("assignedById") UUID assignedById);
 }

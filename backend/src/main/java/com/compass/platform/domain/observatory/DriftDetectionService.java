@@ -242,7 +242,7 @@ public class DriftDetectionService {
             detectUniformCategorization(manager, teamCommitments, config, flags);
 
             // ── COMPLETION_MISMATCH ───────────────────────────────────────────
-            detectCompletionMismatch(manager, teamUserIds, resolvedCycleId, commitmentsByUserId, flags);
+            detectStrategicDivergence(manager, teamUserIds, resolvedCycleId, commitmentsByUserId, flags);
         }
 
         // ── DUPLICATE_NOTES ───────────────────────────────────────────────────
@@ -315,7 +315,12 @@ public class DriftDetectionService {
         for (RallyCry rc : rallyCries) {
             // Walk from the most recent cycle backward, counting consecutive zero-commitment cycles.
             int consecutiveZero = 0;
+            // Track the last non-zero value seen during the backward walk — this is the baseline
+            // (the commitment count just before the zero-streak started). 0.0 if all were zero.
+            double lastNonZeroValue = 0.0;
             // We build dataPoints in chronological order (oldest first) for sparkline rendering.
+            // NOTE: The sparkline data is intentionally truncated at the first non-zero cycle
+            // (i.e., only the zero-streak window is shown), making the absence of coverage visible.
             List<Double> dataPoints = new ArrayList<>();
 
             for (Cycle cycle : lookbackCycles) {
@@ -327,7 +332,9 @@ public class DriftDetectionService {
                 if (count == 0) {
                     consecutiveZero++;
                 } else {
-                    break; // streak broken — stop counting
+                    // Streak broken — the value just before the streak is the baseline
+                    lastNonZeroValue = (double) count;
+                    break;
                 }
             }
 
@@ -340,7 +347,7 @@ public class DriftDetectionService {
                         DriftMetric.COVERAGE,
                         severity,
                         0.0,  // currentValue is 0 — that is the definition of the coverage absence
-                        dataPoints.isEmpty() ? 0.0 : dataPoints.get(0),
+                        lastNonZeroValue, // baseline: last non-zero value before the streak, or 0.0 if all zero
                         consecutiveZero,
                         TrendDirection.DECLINING,
                         dataPoints
@@ -353,7 +360,7 @@ public class DriftDetectionService {
 
     /**
      * Flag a manager's team if more than {@code config.uniformityThreshold}% of commitments
-     * share a single chess category.
+     * share a single CHESS category.
      */
     private void detectUniformCategorization(AppUser manager, List<Commitment> teamCommitments,
                                               ObservatoryConfig config, List<IntegrityFlag> flags) {
@@ -393,8 +400,13 @@ public class DriftDetectionService {
     /**
      * Flag a manager when their own strategic% diverges from their team's strategic% by
      * more than 20 percentage points.
+     *
+     * <p>Note: this method is named {@code detectStrategicDivergence} to accurately describe
+     * what it measures (strategic-% divergence between manager and team). The associated
+     * {@link IntegrityFlagType#COMPLETION_MISMATCH} enum value is kept unchanged for
+     * frontend compatibility.
      */
-    private void detectCompletionMismatch(AppUser manager, List<UUID> teamUserIds,
+    private void detectStrategicDivergence(AppUser manager, List<UUID> teamUserIds,
                                           UUID cycleId, Map<UUID, List<Commitment>> commitmentsByUserId,
                                           List<IntegrityFlag> flags) {
         List<Commitment> managerCommitments =

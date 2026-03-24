@@ -1,11 +1,5 @@
 import type { CycleState } from '@/types';
 
-export interface StateTransition {
-  fromState: CycleState | null;
-  toState: CycleState;
-  transitionedAt: string;
-}
-
 interface CycleStateIndicatorProps {
   currentState: CycleState;
 }
@@ -21,7 +15,7 @@ const STATE_DOT_COLORS: Record<CycleState, string> = {
   DRAFT: 'bg-accent',
   LOCKED: 'bg-warning',
   RECONCILING: 'bg-error',
-  RECONCILED: 'bg-accent',
+  RECONCILED: 'bg-on-surface-variant',
 };
 
 const STATE_MESSAGES: Record<CycleState, string> = {

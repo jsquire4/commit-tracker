@@ -76,7 +76,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
               style={{ backgroundColor: CATEGORY_COLORS[key] ?? '#ccc' }}
             />
             <span className="text-on-surface-variant">
-              {CATEGORY_LABELS[key] ?? key}: {pct}% ({row.totalCommitments} total)
+              {CATEGORY_LABELS[key] ?? key}: {pct}% ({Math.round(pct * row.totalCommitments / 100)} of {row.totalCommitments})
             </span>
           </div>
         );

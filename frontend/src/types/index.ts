@@ -1,4 +1,6 @@
 export * from './api.types';
+export * from './briefing.types';
+export * from './chart.types';
 export * from './commitment.types';
 export * from './cycle.types';
 export * from './rcdo.types';
@@ -8,3 +10,4 @@ export * from './chess.types';
 export * from './enums';
 export * from './dashboard.types';
 export * from './observatory.types';
+export * from './portfolio.types';

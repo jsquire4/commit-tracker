@@ -11,7 +11,7 @@ interface TeamHealthTableProps {
 
 function driftLabel(unit: OrgUnitHealth): { text: string; className: string } {
   const dir = unit.trendDirection.toUpperCase();
-  if (dir === 'DECLINING' && unit.weeksTrending >= 3) {
+  if (dir === 'DECLINING' && Math.abs(unit.weeksTrending) >= 3) {
     return { text: `Alignment \u2193 Sustained`, className: 'text-warning font-medium' };
   }
   if (dir === 'DECLINING') {
@@ -83,7 +83,7 @@ export function TeamHealthTable({ units, onSelectTeam }: TeamHealthTableProps) {
                   <span className={`text-[0.8125rem] ${drift.className}`}>{drift.text}</span>
                 </td>
                 <td className="py-3 px-3 text-body text-on-surface text-right tabular-nums">
-                  {unit.weeksTrending > 0 ? `${unit.weeksTrending}w` : '\u2014'}
+                  {unit.weeksTrending !== 0 ? `${Math.abs(unit.weeksTrending)}w` : '\u2014'}
                 </td>
                 <td className="py-3 px-3 w-8 text-right pr-4">
                   <span className="text-muted opacity-0 group-hover:opacity-100 transition-opacity text-[0.8125rem]">&rarr;</span>
