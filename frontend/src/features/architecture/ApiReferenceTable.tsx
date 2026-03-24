@@ -29,6 +29,7 @@ const API_GROUPS: ApiGroup[] = [
       { method: 'POST', path: '/commitments/unplanned', description: 'Add unplanned work during RECONCILING', auth: 'Owner' },
       { method: 'GET', path: '/commitments', description: 'List with filters (cycle, user, RCDO, CHESS, status)', auth: 'Scoped' },
       { method: 'GET', path: '/commitments/{id}', description: 'Get single commitment', auth: 'Scoped' },
+      { method: 'GET', path: '/commitments/{id}/lineage', description: 'Paginated carry-forward chain (newest first)', auth: 'Scoped' },
       { method: 'PUT', path: '/commitments/{id}', description: 'Update (DRAFT state only)', auth: 'Owner' },
       { method: 'PUT', path: '/commitments/reorder', description: 'Batch reorder (ordered list of IDs)', auth: 'Owner' },
       { method: 'DELETE', path: '/commitments/{id}', description: 'Delete (DRAFT only)', auth: 'Owner' },

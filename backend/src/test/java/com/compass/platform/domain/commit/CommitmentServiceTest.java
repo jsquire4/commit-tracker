@@ -69,6 +69,7 @@ class CommitmentServiceTest {
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
     @Mock private TeamActivationService teamActivationService;
     @Mock private RcdoValidator rcdoValidator;
+    @Mock private CommitmentMapper commitmentMapper;
     @InjectMocks private CommitmentService commitmentService;
 
     private Org org;

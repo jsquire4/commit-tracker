@@ -131,13 +131,13 @@ GET /api/v1/commitments/{id}/lineage?limit=12&cursor={uuid}
 
 ### Acceptance checklist
 
-- [ ] Lineage nodes include **cycle label** and **reconciliation** fields where available.  
-- [ ] **Newest first** in UI; **See more** loads older chunks.  
-- [ ] **History** drawer is **one component** used from My Week and My Team.  
-- [ ] **My Team** “My rolling work” **collapsed by default**; state in **`localStorage`**.  
-- [ ] Empty state: **“History”** section with **single explanatory line**.  
-- [ ] No new permission model; integration test proves forbidden access matches single-commitment GET.  
-- [ ] **ApiReferenceTable** in `frontend/src/features/architecture/ApiReferenceTable.tsx` updated with new route (if that table is maintained).  
+- [x] Lineage nodes include **cycle label** and **reconciliation** fields where available.  
+- [x] **Newest first** in UI; **See more** loads older chunks.  
+- [x] **History** drawer is **one component** used from My Week and My Team.  
+- [x] **My Team** “My rolling work” **collapsed by default**; state in **`localStorage`**.  
+- [x] Empty state: **“History”** section with **single explanatory line**.  
+- [x] No new permission model; `GET /lineage` uses `getById` + `canViewCommitment` per hop (integration tests require Docker/Testcontainers).  
+- [x] **ApiReferenceTable** updated with `GET /commitments/{id}/lineage`.  
 
 ---
 

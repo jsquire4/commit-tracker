@@ -2,6 +2,7 @@ package com.compass.platform.domain.commit;
 
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.commit.dto.CommitmentFilters;
+import com.compass.platform.domain.commit.dto.CommitmentLineageResponse;
 import com.compass.platform.domain.commit.dto.CommitmentResponse;
 import com.compass.platform.domain.commit.dto.CreateCommitmentRequest;
 import com.compass.platform.domain.commit.dto.CreateUnplannedCommitmentRequest;
@@ -79,6 +80,19 @@ public class CommitmentController {
         Commitment commitment = commitmentService.getById(id, actor);
         List<TaskBullet> bullets = taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(id);
         return ResponseEntity.ok(ApiResponse.of(commitmentMapper.toResponse(commitment, bullets)));
+    }
+
+    /**
+     * Week-by-week history along the carry-forward chain (newest-first per page).
+     */
+    @GetMapping("/{id}/lineage")
+    public ResponseEntity<ApiResponse<CommitmentLineageResponse>> getLineage(
+            @PathVariable UUID id,
+            @RequestParam(required = false) UUID cursor,
+            @RequestParam(defaultValue = "7") int limit) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        CommitmentLineageResponse body = commitmentService.getLineage(id, actor, cursor, limit);
+        return ResponseEntity.ok(ApiResponse.of(body));
     }
 
     @PutMapping("/{id}")

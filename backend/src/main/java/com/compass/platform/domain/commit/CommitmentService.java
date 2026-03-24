@@ -8,6 +8,8 @@ import com.compass.platform.domain.CycleState;
 import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.commit.dto.CommitmentFilters;
+import com.compass.platform.domain.commit.dto.CommitmentLineageNode;
+import com.compass.platform.domain.commit.dto.CommitmentLineageResponse;
 import com.compass.platform.domain.commit.dto.CreateCommitmentRequest;
 import com.compass.platform.domain.commit.dto.CreateUnplannedCommitmentRequest;
 import com.compass.platform.domain.commit.dto.UpdateCommitmentRequest;
@@ -36,8 +38,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -60,6 +65,7 @@ public class CommitmentService {
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final TeamActivationService teamActivationService;
     private final RcdoValidator rcdoValidator;
+    private final CommitmentMapper commitmentMapper;
 
     public CommitmentService(CommitmentRepository commitmentRepository,
                              TaskBulletRepository taskBulletRepository,
@@ -73,7 +79,8 @@ public class CommitmentService {
                              AuditService auditService,
                              ReconciliationRecordRepository reconciliationRecordRepository,
                              TeamActivationService teamActivationService,
-                             RcdoValidator rcdoValidator) {
+                             RcdoValidator rcdoValidator,
+                             CommitmentMapper commitmentMapper) {
         this.commitmentRepository = commitmentRepository;
         this.taskBulletRepository = taskBulletRepository;
         this.cycleRepository = cycleRepository;
@@ -87,6 +94,7 @@ public class CommitmentService {
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.teamActivationService = teamActivationService;
         this.rcdoValidator = rcdoValidator;
+        this.commitmentMapper = commitmentMapper;
     }
 
     /**
@@ -395,6 +403,75 @@ public class CommitmentService {
         }
 
         return commitment;
+    }
+
+    /**
+     * Paginated commitment chain along {@code carriedFrom}, newest-first in each page.
+     * First page (no cursor): at most 7 nodes. Later pages: at most {@code limit} (capped at 50).
+     */
+    @Transactional(readOnly = true)
+    public CommitmentLineageResponse getLineage(UUID anchorCommitmentId, AppUser actor,
+                                                UUID cursor, int requestedLimit) {
+        Commitment anchor = getById(anchorCommitmentId, actor);
+
+        List<Commitment> newestFirst = new ArrayList<>();
+        Commitment cur = anchor;
+        Set<UUID> visited = new HashSet<>();
+        while (cur != null) {
+            if (!visited.add(cur.getId())) {
+                throw new ConflictException("Commitment chain contains a cycle");
+            }
+            if (!visibilityEnforcer.canViewCommitment(actor, cur)) {
+                throw new AccessDeniedException("Access denied to commitment " + cur.getId());
+            }
+            newestFirst.add(cur);
+            if (cur.getCarriedFrom() == null) {
+                break;
+            }
+            UUID parentId = cur.getCarriedFrom().getId();
+            cur = commitmentRepository.findById(parentId)
+                    .orElseThrow(() -> new EntityNotFoundException("Commitment", parentId));
+        }
+
+        int startIdx = 0;
+        if (cursor != null) {
+            boolean found = false;
+            for (int i = 0; i < newestFirst.size(); i++) {
+                if (newestFirst.get(i).getId().equals(cursor)) {
+                    startIdx = i + 1;
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new IllegalArgumentException("Invalid lineage cursor: not part of this chain");
+            }
+        }
+
+        if (startIdx >= newestFirst.size()) {
+            return new CommitmentLineageResponse(List.of(), false, null);
+        }
+
+        int effectiveLimit = cursor == null
+                ? Math.min(Math.max(requestedLimit, 1), 7)
+                : Math.min(Math.max(requestedLimit, 1), 50);
+
+        int endIdx = Math.min(startIdx + effectiveLimit, newestFirst.size());
+        List<Commitment> slice = newestFirst.subList(startIdx, endIdx);
+        boolean hasMore = endIdx < newestFirst.size();
+        UUID nextCursor = hasMore ? slice.get(slice.size() - 1).getId() : null;
+
+        List<CommitmentLineageNode> nodes = new ArrayList<>();
+        for (Commitment c : slice) {
+            List<TaskBullet> bullets = taskBulletRepository.findByCommitmentIdOrderBySortOrderAsc(c.getId());
+            Optional<ReconciliationRecord> reconOpt = reconciliationRecordRepository
+                    .findByCommitmentIdAndCycleId(c.getId(), c.getCycle().getId());
+            ReconciliationStatus reconStatus = reconOpt.map(ReconciliationRecord::getStatus).orElse(null);
+            String reconNote = reconOpt.map(ReconciliationRecord::getNotes).orElse(null);
+            nodes.add(commitmentMapper.toLineageNode(c, bullets, reconStatus, reconNote));
+        }
+
+        return new CommitmentLineageResponse(nodes, hasMore, nextCursor);
     }
 
     /**

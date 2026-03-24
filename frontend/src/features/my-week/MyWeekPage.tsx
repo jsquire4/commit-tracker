@@ -17,6 +17,7 @@ import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';
+import { MyWeekHistorySection } from '@/features/commitment-history/MyWeekHistorySection';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -345,6 +346,8 @@ export function MyWeekPage() {
               )}
             </>
           )}
+
+          <MyWeekHistorySection commitments={myCommitments} />
         </div>
 
         {/* Sidebar */}

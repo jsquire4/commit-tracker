@@ -15,6 +15,7 @@ import { RallyCryCoverageCards } from './RallyCryCoverageCards';
 import { PersonCard } from './PersonCard';
 import { AssignWorkForm, createEmptyFormState } from './AssignWorkForm';
 import { TeamAnalytics } from './TeamAnalytics';
+import { MyRollingWorkSection } from '@/features/commitment-history/MyRollingWorkSection';
 import type {
   Commitment,
   TeamMemberSummary,
@@ -48,6 +49,11 @@ export function MyTeamPage() {
 
   // ALL hooks must be above any conditional returns (Rules of Hooks)
   const allCommitments = commitments ?? [];
+
+  const myCommitmentsForCycle = useMemo(() => {
+    if (!userId) return [];
+    return allCommitments.filter((c) => c.userId === userId);
+  }, [allCommitments, userId]);
 
   const commitmentsByUser = useMemo(() => {
     const map: Record<string, Commitment[]> = {};
@@ -139,6 +145,8 @@ export function MyTeamPage() {
           }}
         />
       </div>
+
+      <MyRollingWorkSection commitments={myCommitmentsForCycle} />
 
       {/* Dashboard Filters */}
       <DashboardFilters

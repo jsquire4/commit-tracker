@@ -5,6 +5,7 @@ import type {
   CreateUnplannedCommitmentRequest,
   UpdateCommitmentRequest,
   CommitmentFilters,
+  CommitmentLineageResponse,
 } from '@/types';
 
 const BASE = '/api/v1/commitments';
@@ -52,4 +53,14 @@ export async function createUnplannedCommitment(
 ): Promise<Commitment> {
   const response = await apiClient.post<{ data: Commitment }>(`${BASE}/unplanned`, req);
   return response.data.data;
+}
+
+export async function getCommitmentLineage(
+  id: string,
+  params?: { limit?: number; cursor?: string }
+): Promise<CommitmentLineageResponse> {
+  const q: Record<string, unknown> = {};
+  if (params?.limit != null) q.limit = params.limit;
+  if (params?.cursor != null) q.cursor = params.cursor;
+  return fetchData<CommitmentLineageResponse>(`${BASE}/${id}/lineage`, q);
 }

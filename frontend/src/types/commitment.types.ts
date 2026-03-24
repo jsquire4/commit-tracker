@@ -82,3 +82,25 @@ export interface CommitmentFilters {
   chessCategoryId?: string;
   assignedBy?: string;
 }
+
+/** One week snapshot along a carry-forward chain (API: GET /commitments/{id}/lineage). */
+export interface CommitmentLineageNode {
+  commitmentId: string;
+  cycleId: string;
+  cycleLabel: string;
+  startsAt: string;
+  endsAt: string;
+  title: string;
+  description: string | null;
+  bullets: TaskBullet[];
+  userId: string;
+  userDisplayName: string;
+  reconciliationStatus: ReconciliationStatus | null;
+  reconciliationNote: string | null;
+}
+
+export interface CommitmentLineageResponse {
+  nodes: CommitmentLineageNode[];
+  hasMore: boolean;
+  nextCursor: string | null;
+}

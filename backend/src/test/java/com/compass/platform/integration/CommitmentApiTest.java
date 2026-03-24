@@ -216,6 +216,50 @@ class CommitmentApiTest extends IntegrationTestBase {
     }
 
     @Test
+    @DisplayName("GET /api/v1/commitments/{id}/lineage returns 200 with one node for anchor only")
+    void getLineage_singleCommitment_returnsOneNode() throws Exception {
+        Commitment commitment = commitmentRepository.save(Commitment.builder()
+                .org(org)
+                .user(employee)
+                .cycle(draftCycle)
+                .title("Lineage Root")
+                .completionHorizon(CompletionHorizon.EOW)
+                .priorityRank(0)
+                .build());
+        saveBullets(commitment, org, List.of("Bullet one"));
+
+        mockMvc.perform(get("/api/v1/commitments/" + commitment.getId() + "/lineage")
+                        .header("Authorization", bearerToken(employee)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.nodes.length()", is(1)))
+                .andExpect(jsonPath("$.data.nodes[0].title", is("Lineage Root")))
+                .andExpect(jsonPath("$.data.hasMore", is(false)));
+    }
+
+    @Test
+    @DisplayName("GET /api/v1/commitments/{id}/lineage returns 403 for other org when forbidden")
+    void getLineage_forbidden_returns403() throws Exception {
+        Commitment commitment = commitmentRepository.save(Commitment.builder()
+                .org(org)
+                .user(employee)
+                .cycle(draftCycle)
+                .title("Hidden")
+                .completionHorizon(CompletionHorizon.EOW)
+                .priorityRank(0)
+                .build());
+        saveBullets(commitment, org, List.of("Bullet one"));
+
+        Org otherOrg = orgRepository.save(new Org(null, "Other Org",
+                "other-org-" + UUID.randomUUID().toString().substring(0, 8), "UTC", true));
+        AppUser outsider = userRepository.save(new AppUser(otherOrg, "outsider@example.com", "Outsider",
+                UserRole.MANAGER, null));
+
+        mockMvc.perform(get("/api/v1/commitments/" + commitment.getId() + "/lineage")
+                        .header("Authorization", bearerToken(outsider)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/commitments without auth returns 401")
     void createCommitment_unauthenticated_returns401() throws Exception {
         CreateCommitmentRequest request = new CreateCommitmentRequest(

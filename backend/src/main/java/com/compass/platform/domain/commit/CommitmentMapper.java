@@ -1,6 +1,7 @@
 package com.compass.platform.domain.commit;
 
 import com.compass.platform.domain.ReconciliationStatus;
+import com.compass.platform.domain.commit.dto.CommitmentLineageNode;
 import com.compass.platform.domain.commit.dto.CommitmentResponse;
 import org.springframework.stereotype.Component;
 
@@ -86,5 +87,36 @@ public class CommitmentMapper {
 
     public List<CommitmentResponse> toResponseList(List<Commitment> entities) {
         return entities.stream().map(this::toResponse).toList();
+    }
+
+    /**
+     * Snapshot for commitment history / lineage (one row per cycle in the chain).
+     */
+    public CommitmentLineageNode toLineageNode(
+            Commitment entity,
+            List<TaskBullet> bullets,
+            ReconciliationStatus reconciliationStatus,
+            String reconciliationNote) {
+        List<CommitmentResponse.TaskBulletResponse> bulletResponses = bullets == null
+                ? List.of()
+                : bullets.stream()
+                .map(b -> new CommitmentResponse.TaskBulletResponse(
+                        b.getId(), b.getBody(), b.getSortOrder(), b.isCompleted()))
+                .toList();
+
+        return new CommitmentLineageNode(
+                entity.getId(),
+                entity.getCycle().getId(),
+                entity.getCycle().getLabel(),
+                entity.getCycle().getStartsAt(),
+                entity.getCycle().getEndsAt(),
+                entity.getTitle(),
+                entity.getDescription(),
+                bulletResponses,
+                entity.getUser().getId(),
+                entity.getUser().getDisplayName(),
+                reconciliationStatus,
+                reconciliationNote
+        );
     }
 }
