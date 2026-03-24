@@ -2,10 +2,10 @@ import { useQuery } from '@tanstack/react-query';
 import { getPortfolioData } from '@/api/portfolio.api';
 import type { PortfolioData } from '@/types/portfolio.types';
 
-export function usePortfolio(cycleId?: string) {
+export function usePortfolio() {
   return useQuery<PortfolioData>({
-    queryKey: ['portfolio', cycleId ?? 'current'],
-    queryFn: () => getPortfolioData(cycleId),
+    queryKey: ['portfolio', 'current'],
+    queryFn: () => getPortfolioData(),
     staleTime: 5 * 60_000,
   });
 }

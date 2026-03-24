@@ -1,5 +1,6 @@
 package com.compass.platform.domain.observatory.dto;
 
+import java.util.List;
 import java.util.UUID;
 
 public record PortcoSummary(
@@ -11,5 +12,6 @@ public record PortcoSummary(
         double completionRate,
         double carryForwardRate,
         int activeDriftSignals,
-        long headcount
+        long headcount,
+        List<RallyCrySummary> rallyCries
 ) {}

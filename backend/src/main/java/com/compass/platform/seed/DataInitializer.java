@@ -13,6 +13,7 @@ import com.compass.platform.domain.rcdo.Outcome;
 import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.user.AppUser;
+import com.compass.platform.domain.observatory.Portfolio;
 import com.compass.platform.domain.user.Org;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -84,14 +85,22 @@ public class DataInitializer implements ApplicationRunner {
     // ── Seed steps ───────────────────────────────────────────────────────────────
 
     private Org seedOrg() {
+        Portfolio portfolio = Portfolio.builder()
+                .name("Compass Portfolio")
+                .slug("compass-portfolio")
+                .description("Portfolio tracking Meridian Manufacturing")
+                .build();
+        em.persist(portfolio);
+
         Org meridian = Org.builder()
                 .name("Meridian Manufacturing")
                 .slug("meridian-mfg")
                 .timezone("America/Chicago")
                 .isActive(true)
+                .portfolio(portfolio)
                 .build();
         em.persist(meridian);
-        log.info("event=seed_orgs count=1");
+        log.info("event=seed_orgs count=1 portfolios=1");
         return meridian;
     }
 

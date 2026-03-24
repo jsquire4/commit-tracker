@@ -40,7 +40,7 @@ export function PortfolioPage() {
   const { data: cycle } = useCurrentCycle();
   const [selectedCycleId, setSelectedCycleId] = useState<string | undefined>(undefined);
   const activeCycleId = selectedCycleId ?? cycle?.id;
-  const { data: portfolio, isLoading, isError, error } = usePortfolio(activeCycleId);
+  const { data: portfolio, isLoading, isError, error } = usePortfolio();
 
   if (isLoading) {
     return (

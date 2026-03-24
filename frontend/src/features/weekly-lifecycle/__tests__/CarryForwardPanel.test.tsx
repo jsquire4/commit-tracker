@@ -140,7 +140,7 @@ describe('CarryForwardPanel', () => {
       );
 
       const acceptButtons = screen.getAllByRole('button', { name: /accept/i });
-      await user.click(acceptButtons[0]);
+      await user.click(acceptButtons[0]!);
 
       // After accept: accepted row shows "Accepted" badge; panel remains visible for other item
       expect(screen.getByText('Accepted')).toBeInTheDocument();
@@ -175,7 +175,7 @@ describe('CarryForwardPanel', () => {
       expect(screen.getByText(/2 items carried from last week/i)).toBeInTheDocument();
 
       const acceptButtons = screen.getAllByRole('button', { name: /accept/i });
-      await user.click(acceptButtons[0]);
+      await user.click(acceptButtons[0]!);
 
       expect(screen.getByText(/1 item carried from last week/i)).toBeInTheDocument();
     });
@@ -184,7 +184,7 @@ describe('CarryForwardPanel', () => {
       const user = userEvent.setup();
       const item = makeCarriedCommitment({ title: 'Only task' });
 
-      const { container } = renderWithProviders(
+      renderWithProviders(
         <CarryForwardPanel carriedItems={[item]} cycleId="cycle-1" />
       );
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { renderHook, act, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import React from 'react';
@@ -305,13 +305,13 @@ describe('useReconciliationRow', () => {
 
     act(() => {
       result.current.handleDisplacementChange({
-        category: 'UNPLANNED_WORK',
+        category: 'PRODUCTION_EMERGENCY',
         detail: 'Urgent production incident',
         displacingCommitmentId: null,
       });
     });
 
-    expect(result.current.row.displacement.category).toBe('UNPLANNED_WORK');
+    expect(result.current.row.displacement.category).toBe('PRODUCTION_EMERGENCY');
     expect(result.current.row.displacement.detail).toBe('Urgent production incident');
   });
 

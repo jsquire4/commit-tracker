@@ -15,7 +15,7 @@ export interface PortfolioMetric {
 export interface RallyCryStatus {
   name: string;
   commitmentCount: number;
-  status: 'on-track' | 'behind' | 'stalled' | 'flagged' | 'coverage-gap';
+  status: 'increasing' | 'decreasing' | 'stable' | 'coverage-gap';
 }
 
 export interface DriftSignalSummary {

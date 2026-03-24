@@ -1,5 +1,7 @@
 package com.compass.platform.domain.observatory;
 
+import com.compass.platform.domain.commit.CommitmentRepository;
+import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
 import com.compass.platform.domain.observatory.dto.ExecutiveHealthResponse;
 import com.compass.platform.domain.observatory.dto.HealthGrade;
@@ -7,6 +9,7 @@ import com.compass.platform.domain.observatory.dto.PortcoSummary;
 import com.compass.platform.domain.observatory.dto.PortcoTrendLine;
 import com.compass.platform.domain.observatory.dto.PortfolioComparisonResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
+import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.domain.user.OrgRepository;
@@ -25,7 +28,9 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -38,6 +43,9 @@ class PortfolioServiceTest {
     @Mock private AppUserRepository appUserRepository;
     @Mock private ExecutiveHealthComposer healthComposer;
     @Mock private AnalyticsService analyticsService;
+    @Mock private RallyCryRepository rallyCryRepository;
+    @Mock private CommitmentRepository commitmentRepository;
+    @Mock private CycleRepository cycleRepository;
     @InjectMocks private PortfolioService portfolioService;
 
     private static final int DEFAULT_WEEK_COUNT = 12;
@@ -77,6 +85,11 @@ class PortfolioServiceTest {
                 .timezone("America/New_York")
                 .isActive(true)
                 .build();
+
+        // Default: no active rally cries — buildRallyCrySummaries returns List.of() early.
+        // Lenient because comparison tests and not-found tests never reach this code path.
+        lenient().when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(any(UUID.class)))
+                .thenReturn(List.of());
     }
 
     // -------------------------------------------------------------------------

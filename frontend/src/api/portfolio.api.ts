@@ -5,9 +5,16 @@ import type {
   PortfolioMetric,
   ComparisonRow,
   HealthGradeLabel,
+  RallyCryStatus,
 } from '@/types/portfolio.types';
 
 const OBSERVATORY_BASE = '/api/v1/observatory';
+
+interface BackendRallyCrySummary {
+  name: string;
+  commitmentCount: number;
+  status: string;
+}
 
 /** Backend PortcoSummary shape */
 interface BackendPortcoSummary {
@@ -20,6 +27,7 @@ interface BackendPortcoSummary {
   carryForwardRate: number;
   activeDriftSignals: number;
   headcount: number;
+  rallyCries: BackendRallyCrySummary[];
 }
 
 interface BackendPortfolioHealth {
@@ -68,7 +76,7 @@ function mapGrade(grade: string): HealthGradeLabel {
  * Fetch portfolio data from real backend endpoints and transform
  * into the PortfolioData shape the frontend expects.
  */
-export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData> {
+export async function getPortfolioData(): Promise<PortfolioData> {
   // Fetch health data and trend data in parallel
   const [health, comparison] = await Promise.all([
     fetchData<BackendPortfolioHealth>(`${OBSERVATORY_BASE}/portfolio`),
@@ -116,7 +124,11 @@ export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData
         completionRate: Math.round(c.completionRate),
       },
       alignmentTrend: trend.map((p) => ({ value: Math.round(p.rallyCoveragePct) })),
-      rallyCries: [], // TODO: per-portco rally cry status requires additional endpoint
+      rallyCries: (c.rallyCries ?? []).map((rc): RallyCryStatus => ({
+        name: rc.name,
+        commitmentCount: rc.commitmentCount,
+        status: rc.status as RallyCryStatus['status'],
+      })),
       driftSignals: {
         count: c.activeDriftSignals,
         description: c.activeDriftSignals > 0

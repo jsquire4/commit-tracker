@@ -45,6 +45,12 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
 
     long countByDefiningObjectiveId(UUID definingObjectiveId);
 
+    @Query(value = "SELECT c.rally_cry_id AS rallyCryId, COUNT(c.id) AS cnt " +
+                   "FROM commitments c " +
+                   "WHERE c.org_id = :orgId AND c.cycle_id = :cycleId AND c.rally_cry_id IS NOT NULL " +
+                   "GROUP BY c.rally_cry_id", nativeQuery = true)
+    List<Object[]> countCommitmentsByRallyCryForOrgAndCycle(@Param("orgId") UUID orgId, @Param("cycleId") UUID cycleId);
+
     long countByOutcomeId(UUID outcomeId);
 
     @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id = :cycleId ORDER BY c.user.id, c.priorityRank")

@@ -4,6 +4,7 @@
  * Metrics row. Sparkline SVG. Rally cry summary with status dots.
  * Drift signal callout. "View Briefing" link.
  */
+import { useNavigate } from 'react-router-dom';
 import Card from '@/components/Card';
 import { Sparkline } from './Sparkline';
 import type { PortfolioCompany, HealthGradeLabel } from '@/types/portfolio.types';
@@ -20,22 +21,21 @@ const gradeAccent: Record<HealthGradeLabel, 'teal' | 'amber' | 'rose'> = {
 };
 
 const statusDotClass: Record<string, string> = {
-  'on-track': 'bg-accent',
-  behind: 'bg-warning',
-  stalled: 'bg-error',
-  flagged: 'bg-error',
-  'coverage-gap': 'bg-warning',
+  'increasing': 'bg-accent',
+  'decreasing': 'bg-[#1a3a5c]',
+  'stable': 'bg-on-surface-variant',
+  'coverage-gap': 'bg-on-surface-variant',
 };
 
 const statusTextClass: Record<string, string> = {
-  'on-track': 'text-muted',
-  behind: 'text-warning',
-  stalled: 'text-error',
-  flagged: 'text-error',
-  'coverage-gap': 'text-warning',
+  'increasing': 'text-accent',
+  'decreasing': 'text-[#1a3a5c]',
+  'stable': 'text-muted',
+  'coverage-gap': 'text-muted',
 };
 
 export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
+  const navigate = useNavigate();
   return (
     <Card
       accent={gradeAccent[company.healthGrade]}
@@ -52,7 +52,12 @@ export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
           </h3>
           <p className="text-[0.8125rem] text-muted">{company.subtitle}</p>
         </div>
-        {/* TODO: Wire to portfolio drill-down when implemented */}
+        <button
+          onClick={() => navigate(`/portfolio/${company.orgId}`)}
+          className="text-[0.8125rem] text-accent hover:underline transition-colors"
+        >
+          View Details →
+        </button>
       </div>
 
       {/* Metrics row */}
@@ -92,12 +97,9 @@ export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
               />
               <span className="flex-1">
                 {rc.name} &mdash; {rc.commitmentCount} commitment{rc.commitmentCount !== 1 ? 's' : ''}
-                {rc.status !== 'on-track' && rc.status !== 'behind' ? '' : `, ${rc.status.replace('-', ' ')}`}
               </span>
-              <span
-                className={`text-[0.75rem] flex-shrink-0 ${statusTextClass[rc.status] ?? 'text-muted'}`}
-              >
-                {rc.status === 'on-track' ? 'on track' : rc.status.replace('-', ' ')}
+              <span className={`text-[0.75rem] flex-shrink-0 ${statusTextClass[rc.status] ?? 'text-muted'}`}>
+                {rc.status === 'coverage-gap' ? 'no coverage' : rc.status}
               </span>
             </li>
           ))}

@@ -21,6 +21,7 @@ const mockPortfolioHealth = {
       carryForwardRate: 12,
       activeDriftSignals: 0,
       headcount: 24,
+      rallyCries: [],
     },
   ],
   computedAt: '2026-03-24T12:00:00Z',

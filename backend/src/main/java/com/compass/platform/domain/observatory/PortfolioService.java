@@ -1,11 +1,15 @@
 package com.compass.platform.domain.observatory;
 
+import com.compass.platform.domain.commit.CommitmentRepository;
+import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
 import com.compass.platform.domain.observatory.dto.ExecutiveHealthResponse;
 import com.compass.platform.domain.observatory.dto.PortcoSummary;
 import com.compass.platform.domain.observatory.dto.PortcoTrendLine;
 import com.compass.platform.domain.observatory.dto.PortfolioComparisonResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
+import com.compass.platform.domain.observatory.dto.RallyCrySummary;
+import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.domain.user.OrgRepository;
@@ -15,6 +19,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,17 +46,26 @@ public class PortfolioService {
     private final AppUserRepository appUserRepository;
     private final ExecutiveHealthComposer healthComposer;
     private final AnalyticsService analyticsService;
+    private final RallyCryRepository rallyCryRepository;
+    private final CommitmentRepository commitmentRepository;
+    private final CycleRepository cycleRepository;
 
     public PortfolioService(PortfolioRepository portfolioRepository,
                             OrgRepository orgRepository,
                             AppUserRepository appUserRepository,
                             ExecutiveHealthComposer healthComposer,
-                            AnalyticsService analyticsService) {
+                            AnalyticsService analyticsService,
+                            RallyCryRepository rallyCryRepository,
+                            CommitmentRepository commitmentRepository,
+                            CycleRepository cycleRepository) {
         this.portfolioRepository = portfolioRepository;
         this.orgRepository = orgRepository;
         this.appUserRepository = appUserRepository;
         this.healthComposer = healthComposer;
         this.analyticsService = analyticsService;
+        this.rallyCryRepository = rallyCryRepository;
+        this.commitmentRepository = commitmentRepository;
+        this.cycleRepository = cycleRepository;
     }
 
     // -------------------------------------------------------------------------
@@ -143,6 +157,7 @@ public class PortfolioService {
     private PortcoSummary buildPortcoSummary(Org org, int weekCount) {
         ExecutiveHealthResponse health = healthComposer.computeHealth(org.getId(), weekCount);
         long headcount = appUserRepository.countByOrgIdAndIsActiveTrue(org.getId());
+        List<RallyCrySummary> rallyCries = buildRallyCrySummaries(org.getId());
 
         return new PortcoSummary(
                 org.getId(),
@@ -153,8 +168,53 @@ public class PortfolioService {
                 health.completionRate(),
                 health.carryForwardRate(),
                 health.activeDriftSignals(),
-                headcount
+                headcount,
+                rallyCries
         );
+    }
+
+    /**
+     * Build a list of {@link RallyCrySummary} items for a single org, using the
+     * most recent active cycle to count commitments per rally cry.
+     */
+    private List<RallyCrySummary> buildRallyCrySummaries(UUID orgId) {
+        // Get active rally cries for this org
+        var rallyCries = rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId);
+        if (rallyCries.isEmpty()) {
+            return List.of();
+        }
+
+        // Get the most recent active cycle for this org
+        var latestCycle = cycleRepository.findByOrgIdAndIsActiveTrue(orgId);
+        if (latestCycle.isEmpty()) {
+            // No active cycle — all RCs show as "stable" with 0 commitments
+            return rallyCries.stream()
+                    .map(rc -> new RallyCrySummary(rc.getTitle(), 0, "stable"))
+                    .toList();
+        }
+
+        UUID cycleId = latestCycle.get().getId();
+
+        // Batch count commitments per rally cry
+        var counts = commitmentRepository.countCommitmentsByRallyCryForOrgAndCycle(orgId, cycleId);
+        var countMap = new HashMap<UUID, Long>();
+        for (Object[] row : counts) {
+            countMap.put((UUID) row[0], ((Number) row[1]).longValue());
+        }
+
+        return rallyCries.stream()
+                .map(rc -> {
+                    long count = countMap.getOrDefault(rc.getId(), 0L);
+                    String status;
+                    if (count == 0) {
+                        status = "coverage-gap";
+                    } else {
+                        // Neutral: we don't judge good/bad, just report coverage exists
+                        status = "stable";
+                    }
+                    return new RallyCrySummary(rc.getTitle(), (int) count, status);
+                })
+                .toList();
     }
 
     /**
