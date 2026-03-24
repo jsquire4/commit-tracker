@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFadeUp } from '@/hooks/useMotion';
+import { RevealCard } from '@/components/RevealCard';
 
 interface CompanyNarrative {
   name: string;
@@ -30,22 +31,15 @@ const COMPANIES: CompanyNarrative[] = [
 ];
 
 function CompanyCard({ company, index }: { company: CompanyNarrative; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFadeUp(ref);
-
   return (
-    <div
-      ref={ref}
-      className="reveal rounded bg-surface-lowest p-6"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index} className="rounded bg-surface-lowest p-6">
       <div className="font-serif text-[1.0625rem] text-on-surface mb-2">
         {company.name}
       </div>
       <div className="text-small text-on-surface-variant leading-relaxed">
         {company.description}
       </div>
-    </div>
+    </RevealCard>
   );
 }
 

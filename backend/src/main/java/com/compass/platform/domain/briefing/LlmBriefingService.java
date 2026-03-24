@@ -2,7 +2,6 @@ package com.compass.platform.domain.briefing;
 
 import com.compass.platform.config.LlmConfig;
 import com.compass.platform.domain.briefing.dto.*;
-import com.compass.platform.domain.briefing.dto.BriefingMetric;
 import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
 import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
@@ -14,6 +13,7 @@ import com.compass.platform.domain.dashboard.dto.DashboardFilters;
 import com.compass.platform.domain.dashboard.dto.RcdoCoverageResponse;
 import com.compass.platform.domain.dashboard.dto.TeamRollupResponse;
 import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
+import com.compass.platform.domain.dashboard.dto.DashboardResponse;
 import com.compass.platform.domain.observatory.AnalyticsService;
 import com.compass.platform.domain.observatory.DriftDetectionService;
 import com.compass.platform.domain.observatory.dto.*;
@@ -31,9 +31,6 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,18 +38,17 @@ import java.util.stream.Collectors;
 /**
  * LLM-backed implementation of {@link BriefingService}.
  *
- * <p>TODO(complexity-sweep): This class is 967 lines with 9 dependencies.
- * Extract to: BriefingDataGatherer (gatherData + BriefingDataContext),
- * BriefingPromptBuilder (all build*Prompt/build*Fallback methods),
- * and keep LlmBriefingService as the orchestrator (~300 lines).
+ * <p>Orchestrates briefing generation by delegating to:
+ * <ul>
+ *   <li>{@link BriefingDataGatherer} — data collection</li>
+ *   <li>{@link BriefingPromptBuilder} — prompt construction and fallback templates</li>
+ *   <li>{@link BriefingResponseBuilder} — response assembly</li>
+ *   <li>{@link NarrativeVerifier} — cite-and-verify validation</li>
+ * </ul>
  *
  * <p>Model-agnostic — the LLM provider, model name, and base URL are all
  * configurable via {@link LlmConfig}. Swap from OpenAI to Anthropic or any
  * OpenAI-compatible API by changing environment variables.
- *
- * <p>Uses the cite-and-verify pattern: every number in the prompt is tagged
- * with a reference ID, the LLM is required to cite those refs, and a
- * deterministic {@link NarrativeVerifier} checks the output before storage.
  */
 @Service
 @Primary
@@ -73,6 +69,7 @@ public class LlmBriefingService implements BriefingService {
     private final DashboardService dashboardService;
     private final BriefingDataGatherer dataGatherer;
     private final BriefingResponseBuilder responseBuilder;
+    private final BriefingPromptBuilder promptBuilder;
     private final NarrativeVerifier verifier = new NarrativeVerifier();
 
     private volatile OpenAIClient client;
@@ -87,7 +84,8 @@ public class LlmBriefingService implements BriefingService {
                               ObjectMapper objectMapper,
                               DashboardService dashboardService,
                               BriefingDataGatherer dataGatherer,
-                              BriefingResponseBuilder responseBuilder) {
+                              BriefingResponseBuilder responseBuilder,
+                              BriefingPromptBuilder promptBuilder) {
         this.analyticsService = analyticsService;
         this.driftDetectionService = driftDetectionService;
         this.cycleRepository = cycleRepository;
@@ -99,6 +97,7 @@ public class LlmBriefingService implements BriefingService {
         this.dashboardService = dashboardService;
         this.dataGatherer = dataGatherer;
         this.responseBuilder = responseBuilder;
+        this.promptBuilder = promptBuilder;
     }
 
     private OpenAIClient getClient() {
@@ -128,7 +127,7 @@ public class LlmBriefingService implements BriefingService {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback");
             BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, resolveCycleId(orgId, cycleId));
-            return responseBuilder.buildResponse(responseBuilder.buildTemplateFallback(ctx), List.of(), ctx);
+            return responseBuilder.buildResponse(promptBuilder.buildBriefingFallback(ctx), List.of(), ctx);
         }
 
         UUID resolvedCycleId = resolveCycleId(orgId, cycleId);
@@ -145,7 +144,7 @@ public class LlmBriefingService implements BriefingService {
 
         // Generate new narrative
         log.info("Generating BRIEFING narrative for org={} cycle={} model={}", orgId, resolvedCycleId, llmConfig.getResolvedModel());
-        String rawOutput = callLlm(SYSTEM_PROMPT, ctx.userPrompt());
+        String rawOutput = callLlm(promptBuilder.briefingSystemPrompt(), ctx.userPrompt());
 
         // Verify
         NarrativeVerifier.VerificationResult verification = verifier.verify(
@@ -162,7 +161,7 @@ public class LlmBriefingService implements BriefingService {
             log.warn("Verification failed for BRIEFING (cycle={}). Violations: {}. Falling back to template.",
                     resolvedCycleId, verification.violations());
             // Retry once
-            String retryOutput = callLlm(SYSTEM_PROMPT, ctx.userPrompt()
+            String retryOutput = callLlm(promptBuilder.briefingSystemPrompt(), ctx.userPrompt()
                     + "\n\nPREVIOUS ATTEMPT FAILED VERIFICATION. Violations:\n"
                     + String.join("\n", verification.violations())
                     + "\n\nPlease regenerate, ensuring every number matches the provided data exactly.");
@@ -177,7 +176,7 @@ public class LlmBriefingService implements BriefingService {
             } else {
                 // Fall back to deterministic template
                 log.warn("Retry also failed. Using deterministic fallback for cycle={}", resolvedCycleId);
-                narrative = responseBuilder.buildTemplateFallback(ctx);
+                narrative = promptBuilder.buildBriefingFallback(ctx);
                 suggestionsJson = "[]";
             }
         }
@@ -201,7 +200,7 @@ public class LlmBriefingService implements BriefingService {
 
         // Build system context with org data
         BriefingDataGatherer.BriefingDataContext ctx = dataGatherer.gatherData(orgId, resolveCycleId(orgId, null));
-        String chatSystemPrompt = CHAT_SYSTEM_PROMPT + "\n\nCURRENT DATA:\n" + ctx.userPrompt();
+        String chatSystemPrompt = promptBuilder.chatSystemPrompt() + "\n\nCURRENT DATA:\n" + ctx.userPrompt();
 
         // Build message list
         var paramsBuilder = ChatCompletionCreateParams.builder()
@@ -310,8 +309,7 @@ public class LlmBriefingService implements BriefingService {
         }
 
         DashboardFilters filters = new DashboardFilters(cycleWeekStart, null, null, null, false);
-        com.compass.platform.domain.dashboard.dto.DashboardResponse dash =
-                dashboardService.getDashboard(actor, filters);
+        DashboardResponse dash = dashboardService.getDashboard(actor, filters);
 
         TeamRollupResponse rollup = dash.teamRollup();
         AlignmentSignalResponse alignment = dash.alignmentSignal();
@@ -328,33 +326,14 @@ public class LlmBriefingService implements BriefingService {
                 alignment != null ? alignment.distribution() : Map.of();
         int teamUnlinked = alignment != null ? alignment.unlinkedCount() : 0;
 
-        StringBuilder sb = new StringBuilder();
-        sb.append("Generate a team execution summary for a manager's weekly review.\n\n");
-        sb.append("TEAM SIZE: ").append(teamSize).append('\n');
-        sb.append("TOTAL COMMITMENTS THIS CYCLE: ").append(totalCommitments).append("\n\n");
-
-        sb.append("CHESS DISTRIBUTION:\n");
-        for (Map.Entry<String, AlignmentSignalResponse.CategoryDistribution> entry : dist.entrySet()) {
-            sb.append(String.format("- %s: %.1f%%%n", entry.getKey(), entry.getValue().percentage()));
-        }
-        if (teamUnlinked > 0) {
-            sb.append(String.format("- Uncategorized: %d commitments%n", teamUnlinked));
-        }
-
-        sb.append(String.format("%nRALLY CRY COVERAGE: %.1f%% linked (%d unlinked)%n",
-                linkedPct, unlinkedCount));
-        sb.append(String.format("UNCOVERED OBJECTIVES: %d%n", uncoveredCount));
-
-        if (coverage != null && coverage.uncoveredObjectives() != null) {
-            for (RcdoCoverageResponse.UncoveredObjective uc : coverage.uncoveredObjectives()) {
-                sb.append(String.format("- %s (rally cry: %s)%n", uc.title(), uc.rallyCryTitle()));
-            }
-        }
+        String userPrompt = promptBuilder.buildTeamSummaryPrompt(
+                teamSize, totalCommitments, dist, teamUnlinked, linkedPct, unlinkedCount,
+                uncoveredCount, coverage);
 
         log.info("Generating TEAM_SUMMARY for managerId={} teamSize={} model={}",
                 actor.getId(), teamSize, llmConfig.getResolvedModel());
 
-        String rawOutput = callLlm(TEAM_SUMMARY_SYSTEM_PROMPT, sb.toString());
+        String rawOutput = callLlm(promptBuilder.teamSummarySystemPrompt(), userPrompt);
 
         String headline = "Team Summary";
         String narrative = "";
@@ -406,9 +385,9 @@ public class LlmBriefingService implements BriefingService {
                 .mapToDouble(CompletionDataPoint::carryForwardRate).average().orElse(0);
 
         // Trend direction (compare first half vs second half of window)
-        String alignTrendDir = computeTrendDirection(
+        String alignTrendDir = promptBuilder.computeTrendDirection(
                 alignmentTrend.stream().mapToDouble(AlignmentDataPoint::strategicPct).toArray());
-        String completionTrendDir = computeTrendDirection(
+        String completionTrendDir = promptBuilder.computeTrendDirection(
                 completionTrend.stream().mapToDouble(CompletionDataPoint::completionRate).toArray());
 
         // Drift signals
@@ -418,30 +397,24 @@ public class LlmBriefingService implements BriefingService {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback for program summary");
             return new ProgramSummaryResponse(
-                    responseBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                    promptBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
                             avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
                     Instant.now());
         }
 
         // Build user prompt
         String orgName = orgRepository.findById(orgId).map(Org::getName).orElse("Organization");
-        StringBuilder sb = new StringBuilder();
-        sb.append(String.format("Summarize %s's execution trajectory over the last %d weeks.\n\n", orgName, weekCount));
-        sb.append(String.format("ALIGNMENT: avg strategic %.1f%% [P.avg_strategic], trend %s\n",
-                avgStrategicPct, alignTrendDir));
-        sb.append(String.format("COMPLETION: avg completion %.1f%% [P.avg_completion], trend %s\n",
-                avgCompletionRate, completionTrendDir));
-        sb.append(String.format("CARRY-FORWARD: avg carry-forward %.1f%% [P.avg_carry]\n",
-                avgCarryForwardRate));
-        sb.append(String.format("DRIFT: %d [P.drift] active drift signals\n", driftCount));
+        String userPrompt = promptBuilder.buildProgramSummaryPrompt(orgName, weekCount,
+                avgStrategicPct, alignTrendDir, avgCompletionRate, completionTrendDir,
+                avgCarryForwardRate, driftCount);
 
-        String systemPrompt = PROGRAM_SUMMARY_SYSTEM_PROMPT.replace("{N}", String.valueOf(weekCount));
+        String systemPrompt = promptBuilder.programSummarySystemPrompt(weekCount);
 
         log.info("Generating PROGRAM SUMMARY narrative for org={} weekCount={} model={}",
                 orgId, weekCount, llmConfig.getResolvedModel());
 
         try {
-            String raw = callLlm(systemPrompt, sb.toString());
+            String raw = callLlm(systemPrompt, userPrompt);
             // Strip any stray JSON wrapping if the model returns it
             String narrative = raw.strip();
             if (narrative.startsWith("{")) {
@@ -451,26 +424,10 @@ public class LlmBriefingService implements BriefingService {
         } catch (Exception e) {
             log.warn("LLM call failed for program summary, using fallback: {}", e.getMessage());
             return new ProgramSummaryResponse(
-                    responseBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
+                    promptBuilder.buildProgramSummaryFallback(weekCount, avgStrategicPct, avgCompletionRate,
                             avgCarryForwardRate, alignTrendDir, completionTrendDir, driftCount),
                     Instant.now());
         }
-    }
-
-    /** Determine whether values are trending up, down, or flat across a series. */
-    private String computeTrendDirection(double[] values) {
-        if (values.length < 2) return "flat";
-        int half = values.length / 2;
-        double firstHalfAvg = 0;
-        double secondHalfAvg = 0;
-        for (int i = 0; i < half; i++) firstHalfAvg += values[i];
-        for (int i = half; i < values.length; i++) secondHalfAvg += values[i];
-        firstHalfAvg /= half;
-        secondHalfAvg /= (values.length - half);
-        double delta = secondHalfAvg - firstHalfAvg;
-        if (delta > 2.0) return "improving";
-        if (delta < -2.0) return "declining";
-        return "flat";
     }
 
     /**
@@ -494,7 +451,7 @@ public class LlmBriefingService implements BriefingService {
         }
 
         // Build template fallback (used when LLM is not configured or call fails)
-        String templateNarrative = responseBuilder.buildWeekTemplateFallback(alignment, completion);
+        String templateNarrative = promptBuilder.buildWeekTemplateFallback(alignment, completion);
 
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — using template fallback for week narrative");
@@ -502,10 +459,10 @@ public class LlmBriefingService implements BriefingService {
         }
 
         try {
-            String userPrompt = responseBuilder.buildWeekNarrativePrompt(alignment, completion);
+            String userPrompt = promptBuilder.buildWeekNarrativePrompt(alignment, completion);
             log.info("Generating WEEK narrative for org={} cycle={} label={} model={}",
                     orgId, cycleId, alignment.cycleLabel(), llmConfig.getResolvedModel());
-            String raw = callLlmWithMaxTokens(WEEK_NARRATIVE_SYSTEM_PROMPT, userPrompt, 200);
+            String raw = callLlmWithMaxTokens(promptBuilder.weekNarrativeSystemPrompt(), userPrompt, 200);
             String narrative = raw.trim().replaceAll("^[\"']|[\"']$", "");
             if (narrative.isBlank()) {
                 log.warn("LLM returned blank narrative for cycle={}, falling back to template", cycleId);
@@ -613,120 +570,5 @@ public class LlmBriefingService implements BriefingService {
         return cycles.isEmpty() ? null : cycles.get(0).getId();
     }
 
-    private String hashPrompt(String prompt) {
-        try {
-            byte[] hash = MessageDigest.getInstance("SHA-256").digest(prompt.getBytes(StandardCharsets.UTF_8));
-            return HexFormat.of().formatHex(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("SHA-256 not available", e);
-        }
-    }
 
-    private String serializeVerification(NarrativeVerifier.VerificationResult result) {
-        try {
-            return objectMapper.writeValueAsString(result);
-        } catch (JsonProcessingException e) {
-            return "{\"error\": \"serialization_failed\"}";
-        }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    // System prompts
-    // ═══════════════════════════════════════════════════════════════
-
-    static final String WEEK_NARRATIVE_SYSTEM_PROMPT = """
-            Generate a 2-sentence summary of this week's execution data. \
-            Report data and change only. Use directional language (increased, declined, \
-            held steady) not judgmental language. Do not evaluate performance. \
-            The four commitment categories are: Strategic, Operational, Defensive, and \
-            Capability Building. Refer to them as "commitment categories" — never say \
-            "chess strategies" or "chess categories." \
-            Return plain text only — no JSON, no markdown, no bullet points.""";
-
-    static final String SYSTEM_PROMPT = """
-            You are the intelligence layer for Compass, an execution management platform \
-            used by PE portfolio companies. You produce executive briefings that summarize \
-            a week of team execution data.
-
-            RULES:
-            - Report data and change. Do not evaluate performance.
-            - Use directional language (increased, declined, held steady) not judgmental \
-            language (good, bad, concerning, impressive).
-            - Every number you cite MUST include its reference tag in square brackets \
-            immediately after the number. Example: "Strategic work is at 41% [A.strategic]"
-            - If you cannot cite a reference for a number, do not include that number.
-            - Never name individuals. Refer to teams by manager name only.
-            - Keep the narrative to 2-4 sentences. Dense, not verbose.
-            - Suggested actions must be specific and actionable — say what to look for and why.
-
-            OUTPUT FORMAT (JSON):
-            {
-              "narrative": "2-4 sentences with [ref] citations after every number",
-              "suggestions": [
-                {
-                  "text": "specific actionable recommendation with [ref] citations",
-                  "actionType": "REVIEW_COVERAGE | DISPLACEMENT_REVIEW | INVESTIGATE_DRIFT | CAPACITY_CHECK | NO_ACTION"
-                }
-              ]
-            }
-
-            Return ONLY the JSON object. No markdown fences, no extra text.""";
-
-    static final String CHAT_SYSTEM_PROMPT = """
-            You are the Compass Intelligence assistant for a PE portfolio company's execution \
-            management platform. You answer questions about weekly execution data — alignment, \
-            completion, carry-forward, drift signals, and rally cry coverage.
-
-            RULES:
-            - Only reference data provided in the CURRENT DATA section below.
-            - If you don't have data to answer a question, say so. Never fabricate.
-            - Report data and change. Do not evaluate performance.
-            - Use directional language, not judgmental language.
-            - Keep answers concise — 2-5 sentences unless the user asks for detail.
-            - When citing numbers, use the exact values from the data.""";
-
-    static final String PROGRAM_SUMMARY_SYSTEM_PROMPT = """
-            Summarize the organization's execution trajectory over the last {N} weeks. \
-            2-3 sentences. Report data and change, do not evaluate performance.
-
-            RULES:
-            - Use directional language (increased, declined, held steady) not judgmental \
-            language (good, bad, concerning, impressive).
-            - Cite the key metrics: strategic alignment average, completion rate average, \
-            carry-forward rate, and active drift signals.
-            - Do not use bullet points or headers. Write flowing prose.
-            - Return only the narrative text. No JSON, no markdown, no extra commentary.""";
-
-    static final String TEAM_SUMMARY_SYSTEM_PROMPT = """
-            Summarize this manager's team execution data. Include 2-4 specific suggested \
-            actions. Report data and change only.
-
-            RULES:
-            - Always mention team size.
-            - Use directional language (increased, declined, holds) not judgmental language \
-            (good, bad, concerning, impressive).
-            - Never name individuals.
-            - Narrative: 2-3 sentences of flowing prose. Dense, not verbose.
-            - Suggested actions must be specific and actionable — say exactly what to look \
-            for and why.
-            - IMPORTANT TERMINOLOGY: "Unlinked commitments" means commitments NOT linked \
-            to any rally cry. "Uncovered objectives" means rally cry objectives that have \
-            ZERO commitments assigned to them. These are different concepts — use the correct \
-            term for each. Never say "unlinked objectives" or "unaddressed objectives" — say \
-            "uncovered objectives."
-            - Do not contradict yourself. If rally cry coverage is 100% (all commitments \
-            are linked), do not say objectives are "uncovered" unless you clearly distinguish \
-            that some rally cry sub-objectives have zero commitments despite full linkage.
-
-            OUTPUT FORMAT (JSON):
-            {
-              "headline": "Team Summary",
-              "narrative": "2-3 sentences summarising team execution state",
-              "suggestedActions": [
-                "specific actionable recommendation",
-                "another recommendation"
-              ]
-            }
-
-            Return ONLY the JSON object. No markdown fences, no extra text.""";
 }

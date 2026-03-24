@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
+import { RevealCard } from '../../components/RevealCard';
 
 const BG_COOL = '#F0F7F7';
 const BG_SURFACE = '#F9F9F7';
@@ -70,15 +71,8 @@ const ROLES = [
 ];
 
 function RoleCard({ role, index }: { role: (typeof ROLES)[number]; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFadeUp(ref);
-
   return (
-    <div
-      ref={ref}
-      className="reveal rounded-sm bg-surface p-8 transition-colors duration-150 hover:bg-surface-container-low"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index} className="rounded-sm bg-surface p-8 transition-colors duration-150 hover:bg-surface-container-low">
       <div className="mb-5">{role.icon}</div>
       <h3 className="font-serif text-[1.125rem] font-normal text-on-surface mb-3">
         {role.title}
@@ -99,7 +93,7 @@ function RoleCard({ role, index }: { role: (typeof ROLES)[number]; index: number
           </li>
         ))}
       </ul>
-    </div>
+    </RevealCard>
   );
 }
 

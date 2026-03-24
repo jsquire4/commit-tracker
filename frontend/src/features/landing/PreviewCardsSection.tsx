@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
+import { RevealCard } from '../../components/RevealCard';
 
 const PREVIEWS = [
   {
@@ -53,15 +54,8 @@ const PREVIEWS = [
 ];
 
 function PreviewCard({ preview, index }: { preview: (typeof PREVIEWS)[number]; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFadeUp(ref);
-
   return (
-    <div
-      ref={ref}
-      className="reveal border-[1.5px] border-accent rounded-sm p-8 bg-surface-lowest transition-shadow duration-150 hover:shadow-whisper"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index} className="border-[1.5px] border-accent rounded-sm p-8 bg-surface-lowest transition-shadow duration-150 hover:shadow-whisper">
       <div className="font-sans text-small font-medium uppercase tracking-[0.05rem] text-accent mb-5">
         {preview.header}
       </div>
@@ -83,7 +77,7 @@ function PreviewCard({ preview, index }: { preview: (typeof PREVIEWS)[number]; i
       <div className="font-sans text-[0.8125rem] text-on-surface-variant text-center mt-2 leading-[1.6]">
         {preview.description}
       </div>
-    </div>
+    </RevealCard>
   );
 }
 

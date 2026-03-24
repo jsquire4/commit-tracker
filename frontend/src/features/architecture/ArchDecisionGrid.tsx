@@ -1,5 +1,4 @@
-import { useRef } from 'react';
-import { useFadeUp } from '@/hooks/useMotion';
+import { RevealCard } from '@/components/RevealCard';
 
 interface Decision {
   title: string;
@@ -70,22 +69,15 @@ const DECISIONS: Decision[] = [
 ];
 
 function DecisionCard({ decision, index }: { decision: Decision; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFadeUp(ref);
-
   return (
-    <div
-      ref={ref}
-      className="reveal rounded bg-surface-lowest p-6 transition-colors duration-150 hover:bg-surface"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index} className="rounded bg-surface-lowest p-6 transition-colors duration-150 hover:bg-surface">
       <div className="font-serif text-[1.0625rem] text-on-surface mb-2.5">
         {decision.title}
       </div>
       <div className="text-small text-on-surface-variant leading-relaxed">
         {decision.rationale}
       </div>
-    </div>
+    </RevealCard>
   );
 }
 

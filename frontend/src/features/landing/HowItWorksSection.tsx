@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
+import { RevealCard } from '../../components/RevealCard';
 
 const STEPS = [
   {
@@ -98,12 +99,11 @@ function StepCard({
   index: number;
   isLast: boolean;
 }) {
-  const ref = useRef<HTMLDivElement>(null);
+  const observerRef = useRef<HTMLDivElement>(null);
   const [drawn, setDrawn] = useState(false);
-  useFadeUp(ref);
 
   useEffect(() => {
-    const el = ref.current;
+    const el = observerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
@@ -119,11 +119,8 @@ function StepCard({
   }, [index]);
 
   return (
-    <div
-      ref={ref}
-      className="reveal text-center px-6 relative"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index} className="text-center px-6 relative">
+      <div ref={observerRef}>
       <div className="font-sans text-small font-medium text-muted uppercase tracking-[0.05rem] mb-4">
         {step.number}
       </div>
@@ -143,8 +140,9 @@ function StepCard({
         {step.detail}
       </p>
 
+      </div>
       {!isLast && <StepConnector drawn={drawn} />}
-    </div>
+    </RevealCard>
   );
 }
 

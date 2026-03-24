@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import { useFadeUp } from '../../hooks/useMotion';
+import { RevealCard } from '../../components/RevealCard';
 
 // Landing page section transition colors
 const BG_WARM = '#F5F0EB';
@@ -24,22 +25,15 @@ const PROBLEMS = [
 ];
 
 function ProblemCard({ title, description, index }: { title: string; description: string; index: number }) {
-  const ref = useRef<HTMLDivElement>(null);
-  useFadeUp(ref);
-
   return (
-    <div
-      ref={ref}
-      className="reveal"
-      style={{ transitionDelay: `${index * 40}ms` }}
-    >
+    <RevealCard index={index}>
       <h3 className="font-sans text-title font-medium text-on-surface mb-3">
         {title}
       </h3>
       <p className="text-body text-on-surface-variant leading-[1.7]">
         {description}
       </p>
-    </div>
+    </RevealCard>
   );
 }
 
