@@ -3,8 +3,6 @@ import Card from '@/components/Card';
 import { AlignmentGapChart } from '@/features/manager-dashboard/AlignmentGapChart';
 import type { DashboardResponse, MemberAlignment } from '@/types/dashboard.types';
 
-const LEAD_ROLES = new Set(['MANAGER', 'DIRECTOR', 'VP', 'EXECUTIVE']);
-
 interface TeamAnalyticsProps {
   dashboard: DashboardResponse;
 }
@@ -14,13 +12,12 @@ export function TeamAnalytics({ dashboard }: TeamAnalyticsProps) {
 
   const rcCoverage = dashboard.rcdoCoverage?.linkedPercentage ?? 0;
 
-  const leadUserIds = new Set(
-    (dashboard.teamRollup?.members ?? [])
-      .filter((m) => LEAD_ROLES.has(m.role))
-      .map((m) => m.userId)
-  );
-  const leadMembers: MemberAlignment[] = (dashboard.alignmentSignal?.byTeamMember ?? [])
-    .filter((m) => leadUserIds.has(m.userId));
+  // Show all team members with commitment data (filter out those with zero total)
+  const allMembers: MemberAlignment[] = (dashboard.alignmentSignal?.byTeamMember ?? [])
+    .filter((m) => {
+      const total = Object.values(m.distribution).reduce((sum, d) => sum + d.count, 0) + m.unlinkedCount;
+      return total > 0;
+    });
 
   return (
     <Card padding="compact" className="overflow-hidden">
@@ -57,7 +54,7 @@ export function TeamAnalytics({ dashboard }: TeamAnalyticsProps) {
             </p>
             <AlignmentGapChart
               aggregate={dashboard.alignmentSignal}
-              members={leadMembers}
+              members={allMembers}
             />
           </div>
         </div>
