@@ -25,7 +25,7 @@ import java.util.UUID;
  */
 @RestController
 @RequestMapping("/api/dev")
-@Profile({"local", "test"})
+@Profile({"local", "test", "simulation"})
 @org.springframework.transaction.annotation.Transactional(readOnly = true)
 public class DevController {
 

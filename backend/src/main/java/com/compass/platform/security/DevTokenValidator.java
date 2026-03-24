@@ -19,7 +19,7 @@ import java.util.UUID;
  * (done by JwtAuthenticationFilter after calling validate()).
  */
 @Component
-@Profile({"local", "test"})
+@Profile({"local", "test", "simulation"})
 public class DevTokenValidator implements TokenValidator {
 
     private static final Logger log = LoggerFactory.getLogger(DevTokenValidator.class);
