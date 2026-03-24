@@ -9,6 +9,7 @@ public record PortcoSummary(
         double strategicAlignmentPct,
         double rallyCoveragePct,
         double completionRate,
+        double carryForwardRate,
         int activeDriftSignals,
         long headcount
 ) {}

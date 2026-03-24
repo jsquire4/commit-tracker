@@ -11,6 +11,7 @@ import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.ExecutiveHealthResponse;
 import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.ObservatoryConfigResponse;
+import com.compass.platform.domain.observatory.dto.PortfolioComparisonResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
 import com.compass.platform.domain.observatory.dto.SignalsSummaryResponse;
 import com.compass.platform.domain.observatory.dto.UpdateObservatoryConfigRequest;
@@ -408,6 +409,23 @@ public class ObservatoryController {
         }
         UUID portfolioId = org.getPortfolio().getId();
         return ResponseEntity.ok(ApiResponse.of(portfolioService.getPortfolioHealth(portfolioId)));
+    }
+
+    /**
+     * GET /api/v1/observatory/portfolio/comparison
+     * Alignment trend comparison across all portcos in the caller's portfolio.
+     */
+    @GetMapping("/portfolio/comparison")
+    public ResponseEntity<ApiResponse<PortfolioComparisonResponse>> getPortfolioComparison(
+            @RequestParam(defaultValue = "12") int weekCount) {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        assertObservatoryAccess(actor);
+        if (actor.getOrg().getPortfolio() == null) {
+            throw new IllegalStateException("Org " + actor.getOrg().getId() + " does not belong to a portfolio");
+        }
+        UUID portfolioId = actor.getOrg().getPortfolio().getId();
+        PortfolioComparisonResponse response = portfolioService.getPortfolioComparison(portfolioId, weekCount);
+        return ResponseEntity.ok(ApiResponse.of(response));
     }
 
     /**

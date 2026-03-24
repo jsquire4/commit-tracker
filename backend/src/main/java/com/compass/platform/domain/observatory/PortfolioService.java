@@ -151,6 +151,7 @@ public class PortfolioService {
                 health.strategicAlignmentPct(),
                 health.rallyCoveragePct(),
                 health.completionRate(),
+                health.carryForwardRate(),
                 health.activeDriftSignals(),
                 headcount
         );

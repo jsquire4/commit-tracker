@@ -1,97 +1,176 @@
-import type { PortfolioData } from '@/types/portfolio.types';
+import { fetchData } from './client';
+import type {
+  PortfolioData,
+  PortfolioCompany,
+  PortfolioMetric,
+  ComparisonRow,
+  HealthGradeLabel,
+} from '@/types/portfolio.types';
+
+const OBSERVATORY_BASE = '/api/v1/observatory';
+
+/** Backend PortcoSummary shape */
+interface BackendPortcoSummary {
+  orgId: string;
+  orgName: string;
+  overallGrade: 'GREEN' | 'YELLOW' | 'RED';
+  strategicAlignmentPct: number;
+  rallyCoveragePct: number;
+  completionRate: number;
+  carryForwardRate: number;
+  activeDriftSignals: number;
+  headcount: number;
+}
+
+interface BackendPortfolioHealth {
+  portfolioId: string;
+  portfolioName: string;
+  portcos: BackendPortcoSummary[];
+  computedAt: string;
+}
+
+/** Backend trend data */
+interface BackendAlignmentDataPoint {
+  cycleId: string;
+  cycleLabel: string;
+  startsAt: string;
+  strategicPct: number;
+  operationalPct: number;
+  defensivePct: number;
+  capabilityBuildingPct: number;
+  rallyCoveragePct: number;
+  totalCommitments: number;
+}
+
+interface BackendPortcoTrendLine {
+  orgId: string;
+  orgName: string;
+  dataPoints: BackendAlignmentDataPoint[];
+}
+
+interface BackendPortfolioComparison {
+  portfolioId: string;
+  portfolioName: string;
+  trends: BackendPortcoTrendLine[];
+}
+
+const GRADE_MAP: Record<string, HealthGradeLabel> = {
+  GREEN: 'On Track',
+  YELLOW: 'Watch',
+  RED: 'At Risk',
+};
+
+function mapGrade(grade: string): HealthGradeLabel {
+  return GRADE_MAP[grade] ?? 'Watch';
+}
 
 /**
- * Fetch portfolio overview data.
- *
- * Currently returns a hardcoded stub matching the mockup data.
- * Will be replaced by real API calls to /api/v1/observatory/portfolio.
+ * Fetch portfolio data from real backend endpoints and transform
+ * into the PortfolioData shape the frontend expects.
  */
 export async function getPortfolioData(_cycleId?: string): Promise<PortfolioData> {
-  // STUB: Returns hardcoded data. Replace with real API call to /api/v1/observatory/portfolio
-  // when portfolio data pipeline is live. Tracked: complexity-sweep-2026-03-22
-  void _cycleId;
+  // Fetch health data and trend data in parallel
+  const [health, comparison] = await Promise.all([
+    fetchData<BackendPortfolioHealth>(`${OBSERVATORY_BASE}/portfolio`),
+    fetchData<BackendPortfolioComparison>(`${OBSERVATORY_BASE}/portfolio/comparison?weekCount=12`)
+      .catch(() => null), // graceful fallback if comparison endpoint not available
+  ]);
+
+  const portcos = health.portcos ?? [];
+  const trendMap = new Map<string, BackendAlignmentDataPoint[]>();
+  if (comparison?.trends) {
+    for (const line of comparison.trends) {
+      trendMap.set(line.orgId, line.dataPoints);
+    }
+  }
+
+  // Build aggregate metrics
+  const companyCount = portcos.length;
+  const avgRallyCoverage = companyCount > 0
+    ? Math.round(portcos.reduce((sum, c) => sum + c.rallyCoveragePct, 0) / companyCount)
+    : 0;
+  const avgCarryForward = companyCount > 0
+    ? Math.round(portcos.reduce((sum, c) => sum + c.carryForwardRate, 0) / companyCount)
+    : 0;
+  const totalDrift = portcos.reduce((sum, c) => sum + c.activeDriftSignals, 0);
+
+  const metrics: PortfolioMetric[] = [
+    { key: 'companies', label: 'Active Companies', value: companyCount },
+    { key: 'alignment', label: 'Avg Rally Cry Coverage', value: avgRallyCoverage, suffix: '%' },
+    { key: 'carry', label: 'Portfolio Carry-Forward', value: avgCarryForward, suffix: '%' },
+    { key: 'drift', label: 'Active Drift Signals', value: totalDrift },
+  ];
+
+  // Map companies
+  const companies: PortfolioCompany[] = portcos.map((c) => {
+    const trend = trendMap.get(c.orgId) ?? [];
+    return {
+      orgId: c.orgId,
+      name: c.orgName,
+      subtitle: `${c.headcount} people`,
+      healthGrade: mapGrade(c.overallGrade),
+      metrics: {
+        strategicAlignment: Math.round(c.strategicAlignmentPct),
+        coverage: Math.round(c.rallyCoveragePct),
+        carryForward: Math.round(c.carryForwardRate),
+        completionRate: Math.round(c.completionRate),
+      },
+      alignmentTrend: trend.map((p) => ({ value: Math.round(p.rallyCoveragePct) })),
+      rallyCries: [], // TODO: per-portco rally cry status requires additional endpoint
+      driftSignals: {
+        count: c.activeDriftSignals,
+        description: c.activeDriftSignals > 0
+          ? `${c.activeDriftSignals} active signal${c.activeDriftSignals !== 1 ? 's' : ''}`
+          : 'No drift signals',
+        severity: c.activeDriftSignals > 0 ? 'warning' as const : 'muted' as const,
+      },
+    };
+  });
+
+  // Build comparison table
+  const comparisonRows: ComparisonRow[] = portcos.map((c) => {
+    const trend = trendMap.get(c.orgId) ?? [];
+    const weeksActive = trend.length;
+
+    // Compute trend direction from last 4 data points
+    let trendDir: 'up' | 'down' | 'flat' = 'flat';
+    let trendLabel = 'Stable';
+    if (trend.length >= 2) {
+      const recent = trend[trend.length - 1]!.rallyCoveragePct;
+      const prior = trend[Math.max(0, trend.length - 4)]!.rallyCoveragePct;
+      const delta = recent - prior;
+      if (delta > 3) { trendDir = 'up'; trendLabel = 'Rising'; }
+      else if (delta < -3) { trendDir = 'down'; trendLabel = 'Declining'; }
+    }
+
+    return {
+      orgId: c.orgId,
+      name: c.orgName,
+      weeksActive,
+      alignment: Math.round(c.rallyCoveragePct),
+      trend: trendDir,
+      trendLabel,
+      coverage: Math.round(c.rallyCoveragePct),
+      carryForward: Math.round(c.carryForwardRate),
+      driftSignals: c.activeDriftSignals,
+      healthGrade: mapGrade(c.overallGrade),
+    };
+  });
 
   return {
     narrative: {
-      generatedAt: new Date().toISOString(),
+      generatedAt: health.computedAt ?? new Date().toISOString(),
       headline: 'Portfolio Intelligence Summary',
-      narrative:
-        'The portfolio is tracking 3 active companies this quarter. Meridian Manufacturing continues to lead in alignment at 41% strategic with an improving trajectory. Apex Dynamics is the primary concern\u2009\u2014\u2009strategic alignment has dropped 12 points over 4 weeks and carry-forward rate hit 32%, the highest in the portfolio. Cascade Logistics is in early deployment (Week 2), trending positively with 55% strategic alignment but insufficient data for drift analysis.',
-      focusAreas: [
-        { id: 'f1', text: 'Apex Dynamics: Alignment drift is sustained\u2009\u2014\u2009consider management review' },
-        { id: 'f2', text: 'Cascade Logistics: On track but monitor\u2009\u2014\u2009Week 2 data is early' },
-        { id: 'f3', text: 'Meridian: Churn Reduction rally cry has zero engineering coverage' },
-      ],
+      narrative: `Tracking ${companyCount} active ${companyCount === 1 ? 'company' : 'companies'}. Average rally cry coverage across the portfolio is ${avgRallyCoverage}% with ${totalDrift} active drift signal${totalDrift !== 1 ? 's' : ''}.`,
+      focusAreas: portcos
+        .filter((c) => c.overallGrade === 'RED' || c.activeDriftSignals >= 2)
+        .map((c, i) => ({
+          id: `f${i}`,
+          text: `${c.orgName}: ${mapGrade(c.overallGrade)} — ${c.activeDriftSignals} drift signal${c.activeDriftSignals !== 1 ? 's' : ''}, ${Math.round(c.rallyCoveragePct)}% rally cry coverage`,
+        })),
     },
-    metrics: [
-      { key: 'companies', label: 'Active Companies', value: 3 },
-      { key: 'alignment', label: 'Avg Rally Cry Coverage', value: 47, suffix: '%' },
-      { key: 'carry', label: 'Portfolio Carry-Forward', value: 19, suffix: '%' },
-      { key: 'drift', label: 'Active Drift Signals', value: 4, trend: 'down' },
-    ],
-    companies: [
-      {
-        orgId: 'meridian-001',
-        name: 'Meridian Manufacturing',
-        subtitle: 'Industrial \u00B7 Acquired Q3 2025 \u00B7 Week 6 of deployment',
-        healthGrade: 'On Track',
-        metrics: { strategicAlignment: 41, coverage: 88, carryForward: 18, completionRate: 72 },
-        alignmentTrend: [{ value: 28 }, { value: 36 }, { value: 40 }, { value: 44 }, { value: 46 }, { value: 41 }],
-        rallyCries: [
-          { name: 'Launch Enterprise Tier', commitmentCount: 12, status: 'on-track' },
-          { name: 'Reduce Churn', commitmentCount: 1, status: 'coverage-gap' },
-          { name: 'SOC2 Certification', commitmentCount: 5, status: 'on-track' },
-        ],
-        driftSignals: { count: 2, description: '2 \u2014 Alignment \u2193 Emerging (2 teams)', severity: 'warning' },
-      },
-      {
-        orgId: 'apex-002',
-        name: 'Apex Dynamics',
-        subtitle: 'Aerospace Components \u00B7 Acquired Q1 2025 \u00B7 Week 14 of deployment',
-        healthGrade: 'At Risk',
-        metrics: { strategicAlignment: 28, coverage: 62, carryForward: 32, completionRate: 58 },
-        alignmentTrend: [
-          { value: 40 }, { value: 38 }, { value: 38 }, { value: 36 }, { value: 34 },
-          { value: 34 }, { value: 32 }, { value: 30 }, { value: 28 }, { value: 26 },
-          { value: 24 }, { value: 24 }, { value: 22 }, { value: 28 },
-        ],
-        rallyCries: [
-          { name: 'Supply Chain Modernization', commitmentCount: 8, status: 'behind' },
-          { name: 'Quality Systems Overhaul', commitmentCount: 3, status: 'stalled' },
-          { name: 'Revenue Diversification', commitmentCount: 0, status: 'flagged' },
-        ],
-        driftSignals: { count: 3, description: '3 \u2014 Alignment \u2193 Sustained, Velocity \u2193 Emerging, Coverage \u2193 Sustained', severity: 'warning' },
-      },
-      {
-        orgId: 'cascade-003',
-        name: 'Cascade Logistics',
-        subtitle: 'Last-Mile Delivery \u00B7 Acquired Q4 2025 \u00B7 Week 2 of deployment',
-        healthGrade: 'On Track',
-        metrics: { strategicAlignment: 55, coverage: 74, carryForward: 8, completionRate: 85 },
-        alignmentTrend: [{ value: 48 }, { value: 55 }],
-        rallyCries: [
-          { name: 'Route Optimization Platform', commitmentCount: 6, status: 'on-track' },
-          { name: 'Driver Retention', commitmentCount: 4, status: 'on-track' },
-        ],
-        driftSignals: { count: 0, description: '0 \u2014 Insufficient data (< 4 weeks)', severity: 'muted' },
-      },
-    ],
-    comparison: [
-      {
-        orgId: 'meridian-001', name: 'Meridian Manufacturing', weeksActive: 6,
-        alignment: 41, trend: 'down', trendLabel: 'Slight', coverage: 88,
-        carryForward: 18, driftSignals: 2, healthGrade: 'On Track',
-      },
-      {
-        orgId: 'apex-002', name: 'Apex Dynamics', weeksActive: 14,
-        alignment: 28, trend: 'down', trendLabel: 'Declining', coverage: 62,
-        carryForward: 32, driftSignals: 3, healthGrade: 'At Risk',
-      },
-      {
-        orgId: 'cascade-003', name: 'Cascade Logistics', weeksActive: 2,
-        alignment: 55, trend: 'up', trendLabel: 'Rising', coverage: 74,
-        carryForward: 8, driftSignals: 0, healthGrade: 'On Track',
-      },
-    ],
+    metrics,
+    companies,
+    comparison: comparisonRows,
   };
 }
