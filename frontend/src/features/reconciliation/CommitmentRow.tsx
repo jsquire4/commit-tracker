@@ -152,7 +152,7 @@ export function CommitmentRow({ detail, cycleId, allCommitments, expanded, onTog
       {/* Expandable body */}
       <div
         className="overflow-hidden transition-[max-height] duration-[300ms] ease-[var(--ease-entrance)]"
-        style={{ maxHeight: expanded ? '999vh' : '0px' }}
+        style={{ maxHeight: expanded ? '2000px' : '0px' }}
       >
         <div className="border-t border-surface-container-low">
           <div className="grid grid-cols-1 md:grid-cols-2">

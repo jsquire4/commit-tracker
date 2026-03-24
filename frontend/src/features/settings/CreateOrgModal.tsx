@@ -2,6 +2,7 @@ import { Fragment, useState, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
+import { SelectField } from '@/components/SelectField';
 import { TIMEZONE_OPTIONS } from '@/constants/timezones';
 
 interface CreateOrgModalProps {
@@ -69,27 +70,11 @@ export function CreateOrgModal({ open, isPending, error, onSave, onClose }: Crea
                   placeholder="Acme Manufacturing Inc."
                 />
 
-                <div className="flex flex-col gap-1">
-                  <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                    Timezone
-                  </label>
-                  <select
-                    value={timezone}
-                    onChange={(e) => { setTimezone(e.target.value); }}
-                    className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant
-                      px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent
-                      cursor-pointer appearance-none transition-colors duration-[200ms]"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 0 center',
-                    }}
-                  >
-                    {TIMEZONE_OPTIONS.map((tz) => (
-                      <option key={tz.value} value={tz.value}>{tz.label}</option>
-                    ))}
-                  </select>
-                </div>
+                <SelectField label="Timezone" value={timezone} onChange={setTimezone}>
+                  {TIMEZONE_OPTIONS.map((tz) => (
+                    <option key={tz.value} value={tz.value}>{tz.label}</option>
+                  ))}
+                </SelectField>
 
                 {error && (
                   <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">

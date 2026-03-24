@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
 import Input from '@/components/Input';
+import { SelectField } from '@/components/SelectField';
 import { Badge } from '@/components/Badge';
 import { CreateOrgModal } from './CreateOrgModal';
 import type { User, UserRole } from '@/types';
@@ -402,63 +403,21 @@ export function AdminTab() {
                   />
 
                   {/* Role select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Role <span className="text-error ml-0.5">*</span>
-                    </label>
-                    <select
-                      value={form.role}
-                      onChange={(e) => { setForm({ ...form, role: e.target.value as UserRole }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Role" value={form.role} onChange={(v) => { setForm({ ...form, role: v as UserRole }); }} required>
+                    {ROLE_OPTIONS.map((r) => <option key={r.value} value={r.value}>{r.label}</option>)}
+                  </SelectField>
 
                   {/* Reports To select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Reports To
-                    </label>
-                    <select
-                      value={form.reportsToId}
-                      onChange={(e) => { setForm({ ...form, reportsToId: e.target.value }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      <option value="">None (top-level)</option>
-                      {managers.map((m) => <option key={m.id} value={m.id}>{m.displayName} ({ROLE_LABEL[m.role]})</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Reports To" value={form.reportsToId} onChange={(v) => { setForm({ ...form, reportsToId: v }); }}>
+                    <option value="">None (top-level)</option>
+                    {managers.map((m) => <option key={m.id} value={m.id}>{m.displayName} ({ROLE_LABEL[m.role]})</option>)}
+                  </SelectField>
 
                   {/* Cost Band select */}
-                  <div className="flex flex-col gap-1">
-                    <label className="text-label text-on-surface-variant uppercase tracking-[0.05rem] font-medium">
-                      Level / Cost Band
-                    </label>
-                    <select
-                      value={form.costBandId}
-                      onChange={(e) => { setForm({ ...form, costBandId: e.target.value }); }}
-                      className="w-full bg-transparent border-0 border-b-2 border-b-outline-variant px-0 py-2 text-body text-on-surface focus:outline-none focus:border-b-accent cursor-pointer appearance-none transition-colors duration-[200ms]"
-                      style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' viewBox='0 0 24 24' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundRepeat: 'no-repeat',
-                        backgroundPosition: 'right 0 center',
-                      }}
-                    >
-                      <option value="">Not assigned</option>
-                      {(costBands ?? []).map((b) => <option key={b.id} value={b.id}>{b.name} (Tier {b.tier})</option>)}
-                    </select>
-                  </div>
+                  <SelectField label="Level / Cost Band" value={form.costBandId} onChange={(v) => { setForm({ ...form, costBandId: v }); }}>
+                    <option value="">Not assigned</option>
+                    {(costBands ?? []).map((b) => <option key={b.id} value={b.id}>{b.name} (Tier {b.tier})</option>)}
+                  </SelectField>
 
                   {formError && (
                     <div className="rounded-sm bg-error/10 border border-error/20 px-4 py-3">
