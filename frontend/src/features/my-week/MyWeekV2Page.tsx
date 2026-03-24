@@ -20,7 +20,7 @@ import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';
-import { MyWeekHistorySection } from '@/features/commitment-history/MyWeekHistorySection';
+import { RollingWorkHistory } from '@/features/commitment-history/RollingWorkHistory';
 import { GrowthAreaManager } from '@/features/growth-areas/GrowthAreaManager';
 import { EmptyState } from '@/components/EmptyState';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
@@ -413,7 +413,7 @@ export function MyWeekV2Page() {
             </>
           )}
 
-          <MyWeekHistorySection commitments={myCommitments} />
+          <RollingWorkHistory />
         </div>
 
         {/* Sidebar */}

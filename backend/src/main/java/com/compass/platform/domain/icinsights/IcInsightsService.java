@@ -13,9 +13,12 @@ import com.compass.platform.domain.growth.GrowthAreaRepository;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaAlignmentDetail;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaHit;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaProgress;
+import com.compass.platform.domain.icinsights.dto.HistoryCommitment;
 import com.compass.platform.domain.icinsights.dto.IcWeekSummaryResponse;
 import com.compass.platform.domain.icinsights.dto.MyStoryResponse;
 import com.compass.platform.domain.icinsights.dto.PatternStats;
+import com.compass.platform.domain.icinsights.dto.RollingHistoryResponse;
+import com.compass.platform.domain.icinsights.dto.WeekGroup;
 import com.compass.platform.domain.icinsights.dto.WeekSnapshot;
 import com.compass.platform.domain.icinsights.dto.WeeklyCount;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
@@ -498,6 +501,111 @@ public class IcInsightsService {
                 narrativeInsight, resumeBullets,
                 Math.round(overallAlignmentPct * 10.0) / 10.0,
                 growthAreaAlignmentDetails);
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // Rolling History
+    // ═══════════════════════════════════════════════════════════════
+
+    /**
+     * Compute rolling work history for the authenticated IC across the last
+     * {@code weeks} RECONCILED cycles (most-recent first).
+     *
+     * <p>N+1 prevention: commitments and reconciliation records are loaded in
+     * two batch queries; growth areas are loaded eagerly via Hibernate BatchSize.
+     *
+     * @param userId the authenticated user's ID
+     * @param orgId  the user's org (for cycle scoping)
+     * @param weeks  number of recent reconciled cycles to include (capped 1–12)
+     */
+    public RollingHistoryResponse computeRollingHistory(UUID userId, UUID orgId, int weeks) {
+        // Load last N reconciled cycles for the org, most-recent first
+        List<Cycle> reconciledCycles = cycleRepository
+                .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
+
+        List<Cycle> window = reconciledCycles.stream()
+                .limit(weeks)
+                .collect(Collectors.toList());
+
+        if (window.isEmpty()) {
+            return new RollingHistoryResponse(List.of());
+        }
+
+        List<UUID> cycleIds = window.stream().map(Cycle::getId).collect(Collectors.toList());
+
+        // Single batch query — no N+1
+        List<Commitment> allCommitments = commitmentRepository
+                .findByUserIdInAndCycleIdIn(List.of(userId), cycleIds);
+
+        // Batch-load all reconciliation records for those commitments
+        Set<UUID> commitmentIds = allCommitments.stream()
+                .map(Commitment::getId)
+                .collect(Collectors.toSet());
+
+        List<ReconciliationRecord> allRecords = commitmentIds.isEmpty()
+                ? List.of()
+                : reconciliationRecordRepository.findByCommitmentIdIn(commitmentIds);
+
+        Map<UUID, ReconciliationRecord> recordByCommitmentId = allRecords.stream()
+                .collect(Collectors.toMap(
+                        r -> r.getCommitment().getId(), r -> r, (a, b) -> a));
+
+        // Index commitments by cycle
+        Map<UUID, List<Commitment>> byCycle = allCommitments.stream()
+                .collect(Collectors.groupingBy(c -> c.getCycle().getId()));
+
+        // Build week groups — window is already most-recent first
+        List<WeekGroup> weekGroups = new ArrayList<>();
+        for (Cycle cycle : window) {
+            List<Commitment> cycleCommits = byCycle.getOrDefault(cycle.getId(), List.of());
+
+            List<HistoryCommitment> historyCommitments = cycleCommits.stream()
+                    .sorted(Comparator.comparingInt(Commitment::getPriorityRank))
+                    .map(c -> {
+                        ReconciliationRecord rec = recordByCommitmentId.get(c.getId());
+                        String reconStatus = rec != null ? rec.getStatus().name() : null;
+
+                        String rallyCryTitle = c.getRallyCry() != null
+                                ? c.getRallyCry().getTitle()
+                                : null;
+
+                        String chessCategoryName = c.getChessCategory() != null
+                                ? c.getChessCategory().getName()
+                                : null;
+
+                        List<String> growthAreaLabels = c.getGrowthAreas().stream()
+                                .map(ga -> ga.getLabel())
+                                .sorted()
+                                .collect(Collectors.toList());
+
+                        String assignedByName = c.getAssignedBy() != null
+                                ? c.getAssignedBy().getDisplayName()
+                                : null;
+
+                        return new HistoryCommitment(
+                                c.getId(),
+                                c.getTitle(),
+                                reconStatus,
+                                rallyCryTitle,
+                                chessCategoryName,
+                                growthAreaLabels,
+                                c.isUnplanned(),
+                                assignedByName
+                        );
+                    })
+                    .collect(Collectors.toList());
+
+            weekGroups.add(new WeekGroup(
+                    cycle.getId(),
+                    cycle.getLabel(),
+                    ISO_DATE.format(cycle.getStartsAt()),
+                    ISO_DATE.format(cycle.getEndsAt()),
+                    cycle.getState().name(),
+                    historyCommitments
+            ));
+        }
+
+        return new RollingHistoryResponse(weekGroups);
     }
 
     // ═══════════════════════════════════════════════════════════════

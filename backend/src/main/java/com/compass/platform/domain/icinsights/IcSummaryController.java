@@ -6,6 +6,7 @@ import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.icinsights.dto.IcWeekSummaryResponse;
 import com.compass.platform.domain.icinsights.dto.PersonalReflectionRequest;
 import com.compass.platform.domain.icinsights.dto.PersonalReflectionResponse;
+import com.compass.platform.domain.icinsights.dto.RollingHistoryResponse;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
@@ -57,6 +58,17 @@ public class IcSummaryController {
         IcWeekSummaryResponse response = icInsightsService.computeWeekSummary(
                 actor.getId(), actor.getOrg().getId(), cycleId);
 
+        return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    @GetMapping("/rolling-history")
+    public ResponseEntity<ApiResponse<RollingHistoryResponse>> getRollingHistory(
+            @RequestParam(defaultValue = "4") int weeks) {
+
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        int cappedWeeks = Math.max(1, Math.min(weeks, 12));
+        RollingHistoryResponse response = icInsightsService.computeRollingHistory(
+                actor.getId(), actor.getOrg().getId(), cappedWeeks);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 

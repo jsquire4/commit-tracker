@@ -72,6 +72,30 @@ export interface GrowthAreaAlignmentDetail {
   topTasks: AlignedTask[];
 }
 
+export interface HistoryCommitment {
+  id: string;
+  title: string;
+  reconciliationStatus: string | null;
+  rallyCryTitle: string | null;
+  chessCategoryName: string | null;
+  growthAreaLabels: string[];
+  isUnplanned: boolean;
+  assignedByName: string | null;
+}
+
+export interface WeekGroup {
+  cycleId: string;
+  cycleLabel: string;
+  startsAt: string;
+  endsAt: string;
+  cycleState: string;
+  commitments: HistoryCommitment[];
+}
+
+export interface RollingHistoryResponse {
+  weeks: WeekGroup[];
+}
+
 export interface MyStoryResponse {
   growthAreaProgress: GrowthAreaProgress[];
   recentWeeks: WeekSnapshot[];
