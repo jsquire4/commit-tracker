@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useRef } from 'react';
 import { useCountUp, useFadeUp } from '../../hooks/useMotion';
+import { useInView } from '../../hooks/useInView';
 
 const STATS = [
   { value: 3, label: 'Views' },
@@ -13,25 +14,7 @@ function formatNumber(n: number): string {
 }
 
 function StatItem({ value, label }: { value: number; label: string }) {
-  const [started, setStarted] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setStarted(true);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1 },
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
+  const [ref, started] = useInView<HTMLDivElement>();
   const display = useCountUp(started ? value : 0, 800);
 
   return (

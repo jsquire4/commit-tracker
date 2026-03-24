@@ -95,7 +95,7 @@ export function AlignmentTrendChart({
 }: AlignmentTrendChartProps) {
   const [selectedWeeks, setSelectedWeeks] = useState<WeekOption>(12);
 
-  // Use prop if provided, otherwise use local state
+  // Dual-mode: prop-controlled (e.g., in drill-down) or self-controlled (e.g., standalone)
   const effectiveWeekCount = weekCountProp ?? selectedWeeks;
 
   const {

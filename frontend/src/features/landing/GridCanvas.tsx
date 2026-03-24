@@ -58,6 +58,30 @@ interface Connection {
   maxLife: number;
 }
 
+function buildCells(cols: number, initialOpacity: 'zero' | 'base'): Cell[] {
+  const hotX = cols * 0.72;
+  const hotY = ROWS * 0.45;
+  const maxDist = Math.sqrt(hotX * hotX + hotY * hotY);
+  const cells: Cell[] = [];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < cols; c++) {
+      const dx = c - hotX;
+      const dy = r - hotY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const base = Math.max(0.03, 0.7 * Math.pow(1 - dist / maxDist, 2));
+      cells.push({
+        col: c, row: r, baseOpacity: base,
+        currentOpacity: initialOpacity === 'zero' ? 0 : base,
+        breathPhase: Math.random() * Math.PI * 2,
+        breathSpeed: 0.3 + Math.random() * 0.4,
+        breathAmp: 0.02 + Math.random() * 0.04,
+        signalTimer: 0, signalBrightness: 0,
+      });
+    }
+  }
+  return cells;
+}
+
 export function GridCanvas() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -88,30 +112,7 @@ export function GridCanvas() {
     ctx.scale(dpr, dpr);
 
     /* ── Build cells ────────────────────────────────────────────────── */
-    const hotX = cols * 0.72;
-    const hotY = ROWS * 0.45;
-    const maxDist = Math.sqrt(hotX * hotX + hotY * hotY);
-
-    const cells: Cell[] = [];
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < cols; c++) {
-        const dx = c - hotX;
-        const dy = r - hotY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const base = Math.max(0.03, 0.7 * Math.pow(1 - dist / maxDist, 2));
-        cells.push({
-          col: c,
-          row: r,
-          baseOpacity: base,
-          currentOpacity: 0,
-          breathPhase: Math.random() * Math.PI * 2,
-          breathSpeed: 0.3 + Math.random() * 0.4,
-          breathAmp: 0.02 + Math.random() * 0.04,
-          signalTimer: 0,
-          signalBrightness: 0,
-        });
-      }
-    }
+    const cells: Cell[] = buildCells(cols, 'zero');
 
     /* ── Entrance ───────────────────────────────────────────────────── */
     const entranceTime = performance.now() + 500;
@@ -265,29 +266,9 @@ export function GridCanvas() {
         ctx.scale(newDpr, newDpr);
 
         // Rebuild cells for new column count
-        const newHotX = newCols * 0.72;
-        const newHotY = ROWS * 0.45;
-        const newMaxDist = Math.sqrt(newHotX * newHotX + newHotY * newHotY);
         cells.length = 0;
-        for (let r = 0; r < ROWS; r++) {
-          for (let c = 0; c < newCols; c++) {
-            const dx = c - newHotX;
-            const dy = r - newHotY;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            const base = Math.max(0.03, 0.7 * Math.pow(1 - dist / newMaxDist, 2));
-            cells.push({
-              col: c,
-              row: r,
-              baseOpacity: base,
-              currentOpacity: base,
-              breathPhase: Math.random() * Math.PI * 2,
-              breathSpeed: 0.3 + Math.random() * 0.4,
-              breathAmp: 0.02 + Math.random() * 0.04,
-              signalTimer: 0,
-              signalBrightness: 0,
-            });
-          }
-        }
+        const newCells = buildCells(newCols, 'base');
+        for (const cell of newCells) cells.push(cell);
         activeConnections.length = 0;
         lastFrame = 0;
         animId = requestAnimationFrame(render);
