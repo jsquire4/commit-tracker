@@ -87,6 +87,14 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   );
 }
 
+/** Resolve a category count from distribution — handles both uppercase enum keys and display-name keys */
+function catCount(dist: Record<string, { count: number; percentage: number }>, ...keys: string[]): number {
+  for (const key of keys) {
+    if (dist[key]) return dist[key].count;
+  }
+  return 0;
+}
+
 function buildChartData(
   aggregate: AlignmentSignalResponse,
   members: MemberAlignment[]
@@ -95,28 +103,30 @@ function buildChartData(
     (sum, d) => sum + d.count,
     0
   );
+  const ad = aggregate.distribution;
   const teamTotal: ChartRow = {
     name: 'Team Total',
     userId: null,
     isTeamTotal: true,
-    STRATEGIC: aggregate.distribution['STRATEGIC']?.count ?? 0,
-    OPERATIONAL: aggregate.distribution['OPERATIONAL']?.count ?? 0,
-    DEFENSIVE: aggregate.distribution['DEFENSIVE']?.count ?? 0,
-    CAPABILITY_BUILDING: aggregate.distribution['CAPABILITY_BUILDING']?.count ?? 0,
+    STRATEGIC: catCount(ad, 'STRATEGIC', 'Strategic'),
+    OPERATIONAL: catCount(ad, 'OPERATIONAL', 'Operational'),
+    DEFENSIVE: catCount(ad, 'DEFENSIVE', 'Defensive'),
+    CAPABILITY_BUILDING: catCount(ad, 'CAPABILITY_BUILDING', 'Capability Building'),
     UNLINKED: aggregate.unlinkedCount,
     totalCommitments: teamCategorized + aggregate.unlinkedCount,
   };
 
   const memberRows: ChartRow[] = members.map((m) => {
     const memberCategorized = Object.values(m.distribution).reduce((sum, d) => sum + d.count, 0);
+    const d = m.distribution;
     return {
       name: m.displayName,
       userId: m.userId,
       isTeamTotal: false,
-      STRATEGIC: m.distribution['STRATEGIC']?.count ?? 0,
-      OPERATIONAL: m.distribution['OPERATIONAL']?.count ?? 0,
-      DEFENSIVE: m.distribution['DEFENSIVE']?.count ?? 0,
-      CAPABILITY_BUILDING: m.distribution['CAPABILITY_BUILDING']?.count ?? 0,
+      STRATEGIC: catCount(d, 'STRATEGIC', 'Strategic'),
+      OPERATIONAL: catCount(d, 'OPERATIONAL', 'Operational'),
+      DEFENSIVE: catCount(d, 'DEFENSIVE', 'Defensive'),
+      CAPABILITY_BUILDING: catCount(d, 'CAPABILITY_BUILDING', 'Capability Building'),
       UNLINKED: m.unlinkedCount,
       totalCommitments: memberCategorized + m.unlinkedCount,
     };
