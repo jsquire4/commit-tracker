@@ -194,8 +194,8 @@ class DashboardServiceTest {
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
-                .thenReturn(List.of(specificCycle, activeCycle));
+        when(cycleRepository.findByOrgIdAndStartsAt(org.getId(), weekStart))
+                .thenReturn(Optional.of(specificCycle));
         when(commitmentRepository.findByUserIdInAndCycleId(any(Collection.class), eq(specificCycle.getId())))
                 .thenReturn(List.of(commitment(report1, catA)));
         when(reconciliationRecordRepository.findByOrgIdAndCycleId(any(), eq(specificCycle.getId())))

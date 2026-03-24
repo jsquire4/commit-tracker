@@ -18,7 +18,7 @@ interface SignalCard {
 
 // ─── Signal derivation helpers ────────────────────────────────────────────────
 
-function deriveDriftSignal(drift: DriftReport | undefined): SignalCard | null {
+export function deriveDriftSignal(drift: DriftReport | undefined): SignalCard | null {
   if (!drift || drift.signals.length === 0) return null;
 
   const structural = drift.signals.filter((s) => s.severity === 'STRUCTURAL');
@@ -50,7 +50,7 @@ function deriveDriftSignal(drift: DriftReport | undefined): SignalCard | null {
   };
 }
 
-function deriveLowStrategicSignal(alignment: AlignmentDataPoint[] | undefined, strategicAlignmentTarget: number): SignalCard | null {
+export function deriveLowStrategicSignal(alignment: AlignmentDataPoint[] | undefined, strategicAlignmentTarget: number): SignalCard | null {
   if (!alignment || alignment.length < 2) return null;
 
   const recent = alignment.slice(-4);
@@ -77,7 +77,7 @@ function deriveLowStrategicSignal(alignment: AlignmentDataPoint[] | undefined, s
   };
 }
 
-function deriveWorkDistributionSignal(
+export function deriveWorkDistributionSignal(
   completion: CompletionDataPoint[] | undefined,
   darkWorkWarningPct: number,
 ): SignalCard | null {
@@ -108,7 +108,7 @@ function deriveWorkDistributionSignal(
   };
 }
 
-function deriveDisplacementSignal(displacement: DisplacementSummary | undefined): SignalCard | null {
+export function deriveDisplacementSignal(displacement: DisplacementSummary | undefined): SignalCard | null {
   if (!displacement || displacement.totalDisplacements === 0) return null;
 
   const topCategory = displacement.byCategory[0];
