@@ -7,5 +7,7 @@ public record MyStoryResponse(
         List<WeekSnapshot> recentWeeks,
         PatternStats patternStats,
         String narrativeInsight,
-        List<String> resumeBullets
+        List<String> resumeBullets,
+        double overallAlignmentPct,
+        List<GrowthAreaAlignmentDetail> growthAreaAlignmentDetails
 ) {}

@@ -9,6 +9,8 @@ import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.growth.GrowthArea;
+import com.compass.platform.domain.growth.GrowthAreaRepository;
+import com.compass.platform.domain.icinsights.dto.GrowthAreaAlignmentDetail;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaHit;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaProgress;
 import com.compass.platform.domain.icinsights.dto.IcWeekSummaryResponse;
@@ -58,17 +60,20 @@ public class IcInsightsService {
     private final CommitmentRepository commitmentRepository;
     private final ReconciliationRecordRepository reconciliationRecordRepository;
     private final CycleRepository cycleRepository;
+    private final GrowthAreaRepository growthAreaRepository;
     private final LlmBriefingService llmBriefingService;
     private final BriefingPromptBuilder promptBuilder;
 
     public IcInsightsService(CommitmentRepository commitmentRepository,
                               ReconciliationRecordRepository reconciliationRecordRepository,
                               CycleRepository cycleRepository,
+                              GrowthAreaRepository growthAreaRepository,
                               LlmBriefingService llmBriefingService,
                               BriefingPromptBuilder promptBuilder) {
         this.commitmentRepository = commitmentRepository;
         this.reconciliationRecordRepository = reconciliationRecordRepository;
         this.cycleRepository = cycleRepository;
+        this.growthAreaRepository = growthAreaRepository;
         this.llmBriefingService = llmBriefingService;
         this.promptBuilder = promptBuilder;
     }
@@ -373,6 +378,91 @@ public class IcInsightsService {
                 categoryDistribution
         );
 
+        // ── Growth Alignment Details ──────────────────────────────────────────
+        // Overall alignment pct: commitments with ≥1 growth area / total
+        long alignedCommitmentsCount = allCommitments.stream()
+                .filter(c -> !c.getGrowthAreas().isEmpty())
+                .count();
+        double overallAlignmentPct = totalCommitments > 0
+                ? (double) alignedCommitmentsCount / totalCommitments * 100.0
+                : 0.0;
+
+        // Build a map from growthAreaId -> GrowthArea for ALL growth areas (active + inactive)
+        List<GrowthArea> allUserGrowthAreas = growthAreaRepository.findByUserIdOrderBySortOrderAsc(userId);
+        Map<UUID, GrowthArea> allGaById = allUserGrowthAreas.stream()
+                .collect(Collectors.toMap(GrowthArea::getId, ga -> ga));
+
+        // Per growth area: collect commitments linked to it
+        // Key: growthAreaId, Value: ordered list of commitments (most recent cycle first, then alpha by title)
+        Map<UUID, List<Commitment>> commitmentsByGaId = new LinkedHashMap<>();
+
+        // Seed with all known GAs (so active GAs with 0 tasks are still included)
+        for (GrowthArea ga : allUserGrowthAreas) {
+            commitmentsByGaId.put(ga.getId(), new ArrayList<>());
+        }
+
+        // Build cycle start time index for sorting (most recent cycle first)
+        Map<UUID, java.time.Instant> cycleStartById = window.stream()
+                .collect(Collectors.toMap(Cycle::getId, Cycle::getStartsAt));
+
+        for (Commitment c : allCommitments) {
+            for (GrowthArea ga : c.getGrowthAreas()) {
+                commitmentsByGaId
+                        .computeIfAbsent(ga.getId(), k -> new ArrayList<>())
+                        .add(c);
+                // Ensure we have the GA object even if not in allUserGrowthAreas (edge case)
+                allGaById.putIfAbsent(ga.getId(), ga);
+            }
+        }
+
+        // Sort each GA's commitments: most recent cycle first, then alphabetical by title
+        Comparator<Commitment> commitmentOrder = Comparator
+                .<Commitment, java.time.Instant>comparing(
+                        c -> cycleStartById.getOrDefault(c.getCycle().getId(), java.time.Instant.EPOCH))
+                .reversed()
+                .thenComparing(Commitment::getTitle);
+
+        List<GrowthAreaAlignmentDetail> growthAreaAlignmentDetails = new ArrayList<>();
+        for (Map.Entry<UUID, List<Commitment>> entry : commitmentsByGaId.entrySet()) {
+            UUID gaId = entry.getKey();
+            GrowthArea ga = allGaById.get(gaId);
+            if (ga == null) continue;  // should not happen
+
+            List<Commitment> gaCommitments = entry.getValue();
+            gaCommitments.sort(commitmentOrder);
+
+            int alignedCount = gaCommitments.size();
+            int completedGaCount = (int) gaCommitments.stream()
+                    .filter(c -> {
+                        ReconciliationRecord rec = recordByCommitmentId.get(c.getId());
+                        return rec != null && rec.getStatus() == ReconciliationStatus.COMPLETED;
+                    })
+                    .count();
+
+            // Top 3 tasks
+            List<GrowthAreaAlignmentDetail.AlignedTask> topTasks = gaCommitments.stream()
+                    .limit(3)
+                    .map(c -> {
+                        ReconciliationRecord rec = recordByCommitmentId.get(c.getId());
+                        String reconStatus = rec != null ? rec.getStatus().name() : null;
+                        String cyCleLabel = cycleLabels.getOrDefault(c.getCycle().getId(), "");
+                        return new GrowthAreaAlignmentDetail.AlignedTask(
+                                c.getId(), c.getTitle(), cyCleLabel, reconStatus);
+                    })
+                    .collect(Collectors.toList());
+
+            growthAreaAlignmentDetails.add(new GrowthAreaAlignmentDetail(
+                    gaId, ga.getLabel(), ga.isActive(),
+                    alignedCount, completedGaCount, topTasks));
+        }
+
+        // Sort: areas with linked commitments first (descending count), then active > inactive,
+        // then alphabetical by label
+        growthAreaAlignmentDetails.sort(Comparator
+                .<GrowthAreaAlignmentDetail>comparingInt(d -> -d.alignedCommitmentCount())
+                .thenComparing(d -> !d.isActive())
+                .thenComparing(GrowthAreaAlignmentDetail::label));
+
         // LLM insights
         String narrativeInsight = null;
         List<String> resumeBullets = null;
@@ -405,7 +495,9 @@ public class IcInsightsService {
         }
 
         return new MyStoryResponse(growthAreaProgress, weekSnapshots, patternStats,
-                narrativeInsight, resumeBullets);
+                narrativeInsight, resumeBullets,
+                Math.round(overallAlignmentPct * 10.0) / 10.0,
+                growthAreaAlignmentDetails);
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -449,6 +541,6 @@ public class IcInsightsService {
 
     private MyStoryResponse emptyStory() {
         PatternStats empty = new PatternStats(0, 0, 0.0, 0.0, 0, 0, Map.of());
-        return new MyStoryResponse(List.of(), List.of(), empty, null, null);
+        return new MyStoryResponse(List.of(), List.of(), empty, null, null, 0.0, List.of());
     }
 }

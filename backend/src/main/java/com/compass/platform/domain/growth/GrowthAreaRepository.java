@@ -10,6 +10,9 @@ public interface GrowthAreaRepository extends JpaRepository<GrowthArea, UUID> {
 
     List<GrowthArea> findByUserIdAndIsActiveTrueOrderBySortOrderAsc(UUID userId);
 
+    /** Returns ALL growth areas for a user (active and inactive), ordered by sort_order. */
+    List<GrowthArea> findByUserIdOrderBySortOrderAsc(UUID userId);
+
     long countByUserIdAndIsActiveTrue(UUID userId);
 
     Optional<GrowthArea> findByUserIdAndLabelIgnoreCaseAndIsActiveTrue(UUID userId, String label);

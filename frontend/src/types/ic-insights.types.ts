@@ -56,10 +56,28 @@ export interface PatternStats {
   categoryDistribution: Record<string, number>;
 }
 
+export interface AlignedTask {
+  commitmentId: string;
+  title: string;
+  cycleLabel: string;
+  reconciliationStatus: string | null;
+}
+
+export interface GrowthAreaAlignmentDetail {
+  growthAreaId: string;
+  label: string;
+  isActive: boolean;
+  alignedCommitmentCount: number;
+  completedCount: number;
+  topTasks: AlignedTask[];
+}
+
 export interface MyStoryResponse {
   growthAreaProgress: GrowthAreaProgress[];
   recentWeeks: WeekSnapshot[];
   patternStats: PatternStats;
   narrativeInsight: string | null;
   resumeBullets: string[] | null;
+  overallAlignmentPct: number;
+  growthAreaAlignmentDetails: GrowthAreaAlignmentDetail[];
 }

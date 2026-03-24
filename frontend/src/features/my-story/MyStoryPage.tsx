@@ -4,6 +4,7 @@ import { useGrowthAreas } from '@/hooks/useGrowthAreas';
 import { GrowthAreaManager } from '@/features/growth-areas/GrowthAreaManager';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { GrowthAreaProgressChart } from './GrowthAreaProgressChart';
+import { GrowthAlignmentSection } from './GrowthAlignmentSection';
 import { PatternInsightsPanel } from './PatternInsightsPanel';
 import { ResumeBullets } from './ResumeBullets';
 import { MyStoryEmptyState } from './MyStoryEmptyState';
@@ -199,6 +200,15 @@ export function MyStoryPage() {
 
           {/* Growth Area Progress Chart */}
           <GrowthAreaProgressChart progress={story.growthAreaProgress} />
+
+          {/* Growth Alignment Details */}
+          {(story.growthAreaAlignmentDetails?.length > 0 || story.overallAlignmentPct > 0) && (
+            <GrowthAlignmentSection
+              overallAlignmentPct={story.overallAlignmentPct}
+              details={story.growthAreaAlignmentDetails}
+              totalCommitments={story.patternStats.totalCommitments}
+            />
+          )}
 
           {/* Pattern Insights Panel */}
           {story.patternStats.totalCommitments > 0 && (
