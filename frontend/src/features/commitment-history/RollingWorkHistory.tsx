@@ -206,9 +206,11 @@ export interface WeekListProps {
   initialNextOffset: number;
   /** Fetch function — callers supply their own (getRollingHistory or getTeamMemberHistory) */
   fetcher: (offset: number, limit: number) => Promise<{ weeks: WeekGroup[]; hasMore: boolean; nextOffset: number }>;
+  /** How many weeks to show pre-expanded. Default 1 (most recent only). */
+  defaultExpandedCount?: number;
 }
 
-export function WeekList({ initialWeeks, initialHasMore, initialNextOffset, fetcher }: WeekListProps) {
+export function WeekList({ initialWeeks, initialHasMore, initialNextOffset, fetcher, defaultExpandedCount = 1 }: WeekListProps) {
   const [allWeeks, setAllWeeks] = useState<WeekGroup[]>(initialWeeks);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [nextOffset, setNextOffset] = useState(initialNextOffset);
@@ -253,7 +255,7 @@ export function WeekList({ initialWeeks, initialHasMore, initialNextOffset, fetc
           <WeekGroupCard
             key={group.cycleId}
             group={group}
-            defaultExpanded={idx === 0}
+            defaultExpanded={idx < defaultExpandedCount}
           />
         ))}
       </div>

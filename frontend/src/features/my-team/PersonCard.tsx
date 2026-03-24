@@ -52,7 +52,7 @@ const statusDotClass: Record<string, string> = {
 
 // ── Past Work section (lazy-loaded when card is expanded) ─────────────────────
 
-const TEAM_MEMBER_INITIAL_LIMIT = 7;
+const TEAM_MEMBER_INITIAL_LIMIT = 3;
 
 function PastWorkSection({ userId }: { userId: string }) {
   const { data, isLoading, isError } = useTeamMemberHistory(userId, 0, TEAM_MEMBER_INITIAL_LIMIT);
@@ -97,6 +97,7 @@ function PastWorkSection({ userId }: { userId: string }) {
         initialHasMore={data.hasMore}
         initialNextOffset={data.nextOffset}
         fetcher={fetcher}
+        defaultExpandedCount={3}
       />
     </div>
   );
