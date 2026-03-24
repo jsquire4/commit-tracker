@@ -505,7 +505,7 @@ public class CommitmentService {
 
         ChessCategory chessCategory = resolveChessCategory(chessCategoryId);
 
-        int rank = computeNextRank(actor.getId(), cycle.getId());
+        int rank = computeNextRank(actor.getOrg().getId(), cycle.getId());
 
         // Dual-write: sync day+timeBlock <-> legacy horizon
         CompletionHorizon resolvedHorizon = completionHorizon;
@@ -567,15 +567,8 @@ public class CommitmentService {
         return chessCategory;
     }
 
-    private int computeNextRank(UUID userId, UUID cycleId) {
-        List<Commitment> existing = commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(userId, cycleId);
-        if (existing.isEmpty()) {
-            return 0;
-        }
-        return existing.stream()
-                .mapToInt(Commitment::getPriorityRank)
-                .max()
-                .orElse(-1) + 1;
+    private int computeNextRank(UUID orgId, UUID cycleId) {
+        return commitmentRepository.findMaxPriorityRank(orgId, cycleId) + 1;
     }
 
     private void saveBullets(Commitment commitment, List<String> bulletTexts) {

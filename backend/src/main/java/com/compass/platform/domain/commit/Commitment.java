@@ -23,6 +23,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -96,6 +97,7 @@ public class Commitment {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "carried_from_id")
+    @BatchSize(size = 50)
     private Commitment carriedFrom;
 
     @Column(name = "is_unplanned", nullable = false)

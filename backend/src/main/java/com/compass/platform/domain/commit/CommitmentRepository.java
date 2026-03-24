@@ -42,5 +42,11 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id = :cycleId ORDER BY c.user.id, c.priorityRank")
     List<Commitment> findByUserIdInAndCycleId(@Param("userIds") Collection<UUID> userIds, @Param("cycleId") UUID cycleId);
 
+    @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id IN :cycleIds ORDER BY c.cycle.id, c.user.id, c.priorityRank")
+    List<Commitment> findByUserIdInAndCycleIdIn(@Param("userIds") Collection<UUID> userIds, @Param("cycleIds") Collection<UUID> cycleIds);
+
     List<Commitment> findByOrgIdAndCycleIdIn(UUID orgId, Collection<UUID> cycleIds);
+
+    @Query("SELECT COALESCE(MAX(c.priorityRank), -1) FROM Commitment c WHERE c.org.id = :orgId AND c.cycle.id = :cycleId")
+    int findMaxPriorityRank(@Param("orgId") UUID orgId, @Param("cycleId") UUID cycleId);
 }
