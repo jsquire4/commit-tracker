@@ -24,7 +24,6 @@ export interface ManagerCardProps {
 
 export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCardProps) {
   const gradeColor = HEALTH_COLORS[unit.grade];
-  const isRed = unit.grade === 'RED';
 
   // CHESS bar: full 4-category breakdown
   const strategicW = unit.strategicAlignmentPct;
@@ -44,7 +43,6 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
         'hover:-translate-y-0.5 hover:shadow-lg cursor-pointer text-left',
         HEALTH_BORDER[unit.grade],
         HEALTH_BG[unit.grade],
-        isRed ? 'animate-pulse-subtle' : '',
       ].join(' ')}
       style={{
         animationDelay: `${index * 60}ms`,

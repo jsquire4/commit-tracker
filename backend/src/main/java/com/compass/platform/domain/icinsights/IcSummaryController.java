@@ -4,6 +4,7 @@ import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.icinsights.dto.IcWeekSummaryResponse;
+import com.compass.platform.domain.icinsights.dto.MyStoryResponse;
 import com.compass.platform.domain.icinsights.dto.PersonalReflectionRequest;
 import com.compass.platform.domain.icinsights.dto.PersonalReflectionResponse;
 import com.compass.platform.domain.icinsights.dto.RollingHistoryResponse;
@@ -109,6 +110,30 @@ public class IcSummaryController {
         int safeLimit = Math.max(1, Math.min(limit, 26));
         RollingHistoryResponse response = icInsightsService.computeRollingHistory(
                 userId, actor.getOrg().getId(), safeOffset, safeLimit);
+        return ResponseEntity.ok(ApiResponse.of(response));
+    }
+
+    @GetMapping("/team-member-story")
+    public ResponseEntity<ApiResponse<MyStoryResponse>> getTeamMemberStory(
+            @RequestParam UUID userId,
+            @RequestParam(defaultValue = "12") int weeks) {
+
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+
+        // Elevated roles (Director+) can view any team member's story
+        if (!ELEVATED_ROLES.contains(actor.getRole())) {
+            AppUser target = userRepository.findById(userId)
+                    .orElseThrow(() -> new EntityNotFoundException("User", userId));
+            if (!target.getOrg().getId().equals(actor.getOrg().getId())) {
+                throw new AccessDeniedException("User does not belong to the same org");
+            }
+            if (!isManagerOf(actor.getId(), target)) {
+                throw new AccessDeniedException("You are not a manager of the requested user");
+            }
+        }
+
+        int cappedWeeks = Math.max(1, Math.min(weeks, 52));
+        MyStoryResponse response = icInsightsService.computeMyStory(userId, actor.getOrg().getId(), cappedWeeks);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 

@@ -3,28 +3,30 @@ import { CHESS_ACCENT } from '@/constants/chess-colors';
 
 // ─── Shared Constants ────────────────────────────────────────────────────────
 
+// Neutral directional palette — single teal/navy hue, no red = bad judgment.
+// HIGH alignment: full accent (teal); MID: muted accent; LOW: neutral gray.
 export const HEALTH_COLORS: Record<HealthGrade, string> = {
-  GREEN: CHESS_ACCENT.strategic,
-  YELLOW: '#C2860B',
-  RED: CHESS_ACCENT.defensive,
+  GREEN: CHESS_ACCENT.strategic,   // teal — high alignment
+  YELLOW: '#5B7FA6',               // muted navy-blue — mid alignment
+  RED: '#8E9AA0',                  // neutral gray-blue — low alignment
 };
 
 export const HEALTH_BG: Record<HealthGrade, string> = {
   GREEN: 'bg-accent/[0.08]',
-  YELLOW: 'bg-warning/[0.08]',
-  RED: 'bg-error/[0.08]',
+  YELLOW: 'bg-surface-container',
+  RED: 'bg-surface-container-low',
 };
 
 export const HEALTH_BORDER: Record<HealthGrade, string> = {
   GREEN: 'border-l-accent',
-  YELLOW: 'border-l-warning',
-  RED: 'border-l-error',
+  YELLOW: 'border-l-outline-variant',
+  RED: 'border-l-outline-variant',
 };
 
 export const HEALTH_TEXT: Record<HealthGrade, string> = {
   GREEN: 'text-accent',
-  YELLOW: 'text-warning',
-  RED: 'text-error',
+  YELLOW: 'text-on-surface-variant',
+  RED: 'text-muted',
 };
 
 // ─── Shared Helpers ──────────────────────────────────────────────────────────
@@ -45,7 +47,7 @@ export function trendArrowColor(direction: string): string {
     case 'IMPROVING':
       return 'text-accent';
     case 'DECLINING':
-      return 'text-error';
+      return 'text-on-surface-variant';
     default:
       return 'text-muted';
   }

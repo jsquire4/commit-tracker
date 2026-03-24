@@ -8,16 +8,17 @@ interface OrgUnitCardProps {
   onClick: () => void;
 }
 
+// Neutral directional palette — single-hue progression, no red = bad judgment.
 const gradeColors: Record<HealthGrade, string> = {
   GREEN: 'bg-accent',
-  YELLOW: 'bg-warning',
-  RED: 'bg-error',
+  YELLOW: 'bg-surface-container',
+  RED: 'bg-surface-container-low',
 };
 
 const gradeBorderAccent: Record<HealthGrade, string> = {
   GREEN: 'border-l-accent',
-  YELLOW: 'border-l-warning',
-  RED: 'border-l-error',
+  YELLOW: 'border-l-outline-variant',
+  RED: 'border-l-outline-variant',
 };
 
 function TrendArrow({ direction }: { direction: string }) {
@@ -25,7 +26,7 @@ function TrendArrow({ direction }: { direction: string }) {
     return <span className="text-accent font-bold text-base">{'\u2191'}</span>;
   }
   if (direction.toUpperCase() === 'DECLINING') {
-    return <span className="text-error font-bold text-base">{'\u2193'}</span>;
+    return <span className="text-on-surface-variant font-bold text-base">{'\u2193'}</span>;
   }
   return <span className="text-muted font-bold text-base">{'\u2192'}</span>;
 }

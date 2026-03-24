@@ -5,6 +5,7 @@ interface HealthGradeIndicatorProps {
   percentage: number;
 }
 
+// Neutral directional palette — teal/navy/gray, no red = bad judgment.
 const gradeConfig: Record<HealthGrade, {
   bg: string;
   text: string;
@@ -16,26 +17,26 @@ const gradeConfig: Record<HealthGrade, {
   GREEN: {
     bg: 'bg-accent',
     text: 'text-accent',
-    label: 'Healthy',
+    label: 'High Coverage',
     shadow: 'shadow-glow-green',
     ring: 'ring-4 ring-accent/20',
     pulse: false,
   },
   YELLOW: {
-    bg: 'bg-warning',
-    text: 'text-warning',
-    label: 'At Risk',
-    shadow: 'shadow-glow-amber',
-    ring: 'ring-4 ring-warning/20',
+    bg: 'bg-surface-container',
+    text: 'text-on-surface-variant',
+    label: 'Partial Coverage',
+    shadow: '',
+    ring: 'ring-4 ring-outline-variant/30',
     pulse: false,
   },
   RED: {
-    bg: 'bg-error',
-    text: 'text-error',
-    label: 'Critical',
-    shadow: 'shadow-glow-red',
-    ring: 'ring-4 ring-error/20',
-    pulse: true,
+    bg: 'bg-surface-container-low',
+    text: 'text-muted',
+    label: 'Low Coverage',
+    shadow: '',
+    ring: 'ring-4 ring-outline-variant/20',
+    pulse: false,
   },
 };
 
@@ -56,7 +57,7 @@ export function HealthGradeIndicator({ grade, percentage }: HealthGradeIndicator
         role="img"
         aria-label={`Health grade: ${config.label} at ${String(Math.round(percentage))}%`}
       >
-        <span className="text-3xl font-bold text-white">
+        <span className={`text-3xl font-bold ${grade === 'GREEN' ? 'text-white' : 'text-on-surface'}`}>
           {String(Math.round(percentage))}%
         </span>
       </div>

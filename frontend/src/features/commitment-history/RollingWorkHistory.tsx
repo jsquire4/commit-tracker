@@ -283,8 +283,17 @@ export function WeekList({ initialWeeks, initialHasMore, initialNextOffset, fetc
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export function RollingWorkHistory() {
-  const { data, isLoading, isError } = useRollingHistory(INITIAL_OFFSET, INITIAL_LIMIT);
+export interface RollingWorkHistoryProps {
+  /**
+   * When set, fetches exactly this many weeks and hides the "Load more" button.
+   * Useful for embedded contexts (e.g. My Team) where pagination is unwanted.
+   */
+  maxWeeks?: number;
+}
+
+export function RollingWorkHistory({ maxWeeks }: RollingWorkHistoryProps = {}) {
+  const limit = maxWeeks != null ? maxWeeks : INITIAL_LIMIT;
+  const { data, isLoading, isError } = useRollingHistory(INITIAL_OFFSET, limit);
 
   return (
     <section
@@ -313,7 +322,7 @@ export function RollingWorkHistory() {
       ) : (
         <WeekList
           initialWeeks={data.weeks}
-          initialHasMore={data.hasMore}
+          initialHasMore={maxWeeks != null ? false : data.hasMore}
           initialNextOffset={data.nextOffset}
           fetcher={getRollingHistory}
         />

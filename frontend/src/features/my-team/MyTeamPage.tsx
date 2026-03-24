@@ -170,8 +170,8 @@ export function MyTeamPage() {
       {/* Rally Cry Coverage Cards */}
       {rcdoCoverage && <RallyCryCoverageCards coverage={rcdoCoverage} />}
 
-      {/* My Rolling Work */}
-      <RollingWorkHistory />
+      {/* My Rolling Work — capped at 3 weeks on My Team; no pagination */}
+      <RollingWorkHistory maxWeeks={3} />
 
       {/* Team Members */}
       <ErrorBoundary>

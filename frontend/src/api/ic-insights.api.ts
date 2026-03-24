@@ -26,3 +26,10 @@ export async function getTeamMemberHistory(
     limit,
   });
 }
+
+export async function getTeamMemberStory(userId: string, weeks?: number): Promise<MyStoryResponse> {
+  return fetchData<MyStoryResponse>('/api/v1/my-week/team-member-story', {
+    userId,
+    ...(weeks != null ? { weeks } : {}),
+  });
+}

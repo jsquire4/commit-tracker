@@ -5,10 +5,67 @@
 import { useMemo } from 'react';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments } from '@/hooks/useCommitments';
+import { useTeamMemberStory } from '@/hooks/useIcInsights';
 import { Badge } from '@/components/Badge';
 import Card from '@/components/Card';
 import { SkeletonLoader } from '@/components/SkeletonLoader';
 import type { ReconciliationStatus } from '@/types/enums';
+import type { GrowthAreaAlignmentDetail } from '@/types/ic-insights.types';
+
+// ── Personal Goal Alignment Card ──────────────────────────────────────────────
+
+function PersonalGoalAlignmentCard({ personId }: { personId: string }) {
+  const { data, isLoading, isError } = useTeamMemberStory(personId, 12);
+
+  if (isLoading) {
+    return (
+      <Card padding="normal">
+        <div className="flex flex-col gap-2 animate-pulse">
+          <div className="h-4 w-40 bg-surface-container rounded" />
+          <div className="h-3 w-24 bg-surface-container rounded mt-1" />
+        </div>
+      </Card>
+    );
+  }
+
+  if (isError || !data) {
+    return null;
+  }
+
+  const { overallAlignmentPct, growthAreaAlignmentDetails } = data;
+  const activeAreas = growthAreaAlignmentDetails.filter((a: GrowthAreaAlignmentDetail) => a.isActive);
+
+  return (
+    <Card padding="normal">
+      <h3 className="text-body font-medium text-on-surface mb-3">Personal Goal Alignment</h3>
+
+      {/* Overall alignment pct */}
+      <div className="flex items-baseline gap-2 mb-3">
+        <span className="text-[1.5rem] font-semibold text-on-surface tabular-nums leading-none">
+          {Math.round(overallAlignmentPct)}%
+        </span>
+        <span className="text-small text-muted">of tasks aligned to personal goals (last 12 weeks)</span>
+      </div>
+
+      {activeAreas.length === 0 ? (
+        <p className="text-small text-muted italic">No personal goals set.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {activeAreas.map((area: GrowthAreaAlignmentDetail) => (
+            <li key={area.growthAreaId} className="flex items-center justify-between gap-3">
+              <span className="text-small text-on-surface-variant truncate">{area.label}</span>
+              <span className="text-small font-medium text-on-surface tabular-nums whitespace-nowrap flex-shrink-0">
+                {area.alignedCommitmentCount} task{area.alignedCommitmentCount !== 1 ? 's' : ''}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </Card>
+  );
+}
+
+// ── Commitment status config ───────────────────────────────────────────────────
 
 const RECON_STATUS: Record<ReconciliationStatus, { label: string; className: string }> = {
   COMPLETED: { label: 'Completed', className: 'text-accent' },
@@ -91,6 +148,11 @@ export function PersonDetailLevel({ personId }: PersonDetailLevelProps) {
           ))}
         </div>
       )}
+
+      {/* Personal Goal Alignment */}
+      <div className="animate-fade-up" style={{ animationDelay: '80ms' }}>
+        <PersonalGoalAlignmentCard personId={personId} />
+      </div>
 
       {/* Commitments */}
       <div className="space-y-3">

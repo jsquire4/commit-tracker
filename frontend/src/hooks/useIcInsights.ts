@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getIcWeekSummary, getMyStory, getRollingHistory, getTeamMemberHistory } from '@/api/ic-insights.api';
+import { getIcWeekSummary, getMyStory, getRollingHistory, getTeamMemberHistory, getTeamMemberStory } from '@/api/ic-insights.api';
 
 export function useIcWeekSummary(cycleId: string | undefined) {
   return useQuery({
@@ -32,5 +32,14 @@ export function useTeamMemberHistory(userId: string | undefined, offset: number,
     queryFn: () => getTeamMemberHistory(userId!, offset, limit),
     enabled: Boolean(userId),
     staleTime: 60_000,
+  });
+}
+
+export function useTeamMemberStory(userId: string | undefined, weeks?: number) {
+  return useQuery({
+    queryKey: ['team-member-story', userId, weeks],
+    queryFn: () => getTeamMemberStory(userId!, weeks),
+    enabled: Boolean(userId),
+    staleTime: 5 * 60_000,
   });
 }

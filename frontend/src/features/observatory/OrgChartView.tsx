@@ -10,15 +10,16 @@ import type { HealthGrade } from '@/types/observatory.types';
 import { MANAGER_AND_ABOVE } from '@/constants/roles';
 const DEFAULT_EXPAND_DEPTH = 2;
 
-// Map HealthGrade to a color dot class
+// Map HealthGrade to a neutral directional color dot class.
+// Single teal/gray hue — no red = bad judgment.
 function healthDotClass(grade: HealthGrade): string {
   switch (grade) {
     case 'GREEN':
       return 'bg-accent';
     case 'YELLOW':
-      return 'bg-warning';
+      return 'bg-surface-container';
     case 'RED':
-      return 'bg-error';
+      return 'bg-surface-container-low';
     default:
       return 'bg-muted';
   }
@@ -262,15 +263,15 @@ export function OrgChartView() {
       <div className="flex flex-wrap gap-4 mb-4 text-xs text-muted">
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-accent" aria-hidden="true" />
-          Green health
+          High coverage
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-warning" aria-hidden="true" />
-          Yellow health
+          <span className="w-2.5 h-2.5 rounded-full bg-surface-container border border-outline-variant/40" aria-hidden="true" />
+          Partial coverage
         </div>
         <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-error" aria-hidden="true" />
-          Red health
+          <span className="w-2.5 h-2.5 rounded-full bg-surface-container-low border border-outline-variant/40" aria-hidden="true" />
+          Low coverage
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-full bg-surface-container-high" aria-hidden="true" />
