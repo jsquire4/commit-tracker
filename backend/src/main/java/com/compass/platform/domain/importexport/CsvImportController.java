@@ -1,8 +1,10 @@
 package com.compass.platform.domain.importexport;
 
+import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.security.SecurityContextHelper;
 import com.compass.platform.shared.ApiResponse;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -35,6 +37,13 @@ public class CsvImportController {
      * Validates that the uploaded file has an acceptable CSV MIME type.
      * Rejects other types with 415 Unsupported Media Type.
      */
+    private void requireDirectorOrAbove(AppUser actor) {
+        UserRole role = actor.getRole();
+        if (role != UserRole.DIRECTOR && role != UserRole.VP && role != UserRole.EXECUTIVE) {
+            throw new AccessDeniedException("Data import requires DIRECTOR or above");
+        }
+    }
+
     private void validateCsvContentType(MultipartFile file) {
         String contentType = file.getContentType();
         if (contentType != null
@@ -51,6 +60,7 @@ public class CsvImportController {
             @RequestParam("file") MultipartFile file) {
         validateCsvContentType(file);
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        requireDirectorOrAbove(actor);
         ImportResult result = userCsvImporter.importUsers(file, actor.getOrg().getId(), actor);
         return ResponseEntity.ok(ApiResponse.of(result));
     }
@@ -60,6 +70,7 @@ public class CsvImportController {
             @RequestParam("file") MultipartFile file) {
         validateCsvContentType(file);
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        requireDirectorOrAbove(actor);
         ImportResult result = rcdoCsvImporter.importRcdo(file, actor.getOrg().getId(), actor);
         return ResponseEntity.ok(ApiResponse.of(result));
     }
@@ -69,6 +80,7 @@ public class CsvImportController {
             @RequestParam("file") MultipartFile file) {
         validateCsvContentType(file);
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        requireDirectorOrAbove(actor);
         ImportResult result = chessCategoryCsvImporter.importChessCategories(file, actor.getOrg().getId(), actor);
         return ResponseEntity.ok(ApiResponse.of(result));
     }
@@ -78,6 +90,7 @@ public class CsvImportController {
             @RequestParam("file") MultipartFile file) {
         validateCsvContentType(file);
         AppUser actor = SecurityContextHelper.getCurrentUser();
+        requireDirectorOrAbove(actor);
         ImportResult result = commitmentCsvImporter.importCommitments(file, actor.getOrg().getId(), actor);
         return ResponseEntity.ok(ApiResponse.of(result));
     }

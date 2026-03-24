@@ -8,6 +8,7 @@ import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.domain.user.Org;
 import com.compass.platform.shared.ConflictException;
 import com.compass.platform.shared.EntityNotFoundException;
+import org.springframework.security.access.AccessDeniedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -68,6 +69,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Rally cry");
         RallyCry rallyCry = rallyCryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", id));
+        requireSameOrg(rallyCry.getOrg(), actor);
         if (rallyCry.isArchived()) {
             throw new ConflictException("Cannot update archived RallyCry: " + id);
         }
@@ -85,6 +87,7 @@ public class RcdoService {
     public int archiveRallyCry(UUID id, AppUser actor) {
         RallyCry rallyCry = rallyCryRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("RallyCry", id));
+        requireSameOrg(rallyCry.getOrg(), actor);
         rallyCry.setArchivedAt(Instant.now());
         rallyCryRepository.save(rallyCry);
         int warningCount = countReferencingCommitments("RallyCry", id);
@@ -122,6 +125,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Defining objective");
         DefiningObjective definingObjective = definingObjectiveRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", id));
+        requireSameOrg(definingObjective.getOrg(), actor);
         if (definingObjective.isArchived()) {
             throw new ConflictException("Cannot update archived DefiningObjective: " + id);
         }
@@ -137,6 +141,7 @@ public class RcdoService {
     public int archiveDefiningObjective(UUID id, AppUser actor) {
         DefiningObjective definingObjective = definingObjectiveRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("DefiningObjective", id));
+        requireSameOrg(definingObjective.getOrg(), actor);
         definingObjective.setArchivedAt(Instant.now());
         definingObjectiveRepository.save(definingObjective);
         int warningCount = countReferencingCommitments("DefiningObjective", id);
@@ -174,6 +179,7 @@ public class RcdoService {
         validateTitleNotBlank(title, "Outcome");
         Outcome outcome = outcomeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Outcome", id));
+        requireSameOrg(outcome.getOrg(), actor);
         if (outcome.isArchived()) {
             throw new ConflictException("Cannot update archived Outcome: " + id);
         }
@@ -188,6 +194,7 @@ public class RcdoService {
     public int archiveOutcome(UUID id, AppUser actor) {
         Outcome outcome = outcomeRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Outcome", id));
+        requireSameOrg(outcome.getOrg(), actor);
         outcome.setArchivedAt(Instant.now());
         outcomeRepository.save(outcome);
         int warningCount = countReferencingCommitments("Outcome", id);
@@ -367,6 +374,12 @@ public class RcdoService {
      * Validates that a title field is not null or blank.
      * Throws {@link IllegalArgumentException} if the check fails.
      */
+    private void requireSameOrg(Org entityOrg, AppUser actor) {
+        if (!entityOrg.getId().equals(actor.getOrg().getId())) {
+            throw new AccessDeniedException("Access denied: entity belongs to a different org");
+        }
+    }
+
     private void validateTitleNotBlank(String title, String entityLabel) {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException(entityLabel + " title must not be blank");

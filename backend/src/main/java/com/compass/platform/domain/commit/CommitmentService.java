@@ -207,6 +207,9 @@ public class CommitmentService {
         Commitment commitment = commitmentRepository.findById(commitmentId)
                 .orElseThrow(() -> new EntityNotFoundException("Commitment", commitmentId));
 
+        if (!commitment.getOrg().getId().equals(actor.getOrg().getId())) {
+            throw new AccessDeniedException("Access denied: commitment belongs to a different org");
+        }
         if (!commitment.getUser().getId().equals(actor.getId())) {
             throw new AccessDeniedException("Only the commitment owner can update it");
         }
