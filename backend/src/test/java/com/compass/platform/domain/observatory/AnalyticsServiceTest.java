@@ -95,27 +95,28 @@ class AnalyticsServiceTest {
         when(cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId))
                 .thenReturn(List.of(week3, week2, week1)); // DESC order from repo
 
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week1.getId()))
-                .thenReturn(List.of(
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, operational, CompletionHorizon.EOD)
-                ));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week2.getId()))
-                .thenReturn(List.of(
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, defensive, CompletionHorizon.EOD),
-                        commitment(user, defensive, CompletionHorizon.EOD)
-                ));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week3.getId()))
-                .thenReturn(List.of(
-                        commitment(user, strategic, CompletionHorizon.EOW),
-                        commitment(user, operational, CompletionHorizon.EOD),
-                        commitment(user, operational, CompletionHorizon.EOD),
-                        commitment(user, operational, CompletionHorizon.EOD)
-                ));
+        // Bulk-load mock: all commitments across all cycles
+        List<Commitment> allCommitments = new java.util.ArrayList<>();
+        allCommitments.addAll(List.of(
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week1),
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week1),
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week1),
+                commitmentForCycle(user, operational, CompletionHorizon.EOD, week1)
+        ));
+        allCommitments.addAll(List.of(
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week2),
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week2),
+                commitmentForCycle(user, defensive, CompletionHorizon.EOD, week2),
+                commitmentForCycle(user, defensive, CompletionHorizon.EOD, week2)
+        ));
+        allCommitments.addAll(List.of(
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week3),
+                commitmentForCycle(user, operational, CompletionHorizon.EOD, week3),
+                commitmentForCycle(user, operational, CompletionHorizon.EOD, week3),
+                commitmentForCycle(user, operational, CompletionHorizon.EOD, week3)
+        ));
+        when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
+                .thenReturn(allCommitments);
 
         List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 3);
 
@@ -151,10 +152,12 @@ class AnalyticsServiceTest {
         when(cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId))
                 .thenReturn(List.of(week3, week2, week1));
 
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week3.getId()))
-                .thenReturn(List.of(commitment(user, strategic, CompletionHorizon.EOW)));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week2.getId()))
-                .thenReturn(List.of(commitment(user, operational, CompletionHorizon.EOD)));
+        List<Commitment> limitedCommitments = List.of(
+                commitmentForCycle(user, strategic, CompletionHorizon.EOW, week3),
+                commitmentForCycle(user, operational, CompletionHorizon.EOD, week2)
+        );
+        when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
+                .thenReturn(limitedCommitments);
 
         List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 2);
 
@@ -170,7 +173,7 @@ class AnalyticsServiceTest {
         Cycle week1 = cycle("Week 1", Instant.now());
         when(cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId))
                 .thenReturn(List.of(week1));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week1.getId()))
+        when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
                 .thenReturn(List.of());
 
         List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 4);
@@ -409,7 +412,13 @@ class AnalyticsServiceTest {
         Commitment c3 = commitment(user, defensive, CompletionHorizon.AFTERNOON);
         Commitment c4 = commitment(user, operational, CompletionHorizon.MIDDAY);
 
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(orgId, week1.getId()))
+        // Set correct cycle references for bulk loading
+        c1.setCycle(week1);
+        c2.setCycle(week1);
+        c3.setCycle(week1);
+        c4.setCycle(week1);
+
+        when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
                 .thenReturn(List.of(c1, c2, c3, c4));
 
         // 2 completed, 1 carried forward, 1 not started
@@ -506,6 +515,19 @@ class AnalyticsServiceTest {
                 .user(owner)
                 .cycle(Cycle.builder().org(org).label("placeholder").state(CycleState.DRAFT)
                         .startsAt(Instant.now()).endsAt(Instant.now().plusSeconds(604800)).build())
+                .title("Task")
+                .completionHorizon(horizon)
+                .chessCategory(category)
+                .build();
+        c.setId(UUID.randomUUID());
+        return c;
+    }
+
+    private Commitment commitmentForCycle(AppUser owner, ChessCategory category, CompletionHorizon horizon, Cycle cycle) {
+        Commitment c = Commitment.builder()
+                .org(org)
+                .user(owner)
+                .cycle(cycle)
                 .title("Task")
                 .completionHorizon(horizon)
                 .chessCategory(category)

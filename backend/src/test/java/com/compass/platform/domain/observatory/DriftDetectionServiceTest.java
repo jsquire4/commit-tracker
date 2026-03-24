@@ -108,9 +108,10 @@ class DriftDetectionServiceTest {
 
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12)))
+        when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12)))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -143,9 +144,10 @@ class DriftDetectionServiceTest {
 
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12)))
+        when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12)))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -178,9 +180,10 @@ class DriftDetectionServiceTest {
 
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(tightConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(8)))
+        when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(8), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(8)))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(8), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -210,9 +213,10 @@ class DriftDetectionServiceTest {
 
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12)))
+        when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12)))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());

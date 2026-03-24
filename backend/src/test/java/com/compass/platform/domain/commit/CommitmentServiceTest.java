@@ -48,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -67,6 +68,7 @@ class CommitmentServiceTest {
     @Mock private AuditService auditService;
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
     @Mock private TeamActivationService teamActivationService;
+    @Mock private RcdoValidator rcdoValidator;
     @InjectMocks private CommitmentService commitmentService;
 
     private Org org;
@@ -186,8 +188,8 @@ class CommitmentServiceTest {
         ChessCategory category = buildActiveCategory();
         when(cycleRepository.findById(draftCycle.getId())).thenReturn(Optional.of(draftCycle));
         when(chessCategoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), draftCycle.getId()))
-                .thenReturn(List.of());
+        when(commitmentRepository.findMaxPriorityRank(org.getId(), draftCycle.getId()))
+                .thenReturn(0);
         when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
             Commitment c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -232,8 +234,10 @@ class CommitmentServiceTest {
     @Test
     void create_withInvalidRcdoHierarchy_throwsValidation() {
         UUID outcomeId = UUID.randomUUID();
-        // outcomeId set but no definingObjectiveId
+        // outcomeId set but no definingObjectiveId — rcdoValidator will reject
         when(cycleRepository.findById(draftCycle.getId())).thenReturn(Optional.of(draftCycle));
+        doThrow(new IllegalArgumentException("definingObjectiveId is required when outcomeId is set"))
+                .when(rcdoValidator).validateRcdoConsistencyAndExistence(any(), any(), eq(outcomeId));
 
         CreateCommitmentRequest request = new CreateCommitmentRequest(
                 draftCycle.getId(),
@@ -261,10 +265,10 @@ class CommitmentServiceTest {
     @Test
     void create_withArchivedRcdo_throwsValidation() {
         UUID rallyCryId = UUID.randomUUID();
-        RallyCry archivedRc = buildArchivedRallyCry(rallyCryId);
 
         when(cycleRepository.findById(draftCycle.getId())).thenReturn(Optional.of(draftCycle));
-        when(rallyCryRepository.findById(rallyCryId)).thenReturn(Optional.of(archivedRc));
+        doThrow(new IllegalArgumentException("RallyCry is archived: " + rallyCryId))
+                .when(rcdoValidator).validateRcdoConsistencyAndExistence(eq(rallyCryId), any(), any());
 
         CreateCommitmentRequest request = new CreateCommitmentRequest(
                 draftCycle.getId(),
@@ -327,8 +331,8 @@ class CommitmentServiceTest {
 
         when(cycleRepository.findById(draftCycle.getId())).thenReturn(Optional.of(draftCycle));
         when(chessCategoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), draftCycle.getId()))
-                .thenReturn(List.of(existing));
+        when(commitmentRepository.findMaxPriorityRank(org.getId(), draftCycle.getId()))
+                .thenReturn(3);
 
         ArgumentCaptor<Commitment> captor = ArgumentCaptor.forClass(Commitment.class);
         when(commitmentRepository.save(captor.capture())).thenAnswer(inv -> {
@@ -431,8 +435,8 @@ class CommitmentServiceTest {
         ChessCategory category = buildActiveCategory();
         when(cycleRepository.findById(draftCycle.getId())).thenReturn(Optional.of(draftCycle));
         when(chessCategoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), draftCycle.getId()))
-                .thenReturn(List.of());
+        when(commitmentRepository.findMaxPriorityRank(org.getId(), draftCycle.getId()))
+                .thenReturn(0);
         when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
             Commitment c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -697,7 +701,7 @@ class CommitmentServiceTest {
         Commitment c2 = buildCommitment(employee, draftCycle, 1);
         c2.setId(UUID.randomUUID());
 
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any()))
                 .thenReturn(List.of(c1, c2));
         when(visibilityEnforcer.filterVisible(eq(employee), any())).thenReturn(List.of(c1, c2));
 
@@ -718,7 +722,7 @@ class CommitmentServiceTest {
         Commitment c2 = buildCommitment(manager, draftCycle, 0);
         c2.setId(UUID.randomUUID());
 
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
+        when(commitmentRepository.findByCycleIdWithFilters(eq(org.getId()), eq(cycleId), any(), any(), any(), any()))
                 .thenReturn(List.of(c1, c2));
         // Visibility filter hides c2
         when(visibilityEnforcer.filterVisible(eq(employee), any())).thenReturn(List.of(c1));
@@ -894,8 +898,8 @@ class CommitmentServiceTest {
         ChessCategory category = buildActiveCategory();
         when(cycleRepository.findById(reconcilingCycle.getId())).thenReturn(Optional.of(reconcilingCycle));
         when(chessCategoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), reconcilingCycle.getId()))
-                .thenReturn(List.of());
+        when(commitmentRepository.findMaxPriorityRank(org.getId(), reconcilingCycle.getId()))
+                .thenReturn(0);
         when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
             Commitment c = inv.getArgument(0);
             c.setId(UUID.randomUUID());
@@ -968,8 +972,8 @@ class CommitmentServiceTest {
         ChessCategory category = buildActiveCategory();
         when(cycleRepository.findById(reconcilingCycle.getId())).thenReturn(Optional.of(reconcilingCycle));
         when(chessCategoryRepository.findById(category.getId())).thenReturn(Optional.of(category));
-        when(commitmentRepository.findByUserIdAndCycleIdOrderByPriorityRankAsc(employee.getId(), reconcilingCycle.getId()))
-                .thenReturn(List.of());
+        when(commitmentRepository.findMaxPriorityRank(org.getId(), reconcilingCycle.getId()))
+                .thenReturn(0);
         when(commitmentRepository.save(any(Commitment.class))).thenAnswer(inv -> {
             Commitment c = inv.getArgument(0);
             c.setId(UUID.randomUUID());

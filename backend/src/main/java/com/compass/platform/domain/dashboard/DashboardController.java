@@ -63,9 +63,7 @@ public class DashboardController {
             @RequestParam(required = false) Instant cycleWeekStart) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
 
-        TeamSummaryResponse summary = briefingService != null
-                ? briefingService.generateTeamSummary(actor, cycleWeekStart)
-                : null;
+        TeamSummaryResponse summary = briefingService.generateTeamSummary(actor, cycleWeekStart);
 
         if (summary == null) {
             return ResponseEntity.noContent().build();

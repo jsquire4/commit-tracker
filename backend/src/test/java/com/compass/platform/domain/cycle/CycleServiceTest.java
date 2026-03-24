@@ -7,6 +7,7 @@ import com.compass.platform.domain.ReconciliationStatus;
 import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
+import com.compass.platform.domain.briefing.NarrativeGenerationService;
 import com.compass.platform.domain.commit.CommitmentService;
 import com.compass.platform.domain.commit.TaskBullet;
 import com.compass.platform.domain.cycle.dto.CycleFilters;
@@ -55,6 +56,7 @@ class CycleServiceTest {
     @Mock private CommitmentService commitmentService;
     @Mock private ReconciliationRecordRepository reconciliationRecordRepository;
     @Mock private AuditService auditService;
+    @Mock private NarrativeGenerationService narrativeGenerationService;
 
     @InjectMocks private CycleService cycleService;
 
@@ -256,8 +258,8 @@ class CycleServiceTest {
         cycle.setStartsAt(weekStart);
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(1L);
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.of());
 
@@ -286,8 +288,8 @@ class CycleServiceTest {
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         // Return an empty list so commitmentCount < 1 also fails (rejected due to no commitments)
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of());
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(0L);
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.of());
 
@@ -306,8 +308,8 @@ class CycleServiceTest {
         cycle.setStartsAt(weekStart);
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(1L);
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.of());
 
@@ -338,8 +340,8 @@ class CycleServiceTest {
         cycle.setEndsAt(Instant.now().minus(7, ChronoUnit.DAYS));
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(1L);
         // Return COMPLETED=1 via grouped query
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.<Object[]>of(new Object[]{ReconciliationStatus.COMPLETED, 1L}));
@@ -366,8 +368,8 @@ class CycleServiceTest {
         cycle.setEndsAt(Instant.now().minus(7, ChronoUnit.DAYS));
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(1L);
         // 1 COMPLETED record = all commitments reconciled
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.<Object[]>of(new Object[]{ReconciliationStatus.COMPLETED, 1L}));
@@ -391,8 +393,8 @@ class CycleServiceTest {
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         // 3 commitments total
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle), buildCommitment(cycle), buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(3L);
         // Mix of statuses: 1 COMPLETED + 1 CARRIED_FORWARD + 1 PARTIALLY_COMPLETED = 3 total
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.<Object[]>of(
@@ -419,8 +421,8 @@ class CycleServiceTest {
 
         when(cycleRepository.findById(cycleId)).thenReturn(Optional.of(cycle));
         // 3 commitments but only 2 reconciled
-        when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(org.getId(), cycleId))
-                .thenReturn(List.of(buildCommitment(cycle), buildCommitment(cycle), buildCommitment(cycle)));
+        when(commitmentRepository.countByOrgIdAndCycleId(org.getId(), cycleId))
+                .thenReturn(3L);
         when(reconciliationRecordRepository.countByOrgIdAndCycleIdGroupByStatus(org.getId(), cycleId))
                 .thenReturn(List.<Object[]>of(
                         new Object[]{ReconciliationStatus.COMPLETED, 1L},
@@ -664,7 +666,8 @@ class CycleServiceTest {
         c2.setStartsAt(Instant.now().minus(7, ChronoUnit.DAYS));
         c2.setEndsAt(Instant.now());
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId())).thenReturn(List.of(c1, c2));
+        when(cycleRepository.findByOrgIdWithFilters(eq(org.getId()), any(), any(), any(), any()))
+                .thenReturn(new org.springframework.data.domain.PageImpl<>(List.of(c1, c2)));
 
         CycleFilters filters = new CycleFilters(null, null, null);
         Pageable pageable = PageRequest.of(0, 10);

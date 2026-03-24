@@ -308,6 +308,7 @@ public class LlmBriefingService implements BriefingService {
      * @param actor          the authenticated manager making the request
      * @param cycleWeekStart optional cycle filter passed through to DashboardService
      */
+    @Override
     public TeamSummaryResponse generateTeamSummary(com.compass.platform.domain.user.AppUser actor,
                                                     Instant cycleWeekStart) {
         if (!llmConfig.isConfigured()) {
@@ -378,6 +379,7 @@ public class LlmBriefingService implements BriefingService {
      * <p>When no LLM API key is configured a deterministic template fallback
      * is returned so the endpoint is always usable.
      */
+    @Override
     public ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount) {
         // Gather trend data
         List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
@@ -449,6 +451,7 @@ public class LlmBriefingService implements BriefingService {
      * @param cycleId the specific cycle to narrate
      * @return {@link WeekNarrativeResponse} containing the 2-sentence narrative and generation timestamp
      */
+    @Override
     public WeekNarrativeResponse generateWeekNarrativeResponse(UUID orgId, UUID cycleId) {
         AlignmentDataPoint alignment = analyticsService.computeAlignmentForCycle(orgId, cycleId);
         CompletionDataPoint completion = analyticsService.computeCompletionForCycle(orgId, cycleId);

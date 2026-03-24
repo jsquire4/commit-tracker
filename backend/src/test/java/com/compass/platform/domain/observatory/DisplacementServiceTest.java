@@ -107,7 +107,7 @@ class DisplacementServiceTest {
                 displaced(report2, cycle2, DisplacementCategory.RESOURCE_BLOCKED, null)
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle3, cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -147,7 +147,7 @@ class DisplacementServiceTest {
                 displaced(report1, cycle2, DisplacementCategory.PRODUCTION_EMERGENCY, null)
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -162,7 +162,7 @@ class DisplacementServiceTest {
 
     @Test
     void aggregateDisplacements_noCycles_returnsEmpty() {
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId())).thenReturn(List.of());
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any())).thenReturn(List.of());
 
         DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 4);
 
@@ -180,7 +180,7 @@ class DisplacementServiceTest {
                 displaced(report2, cycle2, DisplacementCategory.RESOURCE_BLOCKED, null)
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle3, cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -202,7 +202,7 @@ class DisplacementServiceTest {
                 displaced(report2, cycle2, DisplacementCategory.SCOPE_CHANGE, null)
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle3, cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -239,7 +239,7 @@ class DisplacementServiceTest {
                         "Ongoing vendor delay with no resolution date")
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle3, cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -276,7 +276,7 @@ class DisplacementServiceTest {
                         "big scope change was unexpected and hard to plan for")
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -301,7 +301,7 @@ class DisplacementServiceTest {
                         "project was suddenly deprioritized by leadership team")
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -323,7 +323,7 @@ class DisplacementServiceTest {
                 displaced(report1, cycle3, DisplacementCategory.SCOPE_CHANGE, "scope creep expanded requirements")
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle3, cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -348,7 +348,7 @@ class DisplacementServiceTest {
                         "resource blocked pending approval")
         );
 
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle2, cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
@@ -367,7 +367,7 @@ class DisplacementServiceTest {
 
     @Test
     void clusterDisplacementNotes_emptyCycles_returnsEmptyMap() {
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId())).thenReturn(List.of());
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any())).thenReturn(List.of());
 
         Map<DisplacementCategory, List<NoteCluster>> result =
                 displacementService.clusterDisplacementNotes(org.getId(), 4);
@@ -394,7 +394,7 @@ class DisplacementServiceTest {
         when(appUserRepository.findById(manager.getId())).thenReturn(Optional.of(manager));
         when(appUserRepository.findSubtreeUserIds(manager.getId()))
                 .thenReturn(List.of(report1.getId(), report2.getId()));
-        when(cycleRepository.findByOrgIdOrderByStartsAtDesc(org.getId()))
+        when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any()))
                 .thenReturn(List.of(cycle1));
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(allOrgRecords);

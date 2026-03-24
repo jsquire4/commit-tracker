@@ -507,7 +507,7 @@ class ReconciliationServiceTest {
         assertThat(summary.partiallyCompletedCount()).isEqualTo(1);
         assertThat(summary.notStartedCount()).isEqualTo(1);
         assertThat(summary.carriedForwardCount()).isEqualTo(0);
-        assertThat(summary.completionRate()).isCloseTo(1.0 / 3.0, within(0.001));
+        assertThat(summary.completionRate()).isCloseTo(200.0 / 3.0, within(0.1));
     }
 
     @Test
@@ -532,7 +532,7 @@ class ReconciliationServiceTest {
 
         ReconciliationSummary summary = reconciliationService.computeSummary(cycleId, employee.getId());
 
-        assertThat(summary.bulletCompletionRate()).isCloseTo(0.5, within(0.001));
+        assertThat(summary.bulletCompletionRate()).isCloseTo(50.0, within(0.1));
     }
 
     // --------------- displacement tracking ---------------
