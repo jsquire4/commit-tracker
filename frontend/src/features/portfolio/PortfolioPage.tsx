@@ -71,7 +71,7 @@ export function PortfolioPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-[70%_30%] gap-8 items-stretch">
+    <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-[70%_30%] gap-8 items-stretch">
       {/* Main column */}
       <div className="flex flex-col gap-8">
         {/* Page header with week selector */}

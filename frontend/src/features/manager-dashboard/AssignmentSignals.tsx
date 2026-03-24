@@ -50,8 +50,9 @@ function SignalCard({ label, value, isAmber = false, sublabel }: SignalCardProps
 export function AssignmentSignals({ signals }: AssignmentSignalsProps) {
   const topConcentration = signals.concentrationRisks[0] ?? null;
   const topConcentrationPct = topConcentration?.percentageOfTotal ?? 0;
-  // Threshold aligned with backend CONCENTRATION_RISK_THRESHOLD = 0.5 (50%)
-  const isConcentrationRisk = topConcentrationPct >= 50;
+  // TODO: read from ObservatoryConfig.concentrationRiskPct when passed as prop
+  const CONCENTRATION_THRESHOLD = 50;
+  const isConcentrationRisk = topConcentrationPct >= CONCENTRATION_THRESHOLD;
 
   return (
     <div className="flex flex-col gap-3">

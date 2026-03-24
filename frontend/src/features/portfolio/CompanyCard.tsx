@@ -52,12 +52,7 @@ export function CompanyCard({ company, animationDelay = 0 }: CompanyCardProps) {
           </h3>
           <p className="text-[0.8125rem] text-muted">{company.subtitle}</p>
         </div>
-        <button
-          type="button"
-          className="text-[0.8125rem] text-accent font-medium whitespace-nowrap flex-shrink-0 mt-1 link-underline bg-transparent border-0 cursor-pointer p-0"
-        >
-          View Briefing &rarr;
-        </button>
+        {/* TODO: Wire to portfolio drill-down when implemented */}
       </div>
 
       {/* Metrics row */}
