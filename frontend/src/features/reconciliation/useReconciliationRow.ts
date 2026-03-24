@@ -49,7 +49,7 @@ function buildReconcileRequest(
     base.displacingCommitmentId = displacement.displacingCommitmentId;
   }
   // Wire quick-signal displacement data
-  if (displacementFlagged && displacementSelectedIds.length === 1) {
+  if (displacementFlagged && displacementSelectedIds.length > 0) {
     base.displacingCommitmentId = displacementSelectedIds[0]!;
   }
   if (displacementFlagged && displacementSelectedIds.length > 0) {
@@ -128,12 +128,14 @@ export function useReconciliationRow(
 
   const handleStatusChange = useCallback(
     async (status: ReconciliationStatus) => {
-      setRow((prev) => ({ ...prev, status, saveError: null }));
+      // Capture current state BEFORE any setRow calls to avoid stale closure
       const latest = rowRef.current;
       const notesRequired = status !== 'COMPLETED';
       if (!notesRequired || latest.notes.trim().length > 0) {
         setRow((prev) => ({ ...prev, status, saving: true, saveError: null }));
         await buildAndSave(status, latest.notes, latest.bulletStatuses, latest.displacement, latest.carryForward, undefined, latest.displacementFlagged, latest.displacementSelectedIds);
+      } else {
+        setRow((prev) => ({ ...prev, status, saveError: null }));
       }
     },
     [rowRef, buildAndSave],

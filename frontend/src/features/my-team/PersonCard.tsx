@@ -5,7 +5,6 @@ import type { Commitment, TeamMemberSummary } from '@/types';
 interface PersonCardProps {
   member: TeamMemberSummary;
   commitments: Commitment[];
-  index: number;
   onAssign: (m: TeamMemberSummary) => void;
 }
 
@@ -52,7 +51,7 @@ const statusDotClass: Record<string, string> = {
   rose: 'bg-error',
 };
 
-export function PersonCard({ member, commitments, index: _index, onAssign }: PersonCardProps) {
+export function PersonCard({ member, commitments, onAssign }: PersonCardProps) {
   const [expanded, setExpanded] = useState(false);
   const linked = commitments.filter((c) => c.rcdoLink?.rallyCryTitle).length;
   const carried = commitments.filter((c) => c.carriedFromCommitmentId).length;

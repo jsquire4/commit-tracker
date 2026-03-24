@@ -88,29 +88,13 @@ export function Badge({
   }
 
   // Category variant: left-border tonal pill with CHESS colors
-  if (variant === 'category') {
-    const catStyle = categoryStyles[(color as CategoryColor) ?? 'strategic'] ?? '';
-    return (
-      <span
-        className={[
-          'inline-flex items-center rounded-full font-medium',
-          sizeClasses[size],
-          catStyle,
-          className,
-        ].join(' ')}
-      >
-        {children}
-      </span>
-    );
-  }
-
-  // Fallback
+  const catStyle = categoryStyles[(color as CategoryColor) ?? 'strategic'] ?? '';
   return (
     <span
       className={[
         'inline-flex items-center rounded-full font-medium',
-        'bg-surface-container-highest text-on-surface',
         sizeClasses[size],
+        catStyle,
         className,
       ].join(' ')}
     >

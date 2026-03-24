@@ -21,9 +21,14 @@ interface ChatApiResponse {
 
 export function useAIChat(_context?: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesRef = useRef<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const nextIdRef = useRef(1);
   const cancelledRef = useRef(false);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   useEffect(() => {
     cancelledRef.current = false;
@@ -42,9 +47,9 @@ export function useAIChat(_context?: string) {
     setIsLoading(true);
 
     try {
-      // Build conversation history for the API
+      // Build conversation history for the API (use ref to avoid stale closure)
       const apiMessages: ChatApiMessage[] = [
-        ...messages.map((m) => ({
+        ...messagesRef.current.map((m) => ({
           role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
           content: m.text,
         })),
@@ -90,7 +95,7 @@ export function useAIChat(_context?: string) {
         setIsLoading(false);
       }
     }
-  }, [messages]);
+  }, []);
 
   const clearMessages = useCallback(() => {
     setMessages([]);

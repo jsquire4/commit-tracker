@@ -24,7 +24,7 @@ export function AIAttribution({ scope, cycleId }: AIAttributionProps) {
     },
   });
 
-  const currentVote = data?.vote || null;
+  const currentVote = data?.vote ?? null;
 
   function handleVote(vote: Vote) {
     mutation.mutate(vote);

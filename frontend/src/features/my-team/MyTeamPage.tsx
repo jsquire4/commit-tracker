@@ -191,12 +191,11 @@ export function MyTeamPage() {
           </div>
 
           <div className="flex flex-col">
-            {sortedMembers.map((member, idx) => (
+            {sortedMembers.map((member) => (
               <PersonCard
                 key={member.userId}
                 member={member}
                 commitments={commitmentsByUser[member.userId] ?? []}
-                index={idx}
                 onAssign={openAssignFromPerson}
               />
             ))}

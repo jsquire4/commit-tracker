@@ -12,13 +12,22 @@ interface UnplannedWorkEntryProps {
   onAdd: () => void;
 }
 
+interface BulletEntry {
+  id: string;
+  value: string;
+}
+
 interface UnplannedFormState {
   title: string;
-  bullets: string[];
+  bullets: BulletEntry[];
   completionHorizon: CompletionHorizon;
   rallyCryId: string;
   reconciliationStatus: ReconciliationStatus | null;
   reconciliationNotes: string;
+}
+
+function makeBullet(value = ''): BulletEntry {
+  return { id: crypto.randomUUID(), value };
 }
 
 const HORIZON_OPTIONS: { value: CompletionHorizon; label: string }[] = [
@@ -29,14 +38,16 @@ const HORIZON_OPTIONS: { value: CompletionHorizon; label: string }[] = [
   { value: 'EOW', label: 'End of Week' },
 ];
 
-const EMPTY_FORM: UnplannedFormState = {
-  title: '',
-  bullets: ['', ''],
-  completionHorizon: 'EOW',
-  rallyCryId: '',
-  reconciliationStatus: null,
-  reconciliationNotes: '',
-};
+function makeEmptyForm(): UnplannedFormState {
+  return {
+    title: '',
+    bullets: [makeBullet(), makeBullet()],
+    completionHorizon: 'EOW',
+    rallyCryId: '',
+    reconciliationStatus: null,
+    reconciliationNotes: '',
+  };
+}
 
 const selectClass = [
   'w-full bg-transparent border-0 border-b-[1.5px] border-b-outline-variant',
@@ -55,7 +66,7 @@ const inputClass = [
 
 export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) {
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<UnplannedFormState>(EMPTY_FORM);
+  const [form, setForm] = useState<UnplannedFormState>(makeEmptyForm);
   const [error, setError] = useState<string | null>(null);
 
   const createMutation = useCreateUnplannedCommitment(cycleId);
@@ -67,24 +78,23 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
     enabled: open,
   });
 
-  function handleBulletChange(idx: number, val: string) {
-    setForm((prev) => {
-      const next = [...prev.bullets];
-      next[idx] = val;
-      return { ...prev, bullets: next };
-    });
+  function handleBulletChange(id: string, val: string) {
+    setForm((prev) => ({
+      ...prev,
+      bullets: prev.bullets.map((b) => (b.id === id ? { ...b, value: val } : b)),
+    }));
   }
 
   function addBullet() {
     if (form.bullets.length >= 5) return;
-    setForm((prev) => ({ ...prev, bullets: [...prev.bullets, ''] }));
+    setForm((prev) => ({ ...prev, bullets: [...prev.bullets, makeBullet()] }));
   }
 
-  function removeBullet(idx: number) {
+  function removeBullet(id: string) {
     if (form.bullets.length <= 2) return;
     setForm((prev) => ({
       ...prev,
-      bullets: prev.bullets.filter((_, i) => i !== idx),
+      bullets: prev.bullets.filter((b) => b.id !== id),
     }));
   }
 
@@ -96,7 +106,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
       setError('Title is required.');
       return;
     }
-    const filledBullets = form.bullets.filter((b) => b.trim().length > 0);
+    const filledBullets = form.bullets.map((b) => b.value).filter((v) => v.trim().length > 0);
     if (filledBullets.length < 2) {
       setError('At least 2 bullet items are required.');
       return;
@@ -121,7 +131,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
         reconciliationStatus: form.reconciliationStatus as ReconciliationStatus,
         ...(trimmedNotes && { reconciliationNotes: trimmedNotes }),
       });
-      setForm(EMPTY_FORM);
+      setForm(makeEmptyForm());
       setOpen(false);
       onAdd();
     } catch {
@@ -130,7 +140,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
   }
 
   function handleCancel() {
-    setForm(EMPTY_FORM);
+    setForm(makeEmptyForm());
     setError(null);
     setOpen(false);
   }
@@ -209,12 +219,12 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
               </span>
               <div className="flex flex-col gap-2">
                 {form.bullets.map((bullet, idx) => (
-                  <div key={idx} className="flex gap-2 items-center">
+                  <div key={bullet.id} className="flex gap-2 items-center">
                     <input
                       type="text"
-                      value={bullet}
+                      value={bullet.value}
                       onChange={(e) => {
-                        handleBulletChange(idx, e.target.value);
+                        handleBulletChange(bullet.id, e.target.value);
                       }}
                       placeholder={`Bullet ${String(idx + 1)}`}
                       className={`${inputClass} flex-1`}
@@ -223,7 +233,7 @@ export function UnplannedWorkEntry({ cycleId, onAdd }: UnplannedWorkEntryProps) 
                       <button
                         type="button"
                         onClick={() => {
-                          removeBullet(idx);
+                          removeBullet(bullet.id);
                         }}
                         aria-label={`Remove bullet ${String(idx + 1)}`}
                         className="text-muted hover:text-error text-lg leading-none px-1 transition-colors duration-[150ms]"

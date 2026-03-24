@@ -63,7 +63,7 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
       setFormError(null);
       createMutation.reset();
     }
-  }, [open]);
+  }, [open, initialState]);
 
   function updateBullet(index: number, value: string) {
     setForm((prev) => { const next = [...prev.bullets]; next[index] = value; return { ...prev, bullets: next }; });
@@ -285,14 +285,6 @@ export function AssignWorkForm({ open, onClose, members, initialState, cycleId, 
                         {tb.label}
                       </button>
                     ))}
-                  </div>
-                </div>
-
-                {/* Strategy Linker placeholder */}
-                <div className="flex flex-col gap-1">
-                  <label className="text-label text-on-surface-variant uppercase tracking-[0.04rem] font-medium">Strategy Link</label>
-                  <div className="py-2.5 border-b-[1.5px] border-dashed border-outline-variant text-[0.8125rem] text-muted cursor-pointer hover:text-on-surface-variant hover:border-accent transition-colors duration-[var(--duration-fast)]">
-                    {form.rallyCryTitle || 'Click to link to a rally cry...'}
                   </div>
                 </div>
 
