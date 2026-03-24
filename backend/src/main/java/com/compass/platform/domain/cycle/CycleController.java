@@ -76,7 +76,7 @@ public class CycleController {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         CycleFilters filters = new CycleFilters(state, dateFrom, dateTo);
         Page<Cycle> cyclePage = cycleService.listCycles(
-                actor.getOrg().getId(), filters, PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "startsAt")));
+                actor.getOrg().getId(), filters, PageRequest.of(page, size, Sort.unsorted()));
 
         List<UUID> cycleIds = cyclePage.getContent().stream().map(Cycle::getId).toList();
         Map<UUID, Long> countsByCycleId = cycleService.getCommitmentCounts(actor.getOrg().getId(), cycleIds);

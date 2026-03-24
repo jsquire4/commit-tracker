@@ -294,7 +294,7 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
                           ? 'translateX(0)'
                           : 'translateX(-100%)',
                     }}
-                    aria-hidden={currentStep !== 'org'}
+                    {...(currentStep !== 'org' ? { inert: '' } : {})}
                   >
                     <form
                       id="commitment-form-v2"
@@ -530,7 +530,7 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
                             ? 'translateX(100%)'    // exit to right (going forward past step 2)
                             : 'translateX(-100%)',  // exit to left (going back to step 1)
                     }}
-                    aria-hidden={currentStep !== 'personal'}
+                    {...(currentStep !== 'personal' ? { inert: '' } : {})}
                   >
                     <PersonalAlignmentView
                       growthAreas={growthAreas}
