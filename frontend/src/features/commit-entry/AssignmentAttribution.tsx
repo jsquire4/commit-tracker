@@ -1,7 +1,7 @@
 import { Fragment } from 'react';
 import { Listbox, Transition } from '@headlessui/react';
 import { useQuery } from '@tanstack/react-query';
-import { getTeam } from '@/api/users.api';
+import { getAssigners } from '@/api/users.api';
 import type { AssignmentAttribution as AssignmentAttributionType } from '@/types';
 
 interface AssignmentAttributionProps {
@@ -14,8 +14,8 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
   const isSelf = value.kind === 'SELF_DIRECTED';
 
   const { data: teamMembers = [] } = useQuery({
-    queryKey: ['users', 'team'],
-    queryFn: getTeam,
+    queryKey: ['users', 'assigners'],
+    queryFn: getAssigners,
     staleTime: 5 * 60_000,
     enabled: true,
   });

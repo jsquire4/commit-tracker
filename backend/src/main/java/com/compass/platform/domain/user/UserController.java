@@ -62,6 +62,47 @@ public class UserController {
         return ResponseEntity.ok(ApiResponse.of(responses));
     }
 
+    /**
+     * Returns people who could have assigned work to the authenticated user:
+     * their direct manager, their manager's manager (up the chain), and their
+     * peers (others who report to the same manager). Used by the "Assigned By"
+     * dropdown in the commitment form.
+     */
+    @GetMapping("/assigners")
+    public ResponseEntity<ApiResponse<List<UserResponse>>> getAssigners() {
+        AppUser actor = SecurityContextHelper.getCurrentUser();
+        AppUser fresh = userRepository.findById(actor.getId()).orElse(actor);
+
+        List<AppUser> assigners = new java.util.ArrayList<>();
+        java.util.Set<java.util.UUID> seen = new java.util.HashSet<>();
+        seen.add(fresh.getId()); // exclude self
+
+        // Walk up the manager chain (manager, their manager, etc.)
+        AppUser current = fresh.getReportsTo();
+        int depth = 0;
+        while (current != null && depth < 10) {
+            if (seen.add(current.getId())) {
+                assigners.add(current);
+            }
+            current = current.getReportsTo();
+            depth++;
+        }
+
+        // Add peers (people who report to the same manager)
+        if (fresh.getReportsTo() != null) {
+            List<AppUser> peers = userRepository.findDirectReports(
+                    fresh.getOrg().getId(), fresh.getReportsTo().getId());
+            for (AppUser peer : peers) {
+                if (seen.add(peer.getId())) {
+                    assigners.add(peer);
+                }
+            }
+        }
+
+        List<UserResponse> responses = assigners.stream().map(this::toResponse).toList();
+        return ResponseEntity.ok(ApiResponse.of(responses));
+    }
+
     @GetMapping("/tree")
     public ResponseEntity<ApiResponse<List<UserResponse>>> getOrgTree() {
         AppUser actor = SecurityContextHelper.getCurrentUser();

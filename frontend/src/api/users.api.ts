@@ -11,6 +11,10 @@ export async function getTeam(): Promise<User[]> {
   return fetchData<User[]>(`${BASE}/team`);
 }
 
+export async function getAssigners(): Promise<User[]> {
+  return fetchData<User[]>(`${BASE}/assigners`);
+}
+
 export async function getOrgTree(): Promise<User[]> {
   return fetchData<User[]>(`${BASE}/tree`);
 }
