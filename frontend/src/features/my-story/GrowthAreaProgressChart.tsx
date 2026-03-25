@@ -1,7 +1,6 @@
 import {
   ComposedChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   Tooltip,
@@ -22,7 +21,6 @@ const GA_COLORS = [
 ] as const;
 
 const UNALIGNED_COLOR = 'var(--color-surface-container)';
-const TREND_LINE_COLOR = 'var(--color-accent)';
 
 // ── Data transformation ───────────────────────────────────────────────────────
 
@@ -223,13 +221,6 @@ function CustomLegend({ barConfig }: CustomLegendProps) {
         />
         <span className="text-xs text-on-surface-variant">Unaligned</span>
       </div>
-      <div className="flex items-center gap-1.5">
-        <span
-          className="inline-block w-8 h-0.5 flex-shrink-0 rounded-full"
-          style={{ backgroundColor: TREND_LINE_COLOR }}
-        />
-        <span className="text-xs text-on-surface-variant">Alignment %</span>
-      </div>
     </div>
   );
 }
@@ -316,16 +307,7 @@ export function GrowthAreaProgressChart({
               radius={[2, 2, 0, 0]}
             />
 
-            {/* Trend line — overall alignment % */}
-            <Line
-              type="monotone"
-              dataKey="__alignmentPct"
-              name="Alignment %"
-              stroke={TREND_LINE_COLOR}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, strokeWidth: 0 }}
-            />
+            {/* Alignment % line removed — the unaligned gray segment tells the story */}
           </ComposedChart>
         </ResponsiveContainer>
       )}
