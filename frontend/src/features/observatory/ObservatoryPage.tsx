@@ -57,6 +57,50 @@ function formatCycleDate(startsAt: string): string {
   }
 }
 
+// ── Scoped Team Banner ────────────────────────────────────────────────────────
+
+interface ScopedBannerProps {
+  managerName: string;
+  onClear: () => void;
+}
+
+function ScopedBanner({ managerName, onClear }: ScopedBannerProps) {
+  return (
+    <div className="flex items-center justify-between gap-3 px-4 py-2.5 bg-accent/8 border border-accent/25 rounded-lg">
+      <div className="flex items-center gap-2 min-w-0">
+        <svg
+          className="w-4 h-4 text-accent flex-shrink-0"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
+        </svg>
+        <span className="text-sm text-on-surface">
+          Viewing: <span className="font-semibold">{managerName}&apos;s Team</span>
+        </span>
+      </div>
+      <button
+        type="button"
+        onClick={onClear}
+        className="flex items-center gap-1.5 text-sm text-accent hover:text-accent-dark font-medium whitespace-nowrap transition-colors"
+      >
+        <svg
+          className="w-3.5 h-3.5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          aria-hidden="true"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+        Back to org view
+      </button>
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ObservatoryPage() {
@@ -89,6 +133,9 @@ export function ObservatoryPage() {
 
   // "From" index into availableCycles (default: first cycle)
   const [fromIdx, setFromIdx] = useState<number>(0);
+
+  // Scoped team view — when set, trend charts filter to this manager's team
+  const [selectedManager, setSelectedManager] = useState<{ id: string; name: string } | null>(null);
 
   // Compute weekCount from the selected "from" position.
   // weekCount = number of cycles from "from" to the last available cycle (inclusive).
@@ -213,14 +260,31 @@ export function ObservatoryPage() {
         <KpiTile label="Active Drift Signals" value={driftSignals} />
       </div>
 
-      {/* ── Program summary (LLM stub) ── */}
-      <ProgramSummary weekCount={weekCount} />
+      {/* ── Scoped team banner (shown when a manager card is selected) ── */}
+      {selectedManager && (
+        <ScopedBanner
+          managerName={selectedManager.name}
+          onClear={() => { setSelectedManager(null); }}
+        />
+      )}
 
-      {/* ── Execution trend chart ── */}
-      <ExecutionTrendChart weekCount={weekCount} />
+      {/* ── Program summary (LLM stub) — org-wide only ── */}
+      {!selectedManager && <ProgramSummary weekCount={weekCount} />}
+
+      {/* ── Execution trend chart — scoped to selected manager when set ── */}
+      <ExecutionTrendChart
+        weekCount={weekCount}
+        managerId={selectedManager?.id}
+      />
 
       {/* ── Team trajectories ── */}
-      <TeamTrajectories weekCount={weekCount} />
+      <TeamTrajectories
+        weekCount={weekCount}
+        selectedManagerId={selectedManager?.id}
+        onSelectTeam={(id, name) => {
+          setSelectedManager((prev) => prev?.id === id ? null : { id, name });
+        }}
+      />
 
       {/* ── Execution heatmap ── */}
       <ExecutionHeatmap weekCount={weekCount} />

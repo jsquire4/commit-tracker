@@ -1,7 +1,8 @@
 /**
  * Sparkline — Inline SVG trend chart.
  * ~200px wide, 32px tall. Draws trend line with stroke animation.
- * Color: teal for positive/flat, rose for declining.
+ * Color: teal for increasing, navy for declining, muted for stable.
+ * Uses neutral directional palette — no red judgment colors.
  */
 import { useRef, useEffect, useState } from 'react';
 import type { SparklinePoint } from '@/types/portfolio.types';
@@ -12,23 +13,23 @@ interface SparklineProps {
   width?: number;
   height?: number;
   /** Force color override; otherwise auto-detected from trend */
-  color?: 'teal' | 'rose' | 'amber';
+  color?: 'teal' | 'navy' | 'muted';
   className?: string;
 }
 
 const colorMap = {
   teal: CHESS_ACCENT.strategic,
-  rose: CHESS_ACCENT.defensive,
-  amber: CHESS_MUTED.defensive,
+  navy: CHESS_ACCENT.operational,
+  muted: CHESS_MUTED.operational,
 };
 
-function detectTrendColor(data: SparklinePoint[]): 'teal' | 'rose' | 'amber' {
+function detectTrendColor(data: SparklinePoint[]): 'teal' | 'navy' | 'muted' {
   if (data.length < 2) return 'teal';
   const first = data[0]!.value;
   const last = data[data.length - 1]!.value;
-  if (last < first - 3) return 'rose';
+  if (last < first - 3) return 'navy';
   if (last > first + 3) return 'teal';
-  return 'amber';
+  return 'muted';
 }
 
 export function Sparkline({

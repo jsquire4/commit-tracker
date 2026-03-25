@@ -1,5 +1,4 @@
 import { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { LineChart, Line, ResponsiveContainer } from 'recharts';
 import { useExecutiveHealth, useAlignmentTrend } from '@/hooks/useObservatory';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
@@ -94,17 +93,20 @@ interface ManagerCardProps {
   unit: OrgUnitHealth;
   weekCount: number;
   index: number;
+  isSelected?: boolean | undefined;
+  onSelect?: ((managerId: string, managerName: string) => void) | undefined;
 }
 
-function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
-  const navigate = useNavigate();
+function ManagerCard({ unit, weekCount, index, isSelected, onSelect }: ManagerCardProps) {
   const { data: trendData } = useAlignmentTrend(weekCount, unit.managerId);
 
   const sparklineData = trendData ?? [];
   const delta = computeDelta(sparklineData);
 
   function handleClick() {
-    void navigate(`/team?managerId=${unit.managerId}`);
+    if (onSelect) {
+      onSelect(unit.managerId, unit.managerName);
+    }
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -120,9 +122,16 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
       tabIndex={0}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
-      className="bg-surface-lowest border border-outline-variant rounded-lg p-4 flex flex-col gap-3 cursor-pointer hover:bg-surface hover:shadow-whisper transition-all duration-[var(--duration-fast)] animate-fade-in"
+      className={[
+        'border rounded-lg p-4 flex flex-col gap-3 transition-all duration-[var(--duration-fast)] animate-fade-in',
+        onSelect ? 'cursor-pointer' : 'cursor-default',
+        isSelected
+          ? 'bg-accent/5 border-accent shadow-whisper ring-1 ring-accent/30'
+          : 'bg-surface-lowest border-outline-variant hover:bg-surface hover:shadow-whisper',
+      ].join(' ')}
       style={{ animationDelay: `${index * 40}ms`, animationFillMode: 'backwards' }}
-      aria-label={`View ${unit.managerName}'s team trajectories`}
+      aria-label={`Scope observatory to ${unit.managerName}'s team`}
+      aria-pressed={isSelected}
     >
       {/* Header: name */}
       <div className="flex items-start justify-between gap-2 min-w-0">
@@ -172,9 +181,11 @@ function ManagerCard({ unit, weekCount, index }: ManagerCardProps) {
 
 interface TeamTrajectoriesProps {
   weekCount: number;
+  onSelectTeam?: ((managerId: string, managerName: string) => void) | undefined;
+  selectedManagerId?: string | undefined;
 }
 
-export function TeamTrajectories({ weekCount }: TeamTrajectoriesProps) {
+export function TeamTrajectories({ weekCount, onSelectTeam, selectedManagerId }: TeamTrajectoriesProps) {
   const { data: healthData, isLoading, isError } = useExecutiveHealth(weekCount);
 
   const units = healthData?.units ?? [];
@@ -211,6 +222,8 @@ export function TeamTrajectories({ weekCount }: TeamTrajectoriesProps) {
           unit={unit}
           weekCount={weekCount}
           index={i}
+          isSelected={selectedManagerId === unit.managerId}
+          onSelect={onSelectTeam}
         />
       ))}
     </div>

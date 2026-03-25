@@ -1,8 +1,8 @@
 /**
  * CompanyCard — Card per company in the portfolio.
- * Health-grade left-border (teal/amber/rose). Company name + subtitle.
+ * Health-grade left-border (teal/amber/navy). Company name + subtitle.
  * Metrics row. Sparkline SVG. Rally cry summary with status dots.
- * Drift signal callout. "View Briefing" link.
+ * Drift signal callout. "View Details" link.
  */
 import { useNavigate } from 'react-router-dom';
 import Card from '@/components/Card';
@@ -14,10 +14,10 @@ interface CompanyCardProps {
   animationDelay?: number;
 }
 
-const gradeAccent: Record<HealthGradeLabel, 'teal' | 'amber' | 'rose'> = {
+const gradeAccent: Record<HealthGradeLabel, 'teal' | 'amber' | 'navy'> = {
   'On Track': 'teal',
   Watch: 'amber',
-  'At Risk': 'rose',
+  'At Risk': 'navy',
 };
 
 const statusDotClass: Record<string, string> = {

@@ -20,19 +20,19 @@ async function getPortfolioOrgHealth(orgId: string): Promise<ExecutiveHealthResp
 const GRADE_LABEL: Record<string, string> = {
   GREEN: 'On Track',
   YELLOW: 'Watch',
-  RED: 'At Risk',
+  RED: 'Low Coverage',
 };
 
 const GRADE_COLOR: Record<string, string> = {
   GREEN: 'text-accent',
   YELLOW: 'text-warning',
-  RED: 'text-error',
+  RED: 'text-navy',
 };
 
-const GRADE_ACCENT: Record<string, 'teal' | 'amber' | 'rose'> = {
+const GRADE_ACCENT: Record<string, 'teal' | 'amber' | 'navy'> = {
   GREEN: 'teal',
   YELLOW: 'amber',
-  RED: 'rose',
+  RED: 'navy',
 };
 
 // ── Sub-components ────────────────────────────────────────────────────────────
@@ -132,8 +132,8 @@ export default function PortfolioOrgPage() {
         >
           ← Back to Portfolio
         </button>
-        <div className="bg-error/10 border border-error/30 rounded-lg p-6 text-center">
-          <p className="text-error font-medium">Failed to load company data</p>
+        <div className="bg-surface-container border border-outline-variant rounded-lg p-6 text-center">
+          <p className="text-on-surface font-medium">Failed to load company data</p>
           <p className="text-muted text-[0.875rem] mt-1">
             Unable to fetch health data for this organization.
           </p>

@@ -149,14 +149,17 @@ interface ExecutionTrendChartProps {
   weekCount?: number;
   /** Optional vertical reference line markers: { cycleLabel, label }[] */
   eventMarkers?: Array<{ cycleLabel: string; label: string }>;
+  /** When set, fetches data scoped to this manager's team */
+  managerId?: string | undefined;
 }
 
 export function ExecutionTrendChart({
   weekCount = 26,
   eventMarkers,
+  managerId,
 }: ExecutionTrendChartProps) {
-  const { data: trendData, isLoading, isError } = useAlignmentTrend(weekCount);
-  const { data: completionData } = useCompletionTrend(weekCount);
+  const { data: trendData, isLoading, isError } = useAlignmentTrend(weekCount, managerId);
+  const { data: completionData } = useCompletionTrend(weekCount, managerId);
 
   const chartData = trendData ? mapToChartData(trendData, completionData) : [];
 

@@ -17,7 +17,7 @@ const directionConfig: Record<PortfolioTrend, { path: string; color: string; sym
   },
   down: {
     path: 'M4 2L8 8L12 2',
-    color: 'text-error',
+    color: 'text-navy',
     symbol: '\u2193',
   },
   flat: {

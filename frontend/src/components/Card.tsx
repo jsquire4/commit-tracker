@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from 'react';
 
-type AccentColor = 'teal' | 'amber' | 'rose';
+type AccentColor = 'teal' | 'amber' | 'rose' | 'navy';
 type PaddingSize = 'compact' | 'normal' | 'spacious';
 
 interface CardProps {
@@ -17,6 +17,7 @@ const accentClasses: Record<AccentColor, string> = {
   teal: 'border-l-2 border-l-accent',
   amber: 'border-l-2 border-l-warning',
   rose: 'border-l-2 border-l-error',
+  navy: 'border-l-2 border-l-navy',
 };
 
 const paddingClasses: Record<PaddingSize, string> = {

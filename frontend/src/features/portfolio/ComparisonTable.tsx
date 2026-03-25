@@ -48,17 +48,17 @@ export function ComparisonTable({ rows, animationDelay = 0 }: ComparisonTablePro
           </thead>
           <tbody>
             {rows.map((row, i) => {
-              const isAtRisk = row.healthGrade === 'At Risk';
               const isWatch = row.healthGrade === 'Watch';
+              const isLow = row.healthGrade === 'At Risk';
 
               return (
                 <tr
                   key={row.orgId}
                   className={[
                     'transition-colors hover:bg-surface animate-fade-up',
-                    isAtRisk ? 'border-l-[3px] border-l-error' : '',
                     isWatch ? 'border-l-[3px] border-l-warning' : '',
-                    !isAtRisk && !isWatch ? 'border-l-[3px] border-l-transparent' : '',
+                    isLow ? 'border-l-[3px] border-l-navy' : '',
+                    !isWatch && !isLow ? 'border-l-[3px] border-l-transparent' : '',
                   ].join(' ')}
                   style={{
                     animationDelay: `${animationDelay + 80 + i * 40}ms`,

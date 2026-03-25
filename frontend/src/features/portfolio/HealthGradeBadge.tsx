@@ -1,5 +1,6 @@
 /**
- * HealthGradeBadge — "On Track" (teal), "Watch" (amber), "At Risk" (rose).
+ * HealthGradeBadge — "On Track" (teal), "Watch" (amber), "At Risk" (navy/muted).
+ * Uses neutral directional palette — no red judgment colors.
  */
 import type { HealthGradeLabel } from '@/types/portfolio.types';
 
@@ -11,7 +12,13 @@ interface HealthGradeBadgeProps {
 const gradeStyles: Record<HealthGradeLabel, string> = {
   'On Track': 'bg-accent/[0.08] text-accent',
   Watch: 'bg-warning/[0.08] text-warning',
-  'At Risk': 'bg-error/[0.08] text-error',
+  'At Risk': 'bg-navy/[0.08] text-navy',
+};
+
+const gradeLabels: Record<HealthGradeLabel, string> = {
+  'On Track': 'On Track',
+  Watch: 'Watch',
+  'At Risk': 'Low Coverage',
 };
 
 export function HealthGradeBadge({ grade, className = '' }: HealthGradeBadgeProps) {
@@ -23,7 +30,7 @@ export function HealthGradeBadge({ grade, className = '' }: HealthGradeBadgeProp
         className,
       ].join(' ')}
     >
-      {grade}
+      {gradeLabels[grade] ?? grade}
     </span>
   );
 }
