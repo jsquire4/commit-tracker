@@ -292,6 +292,7 @@ export function ExecutionTrendChart({
                   stackId="chess"
                   fill={color}
                   stroke="none"
+                  maxBarSize={75}
                   {...(idx === BAR_CONFIG.length - 1 ? { radius: [2, 2, 0, 0] as [number, number, number, number] } : {})}
                   style={{ cursor: 'pointer' }}
                   onClick={(barData, index, event) =>

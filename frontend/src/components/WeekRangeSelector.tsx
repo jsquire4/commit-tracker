@@ -111,7 +111,7 @@ function CycleDropdown({
                   setOpen(false);
                 }}
                 className={[
-                  'w-full px-2.5 py-1.5 text-small text-center whitespace-nowrap transition-colors',
+                  'w-full px-2 py-1.5 text-body text-center whitespace-nowrap transition-colors',
                   isSelected
                     ? 'text-accent font-medium bg-accent/[0.06]'
                     : 'text-on-surface hover:bg-surface-container-low',
