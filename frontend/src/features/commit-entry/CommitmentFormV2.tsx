@@ -64,9 +64,9 @@ function getDefaultValues(commitment?: Commitment): FormValues {
     title: '',
     description: '',
     bullets: DEFAULT_BULLETS,
-    completionHorizon: 'EOD' as CompletionHorizon,
-    completionDay: undefined,
-    completionTimeBlock: undefined,
+    completionHorizon: 'EOW' as CompletionHorizon,
+    completionDay: 'FRIDAY' as CompletionDay,
+    completionTimeBlock: 'EOD' as CompletionTimeBlock,
     chessCategoryId: undefined,
     rallyCryId: undefined,
     definingObjectiveId: undefined,
@@ -77,17 +77,12 @@ function getDefaultValues(commitment?: Commitment): FormValues {
 }
 
 // Step 1 field names — validated before advancing
+// Only include required fields; optional fields (category, RCDO link, assignedBy, etc.)
+// are validated on final submit, not on step transition.
 const STEP_1_FIELDS = [
   'title',
   'bullets',
   'completionHorizon',
-  'completionDay',
-  'completionTimeBlock',
-  'chessCategoryId',
-  'rallyCryId',
-  'definingObjectiveId',
-  'outcomeId',
-  'assignedBy',
 ] as const;
 
 export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: CommitmentFormV2Props) {
@@ -114,6 +109,7 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
     reset,
     setValue,
     trigger,
+    watch,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(CommitmentFormV2Schema),
@@ -386,22 +382,22 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
                           <Controller
                             name="completionHorizon"
                             control={control}
-                            render={({ field }) => (
-                              <HorizonSelector
-                                value={field.value as CompletionHorizon}
-                                onChange={field.onChange}
-                                onDayTimeChange={(v) => {
-                                  setValue(
-                                    'completionDay',
-                                    v.day as CompletionDay | undefined,
-                                  );
-                                  setValue(
-                                    'completionTimeBlock',
-                                    v.timeBlock as CompletionTimeBlock | undefined,
-                                  );
-                                }}
-                              />
-                            )}
+                            render={({ field }) => {
+                              const watchedDay = watch('completionDay');
+                              const watchedTimeBlock = watch('completionTimeBlock');
+                              return (
+                                <HorizonSelector
+                                  value={field.value as CompletionHorizon}
+                                  {...(watchedDay !== undefined && { day: watchedDay })}
+                                  {...(watchedTimeBlock !== undefined && { timeBlock: watchedTimeBlock })}
+                                  onChange={field.onChange}
+                                  onDayTimeChange={(v) => {
+                                    setValue('completionDay', v.day as CompletionDay | undefined);
+                                    setValue('completionTimeBlock', v.timeBlock as CompletionTimeBlock | undefined);
+                                  }}
+                                />
+                              );
+                            }}
                           />
                           {errors.completionHorizon && (
                             <p className="mt-1 text-small text-error">

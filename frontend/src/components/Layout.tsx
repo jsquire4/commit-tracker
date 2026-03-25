@@ -1,5 +1,5 @@
 import { useState, type ReactNode } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { VP_AND_ABOVE, DIRECTOR_AND_ABOVE, MANAGER_AND_ABOVE } from '@/constants/roles';
@@ -69,9 +69,12 @@ export function Layout({ children }: LayoutProps) {
         <div className="max-w-7xl mx-auto px-4">
           {/* Top row: brand — cycle — avatar + gear */}
           <div className="flex items-center justify-between h-12">
-            <span className="font-serif text-sm tracking-widest uppercase text-on-surface select-none">
+            <Link
+              to="/landing"
+              className="font-serif text-base tracking-widest uppercase text-on-surface select-none hover:text-accent transition-colors"
+            >
               compass
-            </span>
+            </Link>
 
             {/* Cycle display (centered) */}
             {cycle && (

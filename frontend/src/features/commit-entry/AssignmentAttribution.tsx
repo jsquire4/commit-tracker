@@ -17,7 +17,7 @@ export function AssignmentAttribution({ value, onChange, disabled = false }: Ass
     queryKey: ['users', 'team'],
     queryFn: getTeam,
     staleTime: 5 * 60_000,
-    enabled: !isSelf,
+    enabled: true,
   });
 
   const selectedAssigner =
