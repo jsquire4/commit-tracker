@@ -33,6 +33,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.compass.platform.domain.observatory.dto.TimeScope;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -90,11 +92,14 @@ public class ObservatoryController {
      */
     @GetMapping("/health")
     public ResponseEntity<ApiResponse<ExecutiveHealthResponse>> getHealth(
-            @RequestParam(defaultValue = "12") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
-        return ResponseEntity.ok(ApiResponse.of(healthComposer.computeHealth(orgId, weekCount)));
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
+        return ResponseEntity.ok(ApiResponse.of(healthComposer.computeHealth(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -107,14 +112,17 @@ public class ObservatoryController {
      */
     @GetMapping("/dashboard")
     public ResponseEntity<ApiResponse<ObservatoryDashboardResponse>> getDashboard(
-            @RequestParam(defaultValue = "26") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 26);
 
-        ExecutiveHealthResponse health = healthComposer.computeHealth(orgId, weekCount);
-        var alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
-        var completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
+        ExecutiveHealthResponse health = healthComposer.computeHealth(orgId, scope);
+        var alignmentTrend = analyticsService.computeAlignmentTrend(orgId, scope);
+        var completionTrend = analyticsService.computeCompletionTrend(orgId, scope);
 
         return ResponseEntity.ok(ApiResponse.of(new ObservatoryDashboardResponse(health, alignmentTrend, completionTrend)));
     }
@@ -146,18 +154,21 @@ public class ObservatoryController {
      */
     @GetMapping("/alignment-trend")
     public ResponseEntity<ApiResponse<?>> getAlignmentTrend(
-            @RequestParam(defaultValue = "12") int weekCount,
-            @RequestParam(required = false) UUID managerId) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) UUID managerId,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
 
         if (managerId != null) {
             return ResponseEntity.ok(ApiResponse.of(
-                    analyticsService.computeTeamAlignmentTrend(orgId, managerId, weekCount)));
+                    analyticsService.computeTeamAlignmentTrend(orgId, managerId, scope)));
         }
         return ResponseEntity.ok(ApiResponse.of(
-                analyticsService.computeAlignmentTrend(orgId, weekCount)));
+                analyticsService.computeAlignmentTrend(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -171,18 +182,21 @@ public class ObservatoryController {
      */
     @GetMapping("/completion-trend")
     public ResponseEntity<ApiResponse<?>> getCompletionTrend(
-            @RequestParam(defaultValue = "12") int weekCount,
-            @RequestParam(required = false) UUID managerId) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) UUID managerId,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
 
         if (managerId != null) {
             return ResponseEntity.ok(ApiResponse.of(
-                    analyticsService.computeTeamCompletionTrend(orgId, managerId, weekCount)));
+                    analyticsService.computeTeamCompletionTrend(orgId, managerId, scope)));
         }
         return ResponseEntity.ok(ApiResponse.of(
-                analyticsService.computeCompletionTrend(orgId, weekCount)));
+                analyticsService.computeCompletionTrend(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -213,12 +227,15 @@ public class ObservatoryController {
      */
     @GetMapping("/displacement")
     public ResponseEntity<ApiResponse<DisplacementSummary>> getDisplacement(
-            @RequestParam(defaultValue = "12") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
         return ResponseEntity.ok(ApiResponse.of(
-                displacementService.aggregateDisplacements(orgId, weekCount)));
+                displacementService.aggregateDisplacements(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -232,18 +249,21 @@ public class ObservatoryController {
      */
     @GetMapping("/signals-summary")
     public ResponseEntity<ApiResponse<SignalsSummaryResponse>> getSignalsSummary(
-            @RequestParam(defaultValue = "26") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 26);
 
         DriftReport driftReport = driftDetectionService.detectDrift(orgId);
         IntegrityReport integrityReport = driftDetectionService.detectSignalIntegrity(orgId, null);
         com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary =
-                displacementService.aggregateDisplacements(orgId, weekCount);
+                displacementService.aggregateDisplacements(orgId, scope);
 
         return ResponseEntity.ok(ApiResponse.of(
-                analyticsService.computeSignalsSummary(orgId, weekCount, driftReport, integrityReport, displacementSummary)));
+                analyticsService.computeSignalsSummary(orgId, scope, driftReport, integrityReport, displacementSummary)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -274,12 +294,15 @@ public class ObservatoryController {
      */
     @GetMapping("/program-heatmap")
     public ResponseEntity<ApiResponse<ProgramHeatmapResponse>> getProgramHeatmap(
-            @RequestParam(defaultValue = "26") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 26);
         return ResponseEntity.ok(ApiResponse.of(
-                analyticsService.computeProgramHeatmap(orgId, weekCount)));
+                analyticsService.computeProgramHeatmap(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -294,12 +317,15 @@ public class ObservatoryController {
      */
     @GetMapping("/program-summary")
     public ResponseEntity<ApiResponse<ProgramSummaryResponse>> getProgramSummary(
-            @RequestParam(defaultValue = "26") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         UUID orgId = actor.getOrg().getId();
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 26);
         return ResponseEntity.ok(ApiResponse.of(
-                briefingService.generateProgramSummary(orgId, weekCount)));
+                briefingService.generateProgramSummary(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════
@@ -412,14 +438,17 @@ public class ObservatoryController {
      */
     @GetMapping("/portfolio/comparison")
     public ResponseEntity<ApiResponse<PortfolioComparisonResponse>> getPortfolioComparison(
-            @RequestParam(defaultValue = "12") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         if (actor.getOrg().getPortfolio() == null) {
             return ResponseEntity.badRequest().body(ApiResponse.of(null));
         }
         UUID portfolioId = actor.getOrg().getPortfolio().getId();
-        PortfolioComparisonResponse response = portfolioService.getPortfolioComparison(portfolioId, weekCount);
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
+        PortfolioComparisonResponse response = portfolioService.getPortfolioComparison(portfolioId, scope);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -430,7 +459,9 @@ public class ObservatoryController {
     @GetMapping("/portfolio/{orgId}")
     public ResponseEntity<ApiResponse<ExecutiveHealthResponse>> getPortfolioOrg(
             @PathVariable UUID orgId,
-            @RequestParam(defaultValue = "12") int weekCount) {
+            @RequestParam(required = false) Integer weekCount,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
         AppUser actor = SecurityContextHelper.getCurrentUser();
         assertObservatoryAccess(actor);
         Org requestedOrg = orgRepository.findById(orgId)
@@ -439,7 +470,8 @@ public class ObservatoryController {
                 || !actor.getOrg().getPortfolio().getId().equals(requestedOrg.getPortfolio().getId())) {
             throw new AccessDeniedException("Access denied to this organization's data");
         }
-        return ResponseEntity.ok(ApiResponse.of(healthComposer.computeHealth(orgId, weekCount)));
+        TimeScope scope = TimeScope.ofWeeksOrRange(weekCount, dateFrom, dateTo, 12);
+        return ResponseEntity.ok(ApiResponse.of(healthComposer.computeHealth(orgId, scope)));
     }
 
     // ═══════════════════════════════════════════════════════════════

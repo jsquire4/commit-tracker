@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.compass.platform.domain.observatory.dto.TimeScope;
+import java.time.Instant;
+
 /**
  * Exposes the IC longitudinal story for the My Story page.
  *
@@ -33,13 +36,17 @@ public class MyStoryController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<MyStoryResponse>> getMyStory(
-            @RequestParam(defaultValue = "12") int weeks) {
+            @RequestParam(required = false) Integer weeks,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
 
-        int cappedWeeks = Math.max(1, Math.min(weeks, MAX_STORY_WEEKS));
+        TimeScope scope = TimeScope.ofWeeksOrRange(
+                weeks != null ? Math.max(1, Math.min(weeks, MAX_STORY_WEEKS)) : null,
+                dateFrom, dateTo, 12);
         AppUser actor = SecurityContextHelper.getCurrentUser();
 
         MyStoryResponse response = icInsightsService.computeMyStory(
-                actor.getId(), actor.getOrg().getId(), cappedWeeks);
+                actor.getId(), actor.getOrg().getId(), scope);
 
         return ResponseEntity.ok(ApiResponse.of(response));
     }

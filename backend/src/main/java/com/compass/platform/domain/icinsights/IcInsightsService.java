@@ -214,14 +214,18 @@ public class IcInsightsService {
      * @param orgId  the user's org (for cycle scoping)
      * @param weeks  number of recent reconciled cycles to include (max 52)
      */
-    public MyStoryResponse computeMyStory(UUID userId, UUID orgId, int weeks) {
-        // Load last N reconciled cycles for the user's org, most-recent first
-        List<Cycle> reconciledCycles = cycleRepository
-                .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
-
-        List<Cycle> window = reconciledCycles.stream()
-                .limit(weeks)
-                .collect(Collectors.toList());
+    public MyStoryResponse computeMyStory(UUID userId, UUID orgId, com.compass.platform.domain.observatory.dto.TimeScope scope) {
+        // Load reconciled cycles for the requested window
+        List<Cycle> window;
+        if (scope.isDateRange()) {
+            window = cycleRepository.findReconciledByOrgIdAndDateRange(orgId, scope.dateFrom(), scope.dateTo());
+        } else {
+            List<Cycle> reconciledCycles = cycleRepository
+                    .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
+            window = reconciledCycles.stream()
+                    .limit(scope.effectiveWeekCount())
+                    .collect(Collectors.toList());
+        }
 
         if (window.isEmpty()) {
             return emptyStory();
@@ -519,10 +523,16 @@ public class IcInsightsService {
      * @param offset  zero-based index into the full list of reconciled cycles
      * @param limit   number of cycles to return starting at offset
      */
-    public RollingHistoryResponse computeRollingHistory(UUID userId, UUID orgId, int offset, int limit) {
-        // Load ALL reconciled cycles for the org, most-recent first
-        List<Cycle> reconciledCycles = cycleRepository
-                .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
+    public RollingHistoryResponse computeRollingHistory(UUID userId, UUID orgId, int offset, int limit,
+                                                          java.time.Instant dateFrom, java.time.Instant dateTo) {
+        // Load reconciled cycles, optionally pre-filtered by date range
+        List<Cycle> reconciledCycles;
+        if (dateFrom != null && dateTo != null) {
+            reconciledCycles = cycleRepository.findReconciledByOrgIdAndDateRange(orgId, dateFrom, dateTo);
+        } else {
+            reconciledCycles = cycleRepository
+                    .findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
+        }
 
         int totalCycles = reconciledCycles.size();
         int fromIndex = Math.min(offset, totalCycles);
