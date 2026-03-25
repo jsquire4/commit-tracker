@@ -17,6 +17,7 @@ import com.compass.platform.domain.observatory.dto.IntegrityFlag;
 import com.compass.platform.domain.observatory.dto.IntegrityFlagType;
 import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.TeamAlignmentTrend;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.TrendDirection;
 import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.rcdo.RallyCryRepository;
@@ -92,8 +93,7 @@ public class DriftDetectionService {
     @Transactional
     public DriftReport detectDrift(UUID orgId) {
         ObservatoryConfig config = getOrCreateConfig(orgId);
-        com.compass.platform.domain.observatory.dto.TimeScope driftScope =
-                com.compass.platform.domain.observatory.dto.TimeScope.ofWeeks(config.getDriftStructuralWeeks());
+        TimeScope driftScope = TimeScope.ofWeeks(config.getDriftStructuralWeeks());
 
         List<AppUser> managers = userRepository.findByOrgIdAndIsActiveTrue(orgId).stream()
                 .filter(u -> MANAGER_ROLES.contains(u.getRole()))

@@ -22,6 +22,8 @@ import { ComparisonTable } from './ComparisonTable';
 
 export function PortfolioPage() {
   const { role } = useAuth();
+  const { transitionClass } = useTransitionKey();
+  const { data: portfolio, isLoading, isError, error } = usePortfolio();
 
   // Role guard — VP and above only
   if (!role || !VP_AND_ABOVE.has(role)) {
@@ -34,9 +36,6 @@ export function PortfolioPage() {
       </div>
     );
   }
-
-  const { transitionClass } = useTransitionKey();
-  const { data: portfolio, isLoading, isError, error } = usePortfolio();
 
   if (isLoading) {
     return (

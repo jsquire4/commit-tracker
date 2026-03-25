@@ -58,6 +58,10 @@ export function WeekRangeSelector() {
       }
       setFilters(initial);
     }
+    // Intentionally omits filters/setFilters from deps — this is a one-time initialization
+    // that should only fire when cycles first load and no filters exist yet. Including
+    // filters would cause a re-render loop (effect sets filters → filters change → effect re-runs).
+    // setFilters is a stable Zustand reference; filters are read only as a guard.
   }, [cycles.length, defaultFrom, defaultTo]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const selectedFrom = cycles.find((c) => c.startsAt === filters.cycleWeekStart);

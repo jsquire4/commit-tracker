@@ -94,30 +94,15 @@ function ScopedBanner({ managerName, onClear }: ScopedBannerProps) {
 export function ObservatoryPage() {
   const { role } = useAuth();
 
-  // Role guard — VP and above only
-  if (!role || !VP_AND_ABOVE.has(role)) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
-        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
-        <p className="text-body text-on-surface-variant max-w-sm">
-          The Observatory is only accessible to VPs and Executives.
-        </p>
-      </div>
-    );
-  }
-
-  // Global date range from Zustand (set by WeekRangeSelector in AppLayout)
+  // All hooks must be called before any conditional return (Rules of Hooks)
   const { weekCount } = useDateRange();
   const { transitionClass } = useTransitionKey();
-
-  // Scoped team view — when set, trend charts filter to this manager's team
   const [selectedManager, setSelectedManager] = useState<{ id: string; name: string } | null>(null);
-
   const { data: dashboard, isLoading: dashboardLoading } = useObservatoryDashboard(weekCount);
+
   const health = dashboard?.health;
   const alignmentTrend = dashboard?.alignmentTrend;
   const completionTrend = dashboard?.completionTrend;
-
   const orgName = health?.orgName ?? '';
 
   // Average rally cry coverage across all weeks in the selected period.
@@ -140,6 +125,18 @@ export function ObservatoryPage() {
     const sum = completionTrend.reduce((acc, p) => acc + p.carryForwardRate, 0);
     return sum / completionTrend.length;
   }, [completionTrend]);
+
+  // Role guard — VP and above only (after all hooks)
+  if (!role || !VP_AND_ABOVE.has(role)) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-8">
+        <h1 className="text-title font-medium text-on-surface">Access Restricted</h1>
+        <p className="text-body text-on-surface-variant max-w-sm">
+          The Observatory is only accessible to VPs and Executives.
+        </p>
+      </div>
+    );
+  }
 
   const kpiLoading = dashboardLoading;
 

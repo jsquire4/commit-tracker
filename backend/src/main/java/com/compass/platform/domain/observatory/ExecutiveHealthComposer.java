@@ -59,8 +59,8 @@ public class ExecutiveHealthComposer {
     /**
      * Compute the full executive health summary for an org over the given week window.
      *
-     * @param orgId     the org to analyse
-     * @param weekCount how many trailing weeks of data to include
+     * @param orgId the org to analyse
+     * @param scope time scope defining the trailing window
      * @return assembled {@link ExecutiveHealthResponse}
      */
     public ExecutiveHealthResponse computeHealth(UUID orgId, TimeScope scope) {

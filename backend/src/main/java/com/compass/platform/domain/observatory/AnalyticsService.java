@@ -11,6 +11,7 @@ import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
+import com.compass.platform.domain.observatory.dto.DisplacementSummary;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSignal;
 import com.compass.platform.domain.observatory.dto.IntegrityFlag;
@@ -78,8 +79,8 @@ public class AnalyticsService {
      * Compute the strategic alignment percentage per cycle for the last N cycles.
      * Returns data ordered chronologically (oldest first) for chart rendering.
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return list of {@link AlignmentDataPoint} ordered by startsAt ascending
      */
     public List<AlignmentDataPoint> computeAlignmentTrend(UUID orgId, TimeScope scope) {
@@ -105,8 +106,8 @@ public class AnalyticsService {
      * Compute completion and carry-forward rates per cycle for the last N cycles.
      * Returns data ordered chronologically (oldest first).
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
     public List<CompletionDataPoint> computeCompletionTrend(UUID orgId, TimeScope scope) {
@@ -142,7 +143,7 @@ public class AnalyticsService {
      *
      * @param orgId     organization ID
      * @param managerId manager whose subtree defines the team
-     * @param weekCount number of most-recent cycles to include
+     * @param scope     time scope defining the trailing window
      * @return {@link TeamAlignmentTrend} containing per-cycle alignment data for the team
      */
     public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, TimeScope scope) {
@@ -156,7 +157,7 @@ public class AnalyticsService {
      *
      * @param orgId       organization ID
      * @param managerId   manager whose subtree defines the team
-     * @param weekCount   number of most-recent cycles to include
+     * @param scope       time scope defining the trailing window
      * @param teamUserIds pre-computed subtree user IDs for the manager
      * @return {@link TeamAlignmentTrend} containing per-cycle alignment data for the team
      */
@@ -203,8 +204,8 @@ public class AnalyticsService {
      * Compute per-manager per-cycle CHESS category heatmap data for the last N reconciled cycles.
      * Returns one row per MANAGER-role user, with team-averaged week cells and per-person breakdown.
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent reconciled cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return {@link ProgramHeatmapResponse} with a row per manager
      */
     public ProgramHeatmapResponse computeProgramHeatmap(UUID orgId, TimeScope scope) {
@@ -299,7 +300,7 @@ public class AnalyticsService {
      *
      * @param orgId     organization ID
      * @param managerId manager whose subtree defines the team
-     * @param weekCount number of most-recent cycles to include
+     * @param scope     time scope defining the trailing window
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
     public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, TimeScope scope) {
@@ -313,7 +314,7 @@ public class AnalyticsService {
      *
      * @param orgId       organization ID
      * @param managerId   manager whose subtree defines the team
-     * @param weekCount   number of most-recent cycles to include
+     * @param scope       time scope defining the trailing window
      * @param teamUserIds pre-computed subtree user IDs for the manager
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
@@ -511,7 +512,7 @@ public class AnalyticsService {
      * </ul>
      *
      * @param orgId           organisation to analyse
-     * @param weekCount       trailing-cycle window for displacement and work-distribution data
+     * @param scope           time scope defining the trailing window
      * @param driftReport     pre-computed drift report (call DriftDetectionService first)
      * @param integrityReport pre-computed integrity report (call DriftDetectionService first)
      * @param displacementSummary pre-computed displacement summary (call DisplacementService first)
@@ -520,7 +521,7 @@ public class AnalyticsService {
     public SignalsSummaryResponse computeSignalsSummary(UUID orgId, TimeScope scope,
                                                          DriftReport driftReport,
                                                          IntegrityReport integrityReport,
-                                                         com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary) {
+                                                         DisplacementSummary displacementSummary) {
         List<ObservatorySignal> signals = new ArrayList<>();
 
         // ── DRIFT_PATTERN signals ─────────────────────────────────────────────

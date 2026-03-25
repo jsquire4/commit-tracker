@@ -8,6 +8,7 @@ import com.compass.platform.domain.commit.Commitment;
 import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.growth.GrowthArea;
 import com.compass.platform.domain.growth.GrowthAreaRepository;
 import com.compass.platform.domain.icinsights.dto.GrowthAreaAlignmentDetail;
@@ -212,9 +213,9 @@ public class IcInsightsService {
      *
      * @param userId the authenticated user's ID
      * @param orgId  the user's org (for cycle scoping)
-     * @param weeks  number of recent reconciled cycles to include (max 52)
+     * @param scope  time scope defining the trailing window
      */
-    public MyStoryResponse computeMyStory(UUID userId, UUID orgId, com.compass.platform.domain.observatory.dto.TimeScope scope) {
+    public MyStoryResponse computeMyStory(UUID userId, UUID orgId, TimeScope scope) {
         // Load reconciled cycles for the requested window
         List<Cycle> window;
         if (scope.isDateRange()) {

@@ -13,7 +13,6 @@ import { ReconciliationBottomBar } from '@/features/reconciliation/Reconciliatio
 import { CoverageStrip } from './CoverageStrip';
 import { CommitmentSummaryStrip } from './CommitmentSummaryStrip';
 import { RallyCrySidebar } from './RallyCrySidebar';
-// CycleHistorySelector removed — global date range selector in Layout handles this
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';

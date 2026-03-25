@@ -259,7 +259,7 @@ public class ObservatoryController {
 
         DriftReport driftReport = driftDetectionService.detectDrift(orgId);
         IntegrityReport integrityReport = driftDetectionService.detectSignalIntegrity(orgId, null);
-        com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary =
+        DisplacementSummary displacementSummary =
                 displacementService.aggregateDisplacements(orgId, scope);
 
         return ResponseEntity.ok(ApiResponse.of(

@@ -115,7 +115,7 @@ public class PortfolioService {
      * declining.</p>
      *
      * @param portfolioId ID of the portfolio to compare
-     * @param weekCount   number of trailing cycles to include in each trend line
+     * @param scope       time scope defining the trailing window
      * @return a {@link PortfolioComparisonResponse} with one trend line per portco
      * @throws jakarta.persistence.EntityNotFoundException if the portfolio does not exist
      */
