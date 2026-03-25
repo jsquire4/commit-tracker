@@ -58,7 +58,7 @@ export function Layout({ children }: LayoutProps) {
   return (
     <div className="min-h-screen bg-surface">
       <nav
-        className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15"
+        className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/30 shadow-[0_1px_3px_0_rgba(0,0,0,0.04)]"
       >
         <div className="max-w-7xl mx-auto px-4">
           {/* Top row: brand — avatar + gear */}
