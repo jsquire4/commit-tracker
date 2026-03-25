@@ -11,6 +11,7 @@ export interface DashboardResponse {
   alignmentSignal: AlignmentSignalResponse;
   assignmentAttribution: AssignmentAttributionResponse;
   rcdoCoverage: RcdoCoverageResponse;
+  growthAreaAlignment: GrowthAreaAlignmentResponse;
 }
 
 /** Mirrors backend TeamRollupResponse */
@@ -83,4 +84,20 @@ export interface RcdoCoverageResponse {
   linkedPercentage: number;
   byRallyCry: { rallyCryId: string; title: string; commitmentCount: number; percentage: number }[];
   uncoveredObjectives: { definingObjectiveId: string; title: string; rallyCryTitle: string; rallyCryId: string }[];
+}
+
+/** Mirrors backend GrowthAreaAlignmentResponse */
+export interface GrowthAreaAlignmentResponse {
+  totalCommitments: number;
+  alignedCount: number;
+  alignedPercentage: number;
+  byTeamMember: MemberGrowthAlignment[];
+}
+
+export interface MemberGrowthAlignment {
+  userId: string;
+  displayName: string;
+  totalCommitments: number;
+  alignedCount: number;
+  alignedPercentage: number;
 }

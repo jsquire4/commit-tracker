@@ -4,5 +4,6 @@ public record DashboardResponse(
     TeamRollupResponse teamRollup,
     AlignmentSignalResponse alignmentSignal,
     AssignmentAttributionResponse assignmentAttribution,
-    RcdoCoverageResponse rcdoCoverage
+    RcdoCoverageResponse rcdoCoverage,
+    GrowthAreaAlignmentResponse growthAreaAlignment
 ) {}

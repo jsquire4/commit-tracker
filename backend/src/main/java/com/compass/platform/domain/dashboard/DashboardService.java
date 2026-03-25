@@ -11,6 +11,7 @@ import com.compass.platform.domain.dashboard.dto.AlignmentSignalResponse;
 import com.compass.platform.domain.dashboard.dto.AssignmentAttributionResponse;
 import com.compass.platform.domain.dashboard.dto.DashboardFilters;
 import com.compass.platform.domain.dashboard.dto.DashboardResponse;
+import com.compass.platform.domain.dashboard.dto.GrowthAreaAlignmentResponse;
 import com.compass.platform.domain.dashboard.dto.RcdoCoverageResponse;
 import com.compass.platform.domain.dashboard.dto.TeamRollupResponse;
 import com.compass.platform.domain.rcdo.DefiningObjective;
@@ -103,7 +104,8 @@ public class DashboardService {
                 buildTeamRollup(actor, data),
                 buildAlignmentSignal(data),
                 buildAssignmentAttribution(data),
-                buildRcdoCoverage(actor, data)
+                buildRcdoCoverage(actor, data),
+                buildGrowthAreaAlignment(data)
         );
     }
 
@@ -328,6 +330,47 @@ public class DashboardService {
         }
 
         return new RcdoCoverageResponse(total, linked, unlinked, linkedPct, byRallyCry, uncoveredObjectives);
+    }
+
+    /**
+     * Growth area alignment: % of commitments linked to at least one personal growth area.
+     * Uses a single native query (JOIN on commitment_growth_areas) to avoid N+1 lazy loads.
+     */
+    private GrowthAreaAlignmentResponse buildGrowthAreaAlignment(DashboardData data) {
+        List<AppUser> members = data.members();
+        Map<UUID, List<Commitment>> byUser = data.commitmentsByUser();
+
+        // Total commitments across team
+        int teamTotal = byUser.values().stream().mapToInt(List::size).sum();
+
+        // Single query: count of commitments with ≥1 growth area, grouped by user
+        List<UUID> userIds = members.stream().map(AppUser::getId).toList();
+        Map<UUID, Integer> alignedCountByUser = new HashMap<>();
+
+        if (!userIds.isEmpty() && data.cycle().isPresent()) {
+            List<Object[]> rows = commitmentRepository.countGrowthAreaAlignedByUser(
+                    userIds, data.cycle().get().getId());
+            for (Object[] row : rows) {
+                UUID userId = (UUID) row[0];
+                int count = ((Number) row[1]).intValue();
+                alignedCountByUser.put(userId, count);
+            }
+        }
+
+        int teamAligned = alignedCountByUser.values().stream().mapToInt(Integer::intValue).sum();
+        double teamPct = teamTotal == 0 ? 0.0 : (double) teamAligned / teamTotal * 100.0;
+
+        List<GrowthAreaAlignmentResponse.MemberGrowthAlignment> memberAlignments = members.stream()
+                .map(member -> {
+                    int memberTotal = byUser.getOrDefault(member.getId(), List.of()).size();
+                    int memberAligned = alignedCountByUser.getOrDefault(member.getId(), 0);
+                    double memberPct = memberTotal == 0 ? 0.0 : (double) memberAligned / memberTotal * 100.0;
+                    return new GrowthAreaAlignmentResponse.MemberGrowthAlignment(
+                            member.getId(), member.getDisplayName(), memberTotal, memberAligned, memberPct);
+                })
+                .toList();
+
+        return new GrowthAreaAlignmentResponse(teamTotal, teamAligned, teamPct, memberAlignments);
     }
 
     // === Internal helpers ===

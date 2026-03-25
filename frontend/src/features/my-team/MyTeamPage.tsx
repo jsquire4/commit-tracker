@@ -15,6 +15,7 @@ import { RallyCryCoverageCards } from './RallyCryCoverageCards';
 import { PersonCard } from './PersonCard';
 import { AssignWorkForm, createEmptyFormState } from './AssignWorkForm';
 import { TeamAnalytics } from './TeamAnalytics';
+import { GrowthAreaAlignmentCard } from './GrowthAreaAlignmentCard';
 import { RollingWorkHistory } from '@/features/commitment-history/RollingWorkHistory';
 import type {
   Commitment,
@@ -246,6 +247,13 @@ export function MyTeamPage() {
       <ErrorBoundary>
         <TeamAnalytics dashboard={dashboard} />
       </ErrorBoundary>
+
+      {/* Growth Area Alignment — collapsible */}
+      {dashboard.growthAreaAlignment && (
+        <ErrorBoundary>
+          <GrowthAreaAlignmentCard data={dashboard.growthAreaAlignment} />
+        </ErrorBoundary>
+      )}
 
       {/* Assign Work Slide-Over */}
       <AssignWorkForm

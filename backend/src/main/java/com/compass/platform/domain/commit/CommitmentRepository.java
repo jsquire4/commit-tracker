@@ -56,6 +56,17 @@ public interface CommitmentRepository extends JpaRepository<Commitment, UUID> {
     @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id = :cycleId ORDER BY c.user.id, c.priorityRank")
     List<Commitment> findByUserIdInAndCycleId(@Param("userIds") Collection<UUID> userIds, @Param("cycleId") UUID cycleId);
 
+    /**
+     * Counts commitments that have at least one growth area, grouped by user.
+     * Returns rows of [userId (UUID), count (Long)].
+     */
+    @Query(value = "SELECT c.user_id, COUNT(DISTINCT c.id) " +
+                   "FROM commitments c " +
+                   "JOIN commitment_growth_areas cga ON cga.commitment_id = c.id " +
+                   "WHERE c.user_id IN :userIds AND c.cycle_id = :cycleId " +
+                   "GROUP BY c.user_id", nativeQuery = true)
+    List<Object[]> countGrowthAreaAlignedByUser(@Param("userIds") Collection<UUID> userIds, @Param("cycleId") UUID cycleId);
+
     @Query("SELECT c FROM Commitment c WHERE c.user.id IN :userIds AND c.cycle.id IN :cycleIds ORDER BY c.cycle.id, c.user.id, c.priorityRank")
     List<Commitment> findByUserIdInAndCycleIdIn(@Param("userIds") Collection<UUID> userIds, @Param("cycleIds") Collection<UUID> cycleIds);
 
