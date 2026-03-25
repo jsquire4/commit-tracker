@@ -52,6 +52,7 @@ function PersonRow({ row, weekLabels }: PersonRowProps) {
           />
         </td>
       ))}
+      <td />
     </tr>
   );
 }
@@ -145,6 +146,7 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle, authUserId }: Manag
             <HeatmapCell cell={cellsByLabel.get(label)} />
           </td>
         ))}
+        <td />
       </tr>
 
       {/* Person rows (expanded): manager's own row first, then team members */}
@@ -295,11 +297,14 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
       <div className="overflow-x-auto">
         <table className="border-collapse w-full">
           <colgroup>
-            {/* Name column — fixed min width, rest shrink */}
-            <col style={{ minWidth: 200 }} />
+            {/* Name column — fixed width */}
+            <col style={{ width: 200 }} />
+            {/* Week columns — fixed narrow width, left-aligned next to names */}
             {weekLabels.map((label) => (
-              <col key={label} style={{ width: 30, minWidth: 30 }} />
+              <col key={label} style={{ width: 30 }} />
             ))}
+            {/* Spacer column absorbs remaining width so week columns stay left-aligned */}
+            <col />
           </colgroup>
 
           {/* Header */}
@@ -320,6 +325,7 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
                   {i + 1}
                 </th>
               ))}
+              <th />
             </tr>
           </thead>
 
