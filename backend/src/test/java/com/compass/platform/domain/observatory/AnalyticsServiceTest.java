@@ -14,6 +14,7 @@ import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.AppUserRepository;
@@ -118,7 +119,7 @@ class AnalyticsServiceTest {
         when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
                 .thenReturn(allCommitments);
 
-        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 3);
+        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, TimeScope.ofWeeks(3));
 
         assertThat(result).hasSize(3);
 
@@ -159,7 +160,7 @@ class AnalyticsServiceTest {
         when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
                 .thenReturn(limitedCommitments);
 
-        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 2);
+        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, TimeScope.ofWeeks(2));
 
         // Should only include the 2 most recent cycles (week3 and week2)
         assertThat(result).hasSize(2);
@@ -176,7 +177,7 @@ class AnalyticsServiceTest {
         when(commitmentRepository.findByOrgIdAndCycleIdIn(eq(orgId), any()))
                 .thenReturn(List.of());
 
-        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, 4);
+        List<AlignmentDataPoint> result = analyticsService.computeAlignmentTrend(orgId, TimeScope.ofWeeks(4));
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).strategicPct()).isEqualTo(0.0);
@@ -430,7 +431,7 @@ class AnalyticsServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(orgId), any(Collection.class)))
                 .thenReturn(List.of(r1, r2, r3, r4));
 
-        List<CompletionDataPoint> result = analyticsService.computeCompletionTrend(orgId, 4);
+        List<CompletionDataPoint> result = analyticsService.computeCompletionTrend(orgId, TimeScope.ofWeeks(4));
 
         assertThat(result).hasSize(1);
         CompletionDataPoint dp = result.get(0);

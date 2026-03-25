@@ -231,7 +231,7 @@ public class LlmBriefingService implements BriefingService {
     public String generateWeekNarrative(UUID orgId, UUID cycleId) {
         if (!llmConfig.isConfigured()) {
             log.debug("No LLM API key configured — skipping week narrative generation for cycleId={}", cycleId);
-            List<CompletionDataPoint> trend = analyticsService.computeCompletionTrend(orgId, 12);
+            List<CompletionDataPoint> trend = analyticsService.computeCompletionTrend(orgId, TimeScope.ofWeeks(12));
             double completionRate = trend.isEmpty() ? 0.0
                     : trend.get(trend.size() - 1).completionRate();
             double carryForwardRate = trend.isEmpty() ? 0.0
@@ -380,16 +380,18 @@ public class LlmBriefingService implements BriefingService {
 
     /**
      * Generate a 2-3 sentence program-level summary of execution trajectory
-     * over the last {@code weekCount} reconciled cycles.
+     * over the trailing window defined by {@code scope}.
      *
      * <p>When no LLM API key is configured a deterministic template fallback
      * is returned so the endpoint is always usable.
      */
     @Override
-    public ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount) {
+    public ProgramSummaryResponse generateProgramSummary(UUID orgId, TimeScope scope) {
         // Gather trend data
-        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
-        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
+        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, scope);
+        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, scope);
+        // For prompt text, derive an approximate week count from the scope
+        int weekCount = scope.isWeekCount() ? scope.effectiveWeekCount() : alignmentTrend.size();
 
         // Derived metrics
         double avgStrategicPct = alignmentTrend.stream()

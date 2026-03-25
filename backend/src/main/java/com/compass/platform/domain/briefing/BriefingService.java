@@ -5,6 +5,7 @@ import com.compass.platform.domain.briefing.dto.ChatRequest.ChatMessage;
 import com.compass.platform.domain.briefing.dto.ChatResponse;
 import com.compass.platform.domain.briefing.dto.ProgramSummaryResponse;
 import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.WeekNarrativeResponse;
 import com.compass.platform.domain.user.AppUser;
 
@@ -91,11 +92,11 @@ public interface BriefingService {
      * Generate a program-level summary of execution trajectory over
      * the last {@code weekCount} reconciled cycles.
      *
-     * @param orgId     the organization
-     * @param weekCount number of trailing weeks to summarise
+     * @param orgId the organization
+     * @param scope time scope defining the trailing window
      * @return program summary with narrative and timestamp
      */
-    ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount);
+    ProgramSummaryResponse generateProgramSummary(UUID orgId, TimeScope scope);
 
     /**
      * Generate a 2-sentence narrative for a single week's execution data.

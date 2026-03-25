@@ -1,7 +1,9 @@
 import { useState, type ReactNode } from 'react';
-import { NavLink, Link } from 'react-router-dom';
+import { NavLink, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 import { VP_AND_ABOVE, DIRECTOR_AND_ABOVE, MANAGER_AND_ABOVE } from '@/constants/roles';
+import { WeekRangeSelector } from './WeekRangeSelector';
+import { DraftDisclaimer } from './DraftDisclaimer';
 
 interface LayoutProps {
   children: ReactNode;
@@ -27,7 +29,11 @@ const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Layout({ children }: LayoutProps) {
   const auth = useAuth();
+  const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+
+  // Hide date selector on non-data pages
+  const hideSelector = ['/settings', '/methodology'].includes(location.pathname);
 
   const role = auth.role;
   const isManager = role != null && MANAGER_AND_ABOVE.has(role);
@@ -55,14 +61,21 @@ export function Layout({ children }: LayoutProps) {
         className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15"
       >
         <div className="max-w-7xl mx-auto px-4">
-          {/* Top row: brand — avatar + gear */}
-          <div className="flex items-center justify-between h-12">
+          {/* Top row: brand — date selector — avatar + gear */}
+          <div className="flex items-center justify-between h-12 gap-3">
             <Link
               to="/landing"
-              className="font-serif text-base tracking-widest uppercase text-on-surface select-none hover:text-accent transition-colors"
+              className="font-serif text-base tracking-widest uppercase text-on-surface select-none hover:text-accent transition-colors flex-shrink-0"
             >
               compass
             </Link>
+
+            {/* Center: global date range selector */}
+            {!hideSelector && (
+              <div className="hidden sm:flex flex-1 justify-center">
+                <WeekRangeSelector />
+              </div>
+            )}
 
             {/* Right: avatar + gear */}
             <div className="flex items-center gap-2">
@@ -178,6 +191,8 @@ export function Layout({ children }: LayoutProps) {
           </div>
         )}
       </nav>
+
+      {!hideSelector && <DraftDisclaimer />}
 
       <main className="max-w-7xl mx-auto px-4 py-6">
         {children}

@@ -9,6 +9,7 @@ import com.compass.platform.domain.observatory.dto.PortcoSummary;
 import com.compass.platform.domain.observatory.dto.PortcoTrendLine;
 import com.compass.platform.domain.observatory.dto.PortfolioComparisonResponse;
 import com.compass.platform.domain.observatory.dto.PortfolioHealthResponse;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.user.AppUserRepository;
 import com.compass.platform.domain.user.Org;
@@ -105,8 +106,8 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA, orgB));
-        when(healthComposer.computeHealth(orgAId, DEFAULT_WEEK_COUNT)).thenReturn(healthA);
-        when(healthComposer.computeHealth(orgBId, DEFAULT_WEEK_COUNT)).thenReturn(healthB);
+        when(healthComposer.computeHealth(eq(orgAId), any(TimeScope.class))).thenReturn(healthA);
+        when(healthComposer.computeHealth(eq(orgBId), any(TimeScope.class))).thenReturn(healthB);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgAId)).thenReturn(42L);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgBId)).thenReturn(17L);
 
@@ -133,12 +134,12 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA));
-        when(healthComposer.computeHealth(orgAId, DEFAULT_WEEK_COUNT)).thenReturn(health);
+        when(healthComposer.computeHealth(eq(orgAId), any(TimeScope.class))).thenReturn(health);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgAId)).thenReturn(10L);
 
         portfolioService.getPortfolioHealth(portfolioId);
 
-        verify(healthComposer).computeHealth(eq(orgAId), eq(DEFAULT_WEEK_COUNT));
+        verify(healthComposer).computeHealth(eq(orgAId), any(TimeScope.class));
     }
 
     // -------------------------------------------------------------------------
@@ -198,7 +199,7 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA));
-        when(healthComposer.computeHealth(orgAId, DEFAULT_WEEK_COUNT)).thenReturn(health);
+        when(healthComposer.computeHealth(eq(orgAId), any(TimeScope.class))).thenReturn(health);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgAId)).thenReturn(expectedHeadcount);
 
         PortfolioHealthResponse response = portfolioService.getPortfolioHealth(portfolioId);
@@ -222,7 +223,7 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA));
-        when(healthComposer.computeHealth(orgAId, DEFAULT_WEEK_COUNT)).thenReturn(health);
+        when(healthComposer.computeHealth(eq(orgAId), any(TimeScope.class))).thenReturn(health);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgAId)).thenReturn(55L);
 
         PortfolioHealthResponse response = portfolioService.getPortfolioHealth(portfolioId);
@@ -246,11 +247,11 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA, orgB));
-        when(analyticsService.computeAlignmentTrend(orgAId, weekCount)).thenReturn(pointsA);
-        when(analyticsService.computeAlignmentTrend(orgBId, weekCount)).thenReturn(pointsB);
+        when(analyticsService.computeAlignmentTrend(eq(orgAId), any(TimeScope.class))).thenReturn(pointsA);
+        when(analyticsService.computeAlignmentTrend(eq(orgBId), any(TimeScope.class))).thenReturn(pointsB);
 
         PortfolioComparisonResponse response =
-                portfolioService.getPortfolioComparison(portfolioId, weekCount);
+                portfolioService.getPortfolioComparison(portfolioId, TimeScope.ofWeeks(weekCount));
 
         assertThat(response.portfolioId()).isEqualTo(portfolioId);
         assertThat(response.portfolioName()).isEqualTo("Apex Fund I");
@@ -272,12 +273,12 @@ class PortfolioServiceTest {
         int customWeekCount = 26;
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA));
-        when(analyticsService.computeAlignmentTrend(orgAId, customWeekCount))
+        when(analyticsService.computeAlignmentTrend(eq(orgAId), any(TimeScope.class)))
                 .thenReturn(List.of());
 
-        portfolioService.getPortfolioComparison(portfolioId, customWeekCount);
+        portfolioService.getPortfolioComparison(portfolioId, TimeScope.ofWeeks(customWeekCount));
 
-        verify(analyticsService).computeAlignmentTrend(eq(orgAId), eq(customWeekCount));
+        verify(analyticsService).computeAlignmentTrend(eq(orgAId), any(TimeScope.class));
     }
 
     @Test
@@ -285,7 +286,7 @@ class PortfolioServiceTest {
         UUID missingId = UUID.randomUUID();
         when(portfolioRepository.findById(missingId)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> portfolioService.getPortfolioComparison(missingId, 8))
+        assertThatThrownBy(() -> portfolioService.getPortfolioComparison(missingId, TimeScope.ofWeeks(8)))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessageContaining(missingId.toString());
 
@@ -298,7 +299,7 @@ class PortfolioServiceTest {
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of());
 
         PortfolioComparisonResponse response =
-                portfolioService.getPortfolioComparison(portfolioId, 12);
+                portfolioService.getPortfolioComparison(portfolioId, TimeScope.ofWeeks(12));
 
         assertThat(response.trends()).isEmpty();
         verifyNoInteractions(analyticsService);
@@ -317,8 +318,8 @@ class PortfolioServiceTest {
 
         when(portfolioRepository.findById(portfolioId)).thenReturn(Optional.of(portfolio));
         when(orgRepository.findByPortfolioId(portfolioId)).thenReturn(List.of(orgA, orgB));
-        when(healthComposer.computeHealth(orgAId, DEFAULT_WEEK_COUNT)).thenReturn(healthA);
-        when(healthComposer.computeHealth(orgBId, DEFAULT_WEEK_COUNT)).thenReturn(healthB);
+        when(healthComposer.computeHealth(eq(orgAId), any(TimeScope.class))).thenReturn(healthA);
+        when(healthComposer.computeHealth(eq(orgBId), any(TimeScope.class))).thenReturn(healthB);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgAId)).thenReturn(100L);
         when(appUserRepository.countByOrgIdAndIsActiveTrue(orgBId)).thenReturn(250L);
 

@@ -6,6 +6,7 @@ import com.compass.platform.domain.observatory.AnalyticsService;
 import com.compass.platform.domain.observatory.DriftDetectionService;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSignal;
 import com.compass.platform.domain.user.Org;
@@ -57,7 +58,7 @@ public class BriefingDataGatherer {
 
     public BriefingDataContext gatherData(UUID orgId, UUID cycleId) {
         // Alignment
-        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, 12);
+        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, TimeScope.ofWeeks(12));
         AlignmentDataPoint latest = alignmentTrend.isEmpty() ? null : alignmentTrend.get(alignmentTrend.size() - 1);
         AlignmentDataPoint previous = alignmentTrend.size() < 2 ? null : alignmentTrend.get(alignmentTrend.size() - 2);
 
@@ -70,7 +71,7 @@ public class BriefingDataGatherer {
         double prevStrategicPct = previous != null ? previous.strategicPct() : strategicPct;
 
         // Completion
-        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, 12);
+        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, TimeScope.ofWeeks(12));
         CompletionDataPoint latestCompletion = completionTrend.isEmpty() ? null : completionTrend.get(completionTrend.size() - 1);
         CompletionDataPoint prevCompletion = completionTrend.size() < 2 ? null : completionTrend.get(completionTrend.size() - 2);
 

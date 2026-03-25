@@ -6,6 +6,7 @@ import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.observatory.AnalyticsService;
 import com.compass.platform.domain.observatory.DriftDetectionService;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.DriftMetric;
 import com.compass.platform.domain.observatory.dto.DriftReport;
@@ -30,6 +31,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -87,9 +89,9 @@ class BriefingDataGatherTest {
         Commitment linked = commitment(true);
         Commitment unlinked = commitment(false);
 
-        when(analyticsService.computeAlignmentTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(prevAlignment, latestAlignment));
-        when(analyticsService.computeCompletionTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(prevCompletion, latestCompletion));
         when(driftDetectionService.detectDrift(eq(orgId))).thenReturn(driftReport);
         when(commitmentRepository.findByOrgIdAndCycleIdOrderByPriorityRankAsc(eq(orgId), eq(cycleId)))
@@ -153,9 +155,9 @@ class BriefingDataGatherTest {
         CompletionDataPoint completion = new CompletionDataPoint(
                 UUID.randomUUID(), "Week 1", Instant.now(), 70.0, 10.0, 5.0, 10, 7);
 
-        when(analyticsService.computeAlignmentTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(alignment));
-        when(analyticsService.computeCompletionTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(completion));
         when(driftDetectionService.detectDrift(eq(orgId)))
                 .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -176,9 +178,9 @@ class BriefingDataGatherTest {
 
     @Test
     void gatherData_emptyTrends_allMetricsDefaultToZero() {
-        when(analyticsService.computeAlignmentTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of());
-        when(analyticsService.computeCompletionTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of());
         when(driftDetectionService.detectDrift(eq(orgId)))
                 .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -355,9 +357,9 @@ class BriefingDataGatherTest {
         CompletionDataPoint onlyC = new CompletionDataPoint(
                 cycleId, "Week 1", Instant.now(), 60.0, 12.0, 6.0, 20, 12);
 
-        when(analyticsService.computeAlignmentTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(only));
-        when(analyticsService.computeCompletionTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(onlyC));
         when(driftDetectionService.detectDrift(eq(orgId)))
                 .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -396,9 +398,9 @@ class BriefingDataGatherTest {
         CompletionDataPoint latestC = new CompletionDataPoint(
                 cycleId, "Week 12", Instant.now(), 60.0, 14.0, 7.0, 35, 21);
 
-        when(analyticsService.computeAlignmentTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(prev, latest));
-        when(analyticsService.computeCompletionTrend(eq(orgId), eq(12)))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(prevC, latestC));
     }
 

@@ -24,6 +24,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.compass.platform.domain.observatory.dto.TimeScope;
+import java.time.Instant;
+
 import java.net.URI;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -75,13 +78,15 @@ public class IcSummaryController {
     @GetMapping("/rolling-history")
     public ResponseEntity<ApiResponse<RollingHistoryResponse>> getRollingHistory(
             @RequestParam(defaultValue = "0") int offset,
-            @RequestParam(defaultValue = "7") int limit) {
+            @RequestParam(defaultValue = "7") int limit,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
 
         AppUser actor = SecurityContextHelper.getCurrentUser();
         int safeOffset = Math.max(0, offset);
         int safeLimit = Math.max(1, Math.min(limit, 26));
         RollingHistoryResponse response = icInsightsService.computeRollingHistory(
-                actor.getId(), actor.getOrg().getId(), safeOffset, safeLimit);
+                actor.getId(), actor.getOrg().getId(), safeOffset, safeLimit, dateFrom, dateTo);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
@@ -109,14 +114,16 @@ public class IcSummaryController {
         int safeOffset = Math.max(0, offset);
         int safeLimit = Math.max(1, Math.min(limit, 26));
         RollingHistoryResponse response = icInsightsService.computeRollingHistory(
-                userId, actor.getOrg().getId(), safeOffset, safeLimit);
+                userId, actor.getOrg().getId(), safeOffset, safeLimit, null, null);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 
     @GetMapping("/team-member-story")
     public ResponseEntity<ApiResponse<MyStoryResponse>> getTeamMemberStory(
             @RequestParam UUID userId,
-            @RequestParam(defaultValue = "12") int weeks) {
+            @RequestParam(required = false) Integer weeks,
+            @RequestParam(required = false) Instant dateFrom,
+            @RequestParam(required = false) Instant dateTo) {
 
         AppUser actor = SecurityContextHelper.getCurrentUser();
 
@@ -132,8 +139,10 @@ public class IcSummaryController {
             }
         }
 
-        int cappedWeeks = Math.max(1, Math.min(weeks, 52));
-        MyStoryResponse response = icInsightsService.computeMyStory(userId, actor.getOrg().getId(), cappedWeeks);
+        TimeScope scope = TimeScope.ofWeeksOrRange(
+                weeks != null ? Math.max(1, Math.min(weeks, 52)) : null,
+                dateFrom, dateTo, 12);
+        MyStoryResponse response = icInsightsService.computeMyStory(userId, actor.getOrg().getId(), scope);
         return ResponseEntity.ok(ApiResponse.of(response));
     }
 

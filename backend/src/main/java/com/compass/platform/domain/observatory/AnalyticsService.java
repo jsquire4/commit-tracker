@@ -7,9 +7,11 @@ import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.CarryForwardChain;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.CostWeightedSignal;
+import com.compass.platform.domain.observatory.dto.DisplacementSummary;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSignal;
 import com.compass.platform.domain.observatory.dto.IntegrityFlag;
@@ -77,12 +79,12 @@ public class AnalyticsService {
      * Compute the strategic alignment percentage per cycle for the last N cycles.
      * Returns data ordered chronologically (oldest first) for chart rendering.
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return list of {@link AlignmentDataPoint} ordered by startsAt ascending
      */
-    public List<AlignmentDataPoint> computeAlignmentTrend(UUID orgId, int weekCount) {
-        List<Cycle> cycles = latestCycles(orgId, weekCount);
+    public List<AlignmentDataPoint> computeAlignmentTrend(UUID orgId, TimeScope scope) {
+        List<Cycle> cycles = latestCycles(orgId, scope);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
         List<Commitment> allCommitments = commitmentRepository.findByOrgIdAndCycleIdIn(orgId, cycleIds);
         Map<UUID, List<Commitment>> commitmentsByCycle = allCommitments.stream()
@@ -96,7 +98,7 @@ public class AnalyticsService {
 
         // Return chronological order (oldest → newest)
         results.sort(Comparator.comparing(AlignmentDataPoint::startsAt));
-        log.debug("computeAlignmentTrend orgId={} weekCount={} cyclesFound={}", orgId, weekCount, results.size());
+        log.debug("computeAlignmentTrend orgId={} scope={} cyclesFound={}", orgId, scope, results.size());
         return results;
     }
 
@@ -104,12 +106,12 @@ public class AnalyticsService {
      * Compute completion and carry-forward rates per cycle for the last N cycles.
      * Returns data ordered chronologically (oldest first).
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
-    public List<CompletionDataPoint> computeCompletionTrend(UUID orgId, int weekCount) {
-        List<Cycle> cycles = latestCycles(orgId, weekCount);
+    public List<CompletionDataPoint> computeCompletionTrend(UUID orgId, TimeScope scope) {
+        List<Cycle> cycles = latestCycles(orgId, scope);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 
         // Bulk-load all reconciliation records for the range at once
@@ -132,7 +134,7 @@ public class AnalyticsService {
         }
 
         results.sort(Comparator.comparing(CompletionDataPoint::startsAt));
-        log.debug("computeCompletionTrend orgId={} weekCount={} cyclesFound={}", orgId, weekCount, results.size());
+        log.debug("computeCompletionTrend orgId={} scope={} cyclesFound={}", orgId, scope, results.size());
         return results;
     }
 
@@ -141,12 +143,12 @@ public class AnalyticsService {
      *
      * @param orgId     organization ID
      * @param managerId manager whose subtree defines the team
-     * @param weekCount number of most-recent cycles to include
+     * @param scope     time scope defining the trailing window
      * @return {@link TeamAlignmentTrend} containing per-cycle alignment data for the team
      */
-    public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, int weekCount) {
+    public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, TimeScope scope) {
         List<UUID> teamUserIds = userRepository.findSubtreeUserIds(managerId);
-        return computeTeamAlignmentTrend(orgId, managerId, weekCount, teamUserIds);
+        return computeTeamAlignmentTrend(orgId, managerId, scope, teamUserIds);
     }
 
     /**
@@ -155,16 +157,16 @@ public class AnalyticsService {
      *
      * @param orgId       organization ID
      * @param managerId   manager whose subtree defines the team
-     * @param weekCount   number of most-recent cycles to include
+     * @param scope       time scope defining the trailing window
      * @param teamUserIds pre-computed subtree user IDs for the manager
      * @return {@link TeamAlignmentTrend} containing per-cycle alignment data for the team
      */
-    public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, int weekCount,
+    public TeamAlignmentTrend computeTeamAlignmentTrend(UUID orgId, UUID managerId, TimeScope scope,
                                                          List<UUID> teamUserIds) {
         AppUser manager = userRepository.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found: " + managerId));
 
-        List<Cycle> cycles = latestCycles(orgId, weekCount);
+        List<Cycle> cycles = latestCycles(orgId, scope);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 
         // Bulk-load all team commitments for the cycle range in one query, then group by cycleId
@@ -202,12 +204,12 @@ public class AnalyticsService {
      * Compute per-manager per-cycle CHESS category heatmap data for the last N reconciled cycles.
      * Returns one row per MANAGER-role user, with team-averaged week cells and per-person breakdown.
      *
-     * @param orgId     organization ID
-     * @param weekCount number of most-recent reconciled cycles to include
+     * @param orgId organization ID
+     * @param scope time scope defining the trailing window
      * @return {@link ProgramHeatmapResponse} with a row per manager
      */
-    public ProgramHeatmapResponse computeProgramHeatmap(UUID orgId, int weekCount) {
-        List<Cycle> cycles = latestCycles(orgId, weekCount);
+    public ProgramHeatmapResponse computeProgramHeatmap(UUID orgId, TimeScope scope) {
+        List<Cycle> cycles = latestCycles(orgId, scope);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 
         // Bulk-load all commitments for the cycle range in one query
@@ -288,7 +290,7 @@ public class AnalyticsService {
             ));
         }
 
-        log.debug("computeProgramHeatmap orgId={} weekCount={} managersFound={}", orgId, weekCount, managerRows.size());
+        log.debug("computeProgramHeatmap orgId={} scope={} managersFound={}", orgId, scope, managerRows.size());
         return new ProgramHeatmapResponse(managerRows);
     }
 
@@ -298,12 +300,12 @@ public class AnalyticsService {
      *
      * @param orgId     organization ID
      * @param managerId manager whose subtree defines the team
-     * @param weekCount number of most-recent cycles to include
+     * @param scope     time scope defining the trailing window
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
-    public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, int weekCount) {
+    public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, TimeScope scope) {
         List<UUID> teamUserIds = userRepository.findSubtreeUserIds(managerId);
-        return computeTeamCompletionTrend(orgId, managerId, weekCount, teamUserIds);
+        return computeTeamCompletionTrend(orgId, managerId, scope, teamUserIds);
     }
 
     /**
@@ -312,13 +314,13 @@ public class AnalyticsService {
      *
      * @param orgId       organization ID
      * @param managerId   manager whose subtree defines the team
-     * @param weekCount   number of most-recent cycles to include
+     * @param scope       time scope defining the trailing window
      * @param teamUserIds pre-computed subtree user IDs for the manager
      * @return list of {@link CompletionDataPoint} ordered by startsAt ascending
      */
-    public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, int weekCount,
+    public List<CompletionDataPoint> computeTeamCompletionTrend(UUID orgId, UUID managerId, TimeScope scope,
                                                                  List<UUID> teamUserIds) {
-        List<Cycle> cycles = latestCycles(orgId, weekCount);
+        List<Cycle> cycles = latestCycles(orgId, scope);
         List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
 
         // Bulk-load all org reconciliation records for this range, then filter to team
@@ -510,16 +512,16 @@ public class AnalyticsService {
      * </ul>
      *
      * @param orgId           organisation to analyse
-     * @param weekCount       trailing-cycle window for displacement and work-distribution data
+     * @param scope           time scope defining the trailing window
      * @param driftReport     pre-computed drift report (call DriftDetectionService first)
      * @param integrityReport pre-computed integrity report (call DriftDetectionService first)
      * @param displacementSummary pre-computed displacement summary (call DisplacementService first)
      * @return SignalsSummaryResponse containing all surfaced signals and a generation timestamp
      */
-    public SignalsSummaryResponse computeSignalsSummary(UUID orgId, int weekCount,
+    public SignalsSummaryResponse computeSignalsSummary(UUID orgId, TimeScope scope,
                                                          DriftReport driftReport,
                                                          IntegrityReport integrityReport,
-                                                         com.compass.platform.domain.observatory.dto.DisplacementSummary displacementSummary) {
+                                                         DisplacementSummary displacementSummary) {
         List<ObservatorySignal> signals = new ArrayList<>();
 
         // ── DRIFT_PATTERN signals ─────────────────────────────────────────────
@@ -558,12 +560,12 @@ public class AnalyticsService {
             String topCategory = displacementSummary.byCategory().isEmpty()
                     ? "unspecified"
                     : displacementSummary.byCategory().get(0).category().name().toLowerCase().replace("_", " ");
-            String title = String.format("Displacement cascade: %d events over %d weeks",
-                    displacementSummary.totalDisplacements(), weekCount);
+            String title = String.format("Displacement cascade: %d events",
+                    displacementSummary.totalDisplacements());
             String body = String.format(
-                    "%d displaced commitments recorded in the last %d cycles. " +
+                    "%d displaced commitments recorded in the selected period. " +
                     "Top displacement category: %s.",
-                    displacementSummary.totalDisplacements(), weekCount, topCategory);
+                    displacementSummary.totalDisplacements(), topCategory);
             List<SignalMetric> metrics = List.of(
                     new SignalMetric("Total displacements", String.valueOf(displacementSummary.totalDisplacements())),
                     new SignalMetric("Top category", topCategory),
@@ -680,7 +682,7 @@ public class AnalyticsService {
                 : 50.0; // default matches ObservatoryConfig entity default
         // darkWorkWarningPct is reserved for future use to flag unlinked-commitment thresholds.
 
-        List<Cycle> recentCycles = latestCycles(orgId, weekCount);
+        List<Cycle> recentCycles = latestCycles(orgId, scope);
         List<UUID> recentCycleIds = recentCycles.stream().map(Cycle::getId).toList();
 
         // Load managers (MANAGER, DIRECTOR, VP roles)
@@ -726,7 +728,7 @@ public class AnalyticsService {
                             "%s has assigned %d of %d commitments (%s) to %s over the last %d cycles, " +
                             "indicating potential concentration risk.",
                             manager.getDisplayName(), entry.getValue(), total,
-                            String.format("%.0f%%", pct), assigneeName, weekCount);
+                            String.format("%.0f%%", pct), assigneeName, recentCycles.size());
                     List<SignalMetric> metrics = List.of(
                             new SignalMetric("Concentration", String.format("%.0f%%", pct)),
                             new SignalMetric("Assignments to " + assigneeName,
@@ -747,7 +749,7 @@ public class AnalyticsService {
             }
         }
 
-        log.debug("computeSignalsSummary orgId={} weekCount={} signalsGenerated={}", orgId, weekCount, signals.size());
+        log.debug("computeSignalsSummary orgId={} scope={} signalsGenerated={}", orgId, scope, signals.size());
         return new SignalsSummaryResponse(signals, Instant.now());
     }
 
@@ -796,11 +798,15 @@ public class AnalyticsService {
      * fetched in descending order. Only reconciled cycles have meaningful data
      * for analytics — DRAFT and in-progress cycles are excluded.
      */
-    private List<Cycle> latestCycles(UUID orgId, int limit) {
+    private List<Cycle> latestCycles(UUID orgId, TimeScope scope) {
+        if (scope.isDateRange()) {
+            return cycleRepository.findReconciledByOrgIdAndDateRange(orgId, scope.dateFrom(), scope.dateTo());
+        }
         List<Cycle> all = cycleRepository.findByOrgIdOrderByStartsAtDesc(orgId);
         List<Cycle> reconciled = all.stream()
                 .filter(c -> c.getState() == CycleState.RECONCILED)
                 .toList();
+        int limit = scope.effectiveWeekCount();
         return reconciled.size() <= limit ? reconciled : reconciled.subList(0, limit);
     }
 

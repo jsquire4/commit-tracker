@@ -13,6 +13,7 @@ import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.dashboard.DashboardService;
 import com.compass.platform.domain.dashboard.dto.TeamSummaryResponse;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.AnalyticsService;
 import com.compass.platform.domain.observatory.DriftDetectionService;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
@@ -277,7 +278,7 @@ class LlmBriefingServiceTest {
         @Test
         @DisplayName("returns template fallback string when LLM is not configured")
         void returnsTemplateFallbackWhenUnconfigured() {
-            when(analyticsService.computeCompletionTrend(ORG_ID, 12))
+            when(analyticsService.computeCompletionTrend(eq(ORG_ID), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint));
 
             String result = service.generateWeekNarrative(ORG_ID, CYCLE_ID);
@@ -289,7 +290,7 @@ class LlmBriefingServiceTest {
         @Test
         @DisplayName("returns zero-rate fallback when no completion trend data exists")
         void returnsZeroRateFallbackWhenNoTrendData() {
-            when(analyticsService.computeCompletionTrend(ORG_ID, 12)).thenReturn(List.of());
+            when(analyticsService.computeCompletionTrend(eq(ORG_ID), any(TimeScope.class))).thenReturn(List.of());
 
             String result = service.generateWeekNarrative(ORG_ID, CYCLE_ID);
 
@@ -299,7 +300,7 @@ class LlmBriefingServiceTest {
         @Test
         @DisplayName("does not call dataGatherer when LLM is unconfigured")
         void doesNotCallDataGathererWhenUnconfigured() {
-            when(analyticsService.computeCompletionTrend(ORG_ID, 12)).thenReturn(List.of());
+            when(analyticsService.computeCompletionTrend(eq(ORG_ID), any(TimeScope.class))).thenReturn(List.of());
 
             service.generateWeekNarrative(ORG_ID, CYCLE_ID);
 
@@ -309,7 +310,7 @@ class LlmBriefingServiceTest {
         @Test
         @DisplayName("does not throw when LLM is unconfigured")
         void doesNotThrowWhenUnconfigured() {
-            when(analyticsService.computeCompletionTrend(ORG_ID, 12)).thenReturn(List.of());
+            when(analyticsService.computeCompletionTrend(eq(ORG_ID), any(TimeScope.class))).thenReturn(List.of());
 
             assertThatNoException().isThrownBy(
                     () -> service.generateWeekNarrative(ORG_ID, CYCLE_ID));
@@ -430,7 +431,7 @@ class LlmBriefingServiceTest {
                     any(String.class), any(String.class), anyInt()))
                     .thenReturn("fallback program narrative");
 
-            ProgramSummaryResponse result = service.generateProgramSummary(ORG_ID, 4);
+            ProgramSummaryResponse result = service.generateProgramSummary(ORG_ID, TimeScope.ofWeeks(4));
 
             assertThat(result).isNotNull();
             assertThat(result.narrative()).isEqualTo("fallback program narrative");
@@ -440,7 +441,7 @@ class LlmBriefingServiceTest {
         @Test
         @DisplayName("delegates to promptBuilder.buildProgramSummaryFallback with correct weekCount")
         void delegatesToFallbackBuilderWithCorrectWeekCount() {
-            stubAnalyticsForProgramSummary(8);
+            stubAnalyticsForProgramSummary();
             when(driftDetectionService.detectDrift(ORG_ID))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
             when(promptBuilder.computeTrendDirection(any())).thenReturn("improving");
@@ -449,7 +450,7 @@ class LlmBriefingServiceTest {
                     any(String.class), any(String.class), anyInt()))
                     .thenReturn("8-week fallback");
 
-            ProgramSummaryResponse result = service.generateProgramSummary(ORG_ID, 8);
+            ProgramSummaryResponse result = service.generateProgramSummary(ORG_ID, TimeScope.ofWeeks(8));
 
             assertThat(result.narrative()).isEqualTo("8-week fallback");
             verify(promptBuilder).buildProgramSummaryFallback(
@@ -468,7 +469,7 @@ class LlmBriefingServiceTest {
                     any(String.class), any(String.class), anyInt()))
                     .thenReturn("no drift narrative");
 
-            assertThatNoException().isThrownBy(() -> service.generateProgramSummary(ORG_ID, 4));
+            assertThatNoException().isThrownBy(() -> service.generateProgramSummary(ORG_ID, TimeScope.ofWeeks(4)));
 
             // driftCount should be 0 when report is null — verify fallback called with 0
             verify(promptBuilder).buildProgramSummaryFallback(
@@ -488,7 +489,7 @@ class LlmBriefingServiceTest {
                     any(String.class), any(String.class), anyInt()))
                     .thenReturn("fallback");
 
-            service.generateProgramSummary(ORG_ID, 4);
+            service.generateProgramSummary(ORG_ID, TimeScope.ofWeeks(4));
 
             verify(orgRepository, never()).findById(any());
         }
@@ -505,20 +506,16 @@ class LlmBriefingServiceTest {
                     any(String.class), any(String.class), anyInt()))
                     .thenReturn("fallback");
 
-            assertThatNoException().isThrownBy(() -> service.generateProgramSummary(ORG_ID, 4));
+            assertThatNoException().isThrownBy(() -> service.generateProgramSummary(ORG_ID, TimeScope.ofWeeks(4)));
         }
 
         private void stubAnalyticsForProgramSummary() {
-            stubAnalyticsForProgramSummary(4);
-        }
-
-        private void stubAnalyticsForProgramSummary(int weekCount) {
             AlignmentDataPoint a = new AlignmentDataPoint(
                     CYCLE_ID, "W1", Instant.EPOCH, 40, 30, 15, 15, 80, 10);
             CompletionDataPoint c = new CompletionDataPoint(
                     CYCLE_ID, "W1", Instant.EPOCH, 70, 12, 5, 10, 8);
-            when(analyticsService.computeAlignmentTrend(ORG_ID, weekCount)).thenReturn(List.of(a));
-            when(analyticsService.computeCompletionTrend(ORG_ID, weekCount)).thenReturn(List.of(c));
+            when(analyticsService.computeAlignmentTrend(eq(ORG_ID), any(TimeScope.class))).thenReturn(List.of(a));
+            when(analyticsService.computeCompletionTrend(eq(ORG_ID), any(TimeScope.class))).thenReturn(List.of(c));
         }
     }
 

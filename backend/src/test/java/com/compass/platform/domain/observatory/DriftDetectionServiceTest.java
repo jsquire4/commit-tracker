@@ -17,6 +17,7 @@ import com.compass.platform.domain.observatory.dto.IntegrityFlag;
 import com.compass.platform.domain.observatory.dto.IntegrityFlagType;
 import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.TeamAlignmentTrend;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.rcdo.RallyCry;
 import com.compass.platform.domain.rcdo.RallyCryRepository;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
@@ -109,9 +110,9 @@ class DriftDetectionServiceTest {
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
         when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -145,9 +146,9 @@ class DriftDetectionServiceTest {
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
         when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -181,9 +182,9 @@ class DriftDetectionServiceTest {
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(tightConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
         when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(8), any()))
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(8), any()))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());
@@ -214,9 +215,9 @@ class DriftDetectionServiceTest {
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(defaultConfig));
         when(userRepository.findByOrgIdAndIsActiveTrue(orgId)).thenReturn(List.of(manager));
         when(userRepository.findSubtreeUserIds(managerId)).thenReturn(List.of());
-        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(trend);
-        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), eq(12), any()))
+        when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(managerId), any(TimeScope.class), any()))
                 .thenReturn(List.of());
         when(rallyCryRepository.findByOrgIdAndArchivedAtIsNullOrderBySortOrderAsc(orgId))
                 .thenReturn(List.of());

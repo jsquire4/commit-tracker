@@ -17,6 +17,8 @@ import { useExecutiveHealth } from '@/hooks/useObservatory';
 import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments } from '@/hooks/useCommitments';
 import { useBriefing } from '@/hooks/useBriefing';
+import { useDateRange } from '@/hooks/useDateRange';
+import { useTransitionKey } from '@/hooks/useTransitionKey';
 import { DrillDownBreadcrumb } from './DrillDownBreadcrumb';
 import { BriefingNarrativeCard } from './BriefingNarrativeCard';
 import { BriefingMetricsStrip } from './BriefingMetricsStrip';
@@ -64,11 +66,14 @@ export function BriefingView() {
   const { toast, toasts, dismiss } = useToast();
 
   // All hooks must be called before any conditional returns (Rules of Hooks)
+  const { activeCycle: dateRangeCycle, weekCount } = useDateRange();
+  const { transitionClass } = useTransitionKey();
   const { data: rcdoTree } = useRcdoTree();
-  const { data: health } = useExecutiveHealth();
+  const { data: health } = useExecutiveHealth(weekCount);
   const { data: cycle } = useCurrentCycle();
-  const { data: commitments } = useCommitments(cycle?.id ?? '');
-  const { data: briefing, isLoading: briefingLoading } = useBriefing(cycle?.id);
+  const resolvedCycle = dateRangeCycle ?? cycle;
+  const { data: commitments } = useCommitments(resolvedCycle?.id ?? '');
+  const { data: briefing, isLoading: briefingLoading } = useBriefing(resolvedCycle?.id);
 
   const handleExportPdf = useCallback(() => {
     if (!mainColumnRef.current) return;
@@ -116,7 +121,7 @@ export function BriefingView() {
   const showBriefingHome = drill.mode === 'briefing' && drill.depth === 0;
 
   return (
-    <div className="min-h-screen bg-surface text-on-surface">
+    <div className={`min-h-screen bg-surface text-on-surface ${transitionClass}`}>
       {/* Mode switcher (only at top level) */}
       {showModeTabs && (
         <div className="flex items-center gap-1 px-8 pt-4">
