@@ -29,13 +29,13 @@ public interface CycleRepository extends JpaRepository<Cycle, UUID> {
 
     @Query(value = "SELECT * FROM cycles WHERE org_id = :orgId"
          + " AND (CAST(:state AS text) IS NULL OR state = :state)"
-         + " AND (:dateFrom IS NULL OR starts_at >= :dateFrom)"
-         + " AND (:dateTo IS NULL OR starts_at <= :dateTo)"
+         + " AND (CAST(:dateFrom AS timestamp) IS NULL OR starts_at >= :dateFrom)"
+         + " AND (CAST(:dateTo AS timestamp) IS NULL OR starts_at <= :dateTo)"
          + " ORDER BY starts_at DESC",
          countQuery = "SELECT COUNT(*) FROM cycles WHERE org_id = :orgId"
          + " AND (CAST(:state AS text) IS NULL OR state = :state)"
-         + " AND (:dateFrom IS NULL OR starts_at >= :dateFrom)"
-         + " AND (:dateTo IS NULL OR starts_at <= :dateTo)",
+         + " AND (CAST(:dateFrom AS timestamp) IS NULL OR starts_at >= :dateFrom)"
+         + " AND (CAST(:dateTo AS timestamp) IS NULL OR starts_at <= :dateTo)",
          nativeQuery = true)
     Page<Cycle> findByOrgIdWithFilters(@Param("orgId") UUID orgId,
                                        @Param("state") String state,
