@@ -215,6 +215,7 @@ export function BriefingView() {
           <TeamDetailLevel
             teamId={drill.teamId}
             onSelectPerson={(personId) => { drill.drillTo({ rc: drill.rallyCryId!, team: drill.teamId!, person: personId }); }}
+            onSelectTeam={(subTeamId) => { drill.drillTo({ ...(drill.rallyCryId ? { rc: drill.rallyCryId } : {}), team: subTeamId }); }}
           />
         </div>
       )}

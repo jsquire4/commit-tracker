@@ -89,7 +89,7 @@ export function DarkWorkAttribution({ commitments }: DarkWorkAttributionProps) {
   return (
     <div className="bg-surface-lowest border border-outline-variant rounded-lg p-6">
       <h2 className="text-lg font-semibold text-on-surface mb-1">
-        Dark Work Attribution
+        Unplanned Work Attribution
       </h2>
       <p className="text-sm text-muted mb-4">
         Manager-assigned vs self-directed commitments by chess category

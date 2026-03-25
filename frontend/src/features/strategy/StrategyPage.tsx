@@ -351,7 +351,7 @@ export function StrategyPage() {
             className="min-w-[340px] max-w-[440px] flex-[1_0_340px]
               flex items-center justify-center gap-2
               px-5 py-5 text-[0.9375rem] font-medium text-accent
-              bg-transparent border-[1.5px] border-dashed border-outline-variant rounded-sm
+              bg-surface-container-low border-[1.5px] border-dashed border-outline-variant/40 rounded-sm
               cursor-pointer self-stretch
               transition-all duration-[150ms]
               hover:bg-accent/[0.04] hover:border-accent

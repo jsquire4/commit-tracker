@@ -71,7 +71,7 @@ const FIELD_META: {
   },
   {
     key: 'darkWorkWarningPct',
-    label: 'Dark Work Warning Threshold (%)',
+    label: 'Unplanned Work Warning Threshold (%)',
     description: 'Warn when manager-assigned work exceeds this percentage.',
     min: 0,
     max: 100,

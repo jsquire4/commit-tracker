@@ -96,7 +96,7 @@ export function ManagerCard({ unit, index, onClick, sparklineData }: ManagerCard
         <span
           className={`text-[10px] font-bold uppercase tracking-wider ${HEALTH_TEXT[unit.grade]}`}
         >
-          {unit.grade}
+          {unit.grade === 'GREEN' ? 'High Coverage' : unit.grade === 'YELLOW' ? 'Partial Coverage' : 'Low Coverage'}
         </span>
 
         {/* Sparkline trend */}

@@ -185,7 +185,7 @@ export function VPSection({ group, sectionIndex, sparklineMap, onSelectTeam }: V
           VP: {group.vpName}
         </h3>
         <span className={`text-sm font-bold ${HEALTH_TEXT[group.vpGrade]}`}>
-          ({group.vpGrade} {trendArrow(group.vpTrend)})
+          ({group.vpGrade === 'GREEN' ? 'High Coverage' : group.vpGrade === 'YELLOW' ? 'Partial Coverage' : 'Low Coverage'} {trendArrow(group.vpTrend)})
         </span>
         <div className="flex-1 h-px bg-outline-variant" />
       </div>

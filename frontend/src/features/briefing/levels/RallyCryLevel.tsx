@@ -263,7 +263,7 @@ export function RallyCryLevel({ onSelectRallyCry, onDrillToTeam }: RallyCryLevel
             <ul className="space-y-3">
               {watchItems.map((item) => (
                 <li key={item.id} className="flex items-start gap-3">
-                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.severity === 'critical' ? 'bg-error' : 'bg-warning'}`} />
+                  <span className={`mt-1.5 w-1.5 h-1.5 rounded-full flex-shrink-0 ${item.severity === 'critical' ? 'bg-surface-container-high' : 'bg-surface-container'}`} />
                   {item.drillTarget?.team ? (
                     <button
                       type="button"

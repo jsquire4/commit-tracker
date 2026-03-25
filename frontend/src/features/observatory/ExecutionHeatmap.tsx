@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgramHeatmap } from '@/hooks/useObservatory';
+import { useAuth } from '@/hooks/useAuth';
 import { LoadingSpinner } from '@/components/LoadingSpinner';
 import type { ManagerHeatmapRow, PersonHeatmapRow } from '@/types';
 import { CHESS_CELL_COLORS, HeatmapCell } from './HeatmapCell';
@@ -62,9 +63,10 @@ interface ManagerRowProps {
   weekLabels: string[];
   isExpanded: boolean;
   onToggle: () => void;
+  authUserId: string;
 }
 
-function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) {
+function ManagerRow({ row, weekLabels, isExpanded, onToggle, authUserId }: ManagerRowProps) {
   const navigate = useNavigate();
   // The manager row's weekCells represent team-averaged CHESS data (not the manager's personal data).
   const cellsByLabel = new Map(row.weekCells.map((c) => [c.cycleLabel, c]));
@@ -78,12 +80,12 @@ function ManagerRow({ row, weekLabels, isExpanded, onToggle }: ManagerRowProps) 
   // Build the child list: manager's own personal row first, then other team members.
   // If the manager is already in the members list (backend includes them), deduplicate.
   // NOTE (M5): The synthetic "(you)" row reuses row.weekCells which is team-averaged data,
-  // not the manager's personal commitment data. It is shown as a placeholder when the
-  // backend does not include the manager in the members list.
+  // not the manager's personal commitment data. It is shown only for the authenticated user.
+  const isCurrentUser = row.managerId === authUserId;
   const managerPersonalRow: PersonHeatmapRow = {
     userId: row.managerId,
-    // Asterisk denotes team-averaged data, not personal data (see legend note below)
-    displayName: `${row.managerName} (you)*`,
+    // Only label as "(you)*" when this manager IS the authenticated user
+    displayName: isCurrentUser ? `${row.managerName} (you)*` : row.managerName,
     weekCells: row.weekCells,
   };
   const memberIds = new Set(row.members.map((m) => m.userId));
@@ -223,6 +225,7 @@ interface ExecutionHeatmapProps {
 
 export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
   const { data, isLoading, isError } = useProgramHeatmap(weekCount);
+  const { userId: authUserId } = useAuth();
   const [expandedManagers, setExpandedManagers] = useState<Set<string>>(new Set());
 
   function toggleManager(managerId: string) {
@@ -280,7 +283,7 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
     <div className="bg-surface-lowest border border-outline-variant rounded-lg overflow-hidden">
       {/* Scrollable table wrapper */}
       <div className="overflow-x-auto">
-        <table className="w-full border-collapse" style={{ tableLayout: 'fixed' }}>
+        <table className="border-collapse" style={{ tableLayout: 'fixed', width: 'max-content', minWidth: '100%' }}>
           <colgroup>
             {/* Name column — fixed min width, rest shrink */}
             <col style={{ minWidth: 200 }} />
@@ -319,6 +322,7 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
                 weekLabels={weekLabels}
                 isExpanded={expandedManagers.has(manager.managerId)}
                 onToggle={() => { toggleManager(manager.managerId); }}
+                authUserId={authUserId}
               />
             ))}
           </tbody>

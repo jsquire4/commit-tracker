@@ -25,9 +25,11 @@ import { DarkWorkAttribution } from '@/features/observatory/DarkWorkAttribution'
 interface TeamDetailLevelProps {
   teamId: string;
   onSelectPerson: (personId: string) => void;
+  /** Optional: called when a clicked member is themselves a manager (drill to their team). */
+  onSelectTeam?: (teamId: string) => void;
 }
 
-export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps) {
+export function TeamDetailLevel({ teamId, onSelectPerson, onSelectTeam }: TeamDetailLevelProps) {
   const { data: cycle } = useCurrentCycle();
   const cycleId = cycle?.id ?? '';
 
@@ -89,11 +91,14 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
   const teamCarryChains = carryChains.filter((chain) => teamMemberIds.has(chain.userId));
   const carryForwardCount = teamCarryChains.length;
 
+  // Track which direct reports are themselves managers (have an entry in healthUnits).
+  const managerIds = new Set(healthUnits.map((u) => u.managerId));
+
   // Group commitments by person for click-through.
   // Seed the map from directReports so members with zero commitments are still shown.
-  const byPerson = new Map<string, { name: string; count: number }>();
+  const byPerson = new Map<string, { name: string; count: number; isManager: boolean }>();
   for (const u of directReports) {
-    byPerson.set(u.id, { name: u.displayName, count: 0 });
+    byPerson.set(u.id, { name: u.displayName, count: 0, isManager: managerIds.has(u.id) });
   }
   for (const c of commitments) {
     if (byPerson.has(c.userId)) {
@@ -107,6 +112,12 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
     RED: 'at-risk',
   };
 
+  const gradeLabel: Record<string, string> = {
+    GREEN: 'High Coverage',
+    YELLOW: 'Partial Coverage',
+    RED: 'Low Coverage',
+  };
+
   return (
     <div className="max-w-[1280px] mx-auto px-8 py-6 space-y-6">
       {/* Header */}
@@ -115,7 +126,7 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
           <h1 className="font-serif text-headline text-on-surface font-normal">{managerName}</h1>
           {managerUnit?.grade && (
             <Badge variant="status" color={gradeColor[managerUnit.grade] ?? 'on-track'}>
-              {managerUnit.grade}
+              {gradeLabel[managerUnit.grade] ?? managerUnit.grade}
             </Badge>
           )}
         </div>
@@ -129,7 +140,7 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
         </p>
       </div>
 
-      {/* Team members — click to drill to person */}
+      {/* Team members — managers drill to their team; ICs drill to person detail */}
       {byPerson.size > 0 && (
         <section className="animate-fade-up" style={{ animationDelay: '40ms' }}>
           <h2 className="text-body font-medium text-on-surface mb-3">Team Members</h2>
@@ -138,11 +149,19 @@ export function TeamDetailLevel({ teamId, onSelectPerson }: TeamDetailLevelProps
               <button
                 key={userId}
                 type="button"
-                onClick={() => { onSelectPerson(userId); }}
+                onClick={() => {
+                  if (data.isManager && onSelectTeam) {
+                    onSelectTeam(userId);
+                  } else {
+                    onSelectPerson(userId);
+                  }
+                }}
                 className="px-3 py-1.5 text-body bg-surface-lowest rounded-sm hover:bg-surface-container-low transition-colors"
                 style={{ transitionDuration: 'var(--duration-fast, 150ms)' }}
+                title={data.isManager ? `View ${data.name}'s team` : undefined}
               >
                 <span className="text-on-surface">{data.name}</span>
+                {data.isManager && <span className="text-accent ml-1 text-[0.75rem]">›</span>}
                 <span className="text-muted ml-1.5">({data.count})</span>
               </button>
             ))}
