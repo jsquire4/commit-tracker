@@ -13,7 +13,7 @@ import { ReconciliationBottomBar } from '@/features/reconciliation/Reconciliatio
 import { CoverageStrip } from './CoverageStrip';
 import { CommitmentSummaryStrip } from './CommitmentSummaryStrip';
 import { RallyCrySidebar } from './RallyCrySidebar';
-import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
+// CycleHistorySelector removed — global date range selector in Layout handles this
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';
@@ -139,13 +139,7 @@ export function MyWeekPage() {
           <div className="bg-surface-lowest rounded-sm p-4 flex items-center justify-between gap-4 flex-wrap overflow-hidden">
             <div className="flex items-center gap-3 min-w-0 overflow-hidden">
               <CycleStateIndicator currentState={cycleState} />
-              <CycleHistorySelector
-                currentCycleId={cycleId}
-                onSelect={(id) => {
-                  // If selecting the current cycle, clear the override
-                  setSelectedCycleId(id === currentCycle?.id ? null : id);
-                }}
-              />
+              <span className="text-small text-on-surface-variant">{cycle?.label ?? ''}</span>
             </div>
             <TransitionActions
               cycle={cycle}
