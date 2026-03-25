@@ -15,6 +15,7 @@ import com.compass.platform.domain.observatory.dto.IntegrityFlagType;
 import com.compass.platform.domain.observatory.dto.IntegrityReport;
 import com.compass.platform.domain.observatory.dto.OrgUnitHealth;
 import com.compass.platform.domain.observatory.dto.TeamAlignmentTrend;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.TrendDirection;
 import com.compass.platform.domain.user.AppUser;
 import com.compass.platform.domain.user.AppUserRepository;
@@ -109,13 +110,13 @@ class ExecutiveHealthComposerTest {
         return user;
     }
 
-    private void stubMinimalComputeHealth(int weekCount) {
+    private void stubMinimalComputeHealth() {
         when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
         when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
 
-        when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+        when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-        when(analyticsService.computeCompletionTrend(orgId, weekCount))
+        when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                 .thenReturn(List.of(completionPoint(72.0, 15.0)));
 
         when(driftDetectionService.detectDrift(orgId))
@@ -189,9 +190,9 @@ class ExecutiveHealthComposerTest {
         @Test
         void assemblesAllFieldsCorrectly() {
             int weekCount = 8;
-            stubMinimalComputeHealth(weekCount);
+            stubMinimalComputeHealth();
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.orgId()).isEqualTo(orgId);
             assertThat(resp.orgName()).isEqualTo("Acme Corp");
@@ -211,9 +212,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
 
             // Two active signals (EMERGING + SUSTAINED) and one hypothetically re-used STRUCTURAL
@@ -229,7 +230,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.activeDriftSignals()).isEqualTo(3);
         }
@@ -239,9 +240,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -250,7 +251,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.integrityFlags()).isEqualTo(2);
         }
@@ -259,7 +260,7 @@ class ExecutiveHealthComposerTest {
         void throwsIllegalArgumentException_whenOrgNotFound() {
             when(orgRepository.findById(orgId)).thenReturn(Optional.empty());
 
-            assertThatThrownBy(() -> composer.computeHealth(orgId, 4))
+            assertThatThrownBy(() -> composer.computeHealth(orgId, TimeScope.ofWeeks(4)))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessageContaining(orgId.toString());
         }
@@ -270,11 +271,11 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount)).thenReturn(List.of(
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class))).thenReturn(List.of(
                     alignmentPoint(70.0, 80.0),   // earlier — GREEN
                     alignmentPoint(30.0, 50.0)    // most recent — RED
             ));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(60.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -283,7 +284,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.overallGrade()).isEqualTo(HealthGrade.RED);
             assertThat(resp.strategicAlignmentPct()).isCloseTo(30.0, within(0.001));
@@ -304,9 +305,9 @@ class ExecutiveHealthComposerTest {
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.empty());
 
             // 65% is above the default strategic target of 60 → should be GREEN
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -315,7 +316,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             // Default config thresholds (from ObservatoryConfig field defaults):
             //   strategicAlignmentTarget = 60.0  → GREEN when alignment >= 60
@@ -332,9 +333,9 @@ class ExecutiveHealthComposerTest {
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.empty());
 
             // 30% is below the default warning of 40 → should be RED
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(30.0, 50.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(50.0, 20.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -343,7 +344,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             // 30% < 40% (default misalignmentWarningPct) → RED
             assertThat(resp.overallGrade()).isEqualTo(HealthGrade.RED);
@@ -355,9 +356,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.empty());
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -366,7 +367,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            composer.computeHealth(orgId, weekCount);
+            composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             verify(configRepository, never()).save(any());
         }
@@ -384,9 +385,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(Collections.emptyList());
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -395,7 +396,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.strategicAlignmentPct()).isZero();
             assertThat(resp.rallyCoveragePct()).isZero();
@@ -407,9 +408,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(Collections.emptyList());
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -418,7 +419,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.completionRate()).isZero();
             assertThat(resp.carryForwardRate()).isZero();
@@ -429,9 +430,9 @@ class ExecutiveHealthComposerTest {
             int weekCount = 4;
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(null, Instant.now())); // null signals list
@@ -440,7 +441,7 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.activeDriftSignals()).isZero();
         }
@@ -448,10 +449,10 @@ class ExecutiveHealthComposerTest {
         @Test
         void noLeaders_yieldsEmptyUnitList() {
             int weekCount = 4;
-            stubMinimalComputeHealth(weekCount);
+            stubMinimalComputeHealth();
             // stubMinimalComputeHealth already stubs findByOrgIdAndRoleIn → empty list
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units()).isEmpty();
         }
@@ -476,9 +477,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -494,17 +495,17 @@ class ExecutiveHealthComposerTest {
             TeamAlignmentTrend dirTrend = new TeamAlignmentTrend(dirId, "Bob Director", "DIRECTOR", 3,
                     List.of(alignmentPoint(50.0, 60.0)));
 
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount)).thenReturn(vpTrend);
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class))).thenReturn(vpTrend);
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(75.0, 12.0)));
             when(userRepository.findSubtreeUserIds(vpId)).thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
 
-            when(analyticsService.computeTeamAlignmentTrend(orgId, dirId, weekCount)).thenReturn(dirTrend);
-            when(analyticsService.computeTeamCompletionTrend(orgId, dirId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(dirId), any(TimeScope.class))).thenReturn(dirTrend);
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(dirId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(60.0, 20.0)));
             when(userRepository.findSubtreeUserIds(dirId)).thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units()).hasSize(2);
         }
@@ -517,9 +518,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -530,13 +531,13 @@ class ExecutiveHealthComposerTest {
 
             TeamAlignmentTrend vpTrend = new TeamAlignmentTrend(vpId, "Carol VP", "VP", 4,
                     List.of(alignmentPoint(62.0, 75.0)));
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount)).thenReturn(vpTrend);
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class))).thenReturn(vpTrend);
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(68.0, 8.0)));
             when(userRepository.findSubtreeUserIds(vpId))
                     .thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID()));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             OrgUnitHealth unit = resp.units().get(0);
             assertThat(unit.managerId()).isEqualTo(vpId);
@@ -557,9 +558,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -568,12 +569,12 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of(vpUser));
 
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount)).thenReturn(null);
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class))).thenReturn(null);
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(Collections.emptyList());
             when(userRepository.findSubtreeUserIds(vpId)).thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             OrgUnitHealth unit = resp.units().get(0);
             assertThat(unit.strategicAlignmentPct()).isZero();
@@ -590,9 +591,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -606,13 +607,13 @@ class ExecutiveHealthComposerTest {
                     UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID(),
                     UUID.randomUUID(), UUID.randomUUID(), UUID.randomUUID());
             when(userRepository.findSubtreeUserIds(vpId)).thenReturn(subtree);
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Eve VP", "VP", 10,
                             List.of(alignmentPoint(65.0, 80.0))));
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).headcount()).isEqualTo(10);
         }
@@ -634,12 +635,12 @@ class ExecutiveHealthComposerTest {
             vpUser = vp(vpId, "Frank VP");
         }
 
-        private void stubOrgLevel(int weekCount) {
+        private void stubOrgLevel() {
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -648,14 +649,14 @@ class ExecutiveHealthComposerTest {
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of(vpUser));
             when(userRepository.findSubtreeUserIds(vpId)).thenReturn(List.of(UUID.randomUUID(), UUID.randomUUID()));
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
         }
 
         @Test
         void trendDirection_declining_whenValuesConsistentlyFalling() {
             int weekCount = 4;
-            stubOrgLevel(weekCount);
+            stubOrgLevel();
 
             // Strictly declining sequence: 70 → 65 → 58 → 50 (all drops > 2.0 tolerance)
             List<AlignmentDataPoint> declining = List.of(
@@ -664,10 +665,10 @@ class ExecutiveHealthComposerTest {
                     alignmentPoint(58.0, 70.0),
                     alignmentPoint(50.0, 65.0)
             );
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Frank VP", "VP", 2, declining));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).trendDirection()).isEqualTo("declining");
             assertThat(resp.units().get(0).weeksTrending()).isLessThan(0); // negative = declining streak
@@ -676,7 +677,7 @@ class ExecutiveHealthComposerTest {
         @Test
         void trendDirection_improving_whenValuesConsistentlyRising() {
             int weekCount = 4;
-            stubOrgLevel(weekCount);
+            stubOrgLevel();
 
             // Strictly improving sequence: 45 → 52 → 60 → 68 (all gains > 2.0 tolerance)
             List<AlignmentDataPoint> improving = List.of(
@@ -685,10 +686,10 @@ class ExecutiveHealthComposerTest {
                     alignmentPoint(60.0, 68.0),
                     alignmentPoint(68.0, 75.0)
             );
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Frank VP", "VP", 2, improving));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).trendDirection()).isEqualTo("improving");
             assertThat(resp.units().get(0).weeksTrending()).isGreaterThan(0); // positive = improving streak
@@ -697,7 +698,7 @@ class ExecutiveHealthComposerTest {
         @Test
         void trendDirection_flat_whenValuesWithinTolerance() {
             int weekCount = 4;
-            stubOrgLevel(weekCount);
+            stubOrgLevel();
 
             // Tiny fluctuations within ±2.0 tolerance → FLAT
             List<AlignmentDataPoint> flat = List.of(
@@ -706,10 +707,10 @@ class ExecutiveHealthComposerTest {
                     alignmentPoint(60.5, 70.5),
                     alignmentPoint(60.8, 70.8)
             );
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Frank VP", "VP", 2, flat));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).trendDirection()).isEqualTo("flat");
             assertThat(resp.units().get(0).weeksTrending()).isZero();
@@ -718,12 +719,12 @@ class ExecutiveHealthComposerTest {
         @Test
         void weeksTrending_isZero_forEmptyDataPoints() {
             int weekCount = 4;
-            stubOrgLevel(weekCount);
+            stubOrgLevel();
 
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Frank VP", "VP", 2, List.of()));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).weeksTrending()).isZero();
             assertThat(resp.units().get(0).trendDirection()).isEqualTo("flat");
@@ -764,9 +765,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -774,15 +775,15 @@ class ExecutiveHealthComposerTest {
                     .thenReturn(new IntegrityReport(List.of()));
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of(vpUser));
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Grace VP", "VP", 3,
                             List.of(alignmentPoint(65.0, 80.0))));
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(userRepository.findSubtreeUserIds(vpId))
                     .thenReturn(List.of(dr1.getId(), dr2.getId(), dr3.getId()));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             // 2 + 3 + 5 = 10
             assertThat(resp.units().get(0).costBandWeightedHeadcount()).isEqualTo(10);
@@ -807,9 +808,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -817,15 +818,15 @@ class ExecutiveHealthComposerTest {
                     .thenReturn(new IntegrityReport(List.of()));
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of(vpUser));
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Hank VP", "VP", 2,
                             List.of(alignmentPoint(65.0, 80.0))));
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(userRepository.findSubtreeUserIds(vpId))
                     .thenReturn(List.of(dr1.getId(), dr2.getId()));
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             // 0 (null band) + 4 = 4
             assertThat(resp.units().get(0).costBandWeightedHeadcount()).isEqualTo(4);
@@ -843,9 +844,9 @@ class ExecutiveHealthComposerTest {
 
             when(orgRepository.findById(orgId)).thenReturn(Optional.of(org));
             when(configRepository.findByOrgId(orgId)).thenReturn(Optional.of(config));
-            when(analyticsService.computeAlignmentTrend(orgId, weekCount))
+            when(analyticsService.computeAlignmentTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(alignmentPoint(65.0, 80.0)));
-            when(analyticsService.computeCompletionTrend(orgId, weekCount))
+            when(analyticsService.computeCompletionTrend(eq(orgId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(driftDetectionService.detectDrift(orgId))
                     .thenReturn(new DriftReport(List.of(), Instant.now()));
@@ -853,14 +854,14 @@ class ExecutiveHealthComposerTest {
                     .thenReturn(new IntegrityReport(List.of()));
             when(userRepository.findByOrgIdAndRoleIn(eq(orgId), any()))
                     .thenReturn(List.of(vpUser));
-            when(analyticsService.computeTeamAlignmentTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamAlignmentTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(new TeamAlignmentTrend(vpId, "Iris VP", "VP", 0,
                             List.of(alignmentPoint(65.0, 80.0))));
-            when(analyticsService.computeTeamCompletionTrend(orgId, vpId, weekCount))
+            when(analyticsService.computeTeamCompletionTrend(eq(orgId), eq(vpId), any(TimeScope.class)))
                     .thenReturn(List.of(completionPoint(70.0, 10.0)));
             when(userRepository.findSubtreeUserIds(vpId)).thenReturn(List.of());
 
-            ExecutiveHealthResponse resp = composer.computeHealth(orgId, weekCount);
+            ExecutiveHealthResponse resp = composer.computeHealth(orgId, TimeScope.ofWeeks(weekCount));
 
             assertThat(resp.units().get(0).costBandWeightedHeadcount()).isZero();
         }

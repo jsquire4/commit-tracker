@@ -11,6 +11,7 @@ import com.compass.platform.domain.observatory.dto.CategoryCount;
 import com.compass.platform.domain.observatory.dto.DisplacementSummary;
 import com.compass.platform.domain.observatory.dto.ManagerDisplacementReport;
 import com.compass.platform.domain.observatory.dto.NoteCluster;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.reconciliation.ReconciliationRecord;
 import com.compass.platform.domain.reconciliation.ReconciliationRecordRepository;
 import com.compass.platform.domain.user.AppUser;
@@ -112,7 +113,7 @@ class DisplacementServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
 
-        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 3);
+        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), TimeScope.ofWeeks(3));
 
         assertThat(summary.totalDisplacements()).isEqualTo(10);
         assertThat(summary.byCategory()).hasSize(3);
@@ -152,7 +153,7 @@ class DisplacementServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
 
-        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 2);
+        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), TimeScope.ofWeeks(2));
 
         assertThat(summary.byCategory()).hasSize(3);
         // First item must have the highest count
@@ -164,7 +165,7 @@ class DisplacementServiceTest {
     void aggregateDisplacements_noCycles_returnsEmpty() {
         when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any())).thenReturn(List.of());
 
-        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 4);
+        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), TimeScope.ofWeeks(4));
 
         assertThat(summary.totalDisplacements()).isEqualTo(0);
         assertThat(summary.byCategory()).isEmpty();
@@ -185,7 +186,7 @@ class DisplacementServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
 
-        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 3);
+        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), TimeScope.ofWeeks(3));
 
         Map<Integer, Integer> trend = summary.weeklyTrend();
         // Index 0 = oldest (cycle1), index 1 = cycle2, index 2 = newest (cycle3)
@@ -207,7 +208,7 @@ class DisplacementServiceTest {
         when(reconciliationRecordRepository.findByOrgIdAndCycleIdIn(eq(org.getId()), any(Collection.class)))
                 .thenReturn(records);
 
-        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), 2);
+        DisplacementSummary summary = displacementService.aggregateDisplacements(org.getId(), TimeScope.ofWeeks(2));
 
         assertThat(summary.totalDisplacements()).isEqualTo(2);
         assertThat(summary.weeklyTrend()).hasSize(2);
@@ -245,7 +246,7 @@ class DisplacementServiceTest {
                 .thenReturn(records);
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 3);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(3));
 
         assertThat(result).containsKey(DisplacementCategory.PRODUCTION_EMERGENCY);
         assertThat(result).containsKey(DisplacementCategory.EXTERNAL_DEPENDENCY);
@@ -282,7 +283,7 @@ class DisplacementServiceTest {
                 .thenReturn(records);
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 1);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(1));
 
         List<NoteCluster> clusters = result.getOrDefault(DisplacementCategory.SCOPE_CHANGE, List.of());
         // "big scope" and "scope change" should be found; "the big" must NOT appear
@@ -307,7 +308,7 @@ class DisplacementServiceTest {
                 .thenReturn(records);
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 1);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(1));
 
         assertThat(result).isEmpty();
     }
@@ -329,7 +330,7 @@ class DisplacementServiceTest {
                 .thenReturn(records);
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 3);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(3));
 
         List<NoteCluster> clusters = result.getOrDefault(DisplacementCategory.SCOPE_CHANGE, List.of());
         NoteCluster scopeCreep = clusters.stream()
@@ -354,7 +355,7 @@ class DisplacementServiceTest {
                 .thenReturn(records);
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 2);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(2));
 
         List<NoteCluster> clusters = result.getOrDefault(DisplacementCategory.RESOURCE_BLOCKED, List.of());
         NoteCluster resourceBlocked = clusters.stream()
@@ -370,7 +371,7 @@ class DisplacementServiceTest {
         when(cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(eq(org.getId()), any())).thenReturn(List.of());
 
         Map<DisplacementCategory, List<NoteCluster>> result =
-                displacementService.clusterDisplacementNotes(org.getId(), 4);
+                displacementService.clusterDisplacementNotes(org.getId(), TimeScope.ofWeeks(4));
 
         assertThat(result).isEmpty();
     }
@@ -400,7 +401,7 @@ class DisplacementServiceTest {
                 .thenReturn(allOrgRecords);
 
         ManagerDisplacementReport report =
-                displacementService.getDisplacementsByManager(org.getId(), manager.getId(), 1);
+                displacementService.getDisplacementsByManager(org.getId(), manager.getId(), TimeScope.ofWeeks(1));
 
         // Only the 2 team records should be counted, not the outsider's
         assertThat(report.totalDisplacements()).isEqualTo(2);
