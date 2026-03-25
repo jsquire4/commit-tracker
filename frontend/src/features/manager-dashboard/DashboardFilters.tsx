@@ -44,26 +44,6 @@ export function DashboardFilters({
     }
   }
 
-  function handleFromChange(value: string) {
-    if (value) {
-      onChange({ cycleWeekStart: `${value}T00:00:00Z` });
-    } else {
-      // Clear both dates when From is cleared — use reset then re-apply non-date filters
-      resetDashboardFilters();
-    }
-  }
-
-  function handleToChange(value: string) {
-    if (value) {
-      onChange({ cycleWeekEnd: `${value}T00:00:00Z` });
-    } else {
-      // Clear just the end date by resetting and re-applying start + other filters
-      const { cycleWeekEnd: _, ...rest } = filters;
-      resetDashboardFilters();
-      onChange(rest);
-    }
-  }
-
   function handleSubtreeChange(checked: boolean) {
     if (checked) {
       onChange({ includeSubtree: true });
@@ -112,33 +92,6 @@ export function DashboardFilters({
             </option>
           ))}
         </select>
-      </div>
-
-      {/* Date range selectors */}
-      <div className="flex flex-col gap-1 min-w-[140px]">
-        <label htmlFor="filter-from" className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
-          From
-        </label>
-        <input
-          id="filter-from"
-          type="date"
-          className="rounded-md border border-outline-variant bg-surface-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-accent"
-          value={filters.cycleWeekStart ? filters.cycleWeekStart.substring(0, 10) : ''}
-          onChange={(e) => { handleFromChange(e.target.value); }}
-        />
-      </div>
-      <div className="flex flex-col gap-1 min-w-[140px]">
-        <label htmlFor="filter-to" className="text-xs font-medium text-on-surface-variant uppercase tracking-wide">
-          To
-        </label>
-        <input
-          id="filter-to"
-          type="date"
-          className="rounded-md border border-outline-variant bg-surface-lowest px-3 py-2 text-sm text-on-surface focus:outline-none focus:ring-2 focus:ring-accent"
-          value={filters.cycleWeekEnd ? filters.cycleWeekEnd.substring(0, 10) : ''}
-          min={filters.cycleWeekStart ? filters.cycleWeekStart.substring(0, 10) : ''}
-          onChange={(e) => { handleToChange(e.target.value); }}
-        />
       </div>
 
       {/* Include subtree toggle — Director and above only */}

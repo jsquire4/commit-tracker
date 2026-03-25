@@ -9,6 +9,8 @@ interface TeamSummaryCardProps {
   commitments: Commitment[];
   cycleId: string;
   cycleWeekStart?: string;
+  cycleWeekEnd?: string;
+  hasDraftData?: boolean;
 }
 
 interface SuggestedAction {
@@ -60,7 +62,7 @@ function buildSummary(dashboard: DashboardResponse, commitments: Commitment[]): 
 
   const headline = 'Team Summary';
   const narrative =
-    `Your team of ${teamSize} has ${linkedPct}% of commitments linked to rally cries this cycle.` +
+    `The team of ${teamSize} has ${total} commitment${total !== 1 ? 's' : ''} in this period with ${linkedPct}% linked to rally cries.` +
     (unlinked > 0 ? ` ${unlinked} commitment${unlinked !== 1 ? 's remain' : ' remains'} unlinked.` : '') +
     (carried > 0 ? ` Carry-forward rate is ${carryPct}%.` : '') +
     (uncovered.length > 0 ? ` ${uncovered.length} objective${uncovered.length !== 1 ? 's have' : ' has'} zero coverage.` : '');
@@ -68,10 +70,9 @@ function buildSummary(dashboard: DashboardResponse, commitments: Commitment[]): 
   return { headline, narrative, actions };
 }
 
-export function TeamSummaryCard({ dashboard, commitments, cycleId, cycleWeekStart }: TeamSummaryCardProps) {
-  // cycleWeekStart is passed from MyTeamPage via DashboardFilters selection and forwarded here
-  // to scope the LLM summary to the selected historical cycle. When undefined, defaults to the
-  // current cycle (backend determines the current week from context).
+export function TeamSummaryCard({ dashboard, commitments, cycleId, cycleWeekStart, cycleWeekEnd: _cycleWeekEnd, hasDraftData }: TeamSummaryCardProps) {
+  // Scope the LLM summary to the selected date range.
+  // When undefined, defaults to the current cycle.
   const { data: llmSummary, isLoading } = useTeamSummary(cycleWeekStart);
 
   // Use LLM response when available; fall back to deterministic while loading or when null
@@ -109,6 +110,11 @@ export function TeamSummaryCard({ dashboard, commitments, cycleId, cycleWeekStar
           </li>
         ))}
       </ul>
+      {hasDraftData && (
+        <p className="text-small text-muted mt-4 italic">
+          Note: This summary includes data from weeks that have not been locked or reconciled. Numbers may change as team members finalize their commitments.
+        </p>
+      )}
       <AIAttribution scope="TEAM_SUMMARY" cycleId={cycleId} />
     </Card>
   );
