@@ -11,7 +11,9 @@
 import { useState, useMemo } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { VP_AND_ABOVE } from '@/constants/roles';
-import { useObservatoryDashboard, useAlignmentTrend } from '@/hooks/useObservatory';
+import { useObservatoryDashboard } from '@/hooks/useObservatory';
+import { useDateRange } from '@/hooks/useDateRange';
+import { useTransitionKey } from '@/hooks/useTransitionKey';
 import { ProgramSummary } from './ProgramSummary';
 import { ExecutionTrendChart } from './ExecutionTrendChart';
 import { TeamTrajectories } from './TeamTrajectories';
@@ -41,20 +43,6 @@ function KpiTile({ label, value, unit }: KpiTileProps) {
       </span>
     </div>
   );
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-
-/** Format a ISO date string as "MMM d" (e.g. "Mar 16"). */
-function formatCycleDate(startsAt: string): string {
-  try {
-    return new Date(startsAt).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-    });
-  } catch {
-    return startsAt;
-  }
 }
 
 // ── Scoped Team Banner ────────────────────────────────────────────────────────
@@ -118,35 +106,12 @@ export function ObservatoryPage() {
     );
   }
 
-  // Sentinel value: fetch all available reconciled cycles regardless of count.
-  // The API treats any value larger than the total cycle count as "return all".
-  const ALL_WEEKS = 999;
-  const { data: allCycles } = useAlignmentTrend(ALL_WEEKS);
-
-  // Sorted ascending list of available cycle start dates
-  const availableCycles = useMemo(() => {
-    if (!allCycles || allCycles.length === 0) return [];
-    return [...allCycles].sort(
-      (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
-    );
-  }, [allCycles]);
-
-  // "From" index into availableCycles (default: first cycle)
-  const [fromIdx, setFromIdx] = useState<number>(0);
+  // Global date range from Zustand (set by WeekRangeSelector in AppLayout)
+  const { weekCount } = useDateRange();
+  const { transitionClass } = useTransitionKey();
 
   // Scoped team view — when set, trend charts filter to this manager's team
   const [selectedManager, setSelectedManager] = useState<{ id: string; name: string } | null>(null);
-
-  // Compute weekCount from the selected "from" position.
-  // weekCount = number of cycles from "from" to the last available cycle (inclusive).
-  // SEMANTIC NOTE: The APIs accept a trailing-window count (most-recent N cycles), not a
-  // start-date. We convert the "From" selector index into a count so the most-recent cycle
-  // is always the right boundary. This works correctly for sequential cycles but does not
-  // support arbitrary date ranges (e.g. skipping the most-recent cycle).
-  const weekCount = useMemo(() => {
-    if (availableCycles.length === 0) return 26;
-    return Math.max(1, availableCycles.length - fromIdx);
-  }, [availableCycles, fromIdx]);
 
   const { data: dashboard, isLoading: dashboardLoading } = useObservatoryDashboard(weekCount);
   const health = dashboard?.health;
@@ -195,15 +160,8 @@ export function ObservatoryPage() {
     ? '—'
     : String(health?.activeDriftSignals ?? 0);
 
-  // Date range labels for the header display
-  const fromLabel = availableCycles[fromIdx]
-    ? formatCycleDate(availableCycles[fromIdx].startsAt)
-    : null;
-  const lastCycle = availableCycles[availableCycles.length - 1];
-  const toLabel = lastCycle != null ? formatCycleDate(lastCycle.startsAt) : null;
-
   return (
-    <div className="space-y-6">
+    <div className={`space-y-6 ${transitionClass}`}>
       {/* ── Page header ── */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -214,40 +172,6 @@ export function ObservatoryPage() {
           </h1>
           {orgName && (
             <p className="text-sm text-on-surface-variant mt-0.5">{orgName}</p>
-          )}
-        </div>
-
-        {/* Date range selector */}
-        <div className="flex items-center gap-2 self-start sm:self-auto flex-wrap">
-          <label
-            htmlFor="obs-from-cycle"
-            className="text-sm text-on-surface-variant whitespace-nowrap"
-          >
-            From
-          </label>
-          <select
-            id="obs-from-cycle"
-            value={fromIdx}
-            onChange={(e) => { setFromIdx(Number(e.target.value)); }}
-            className="text-sm border border-outline-variant rounded-md px-2 py-1.5 bg-surface-lowest text-on-surface focus:outline-none focus:ring-2 focus:ring-accent"
-            disabled={availableCycles.length === 0}
-          >
-            {availableCycles.length === 0 ? (
-              <option value={0}>Loading…</option>
-            ) : (
-              availableCycles.map((cycle, idx) => (
-                <option key={cycle.cycleId} value={idx}>
-                  {formatCycleDate(cycle.startsAt)}
-                </option>
-              ))
-            )}
-          </select>
-          <span className="text-sm text-on-surface-variant">→</span>
-          <span className="text-sm text-on-surface font-medium whitespace-nowrap">
-            {toLabel ?? '…'}
-          </span>
-          {fromLabel && toLabel && (
-            <span className="text-xs text-muted">({weekCount} week{weekCount !== 1 ? 's' : ''})</span>
           )}
         </div>
       </div>

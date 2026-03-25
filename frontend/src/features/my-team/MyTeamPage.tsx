@@ -8,7 +8,7 @@ import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Button from '@/components/Button';
 import { DashboardFilters } from '@/features/manager-dashboard/DashboardFilters';
-import { WeekRangeSelector, useHasDraftCycles } from './WeekRangeSelector';
+import { useTransitionKey } from '@/hooks/useTransitionKey';
 import { TeamSummaryCard } from './TeamSummaryCard';
 import { TeamMetricsStrip } from './TeamMetricsStrip';
 import { RallyCryCoverageCards } from './RallyCryCoverageCards';
@@ -46,7 +46,7 @@ export function MyTeamPage() {
   const activeCycleId = dashboard?.resolvedCycleId ?? cycle?.id ?? '';
   const { data: commitments, isLoading: commitmentsLoading } = useCommitments(activeCycleId);
 
-  const { hasDraft, draftLabel } = useHasDraftCycles(filters);
+  const { transitionClass } = useTransitionKey();
 
   const [assignFormOpen, setAssignFormOpen] = useState(false);
   const [assignFormState, setAssignFormState] = useState<AssignmentFormState>(createEmptyFormState);
@@ -162,30 +162,11 @@ export function MyTeamPage() {
   }
 
   return (
-    <div className="max-w-[960px] mx-auto px-8 py-8 flex flex-col gap-8">
-      {/* Page header with week range selector */}
+    <div className={`max-w-[960px] mx-auto px-8 py-8 flex flex-col gap-8 ${transitionClass}`}>
+      {/* Page header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h1 className="font-serif text-[1.25rem] text-on-surface shrink-0">My Team</h1>
-        <WeekRangeSelector filters={filters} onChange={setDashboardFilters} />
       </div>
-
-      {/* Draft / unreconciled disclaimer */}
-      {hasDraft && (
-        <div className="flex items-start gap-3 bg-warning/[0.06] border border-warning/20 rounded-sm px-4 py-3">
-          <svg className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
-          </svg>
-          <div>
-            <p className="text-body font-medium text-on-surface">
-              Includes unreconciled data
-            </p>
-            <p className="text-small text-on-surface-variant mt-0.5">
-              {draftLabel} {draftLabel?.includes(',') ? 'have' : 'has'} not been locked or reconciled yet.
-              Commitments may still be added, changed, or removed before the week closes.
-            </p>
-          </div>
-        </div>
-      )}
 
       {/* Dashboard Filters */}
       <DashboardFilters
@@ -203,7 +184,7 @@ export function MyTeamPage() {
         cycleId={activeCycleId}
         {...(filters.cycleWeekStart !== undefined && { cycleWeekStart: filters.cycleWeekStart })}
         {...(filters.cycleWeekEnd !== undefined && { cycleWeekEnd: filters.cycleWeekEnd })}
-        hasDraftData={hasDraft}
+        hasDraftData={false}
       />
 
       {/* Metrics Strip */}

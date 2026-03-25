@@ -1,11 +1,13 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { useCurrentCycle, useCycle } from '@/hooks/useCycle';
+import { useCurrentCycle } from '@/hooks/useCycle';
 import { useCommitments, useDeleteCommitment } from '@/hooks/useCommitments';
 import { useReconciliationView, useCompleteReconciliation } from '@/hooks/useReconciliation';
 import { useAuth } from '@/hooks/useAuth';
 import { useUIStore } from '@/stores/ui.store';
 import { useGrowthAreas } from '@/hooks/useGrowthAreas';
+import { useDateRange } from '@/hooks/useDateRange';
+import { useTransitionKey } from '@/hooks/useTransitionKey';
 import { CommitmentList } from '@/features/commit-entry/CommitmentList';
 import { CommitmentFormV2 } from '@/features/commit-entry/CommitmentFormV2';
 import { PlannedVsActualTable } from '@/features/reconciliation/PlannedVsActualTable';
@@ -16,7 +18,6 @@ import { WeekCloseSummaryScreen } from '@/features/reconciliation/WeekCloseSumma
 import { WeekSummaryStrip, WeekSummaryStripSkeleton } from './WeekSummaryStrip';
 import { RallyCrySidebar } from './RallyCrySidebar';
 import { CoverageStrip } from './CoverageStrip';
-import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
 import { CycleStateIndicator } from '@/features/weekly-lifecycle/CycleStateIndicator';
 import { TransitionActions } from '@/features/weekly-lifecycle/TransitionActions';
 import { CarryForwardPanel } from '@/features/weekly-lifecycle/CarryForwardPanel';
@@ -33,27 +34,28 @@ import type { CycleState, ReconciliationStatus } from '@/types';
 export function MyWeekV2Page() {
   const { userId: authUserId } = useAuth();
   const [searchParams] = useSearchParams();
+  const { transitionClass } = useTransitionKey();
+
+  // Global date range from Zustand — drives which cycle is active
+  const { activeCycle, setFilters, cycles } = useDateRange();
+
+  // Fallback to current cycle when global range hasn't resolved a cycle yet
+  const { data: currentCycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
 
   // Support deep-link from Observatory heatmap: /?cycleId=...&userId=...
   const deepLinkCycleId = searchParams.get('cycleId');
-
-  const { data: currentCycle, isLoading: cycleLoading, error: cycleError } = useCurrentCycle();
-  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
-
-  // On first load, apply the deep-linked cycleId if provided
   useEffect(() => {
-    if (deepLinkCycleId && selectedCycleId === null) {
-      setSelectedCycleId(deepLinkCycleId);
+    if (deepLinkCycleId && cycles.length > 0) {
+      const target = cycles.find((c) => c.id === deepLinkCycleId);
+      if (target) {
+        setFilters({ cycleWeekStart: target.startsAt, cycleWeekEnd: target.endsAt });
+      }
     }
-    // Only run on mount
+    // Only run when deep-link param or cycles change
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [deepLinkCycleId, cycles.length]);
 
-  // When a different cycle is selected via the pill selector, fetch it
-  const { data: selectedCycleData } = useCycle(selectedCycleId ?? '');
-
-  // Use the selected cycle if one is picked, otherwise the current cycle
-  const cycle = selectedCycleId ? selectedCycleData ?? currentCycle : currentCycle;
+  const cycle = activeCycle ?? currentCycle;
   const cycleId = cycle?.id ?? '';
   const cycleState: CycleState = cycle?.state ?? 'DRAFT';
 
@@ -143,7 +145,7 @@ export function MyWeekV2Page() {
 
   return (
     <>
-      <div className="max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-[65%_35%] gap-8 items-start">
+      <div className={`max-w-[1280px] mx-auto px-8 py-8 grid grid-cols-1 lg:grid-cols-[65%_35%] gap-8 items-start ${transitionClass}`}>
 
         {/* Main Column */}
         <div className="flex flex-col gap-6 min-w-0">
@@ -152,18 +154,15 @@ export function MyWeekV2Page() {
           <div className="bg-surface-lowest rounded-sm p-4 flex items-center justify-between gap-4 flex-wrap overflow-hidden">
             <div className="flex items-center gap-3 min-w-0 overflow-hidden">
               <CycleStateIndicator currentState={cycleState} />
-              <CycleHistorySelector
-                currentCycleId={cycleId}
-                onSelect={(id) => {
-                  setSelectedCycleId(id === currentCycle?.id ? null : id);
-                }}
-              />
             </div>
             <TransitionActions
               cycle={cycle}
               commitmentCount={myCommitments.length}
               onStartNextWeek={(newCycleId) => {
-                setSelectedCycleId(newCycleId);
+                const newCycle = cycles.find((c) => c.id === newCycleId);
+                if (newCycle) {
+                  setFilters({ cycleWeekStart: newCycle.startsAt, cycleWeekEnd: newCycle.endsAt });
+                }
               }}
             />
           </div>
