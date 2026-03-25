@@ -293,7 +293,7 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
     <div className="bg-surface-lowest border border-outline-variant rounded-lg overflow-hidden">
       {/* Scrollable table wrapper */}
       <div className="overflow-x-auto">
-        <table className="border-collapse" style={{ tableLayout: 'fixed', width: 'max-content' }}>
+        <table className="border-collapse w-full">
           <colgroup>
             {/* Name column — fixed min width, rest shrink */}
             <col style={{ minWidth: 200 }} />
