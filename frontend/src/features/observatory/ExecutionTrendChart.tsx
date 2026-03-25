@@ -18,7 +18,7 @@ import {
   ResponsiveContainer,
 } from 'recharts';
 import { useAlignmentTrend, useCompletionTrend, useWeekNarrative } from '@/hooks/useObservatory';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+
 import type { AlignmentDataPoint, CompletionDataPoint } from '@/types';
 import { SpeechBubble, generateWeekNarrative } from './SpeechBubble';
 import type { SpeechBubbleMetric } from './SpeechBubble';
@@ -232,9 +232,7 @@ export function ExecutionTrendChart({
       </div>
 
       {isLoading ? (
-        <div className="flex items-center justify-center h-72">
-          <LoadingSpinner size="md" label="Loading trend data..." />
-        </div>
+        <div className="h-72 bg-surface-container animate-pulse rounded-sm" />
       ) : isError ? (
         <div className="flex items-center justify-center h-72">
           <p className="text-sm text-error">Failed to load execution trend data.</p>

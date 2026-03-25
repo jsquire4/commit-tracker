@@ -4,7 +4,7 @@ import { useCurrentCycle } from '@/hooks/useCycle';
 import { useDashboard } from '@/hooks/useTeamDashboard';
 import { useCommitments } from '@/hooks/useCommitments';
 import { useUIStore } from '@/stores/ui.store';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { SkeletonLoader } from '@/components/SkeletonLoader';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import Button from '@/components/Button';
 import { CycleHistorySelector } from '@/features/shared/CycleHistorySelector';
@@ -99,7 +99,39 @@ export function MyTeamPage() {
   }
 
   if (dashLoading || commitmentsLoading) {
-    return <div className="flex items-center justify-center min-h-[60vh]"><LoadingSpinner size="lg" label="Loading team view..." /></div>;
+    return (
+      <div className="max-w-[960px] mx-auto px-8 py-8 flex flex-col gap-8">
+        {/* Page header skeleton */}
+        <div className="flex items-center justify-between gap-4">
+          <div className="h-6 w-20 bg-surface-container animate-pulse rounded-sm" />
+          <div className="h-8 w-40 bg-surface-container animate-pulse rounded-sm" />
+        </div>
+        {/* Filters skeleton */}
+        <div className="flex gap-3">
+          <div className="h-9 w-32 bg-surface-container animate-pulse rounded-sm" />
+          <div className="h-9 w-32 bg-surface-container animate-pulse rounded-sm" />
+        </div>
+        {/* AI summary card skeleton */}
+        <div className="h-32 bg-surface-lowest rounded-sm animate-pulse" />
+        {/* Metrics strip skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="h-20 bg-surface-lowest rounded-sm animate-pulse" />
+          ))}
+        </div>
+        {/* Rally cry coverage skeleton */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-28 bg-surface-lowest rounded-sm animate-pulse" />
+          ))}
+        </div>
+        {/* Team members skeleton */}
+        <div className="bg-surface-lowest rounded-sm p-5 flex flex-col gap-3">
+          <div className="h-6 w-36 bg-surface-container animate-pulse rounded-sm" />
+          <SkeletonLoader variant="table-row" count={5} />
+        </div>
+      </div>
+    );
   }
 
   if (dashError || !dashboard) {

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useProgramHeatmap } from '@/hooks/useObservatory';
 import { useAuth } from '@/hooks/useAuth';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+
 import type { ManagerHeatmapRow, PersonHeatmapRow } from '@/types';
 import { CHESS_CELL_COLORS, HeatmapCell } from './HeatmapCell';
 
@@ -242,8 +242,18 @@ export function ExecutionHeatmap({ weekCount }: ExecutionHeatmapProps) {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <LoadingSpinner size="md" label="Loading execution heatmap..." />
+      <div className="bg-surface-lowest border border-outline-variant rounded-lg p-4 animate-pulse flex flex-col gap-3">
+        <div className="h-5 w-40 bg-surface-container rounded-sm" />
+        {[0, 1, 2, 3].map((i) => (
+          <div key={i} className="flex items-center gap-3">
+            <div className="h-4 w-28 bg-surface-container rounded-sm flex-shrink-0" />
+            <div className="flex gap-1 flex-1">
+              {Array.from({ length: 8 }).map((_, j) => (
+                <div key={j} className="h-8 flex-1 bg-surface-container rounded-sm" />
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

@@ -4,7 +4,6 @@
  * Shows a spinner while the LLM is generating; falls back gracefully on error.
  */
 import { useProgramSummary } from '@/hooks/useObservatory';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
 
 interface ProgramSummaryProps {
   weekCount: number;
@@ -23,7 +22,11 @@ export function ProgramSummary({ weekCount }: ProgramSummaryProps) {
       </p>
 
       {isLoading ? (
-        <LoadingSpinner size="sm" label="Generating summary…" />
+        <div className="flex flex-col gap-2 animate-pulse">
+          <div className="h-4 w-full bg-surface-container rounded-sm" />
+          <div className="h-4 w-5/6 bg-surface-container rounded-sm" />
+          <div className="h-4 w-4/5 bg-surface-container rounded-sm" />
+        </div>
       ) : isError ? (
         <p
           className="text-base leading-relaxed text-on-surface-variant italic"

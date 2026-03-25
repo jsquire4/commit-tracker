@@ -272,8 +272,44 @@ export function StrategyPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <p className="text-muted">Loading strategy...</p>
+      <div className="min-h-screen bg-surface">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header skeleton */}
+          <div className="flex items-start justify-between mb-6 max-w-[1280px] mx-auto">
+            <div className="flex flex-col gap-2">
+              <div className="h-7 w-48 bg-surface-container animate-pulse rounded-sm" />
+              <div className="h-4 w-80 bg-surface-container animate-pulse rounded-sm" />
+            </div>
+            <div className="h-4 w-36 bg-surface-container animate-pulse rounded-sm mt-1" />
+          </div>
+          {/* Kanban columns skeleton */}
+          <div className="flex gap-8 overflow-x-auto pb-4">
+            {[0, 1, 2].map((i) => (
+              <div
+                key={i}
+                className="min-w-[340px] flex-[1_0_340px] bg-surface-lowest rounded-sm p-5 flex flex-col gap-4 animate-pulse"
+              >
+                {/* Column header */}
+                <div className="flex items-center justify-between">
+                  <div className="h-5 w-2/3 bg-surface-container rounded-sm" />
+                  <div className="h-5 w-8 bg-surface-container rounded-sm" />
+                </div>
+                {/* Objective cards */}
+                {[0, 1, 2].map((j) => (
+                  <div key={j} className="bg-surface-container rounded-sm p-4 flex flex-col gap-2">
+                    <div className="h-4 w-4/5 bg-surface-container-high rounded-sm" />
+                    <div className="h-3 w-1/2 bg-surface-container-high rounded-sm" />
+                    {/* Outcomes */}
+                    <div className="mt-2 flex flex-col gap-1.5 pl-3 border-l border-outline-variant/30">
+                      <div className="h-3 w-3/4 bg-surface-container-high rounded-sm" />
+                      <div className="h-3 w-2/3 bg-surface-container-high rounded-sm" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     );
   }
