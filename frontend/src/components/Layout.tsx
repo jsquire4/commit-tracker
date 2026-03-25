@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
-import { useCurrentCycle } from '@/hooks/useCycle';
 import { VP_AND_ABOVE, DIRECTOR_AND_ABOVE, MANAGER_AND_ABOVE } from '@/constants/roles';
 
 interface LayoutProps {
@@ -17,16 +16,6 @@ function getInitials(displayName?: string): string {
   return displayName.slice(0, 2).toUpperCase();
 }
 
-function formatCycleWeek(cycle: { label: string; startsAt: string; endsAt: string }): string {
-  const weekMatch = cycle.label.match(/\d+/);
-  const weekNum = weekMatch ? weekMatch[0] : '?';
-  const start = new Date(cycle.startsAt);
-  const end = new Date(cycle.endsAt);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  return `Week ${weekNum} \u00b7 ${fmt(start)}\u2013${fmt(end)}`;
-}
-
 const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
   [
     'px-3 py-2 text-body font-medium whitespace-nowrap transition-colors',
@@ -38,7 +27,6 @@ const tabLinkClass = ({ isActive }: { isActive: boolean }) =>
 
 export function Layout({ children }: LayoutProps) {
   const auth = useAuth();
-  const { data: cycle } = useCurrentCycle();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const role = auth.role;
@@ -67,7 +55,7 @@ export function Layout({ children }: LayoutProps) {
         className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15"
       >
         <div className="max-w-7xl mx-auto px-4">
-          {/* Top row: brand — cycle — avatar + gear */}
+          {/* Top row: brand — avatar + gear */}
           <div className="flex items-center justify-between h-12">
             <Link
               to="/landing"
@@ -75,13 +63,6 @@ export function Layout({ children }: LayoutProps) {
             >
               compass
             </Link>
-
-            {/* Cycle display (centered) */}
-            {cycle && (
-              <span className="hidden sm:block text-small text-on-surface-variant">
-                {formatCycleWeek(cycle)}
-              </span>
-            )}
 
             {/* Right: avatar + gear */}
             <div className="flex items-center gap-2">

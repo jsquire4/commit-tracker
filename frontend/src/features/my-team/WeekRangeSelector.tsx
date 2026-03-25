@@ -8,13 +8,25 @@ interface WeekRangeSelectorProps {
   onChange: (f: Partial<DashboardFilters>) => void;
 }
 
-/** Format a cycle for display in the dropdown: "W25 · Mar 16–22" */
+/** Format a cycle as "Mar 16–22, 2026" */
 function formatCycleOption(cycle: Cycle): string {
   const s = new Date(cycle.startsAt);
   const e = new Date(cycle.endsAt);
-  const monthDay = (d: Date) =>
-    d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-  return `${cycle.label} · ${monthDay(s)}–${monthDay(e)}`;
+  const sMonth = s.toLocaleDateString('en-US', { month: 'short' });
+  const eMonth = e.toLocaleDateString('en-US', { month: 'short' });
+  const sDay = s.getDate();
+  const eDay = e.getDate();
+  const year = s.getFullYear();
+  // Same month: "Mar 16–22, 2026", different month: "Mar 30–Apr 5, 2026"
+  if (sMonth === eMonth) {
+    return `${sMonth} ${sDay}–${eDay}, ${year}`;
+  }
+  return `${sMonth} ${sDay}–${eMonth} ${eDay}, ${year}`;
+}
+
+/** Format a date range for the disclaimer: "Mar 30–Apr 5, 2026" */
+function formatCycleDateShort(cycle: Cycle): string {
+  return formatCycleOption(cycle);
 }
 
 function useSortedCycles() {
@@ -23,7 +35,7 @@ function useSortedCycles() {
     queryFn: async () => {
       const result = await listCycles();
       const sorted = [...result.items].sort(
-        (a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime(),
+        (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
       );
       // Deduplicate by startsAt date (keep active or most recent)
       const seen = new Map<string, Cycle>();
@@ -38,7 +50,7 @@ function useSortedCycles() {
           }
         }
       }
-      return [...seen.values()]; // newest first
+      return [...seen.values()]; // oldest first (chronological)
     },
     staleTime: 60_000,
   });
@@ -50,9 +62,11 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
   // Find the default range: last completed week → current week
   const { defaultFrom, defaultTo } = useMemo(() => {
     if (cycles.length === 0) return { defaultFrom: null, defaultTo: null };
-    const current = cycles.find((c) => c.isActive) ?? cycles[0];
-    // Find the most recent locked/reconciled cycle (completed work)
-    const lastCompleted = cycles.find(
+    // cycles is sorted oldest-first; current/active is typically near the end
+    const current = cycles.find((c) => c.isActive) ?? cycles[cycles.length - 1];
+    // Walk backwards from the end to find the most recent locked/reconciled cycle
+    const reversed = [...cycles].reverse();
+    const lastCompleted = reversed.find(
       (c) => c.state === 'LOCKED' || c.state === 'RECONCILED' || c.state === 'RECONCILING',
     );
     return {
@@ -83,8 +97,7 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
   const selectedFrom = cycles.find((c) => c.startsAt === filters.cycleWeekStart);
   const selectedTo = cycles.find((c) => c.startsAt === filters.cycleWeekEnd);
 
-  // Options: "From" shows all cycles, "To" shows only cycles >= From
-  const fromOptions = cycles;
+  // "To" shows only cycles >= From
   const toOptions = useMemo(() => {
     if (!selectedFrom) return cycles;
     const fromTime = new Date(selectedFrom.startsAt).getTime();
@@ -95,6 +108,7 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
 
   return (
     <div className="flex items-center gap-2 flex-shrink-0">
+      <span className="text-small text-muted">From</span>
       <select
         aria-label="From week"
         className="rounded-sm border border-outline-variant bg-surface-lowest px-2.5 py-1.5 text-small text-on-surface focus:outline-none focus:ring-2 focus:ring-accent cursor-pointer"
@@ -102,7 +116,6 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
         onChange={(e) => {
           const cycle = cycles.find((c) => c.startsAt === e.target.value);
           if (cycle) {
-            // If "To" is before the new "From", move it forward
             const toTime = selectedTo
               ? new Date(selectedTo.startsAt).getTime()
               : 0;
@@ -118,14 +131,14 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
           }
         }}
       >
-        {fromOptions.map((c) => (
+        {cycles.map((c) => (
           <option key={c.id} value={c.startsAt}>
             {formatCycleOption(c)}
           </option>
         ))}
       </select>
 
-      <span className="text-muted text-small">to</span>
+      <span className="text-small text-muted">to</span>
 
       <select
         aria-label="To week"
@@ -150,7 +163,6 @@ export function WeekRangeSelector({ filters, onChange }: WeekRangeSelectorProps)
 
 /**
  * Returns whether the selected date range includes any unreconciled (DRAFT) cycles.
- * Call with the cycles data and current filters.
  */
 export function useHasDraftCycles(filters: DashboardFilters): {
   hasDraft: boolean;
@@ -176,7 +188,7 @@ export function useHasDraftCycles(filters: DashboardFilters): {
     const drafts = inRange.filter((c) => c.state === 'DRAFT');
     if (drafts.length === 0) return { hasDraft: false, draftLabel: null };
 
-    const labels = drafts.map((c) => c.label).join(', ');
+    const labels = drafts.map((c) => formatCycleDateShort(c)).join(', ');
     return { hasDraft: true, draftLabel: labels };
   }, [cycles, filters.cycleWeekStart, filters.cycleWeekEnd]);
 }
