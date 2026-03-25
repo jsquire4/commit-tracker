@@ -61,21 +61,14 @@ export function Layout({ children }: LayoutProps) {
         className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15"
       >
         <div className="max-w-7xl mx-auto px-4">
-          {/* Top row: brand — date selector — avatar + gear */}
-          <div className="flex items-center justify-between h-12 gap-3">
+          {/* Top row: brand — avatar + gear */}
+          <div className="flex items-center justify-between h-12">
             <Link
               to="/landing"
               className="font-serif text-base tracking-widest uppercase text-on-surface select-none hover:text-accent transition-colors flex-shrink-0"
             >
               compass
             </Link>
-
-            {/* Center: global date range selector */}
-            {!hideSelector && (
-              <div className="hidden sm:flex flex-1 justify-center">
-                <WeekRangeSelector />
-              </div>
-            )}
 
             {/* Right: avatar + gear */}
             <div className="flex items-center gap-2">
@@ -122,22 +115,30 @@ export function Layout({ children }: LayoutProps) {
             </div>
           </div>
 
-          {/* Bottom row: tab bar (desktop) — two tiers */}
-          <div className="hidden min-[900px]:flex items-center gap-1 -mb-px overflow-x-auto scrollbar-thin">
-            {primaryTabs.map(({ to, label }) => (
-              <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
-                {label}
-              </NavLink>
-            ))}
-            {orgTabs.length > 0 && (
-              <>
-                <span className="mx-2 text-outline-variant/40 select-none" aria-hidden="true">|</span>
-                {orgTabs.map(({ to, label }) => (
-                  <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
-                    {label}
-                  </NavLink>
-                ))}
-              </>
+          {/* Bottom row: tab bar + date range selector */}
+          <div className="hidden min-[900px]:flex items-center -mb-px overflow-x-auto scrollbar-thin">
+            <div className="flex items-center gap-1">
+              {primaryTabs.map(({ to, label }) => (
+                <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
+                  {label}
+                </NavLink>
+              ))}
+              {orgTabs.length > 0 && (
+                <>
+                  <span className="mx-2 text-outline-variant/40 select-none" aria-hidden="true">|</span>
+                  {orgTabs.map(({ to, label }) => (
+                    <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>
+                      {label}
+                    </NavLink>
+                  ))}
+                </>
+              )}
+            </div>
+            {/* Date range selector — right side of tab row */}
+            {!hideSelector && (
+              <div className="ml-auto pl-4 flex-shrink-0">
+                <WeekRangeSelector />
+              </div>
             )}
           </div>
         </div>

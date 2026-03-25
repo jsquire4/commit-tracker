@@ -83,12 +83,12 @@ export function WeekRangeSelector() {
   if (cycles.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 flex-wrap">
+    <div className="flex items-center gap-2">
       {/* From / To dropdowns */}
       <div className="flex items-center gap-1.5">
         <select
           aria-label="From week"
-          className="rounded-sm border border-outline-variant bg-surface-lowest px-2 py-1 text-small text-on-surface focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+          className="appearance-none bg-transparent px-2 py-1.5 text-body font-medium text-on-surface-variant border-b-2 border-transparent hover:text-accent hover:border-accent focus:text-accent focus:border-accent focus:outline-none transition-colors cursor-pointer"
           value={filters.cycleWeekStart ?? ''}
           onChange={(e) => {
             const cycle = cycles.find((c) => c.startsAt === e.target.value);
@@ -108,11 +108,11 @@ export function WeekRangeSelector() {
           ))}
         </select>
 
-        <span className="text-muted text-small select-none">–</span>
+        <span className="text-muted text-body select-none">–</span>
 
         <select
           aria-label="To week"
-          className="rounded-sm border border-outline-variant bg-surface-lowest px-2 py-1 text-small text-on-surface focus:outline-none focus:ring-1 focus:ring-accent cursor-pointer"
+          className="appearance-none bg-transparent px-2 py-1.5 text-body font-medium text-on-surface-variant border-b-2 border-transparent hover:text-accent hover:border-accent focus:text-accent focus:border-accent focus:outline-none transition-colors cursor-pointer"
           value={filters.cycleWeekEnd ?? filters.cycleWeekStart ?? ''}
           onChange={(e) => {
             const cycle = cycles.find((c) => c.startsAt === e.target.value);
@@ -136,7 +136,7 @@ export function WeekRangeSelector() {
               key={preset}
               type="button"
               onClick={() => { applyPreset(preset); }}
-              className="px-1.5 py-0.5 text-[0.6875rem] font-medium text-muted rounded border border-outline-variant/50 hover:bg-surface-container-low hover:text-on-surface-variant transition-colors duration-[var(--duration-fast)] cursor-pointer"
+              className="px-2 py-1 text-small font-medium text-on-surface-variant hover:text-accent border-b-2 border-transparent hover:border-accent transition-colors duration-[var(--duration-fast)] cursor-pointer"
             >
               {label}
             </button>

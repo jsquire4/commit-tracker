@@ -13,7 +13,7 @@ export function useSortedCycles() {
   return useQuery({
     queryKey: ['cycles', 'range-selector'],
     queryFn: async () => {
-      const result = await listCycles();
+      const result = await listCycles({ size: 200 });
       const sorted = [...result.items].sort(
         (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
       );
