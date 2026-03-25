@@ -73,14 +73,44 @@ export function SimulationSection() {
               for each persona.
             </p>
             <p>
-              The growth area injection was a separate, AI-assisted pass. After all 26 weeks
-              of commitments were loaded, 9 parallel AI agents each assumed 2&ndash;5
-              personas and processed their full commitment history. Each agent made
-              per-task judgment calls: does this specific task align to this person&rsquo;s
+              After all 27 weeks of commitments were generated, growth area data was
+              injected through a persona-driven AI process. Each of 35 Meridian employees
+              was assigned 3 growth areas based on their scenario bible character arc &mdash;
+              a force-multiplier manager received &ldquo;Team Development&rdquo; and
+              &ldquo;Strategic Translation,&rdquo; while a sandbagged star performer
+              received areas like &ldquo;Supply Chain Strategy&rdquo; that reflect their
+              true capability, not their assigned work.
+            </p>
+            <p>
+              Nine parallel AI agents each assumed 2&ndash;5 personas and processed their
+              full 27-week commitment history. For each task, the agent made individual
+              judgment calls: does this specific commitment align to this person&rsquo;s
               growth areas, given their role, character arc, and the week&rsquo;s context?
-              The result is 2,312 commitment-to-growth-area links and 915 personal
-              reflections &mdash; not generated from heuristics, but from reading actual
-              task titles, bullet points, and narrative context.
+              This was not keyword matching &mdash; an &ldquo;ERP migration coordination
+              call&rdquo; aligns to &ldquo;Cross-Functional Leadership&rdquo; for a senior
+              manager but not for a junior analyst doing the same task.
+            </p>
+            <p>
+              One persona &mdash; Wei Zhang, &ldquo;The Drifter&rdquo; &mdash; changes
+              growth areas every 4 weeks to verify that the platform correctly tracks
+              alignment across changing goals. The join table preserves every link with the
+              growth area&rsquo;s state at time of tagging, so deactivation never rewrites
+              history.
+            </p>
+            <p>
+              Each agent also wrote weekly personal reflections in character &mdash; 915
+              total, each with an alignment signal (closer/same/further to goals) and a
+              learning note in the persona&rsquo;s voice. Carlos Vega&rsquo;s notes cite
+              specific data: &ldquo;SPC analysis on Line 3 confirmed my hypothesis about
+              vibration patterns.&rdquo; Miguel Fernandez&rsquo;s notes show struggle:
+              &ldquo;Carried over two items again. Need to scope better but not sure
+              how.&rdquo;
+            </p>
+            <p>
+              The result: realistic variation in alignment rates that mirrors executive
+              intuition &mdash; star performers at ~70%, sandbagged talent at ~20%, absent
+              managers&rsquo; teams at ~30%. Not random, not uniform, not heuristic. Judgment
+              at scale.
             </p>
           </div>
 
@@ -108,51 +138,6 @@ export function SimulationSection() {
           {COMPANIES.map((c, i) => (
             <CompanyCard key={c.name} company={c} index={i} />
           ))}
-        </div>
-
-        {/* Persona-Driven Data Injection */}
-        <div className="rounded bg-surface-lowest p-7 mb-8">
-          <h3 className="font-serif text-[1.25rem] text-on-surface mb-4">
-            Persona-Driven Growth Area Injection
-          </h3>
-          <div className="text-body text-on-surface-variant leading-relaxed space-y-4">
-            <p>
-              Each of 35 Meridian employees was assigned 3 growth areas based directly on
-              their scenario bible character arc. A force-multiplier manager received
-              &ldquo;cross-team leadership&rdquo; and &ldquo;systems thinking.&rdquo; A
-              sandbagged star performer received &ldquo;technical depth&rdquo; and
-              &ldquo;project ownership&rdquo; &mdash; areas they want to grow but keep
-              getting pulled away from. An absent manager received leadership-focused areas
-              that their behavior never actually maps to, producing realistic low-alignment
-              data for that persona.
-            </p>
-            <p>
-              Nine parallel AI agents were each assigned 2&ndash;5 Meridian personas. For
-              each persona, the agent read their full 27-week commitment history and made
-              individual judgment calls on each task: does this commitment align to growth
-              area X? The decision was not a keyword match &mdash; it required understanding
-              the task in context of that person&rsquo;s role, their week, and what the
-              growth area actually means for someone at their level. An &ldquo;ERP migration
-              coordination call&rdquo; aligns to &ldquo;cross-team leadership&rdquo; for a
-              senior manager but not for a junior analyst doing the same task.
-            </p>
-            <p>
-              One persona &mdash; Wei Zhang, &ldquo;The Drifter&rdquo; &mdash; changes
-              growth areas every 4 weeks to verify that the platform correctly tracks
-              alignment across changing goals without contaminating historical records. The
-              join table preserves every commitment-to-growth-area link with the growth
-              area&rsquo;s state at time of tagging, so growth area deactivation never
-              rewrites history.
-            </p>
-            <p>
-              The result is realistic variation in alignment rates that mirrors what
-              executive intuition would predict from each character: star performers like
-              Carlos Vega at ~70% personal alignment, the sandbagged Robert Chang at ~20%
-              (high org alignment, near-zero personal &mdash; exactly the retention risk
-              signal), and absent manager Tom Jackson&rsquo;s team at ~30% across the board
-              because their work is reactive and unconnected to their growth directions.
-            </p>
-          </div>
         </div>
 
         <div className="text-small text-on-surface-variant leading-relaxed max-w-[780px]">
