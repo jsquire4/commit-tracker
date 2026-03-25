@@ -87,3 +87,5 @@ backend/           Spring Boot 3.2.5 (Java 21)
 ## Status
 
 Feature-complete. Observatory platform built and audited.
+
+**Demo & stakeholder narrative** (26-week story index, “not just the front end”): see [`docs/stakeholder-narrative.md`](docs/stakeholder-narrative.md) and the full arc in [`docs/scenario-bible.md`](docs/scenario-bible.md).
