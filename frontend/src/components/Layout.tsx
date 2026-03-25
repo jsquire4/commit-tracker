@@ -116,7 +116,7 @@ export function Layout({ children }: LayoutProps) {
           </div>
 
           {/* Bottom row: tab bar + date range selector */}
-          <div className="hidden min-[900px]:flex items-center -mb-px overflow-x-auto scrollbar-thin">
+          <div className="hidden min-[900px]:flex items-center -mb-px">
             <div className="flex items-center gap-1">
               {primaryTabs.map(({ to, label }) => (
                 <NavLink key={to} to={to} end={to === '/'} className={tabLinkClass}>

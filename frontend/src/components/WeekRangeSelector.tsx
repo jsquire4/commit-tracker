@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useUIStore } from '@/stores/ui.store';
 import { useSortedCycles } from '@/hooks/useDateRange';
 import { getPresetRange } from '@/lib/dateRangeUtils';
@@ -19,7 +20,7 @@ function formatCycleOption(cycle: Cycle): string {
   return `${sMonth} ${sDay}–${eMonth} ${eDay}, ${year}`;
 }
 
-/** Custom dropdown that always drops DOWN, scrollable, 6 visible items, styled to match tabs */
+/** Custom dropdown — renders menu via portal so it escapes nav overflow */
 function CycleDropdown({
   label,
   options,
@@ -32,13 +33,30 @@ function CycleDropdown({
   onChange: (startsAt: string) => void;
 }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [menuPos, setMenuPos] = useState({ top: 0, left: 0 });
+
+  // Position the menu below the button
+  const updatePosition = useCallback(() => {
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      setMenuPos({
+        top: rect.bottom + 4,
+        left: rect.left + rect.width / 2,
+      });
+    }
+  }, []);
 
   // Close on outside click
   useEffect(() => {
     if (!open) return;
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (
+        btnRef.current && !btnRef.current.contains(target) &&
+        menuRef.current && !menuRef.current.contains(target)
+      ) {
         setOpen(false);
       }
     }
@@ -53,10 +71,14 @@ function CycleDropdown({
   const descOptions = useMemo(() => [...options].reverse(), [options]);
 
   return (
-    <div ref={ref} className="relative">
+    <>
       <button
+        ref={btnRef}
         type="button"
-        onClick={() => { setOpen(!open); }}
+        onClick={() => {
+          updatePosition();
+          setOpen(!open);
+        }}
         className={[
           'px-3 py-1.5 text-body font-medium whitespace-nowrap text-center',
           'border-b-2 transition-colors cursor-pointer',
@@ -68,8 +90,16 @@ function CycleDropdown({
         {displayText}
       </button>
 
-      {open && (
-        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 z-50 bg-surface-lowest border border-outline-variant rounded-sm shadow-whisper min-w-[200px] max-h-[228px] overflow-y-auto scrollbar-thin">
+      {open && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed z-[9999] bg-surface-lowest border border-outline-variant rounded-sm shadow-whisper min-w-[200px] max-h-[228px] overflow-y-auto scrollbar-thin"
+          style={{
+            top: menuPos.top,
+            left: menuPos.left,
+            transform: 'translateX(-50%)',
+          }}
+        >
           {descOptions.map((c) => {
             const isSelected = c.startsAt === value;
             return (
@@ -91,9 +121,10 @@ function CycleDropdown({
               </button>
             );
           })}
-        </div>
+        </div>,
+        document.body,
       )}
-    </div>
+    </>
   );
 }
 
