@@ -93,7 +93,7 @@ function CycleDropdown({
       {open && createPortal(
         <div
           ref={menuRef}
-          className="fixed z-[9999] bg-surface-lowest border border-outline-variant rounded-sm shadow-whisper min-w-[200px] max-h-[228px] overflow-y-auto scrollbar-thin"
+          className="fixed z-[9999] bg-surface-lowest border border-outline-variant rounded-sm shadow-whisper max-h-[228px] overflow-y-auto scrollbar-thin"
           style={{
             top: menuPos.top,
             left: menuPos.left,
@@ -111,7 +111,7 @@ function CycleDropdown({
                   setOpen(false);
                 }}
                 className={[
-                  'w-full px-3 py-2 text-body text-center whitespace-nowrap transition-colors',
+                  'w-full px-2.5 py-1.5 text-small text-center whitespace-nowrap transition-colors',
                   isSelected
                     ? 'text-accent font-medium bg-accent/[0.06]'
                     : 'text-on-surface hover:bg-surface-container-low',
