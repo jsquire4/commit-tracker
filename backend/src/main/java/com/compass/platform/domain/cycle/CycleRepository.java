@@ -19,6 +19,10 @@ public interface CycleRepository extends JpaRepository<Cycle, UUID> {
     List<Cycle> findByOrgIdAndStateOrderByStartsAtDesc(UUID orgId, CycleState state);
     Optional<Cycle> findByOrgIdAndStartsAt(UUID orgId, Instant startsAt);
 
+    /** Find cycle whose startsAt falls within a date range (handles midnight UTC vs actual start time). */
+    @Query("SELECT c FROM Cycle c WHERE c.org.id = :orgId AND c.startsAt >= :from AND c.startsAt < :to ORDER BY c.startsAt DESC")
+    List<Cycle> findByOrgIdAndStartsAtBetween(@Param("orgId") UUID orgId, @Param("from") Instant from, @Param("to") Instant to);
+
     @Query(value = "SELECT * FROM cycles WHERE org_id = :orgId"
          + " AND (CAST(:state AS text) IS NULL OR state = :state)"
          + " AND (:dateFrom IS NULL OR starts_at >= :dateFrom)"

@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record DashboardFilters(
     Instant cycleWeekStart,
+    Instant cycleWeekEnd,
     UUID teamMemberId,
     UUID rcdoId,
     String rcdoType, // "RALLY_CRY", "DEFINING_OBJECTIVE", "OUTCOME"

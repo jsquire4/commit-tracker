@@ -29,8 +29,6 @@ import { MANAGER_AND_ABOVE } from '@/constants/roles';
 export function MyTeamPage() {
   const { role, userId } = useAuth();
   const { data: cycle } = useCurrentCycle();
-  const [selectedCycleId, setSelectedCycleId] = useState<string | null>(null);
-  const activeCycleId = selectedCycleId ?? cycle?.id ?? '';
 
   const filters = useUIStore((s) => s.dashboardFilters);
   const setDashboardFilters = useUIStore((s) => s.setDashboardFilters);
@@ -43,6 +41,9 @@ export function MyTeamPage() {
   }, [role, filters.includeSubtree, setDashboardFilters]);
 
   const { data: dashboard, isLoading: dashLoading, isError: dashError, error: dashErr } = useDashboard(filters);
+
+  // Use the cycle the dashboard resolved — keeps commitments in sync with all dashboard sections
+  const activeCycleId = dashboard?.resolvedCycleId ?? cycle?.id ?? '';
   const { data: commitments, isLoading: commitmentsLoading } = useCommitments(activeCycleId);
 
   const [assignFormOpen, setAssignFormOpen] = useState(false);
@@ -165,11 +166,12 @@ export function MyTeamPage() {
         <h1 className="font-serif text-[1.25rem] text-on-surface shrink-0">My Team</h1>
         <CycleHistorySelector
           currentCycleId={activeCycleId}
-          onSelect={(id, selectedCycle) => {
-            setSelectedCycleId(id);
-            // Wire the selected cycle's start date into the dashboard filters so the
-            // backend resolveCycle() picks the correct historical cycle.
-            setDashboardFilters({ cycleWeekStart: selectedCycle.startsAt });
+          onSelect={(_id, selectedCycle) => {
+            // Use the cycle's exact startsAt so the backend resolves the correct cycle.
+            // The dashboard's resolvedCycleId drives activeCycleId for commitments.
+            // Clear any date range, then set the exact cycle start
+            const { cycleWeekStart: _, cycleWeekEnd: _2, ...rest } = filters;
+            setDashboardFilters({ ...rest, cycleWeekStart: selectedCycle.startsAt });
           }}
         />
       </div>

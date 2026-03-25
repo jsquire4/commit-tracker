@@ -322,7 +322,7 @@ public class LlmBriefingService implements BriefingService {
             return null;
         }
 
-        DashboardFilters filters = new DashboardFilters(cycleWeekStart, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(cycleWeekStart, null, null, null, null, false);
         DashboardResponse dash = dashboardService.getDashboard(actor, filters);
 
         TeamRollupResponse rollup = dash.teamRollup();

@@ -31,6 +31,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -47,9 +49,13 @@ public class DashboardService {
     /** Bundles the three data loads shared by all dashboard methods. */
     private record DashboardData(
             List<AppUser> members,
-            Optional<Cycle> cycle,
+            List<Cycle> cycles,
             Map<UUID, List<Commitment>> commitmentsByUser
-    ) {}
+    ) {
+        /** Convenience: first (or only) cycle — used where single-cycle is sufficient. */
+        Optional<Cycle> cycle() { return cycles.isEmpty() ? Optional.empty() : Optional.of(cycles.get(0)); }
+        List<UUID> cycleIds() { return cycles.stream().map(Cycle::getId).toList(); }
+    }
 
     private static final Logger log = LoggerFactory.getLogger(DashboardService.class);
 
@@ -100,7 +106,10 @@ public class DashboardService {
     public DashboardResponse getDashboard(AppUser actor, DashboardFilters filters) {
         assertManagerRole(actor);
         DashboardData data = loadDashboardData(actor, filters);
+        // Return the first (or only) resolved cycle ID for commitments queries
+        UUID resolvedCycleId = data.cycles.isEmpty() ? null : data.cycles.get(0).getId();
         return new DashboardResponse(
+                resolvedCycleId,
                 buildTeamRollup(actor, data),
                 buildAlignmentSignal(data),
                 buildAssignmentAttribution(data),
@@ -123,17 +132,16 @@ public class DashboardService {
     }
 
     private TeamRollupResponse buildTeamRollup(AppUser manager, DashboardData data) {
-        // Fetch reconciliation records once for the whole org+cycle, not per member.
+        // Fetch reconciliation records once for all resolved cycles, not per member.
         // Map commitmentId → status so buildTeamMemberSummary can count both
         // reconciledCount (any record) and completedCount (COMPLETED + PARTIALLY_COMPLETED).
-        Map<UUID, ReconciliationStatus> reconciledStatusByCommitmentId = data.cycle()
-                .map(cycle -> reconciliationRecordRepository
-                        .findByOrgIdAndCycleId(manager.getOrg().getId(), cycle.getId())
-                        .stream()
-                        .collect(Collectors.toMap(
-                                r -> r.getCommitment().getId(),
-                                ReconciliationRecord::getStatus)))
-                .orElse(Map.of());
+        Map<UUID, ReconciliationStatus> reconciledStatusByCommitmentId = new HashMap<>();
+        for (Cycle cycle : data.cycles) {
+            reconciliationRecordRepository
+                    .findByOrgIdAndCycleId(manager.getOrg().getId(), cycle.getId())
+                    .forEach(r -> reconciledStatusByCommitmentId.put(
+                            r.getCommitment().getId(), r.getStatus()));
+        }
 
         List<TeamRollupResponse.TeamMemberSummary> summaries = data.members().stream()
                 .map(member -> buildTeamMemberSummary(member, data.cycle(), data.commitmentsByUser(), reconciledStatusByCommitmentId))
@@ -343,17 +351,19 @@ public class DashboardService {
         // Total commitments across team
         int teamTotal = byUser.values().stream().mapToInt(List::size).sum();
 
-        // Single query: count of commitments with ≥1 growth area, grouped by user
+        // Single query per cycle: count of commitments with ≥1 growth area, grouped by user
         List<UUID> userIds = members.stream().map(AppUser::getId).toList();
         Map<UUID, Integer> alignedCountByUser = new HashMap<>();
 
-        if (!userIds.isEmpty() && data.cycle().isPresent()) {
-            List<Object[]> rows = commitmentRepository.countGrowthAreaAlignedByUser(
-                    userIds, data.cycle().get().getId());
-            for (Object[] row : rows) {
-                UUID userId = (UUID) row[0];
-                int count = ((Number) row[1]).intValue();
-                alignedCountByUser.put(userId, count);
+        if (!userIds.isEmpty()) {
+            for (Cycle cycle : data.cycles) {
+                List<Object[]> rows = commitmentRepository.countGrowthAreaAlignedByUser(
+                        userIds, cycle.getId());
+                for (Object[] row : rows) {
+                    UUID userId = (UUID) row[0];
+                    int count = ((Number) row[1]).intValue();
+                    alignedCountByUser.merge(userId, count, Integer::sum);
+                }
             }
         }
 
@@ -383,13 +393,14 @@ public class DashboardService {
      */
     private DashboardData loadDashboardData(AppUser manager, DashboardFilters filters) {
         List<AppUser> members = getVisibleTeamMembers(manager, filters);
-        Optional<Cycle> cycleOpt = resolveCycle(manager.getOrg().getId(), filters);
+        List<Cycle> cycles = resolveCycles(manager.getOrg().getId(), filters);
         List<UUID> userIds = members.stream().map(AppUser::getId).toList();
-        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleOpt.map(Cycle::getId).orElse(null));
+        List<UUID> cycleIds = cycles.stream().map(Cycle::getId).toList();
+        Map<UUID, List<Commitment>> byUser = groupCommitmentsByUser(userIds, cycleIds);
         if (filters.rcdoId() != null && filters.rcdoType() != null) {
             byUser = applyRcdoFilter(byUser, filters.rcdoId(), filters.rcdoType());
         }
-        return new DashboardData(members, cycleOpt, byUser);
+        return new DashboardData(members, cycles, byUser);
     }
 
     /**
@@ -453,14 +464,19 @@ public class DashboardService {
      * Returns an empty list per user if no commitments found.
      * When cycleId is null, returns an empty map (no cycle context).
      */
-    Map<UUID, List<Commitment>> groupCommitmentsByUser(List<UUID> userIds, UUID cycleId) {
-        if (userIds.isEmpty() || cycleId == null) {
+    Map<UUID, List<Commitment>> groupCommitmentsByUser(List<UUID> userIds, List<UUID> cycleIds) {
+        if (userIds.isEmpty() || cycleIds.isEmpty()) {
             Map<UUID, List<Commitment>> empty = new HashMap<>();
             userIds.forEach(id -> empty.put(id, List.of()));
             return empty;
         }
 
-        List<Commitment> all = commitmentRepository.findByUserIdInAndCycleId(userIds, cycleId);
+        List<Commitment> all;
+        if (cycleIds.size() == 1) {
+            all = commitmentRepository.findByUserIdInAndCycleId(userIds, cycleIds.get(0));
+        } else {
+            all = commitmentRepository.findByUserIdInAndCycleIdIn(userIds, cycleIds);
+        }
         Map<UUID, List<Commitment>> grouped = all.stream()
                 .collect(Collectors.groupingBy(c -> c.getUser().getId()));
 
@@ -480,14 +496,46 @@ public class DashboardService {
     }
 
     /**
-     * Resolves the active cycle for the org, or the cycle matching cycleWeekStart if provided.
+     * Resolves one or more cycles for the dashboard.
+     * <ul>
+     *   <li>No date filters → active cycle only</li>
+     *   <li>cycleWeekStart only → single cycle matching that date</li>
+     *   <li>cycleWeekStart + cycleWeekEnd → all cycles in that range</li>
+     * </ul>
+     * The date picker sends midnight UTC (e.g. 2026-03-16T00:00:00Z) which may not exactly
+     * match the cycle's startsAt. Uses a generous range query to handle timezone offsets.
      */
-    private Optional<Cycle> resolveCycle(UUID orgId, DashboardFilters filters) {
-        if (filters.cycleWeekStart() != null) {
-            // Direct lookup by org + startsAt (avoids loading all cycles)
-            return cycleRepository.findByOrgIdAndStartsAt(orgId, filters.cycleWeekStart());
+    private List<Cycle> resolveCycles(UUID orgId, DashboardFilters filters) {
+        if (filters.cycleWeekStart() != null && filters.cycleWeekEnd() != null) {
+            // Date range: find all cycles whose startsAt is within [start, end+1day)
+            Instant from = filters.cycleWeekStart().truncatedTo(ChronoUnit.DAYS);
+            Instant to = filters.cycleWeekEnd().truncatedTo(ChronoUnit.DAYS)
+                    .plus(1, ChronoUnit.DAYS);
+            return cycleRepository.findByOrgIdAndStartsAtBetween(orgId, from, to);
         }
-        return cycleRepository.findByOrgIdAndIsActiveTrue(orgId);
+
+        if (filters.cycleWeekStart() != null) {
+            // Single date — try exact match first, then same-day range
+            Optional<Cycle> exact = cycleRepository.findByOrgIdAndStartsAt(orgId, filters.cycleWeekStart());
+            if (exact.isPresent()) return List.of(exact.get());
+
+            Instant dayStart = filters.cycleWeekStart().truncatedTo(ChronoUnit.DAYS);
+            Instant dayEnd = dayStart.plus(1, ChronoUnit.DAYS);
+            List<Cycle> sameDayCycles = cycleRepository.findByOrgIdAndStartsAtBetween(orgId, dayStart, dayEnd);
+            if (!sameDayCycles.isEmpty()) {
+                // Prefer active cycle if multiple exist for the same day
+                Cycle best = sameDayCycles.stream()
+                        .filter(Cycle::isActive)
+                        .findFirst()
+                        .orElse(sameDayCycles.get(0));
+                return List.of(best);
+            }
+            return List.of();
+        }
+
+        return cycleRepository.findByOrgIdAndIsActiveTrue(orgId)
+                .map(List::of)
+                .orElse(List.of());
     }
 
     private TeamRollupResponse.TeamMemberSummary buildTeamMemberSummary(AppUser member, Optional<Cycle> cycleOpt,

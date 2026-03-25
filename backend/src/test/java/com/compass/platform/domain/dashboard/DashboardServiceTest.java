@@ -116,7 +116,7 @@ class DashboardServiceTest {
 
     @Test
     void getTeamRollup_asManager_returnsDirectReportsSummary() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         Commitment r1c1 = commitment(report1, catA);
         Commitment r1c2 = commitment(report1, catA);
@@ -144,7 +144,7 @@ class DashboardServiceTest {
 
     @Test
     void getTeamRollup_asDirector_includesSubtreeWhenFlagged() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, true);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, true);
         UUID subtreeUserId = UUID.randomUUID();
         AppUser subtreeUser = new AppUser(org, "sub@example.com", "Sub User", UserRole.EMPLOYEE, report1);
         subtreeUser.setId(subtreeUserId);
@@ -170,7 +170,7 @@ class DashboardServiceTest {
 
     @Test
     void getTeamRollup_asEmployee_throwsForbidden() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         assertThatThrownBy(() -> dashboardService.getTeamRollup(employee, filters))
                 .isInstanceOf(AccessDeniedException.class)
@@ -190,7 +190,7 @@ class DashboardServiceTest {
                 .build();
         specificCycle.setId(UUID.randomUUID());
 
-        DashboardFilters filters = new DashboardFilters(weekStart, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(weekStart, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -213,7 +213,7 @@ class DashboardServiceTest {
 
     @Test
     void getAlignmentSignal_computesCorrectPercentages() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -238,7 +238,7 @@ class DashboardServiceTest {
 
     @Test
     void getAlignmentSignal_noCommitments_returnsZeroes() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -257,7 +257,7 @@ class DashboardServiceTest {
 
     @Test
     void getAlignmentSignal_includesPerMemberBreakdown() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1, report2));
@@ -280,7 +280,7 @@ class DashboardServiceTest {
 
     @Test
     void getAlignmentSignal_countsUnlinkedSeparately() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -306,7 +306,7 @@ class DashboardServiceTest {
 
     @Test
     void getAssignmentAttribution_computesSelfVsAssigned() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -330,7 +330,7 @@ class DashboardServiceTest {
 
     @Test
     void getAssignmentAttribution_identifiesDependencyRisk() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1, report2));
@@ -352,7 +352,7 @@ class DashboardServiceTest {
 
     @Test
     void getAssignmentAttribution_noAssignments_returnsAllSelfDirected() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -375,7 +375,7 @@ class DashboardServiceTest {
 
     @Test
     void getRcdoCoverage_computesLinkagePercentages() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
         RallyCry rc = rallyCry("Rally Cry One");
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
@@ -399,7 +399,7 @@ class DashboardServiceTest {
 
     @Test
     void getRcdoCoverage_identifiesUnlinkedCommitments() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
 
         when(userRepository.findDirectReports(org.getId(), manager.getId()))
                 .thenReturn(List.of(report1));
@@ -419,7 +419,7 @@ class DashboardServiceTest {
 
     @Test
     void getRcdoCoverage_identifiesUncoveredDefiningObjectives() {
-        DashboardFilters filters = new DashboardFilters(null, null, null, null, false);
+        DashboardFilters filters = new DashboardFilters(null, null, null, null, null, false);
         RallyCry rc = rallyCry("Rally Cry One");
 
         DefiningObjective coveredDo = definingObjective("Covered DO", rc);

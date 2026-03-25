@@ -7,6 +7,7 @@ import type { CycleState } from './cycle.types';
 
 /** Mirrors backend DashboardResponse — composite response from GET /api/v1/dashboard */
 export interface DashboardResponse {
+  resolvedCycleId: string | null;
   teamRollup: TeamRollupResponse;
   alignmentSignal: AlignmentSignalResponse;
   assignmentAttribution: AssignmentAttributionResponse;
@@ -70,6 +71,7 @@ export interface AssignmentConcentration {
 
 export interface DashboardFilters {
   cycleWeekStart?: string;
+  cycleWeekEnd?: string;
   teamMemberId?: string;
   rcdoId?: string;
   rcdoType?: string;

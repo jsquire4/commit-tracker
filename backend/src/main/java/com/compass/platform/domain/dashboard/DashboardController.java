@@ -38,6 +38,7 @@ public class DashboardController {
     @GetMapping
     public ResponseEntity<ApiResponse<DashboardResponse>> getDashboard(
             @RequestParam(required = false) Instant cycleWeekStart,
+            @RequestParam(required = false) Instant cycleWeekEnd,
             @RequestParam(required = false) UUID teamMemberId,
             @RequestParam(required = false) UUID rcdoId,
             @RequestParam(required = false) String rcdoType,
@@ -45,7 +46,7 @@ public class DashboardController {
         AppUser actor = SecurityContextHelper.getCurrentUser();
 
         DashboardFilters filters = new DashboardFilters(
-                cycleWeekStart, teamMemberId, rcdoId, rcdoType, includeSubtree);
+                cycleWeekStart, cycleWeekEnd, teamMemberId, rcdoId, rcdoType, includeSubtree);
 
         DashboardResponse response = dashboardService.getDashboard(actor, filters);
 
