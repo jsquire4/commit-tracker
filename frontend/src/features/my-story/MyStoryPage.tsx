@@ -199,7 +199,7 @@ export function MyStoryPage() {
           )}
 
           {/* Growth Area Progress Chart */}
-          <GrowthAreaProgressChart progress={story.growthAreaProgress} />
+          <GrowthAreaProgressChart progress={story.growthAreaProgress} weekSnapshots={story.recentWeeks} />
 
           {/* Growth Alignment Details */}
           {(story.growthAreaAlignmentDetails?.length > 0 || story.overallAlignmentPct > 0) && (
