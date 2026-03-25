@@ -3,10 +3,10 @@ import { useCountUp, useFadeUp } from '../../hooks/useMotion';
 import { useInView } from '../../hooks/useInView';
 
 const STATS = [
-  { value: 3, label: 'Views' },
-  { value: 26, label: 'Week Simulation' },
-  { value: 18500, label: 'Commitments' },
-  { value: 178, label: 'Simulated Users' },
+  { value: 27, label: 'Reconciled Weeks' },
+  { value: 35, label: 'Simulated Users' },
+  { value: 2584, label: 'Commitments' },
+  { value: 915, label: 'Personal Reflections' },
 ];
 
 function formatNumber(n: number): string {

@@ -48,16 +48,10 @@ export function HeroSection() {
 
           <div className="flex gap-4 mb-8" style={stagger(3)}>
             <a
-              href="#how-it-works"
+              href="/"
               className="inline-flex items-center gap-1.5 px-7 py-3 bg-accent text-white font-sans text-body font-medium rounded-sm no-underline transition-colors duration-150 hover:bg-accent-dark active:translate-y-px"
             >
               View Demo <span aria-hidden="true">&rarr;</span>
-            </a>
-            <a
-              href="#see-it"
-              className="inline-flex items-center gap-1.5 px-7 py-3 bg-surface text-accent font-sans text-body font-medium rounded-sm no-underline border-[1.5px] border-accent transition-colors duration-150 hover:bg-accent hover:text-white active:translate-y-px"
-            >
-              See the Views <span aria-hidden="true">&rarr;</span>
             </a>
           </div>
 

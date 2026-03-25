@@ -9,22 +9,7 @@ const COMPANIES: CompanyNarrative[] = [
   {
     name: 'Meridian Advanced Manufacturing',
     description:
-      'Industrial turnaround. ~50 people across 3 divisions. Starts strong with 55% strategic alignment (Weeks 1\u20138), hits production crisis at Week 10 with displacement cascading into the engineering division, enters confirmed strategic drift by Week 16 as ERP migration fails, CEO intervenes at Week 18 using observatory data, partial recovery to ~50% alignment by Week 26. Key narratives: a force-multiplier manager (Elena) vs. an absent manager (Tom), a sandbagged star (Robert Chang) wasted on operational work, a system-gamer (Victor) whose vague commitments mask low visibility, and cross-division displacement where engineering teams are pulled into production firefighting.',
-  },
-  {
-    name: 'Pinnacle Health Systems',
-    description:
-      'Healthcare consolidation. ~48 people, 3 hospitals. The "false yellow" \u2014 surface metrics stay acceptable for all 26 weeks, but cost-weighted analysis reveals senior physician-administrators ($110\u2013$160/hr) spending majority time on defensive compliance work while consolidation falls to junior staff. Key narratives: a hospital director (Dr. Mitchell) who silently resists standardization, a frustrated shared-services team whose carry-forward chains trace back to hospital directors blocking progress, and a before/after manager transfer story (Jason Miller moves from a fortress manager to a collaborative one \u2014 same person, different outcomes).',
-  },
-  {
-    name: 'Atlas Logistics Group',
-    description:
-      'Crisis and turnaround. ~46 people, 3 divisions. The most dramatic arc. Weeks 1\u201315 under legacy leadership: portfolio-worst 25% strategic alignment, 40%+ carry-forward, pervasive displacement. Week 16: Apex installs new VP Diana Chen. Weeks 17\u201320: transition chaos (metrics dip further before improving). Weeks 22\u201326: recovery trajectory \u2014 alignment climbs to 42%, carry-forward drops to 25%. Key narratives: a manager whose transformation under new leadership is the strongest "leadership matters" data point (Steve Cooper), a resistor whose team stays red while everyone else improves (Karen Turner), and a technology division that was always strategic but blocked by old-guard leadership until the change.',
-  },
-  {
-    name: 'Vanguard Digital Services',
-    description:
-      'The false positive. ~34 people, 2 divisions. Headline metrics look green for all 26 weeks \u2014 65%+ strategic alignment, strong completion. But deeper analysis reveals: concentration risk (3 people carry 85% of strategic output \u2014 when one takes PTO at Week 16, output drops 50%), an overcrowded rally cry objective with 8 people while other objectives have zero coverage, and a managed services division that learned to tag operational work as "strategic" without changing substance. Key narratives: gaming detection through shallow RCDO linkage depth, an honest operator (Jack Thompson) whose team looks "worst" because he refuses to relabel operational work, and a house-of-cards strategic posture that only surfaces when you drill past headlines.',
+      'Industrial turnaround. 35 people across 3 divisions. Starts strong with 55% strategic alignment (Weeks 1\u20138), hits production crisis at Week 10 with displacement cascading into the engineering division, enters confirmed strategic drift by Week 16 as ERP migration fails, CEO intervenes at Week 18 using observatory data, partial recovery to ~50% alignment by Week 27. Key narratives: a force-multiplier manager (Elena) vs. an absent manager (Tom), a sandbagged star (Robert Chang) wasted on operational work, a system-gamer (Victor) whose vague commitments mask low visibility, and cross-division displacement where engineering teams are pulled into production firefighting.',
   },
 ];
 
@@ -52,10 +37,10 @@ export function SimulationSection() {
         </h2>
         <p className="text-body text-on-surface-variant leading-relaxed mb-6 max-w-none">
           The data shown in the platform is generated through a narrative-driven simulation
-          spanning 26 weeks across 4 portfolio companies under Apex Capital Partners, a
-          mid-market PE firm specializing in industrial and services roll-ups. Each company
-          follows a scripted scenario arc with realistic organizational dynamics &mdash; not
-          random data, but encoded stories with known ground truth.
+          spanning 27 weeks at Meridian Advanced Manufacturing, a company under Apex Capital
+          Partners, a mid-market PE firm specializing in industrial and services roll-ups.
+          The simulation follows a scripted scenario arc with realistic organizational dynamics &mdash; not
+          random data, but an encoded story with known ground truth.
         </p>
 
         {/* Harness Architecture */}
@@ -75,16 +60,15 @@ export function SimulationSection() {
               <code className="font-mono text-small bg-surface-container px-1.5 py-0.5 rounded-sm">
                 docs/scenario-bible.md
               </code>
-              {' '}) &mdash; a narrative specification for each of the 4 portfolio companies
-              covering 26 weeks of organizational events, leadership dynamics, and
-              performance trajectories.
+              {' '}) &mdash; a narrative specification for Meridian covering 27 weeks of
+              organizational events, leadership dynamics, and performance trajectories.
             </p>
             <p>
               Each harness run creates users, rally cries, cycles, commitments, and
               reconciliation records in sequence. The harness respects cycle state
               transitions: it opens a DRAFT, enters commitments, locks the cycle, then
               reconciles &mdash; exactly as a real user would, but at machine speed across
-              178 people simultaneously. Carry-forward chains, displacement records, and
+              35 people simultaneously. Carry-forward chains, displacement records, and
               assignment attribution are all generated according to the scripted narrative
               for each persona.
             </p>
@@ -103,14 +87,14 @@ export function SimulationSection() {
           {/* Stats row */}
           <div className="mt-6 grid grid-cols-4 gap-4 max-[640px]:grid-cols-2">
             {[
-              { label: 'Companies', value: '4' },
-              { label: 'People', value: '~178' },
-              { label: 'Weeks', value: '26' },
-              { label: 'Commitments', value: '~18,500' },
+              { label: 'Company', value: '1' },
+              { label: 'People', value: '35' },
+              { label: 'Weeks', value: '27' },
+              { label: 'Commitments', value: '2,584' },
               { label: 'Growth Areas', value: '107' },
               { label: 'Alignment Links', value: '2,312' },
               { label: 'Reflections', value: '915' },
-              { label: 'Scenario Weeks', value: '104' },
+              { label: 'Rally Cries', value: '3' },
             ].map(({ label, value }) => (
               <div key={label} className="rounded bg-surface-container p-3 text-center">
                 <div className="font-serif text-[1.375rem] text-on-surface">{value}</div>
@@ -133,7 +117,7 @@ export function SimulationSection() {
           </h3>
           <div className="text-body text-on-surface-variant leading-relaxed space-y-4">
             <p>
-              Each of 34 Meridian employees was assigned 3 growth areas based directly on
+              Each of 35 Meridian employees was assigned 3 growth areas based directly on
               their scenario bible character arc. A force-multiplier manager received
               &ldquo;cross-team leadership&rdquo; and &ldquo;systems thinking.&rdquo; A
               sandbagged star performer received &ldquo;technical depth&rdquo; and
@@ -144,7 +128,7 @@ export function SimulationSection() {
             </p>
             <p>
               Nine parallel AI agents were each assigned 2&ndash;5 Meridian personas. For
-              each persona, the agent read their full 26-week commitment history and made
+              each persona, the agent read their full 27-week commitment history and made
               individual judgment calls on each task: does this commitment align to growth
               area X? The decision was not a keyword match &mdash; it required understanding
               the task in context of that person&rsquo;s role, their week, and what the

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export function ArchitectureNav() {
   return (
-    <nav className="sticky top-0 z-30 border-b border-outline-variant bg-surface-lowest/85 backdrop-blur-[20px]">
+    <nav className="sticky top-0 z-30 bg-surface/85 backdrop-blur-[20px] border-b border-outline-variant/15">
       <div className="mx-auto max-w-[1280px] px-8">
         <div className="flex h-14 items-center justify-between">
           <Link

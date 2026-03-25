@@ -176,8 +176,8 @@ export function ArchitecturePage() {
               </p>
               <p>
                 The platform you&rsquo;re seeing is populated with data from a
-                narrative-driven simulation spanning 26 weeks across 4 portfolio
-                companies. Each company follows a scripted scenario arc &mdash; from
+                narrative-driven simulation spanning 27 weeks at Meridian Advanced
+                Manufacturing. The company follows a scripted scenario arc &mdash; from
                 strong initial alignment through crisis, drift, leadership
                 intervention, and recovery. This simulation demonstrates the
                 platform&rsquo;s analytical capabilities against data with known
