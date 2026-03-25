@@ -5,6 +5,7 @@ import com.compass.platform.domain.DisplacementCategory;
 import com.compass.platform.domain.cycle.Cycle;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.CategoryCount;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.DisplacementSummary;
 import com.compass.platform.domain.observatory.dto.ManagerDisplacementReport;
 import com.compass.platform.domain.observatory.dto.NoteCluster;
@@ -61,8 +62,8 @@ public class DisplacementService {
      * Groups by displacement category, computes percentages, identifies top teams,
      * and builds a week-over-week trend map.
      */
-    public DisplacementSummary aggregateDisplacements(UUID orgId, int weekCount) {
-        List<Cycle> cycles = resolveRecentCycles(orgId, weekCount);
+    public DisplacementSummary aggregateDisplacements(UUID orgId, TimeScope scope) {
+        List<Cycle> cycles = resolveRecentCycles(orgId, scope);
         if (cycles.isEmpty()) {
             return new DisplacementSummary(0, List.of(), Map.of());
         }
@@ -100,7 +101,7 @@ public class DisplacementService {
      * Aggregate displacements scoped to a specific manager's team (direct reports and
      * their subtree). Also clusters displacement notes for the manager's team.
      */
-    public ManagerDisplacementReport getDisplacementsByManager(UUID orgId, UUID managerId, int weekCount) {
+    public ManagerDisplacementReport getDisplacementsByManager(UUID orgId, UUID managerId, TimeScope scope) {
         AppUser manager = appUserRepository.findById(managerId)
                 .orElseThrow(() -> new IllegalArgumentException("Manager not found: " + managerId));
 
@@ -108,7 +109,7 @@ public class DisplacementService {
         List<UUID> subtreeIds = appUserRepository.findSubtreeUserIds(managerId);
         Set<UUID> teamIds = new HashSet<>(subtreeIds);
 
-        List<Cycle> cycles = resolveRecentCycles(orgId, weekCount);
+        List<Cycle> cycles = resolveRecentCycles(orgId, scope);
         if (cycles.isEmpty() || teamIds.isEmpty()) {
             return new ManagerDisplacementReport(managerId, manager.getDisplayName(), 0, List.of(), List.of());
         }
@@ -145,8 +146,8 @@ public class DisplacementService {
      * Cluster free-text displacement notes across the org using n-gram extraction.
      * Groups by displacement category first, then surfaces recurring 2- and 3-gram phrases.
      */
-    public Map<DisplacementCategory, List<NoteCluster>> clusterDisplacementNotes(UUID orgId, int weekCount) {
-        List<Cycle> cycles = resolveRecentCycles(orgId, weekCount);
+    public Map<DisplacementCategory, List<NoteCluster>> clusterDisplacementNotes(UUID orgId, TimeScope scope) {
+        List<Cycle> cycles = resolveRecentCycles(orgId, scope);
         if (cycles.isEmpty()) {
             return Map.of();
         }
@@ -218,9 +219,12 @@ public class DisplacementService {
      * Only RECONCILED cycles have complete reconciliation data; including other states
      * would mix partial or absent data into analytics calculations.
      */
-    private List<Cycle> resolveRecentCycles(UUID orgId, int weekCount) {
+    private List<Cycle> resolveRecentCycles(UUID orgId, TimeScope scope) {
+        if (scope.isDateRange()) {
+            return cycleRepository.findReconciledByOrgIdAndDateRange(orgId, scope.dateFrom(), scope.dateTo());
+        }
         List<Cycle> reconciled = cycleRepository.findByOrgIdAndStateOrderByStartsAtDesc(orgId, CycleState.RECONCILED);
-        return reconciled.stream().limit(weekCount).toList();
+        return reconciled.stream().limit(scope.effectiveWeekCount()).toList();
     }
 
     /**

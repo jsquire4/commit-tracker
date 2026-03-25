@@ -92,7 +92,8 @@ public class DriftDetectionService {
     @Transactional
     public DriftReport detectDrift(UUID orgId) {
         ObservatoryConfig config = getOrCreateConfig(orgId);
-        int weekCount = config.getDriftStructuralWeeks();
+        com.compass.platform.domain.observatory.dto.TimeScope driftScope =
+                com.compass.platform.domain.observatory.dto.TimeScope.ofWeeks(config.getDriftStructuralWeeks());
 
         List<AppUser> managers = userRepository.findByOrgIdAndIsActiveTrue(orgId).stream()
                 .filter(u -> MANAGER_ROLES.contains(u.getRole()))
@@ -111,7 +112,7 @@ public class DriftDetectionService {
 
             // ── ALIGNMENT drift ──────────────────────────────────────────────
             TeamAlignmentTrend alignmentTrend =
-                    analyticsService.computeTeamAlignmentTrend(orgId, manager.getId(), weekCount, teamUserIds);
+                    analyticsService.computeTeamAlignmentTrend(orgId, manager.getId(), driftScope, teamUserIds);
 
             List<Double> strategicPcts = alignmentTrend.dataPoints().stream()
                     .map(AlignmentDataPoint::strategicPct)
@@ -140,7 +141,7 @@ public class DriftDetectionService {
 
             // ── VELOCITY drift ───────────────────────────────────────────────
             List<CompletionDataPoint> completionPoints =
-                    analyticsService.computeTeamCompletionTrend(orgId, manager.getId(), weekCount, teamUserIds);
+                    analyticsService.computeTeamCompletionTrend(orgId, manager.getId(), driftScope, teamUserIds);
 
             List<Double> completionRates = completionPoints.stream()
                     .map(CompletionDataPoint::completionRate)

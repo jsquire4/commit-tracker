@@ -2,6 +2,7 @@ package com.compass.platform.domain.observatory;
 
 import com.compass.platform.domain.UserRole;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.CompletionDataPoint;
 import com.compass.platform.domain.observatory.dto.DriftReport;
 import com.compass.platform.domain.observatory.dto.DriftSeverity;
@@ -62,7 +63,7 @@ public class ExecutiveHealthComposer {
      * @param weekCount how many trailing weeks of data to include
      * @return assembled {@link ExecutiveHealthResponse}
      */
-    public ExecutiveHealthResponse computeHealth(UUID orgId, int weekCount) {
+    public ExecutiveHealthResponse computeHealth(UUID orgId, TimeScope scope) {
         // 1. Load org for name — fail fast if not found
         Org org = orgRepository.findById(orgId)
                 .orElseThrow(() -> new IllegalArgumentException("Org not found: " + orgId));
@@ -77,12 +78,12 @@ public class ExecutiveHealthComposer {
         // findSubtreeUserIds which excludes the root manager, so org-wide will always be slightly
         // higher than the arithmetic sum of team subtotals. This is intentional — the org-wide figure
         // is the authoritative alignment number; the per-team table shows only subordinate coverage.
-        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, weekCount);
+        List<AlignmentDataPoint> alignmentTrend = analyticsService.computeAlignmentTrend(orgId, scope);
         double strategicAlignmentPct = mostRecentStrategicPct(alignmentTrend);
         double rallyCoveragePct = mostRecentRallyCoveragePct(alignmentTrend);
 
         // 4. Completion trend — extract most recent data point for completion + carry-forward rate
-        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, weekCount);
+        List<CompletionDataPoint> completionTrend = analyticsService.computeCompletionTrend(orgId, scope);
         double completionRate = mostRecentCompletionRate(completionTrend);
         double carryForwardRate = mostRecentCarryForwardRate(completionTrend);
 
@@ -95,7 +96,7 @@ public class ExecutiveHealthComposer {
         int integrityFlags = integrityReport.flags().size();
 
         // 7. Per-VP/Director breakdown
-        List<OrgUnitHealth> units = buildUnitHealthList(orgId, weekCount, config);
+        List<OrgUnitHealth> units = buildUnitHealthList(orgId, scope, config);
 
         // 8. Overall grade from org-wide alignment
         HealthGrade overallGrade = computeGrade(strategicAlignmentPct, config);
@@ -187,7 +188,7 @@ public class ExecutiveHealthComposer {
      * Build one {@link OrgUnitHealth} per VP or Director in the org.
      * Per-unit alignment uses the team-scoped alignment trend from AnalyticsService.
      */
-    private List<OrgUnitHealth> buildUnitHealthList(UUID orgId, int weekCount, ObservatoryConfig config) {
+    private List<OrgUnitHealth> buildUnitHealthList(UUID orgId, TimeScope scope, ObservatoryConfig config) {
         List<AppUser> leaders = userRepository.findByOrgIdAndRoleIn(
                 orgId, List.of(UserRole.VP, UserRole.DIRECTOR));
 
@@ -197,23 +198,23 @@ public class ExecutiveHealthComposer {
 
         List<OrgUnitHealth> units = new ArrayList<>(leaders.size());
         for (AppUser leader : leaders) {
-            units.add(buildUnitHealth(orgId, leader, weekCount, config));
+            units.add(buildUnitHealth(orgId, leader, scope, config));
         }
         return units;
     }
 
-    private OrgUnitHealth buildUnitHealth(UUID orgId, AppUser leader, int weekCount, ObservatoryConfig config) {
+    private OrgUnitHealth buildUnitHealth(UUID orgId, AppUser leader, TimeScope scope, ObservatoryConfig config) {
         UUID managerId = leader.getId();
 
         // Team-scoped alignment
-        TeamAlignmentTrend teamTrend = analyticsService.computeTeamAlignmentTrend(orgId, managerId, weekCount);
+        TeamAlignmentTrend teamTrend = analyticsService.computeTeamAlignmentTrend(orgId, managerId, scope);
         List<AlignmentDataPoint> teamAlignment = (teamTrend != null) ? teamTrend.dataPoints() : List.of();
         double unitStrategicPct = mostRecentStrategicPct(teamAlignment);
         double unitRallyCoveragePct = mostRecentRallyCoveragePct(teamAlignment);
 
         // Team-scoped completion
         List<CompletionDataPoint> teamCompletion = analyticsService.computeTeamCompletionTrend(
-                orgId, managerId, weekCount);
+                orgId, managerId, scope);
         double unitCompletionRate = mostRecentCompletionRate(teamCompletion);
 
         // Headcount from full reporting subtree (not just direct reports)

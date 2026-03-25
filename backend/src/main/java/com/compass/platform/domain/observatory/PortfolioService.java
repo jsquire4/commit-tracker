@@ -3,6 +3,7 @@ package com.compass.platform.domain.observatory;
 import com.compass.platform.domain.commit.CommitmentRepository;
 import com.compass.platform.domain.cycle.CycleRepository;
 import com.compass.platform.domain.observatory.dto.AlignmentDataPoint;
+import com.compass.platform.domain.observatory.dto.TimeScope;
 import com.compass.platform.domain.observatory.dto.ExecutiveHealthResponse;
 import com.compass.platform.domain.observatory.dto.PortcoSummary;
 import com.compass.platform.domain.observatory.dto.PortcoTrendLine;
@@ -38,8 +39,8 @@ public class PortfolioService {
 
     private static final Logger log = LoggerFactory.getLogger(PortfolioService.class);
 
-    /** Default trailing-cycle window used when no weekCount is specified. */
-    private static final int DEFAULT_WEEK_COUNT = 12;
+    /** Default trailing-cycle window used when no scope is specified. */
+    private static final TimeScope DEFAULT_SCOPE = TimeScope.ofWeeks(12);
 
     private final PortfolioRepository portfolioRepository;
     private final OrgRepository orgRepository;
@@ -91,7 +92,7 @@ public class PortfolioService {
         List<Org> orgs = orgRepository.findByPortfolioId(portfolioId);
 
         List<PortcoSummary> portcos = orgs.stream()
-                .map(org -> buildPortcoSummary(org, DEFAULT_WEEK_COUNT))
+                .map(org -> buildPortcoSummary(org, DEFAULT_SCOPE))
                 .toList();
 
         log.debug("getPortfolioHealth portfolioId={} orgCount={}", portfolioId, portcos.size());
@@ -118,16 +119,16 @@ public class PortfolioService {
      * @return a {@link PortfolioComparisonResponse} with one trend line per portco
      * @throws jakarta.persistence.EntityNotFoundException if the portfolio does not exist
      */
-    public PortfolioComparisonResponse getPortfolioComparison(UUID portfolioId, int weekCount) {
+    public PortfolioComparisonResponse getPortfolioComparison(UUID portfolioId, TimeScope scope) {
         Portfolio portfolio = loadPortfolio(portfolioId);
         List<Org> orgs = orgRepository.findByPortfolioId(portfolioId);
 
         List<PortcoTrendLine> trends = orgs.stream()
-                .map(org -> buildPortcoTrendLine(org, weekCount))
+                .map(org -> buildPortcoTrendLine(org, scope))
                 .toList();
 
         log.debug("getPortfolioComparison portfolioId={} weekCount={} orgCount={}",
-                portfolioId, weekCount, trends.size());
+                portfolioId, scope, trends.size());
 
         return new PortfolioComparisonResponse(
                 portfolio.getId(),
@@ -154,8 +155,8 @@ public class PortfolioService {
      * {@link ExecutiveHealthComposer#computeHealth} and overlaying the live
      * headcount from the user table.
      */
-    private PortcoSummary buildPortcoSummary(Org org, int weekCount) {
-        ExecutiveHealthResponse health = healthComposer.computeHealth(org.getId(), weekCount);
+    private PortcoSummary buildPortcoSummary(Org org, TimeScope scope) {
+        ExecutiveHealthResponse health = healthComposer.computeHealth(org.getId(), scope);
         long headcount = appUserRepository.countByOrgIdAndIsActiveTrue(org.getId());
         List<RallyCrySummary> rallyCries = buildRallyCrySummaries(org.getId());
 
@@ -221,9 +222,9 @@ public class PortfolioService {
      * Build a {@link PortcoTrendLine} for a single org by fetching its
      * alignment trend for the requested number of trailing cycles.
      */
-    private PortcoTrendLine buildPortcoTrendLine(Org org, int weekCount) {
+    private PortcoTrendLine buildPortcoTrendLine(Org org, TimeScope scope) {
         List<AlignmentDataPoint> dataPoints =
-                analyticsService.computeAlignmentTrend(org.getId(), weekCount);
+                analyticsService.computeAlignmentTrend(org.getId(), scope);
 
         return new PortcoTrendLine(
                 org.getId(),

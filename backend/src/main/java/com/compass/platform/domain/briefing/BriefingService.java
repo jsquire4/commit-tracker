@@ -95,7 +95,7 @@ public interface BriefingService {
      * @param weekCount number of trailing weeks to summarise
      * @return program summary with narrative and timestamp
      */
-    ProgramSummaryResponse generateProgramSummary(UUID orgId, int weekCount);
+    ProgramSummaryResponse generateProgramSummary(UUID orgId, com.compass.platform.domain.observatory.dto.TimeScope scope);
 
     /**
      * Generate a 2-sentence narrative for a single week's execution data.
