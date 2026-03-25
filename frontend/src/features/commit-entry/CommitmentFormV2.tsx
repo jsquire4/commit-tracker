@@ -3,7 +3,7 @@ import { useForm, Controller, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog, Transition } from '@headlessui/react';
 import { z } from 'zod';
-import { CreateCommitmentFormSchema } from '@/lib/validation';
+import { CreateCommitmentFormBaseSchema } from '@/lib/validation';
 import {
   useCreateCommitment,
   useUpdateCommitment,
@@ -20,11 +20,15 @@ import { PersonalAlignmentView } from './PersonalAlignmentView';
 import Button from '@/components/Button';
 import type { Commitment, CompletionHorizon, CompletionDay, CompletionTimeBlock } from '@/types';
 
-// Extend the base schema with growthAreaIds
-const CommitmentFormV2Schema = CreateCommitmentFormSchema.and(
-  z.object({
-    growthAreaIds: z.array(z.string().uuid()),
-  }),
+// Extend the base object schema (before refinements) to avoid ZodIntersection + ZodEffects issues
+const CommitmentFormV2Schema = CreateCommitmentFormBaseSchema.extend({
+  growthAreaIds: z.array(z.string().uuid()),
+}).refine(
+  (data) => !data.outcomeId || data.definingObjectiveId,
+  { message: 'Defining Objective is required when Outcome is set', path: ['definingObjectiveId'] },
+).refine(
+  (data) => !data.definingObjectiveId || data.rallyCryId,
+  { message: 'Rally Cry is required when Defining Objective is set', path: ['rallyCryId'] },
 );
 
 type FormValues = z.infer<typeof CommitmentFormV2Schema>;
@@ -90,6 +94,9 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
   const [currentStep, setCurrentStep] = useState<Step>('org');
   // Track transition direction for animation
   const [isAnimatingForward, setIsAnimatingForward] = useState(true);
+  // Track assignment mode separately from the assignedBy UUID value
+  // (empty string is falsy, so we can't derive mode from the field value alone)
+  const [assignmentMode, setAssignmentMode] = useState<'SELF_DIRECTED' | 'ASSIGNED_BY'>('SELF_DIRECTED');
 
   const { data: commitments = [] } = useCommitments(cycleId, undefined);
   const { data: chessCategories = [] } = useChessCategories();
@@ -123,6 +130,11 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
     if (open) {
       reset(getDefaultValues(existingCommitment));
       setCurrentStep('org');
+      setAssignmentMode(
+        existingCommitment?.attribution.kind === 'ASSIGNED_BY'
+          ? 'ASSIGNED_BY'
+          : 'SELF_DIRECTED',
+      );
     }
   }, [open, existingCommitment, reset]);
 
@@ -437,10 +449,10 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
                             render={({ field }) => (
                               <AssignmentAttribution
                                 value={
-                                  field.value
+                                  assignmentMode === 'ASSIGNED_BY'
                                     ? {
                                         kind: 'ASSIGNED_BY',
-                                        assignedById: field.value,
+                                        assignedById: field.value ?? '',
                                         assignedByName: existingCommitment?.attribution?.kind === 'ASSIGNED_BY'
                                           ? existingCommitment.attribution.assignedByName ?? ''
                                           : '',
@@ -448,8 +460,11 @@ export function CommitmentFormV2({ open, commitmentId, cycleId, onClose }: Commi
                                     : { kind: 'SELF_DIRECTED' }
                                 }
                                 onChange={(a) => {
+                                  setAssignmentMode(a.kind);
                                   field.onChange(
-                                    a.kind === 'ASSIGNED_BY' ? a.assignedById : undefined,
+                                    a.kind === 'ASSIGNED_BY' && a.assignedById
+                                      ? a.assignedById
+                                      : undefined,
                                   );
                                 }}
                               />

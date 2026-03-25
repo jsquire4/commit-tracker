@@ -7,7 +7,8 @@ export const CompletionTimeBlockSchema = z.enum(['MORNING', 'MIDDAY', 'AFTERNOON
 export const ReconciliationStatusSchema = z.enum(['COMPLETED', 'PARTIALLY_COMPLETED', 'NOT_STARTED', 'CARRIED_FORWARD']);
 
 // Form validation schemas (for react-hook-form)
-export const CreateCommitmentFormSchema = z.object({
+// Base object schema (without cross-field refinements) — used by CommitmentFormV2 to .extend()
+export const CreateCommitmentFormBaseSchema = z.object({
   title: z.string().min(1, 'Title is required').max(500, 'Title too long'),
   description: z.string().max(2000).optional(),
   bullets: z.array(z.string().min(1)).min(2, 'At least 2 bullets required').max(5, 'Maximum 5 bullets'),
@@ -19,7 +20,9 @@ export const CreateCommitmentFormSchema = z.object({
   definingObjectiveId: z.string().uuid().optional(),
   outcomeId: z.string().uuid().optional(),
   assignedBy: z.string().uuid().optional(),
-}).refine(
+});
+
+export const CreateCommitmentFormSchema = CreateCommitmentFormBaseSchema.refine(
   (data) => !data.outcomeId || data.definingObjectiveId,
   { message: 'Defining Objective is required when Outcome is set', path: ['definingObjectiveId'] }
 ).refine(
