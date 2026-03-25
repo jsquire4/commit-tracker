@@ -83,6 +83,7 @@ const API_GROUPS: ApiGroup[] = [
       { method: 'GET', path: '/users/me', description: 'Current user profile', auth: 'All' },
       { method: 'GET', path: '/users/team', description: 'Direct reports', auth: 'Manager+' },
       { method: 'GET', path: '/users/tree', description: 'Full org subtree', auth: 'Director+' },
+      { method: 'GET', path: '/users/assigners', description: 'Manager chain + peers for \u201cAssigned By\u201d dropdown', auth: 'All' },
     ],
   },
   {
@@ -91,6 +92,32 @@ const API_GROUPS: ApiGroup[] = [
       { method: 'GET', path: '/briefing/latest', description: 'Latest AI-generated briefing', auth: 'Manager+' },
       { method: 'POST', path: '/briefing/generate', description: 'Trigger new briefing generation', auth: 'Director+' },
       { method: 'POST', path: '/briefing/chat', description: 'Conversational analytics query', auth: 'Manager+' },
+    ],
+  },
+  {
+    name: 'Growth Areas',
+    endpoints: [
+      { method: 'POST', path: '/growth-areas', description: 'Create growth area (max 5 active)', auth: 'Owner' },
+      { method: 'GET', path: '/growth-areas/me', description: 'List my active growth areas', auth: 'Owner' },
+      { method: 'PUT', path: '/growth-areas/{id}', description: 'Update growth area', auth: 'Owner' },
+      { method: 'DELETE', path: '/growth-areas/{id}', description: 'Deactivate growth area (soft delete)', auth: 'Owner' },
+    ],
+  },
+  {
+    name: 'IC Insights',
+    endpoints: [
+      { method: 'GET', path: '/my-week/summary', description: 'Week summary with growth area hits + LLM narrative', auth: 'Owner' },
+      { method: 'GET', path: '/my-week/rolling-history', description: 'Paginated rolling work history (offset/limit)', auth: 'Owner' },
+      { method: 'GET', path: '/my-week/reflection', description: 'Get personal reflection for a cycle', auth: 'Owner' },
+      { method: 'POST', path: '/my-week/reflection', description: 'Save alignment signal + learning note', auth: 'Owner' },
+      { method: 'GET', path: '/my-week/team-member-history', description: 'Manager view of team member\u2019s history', auth: 'Manager+' },
+    ],
+  },
+  {
+    name: 'My Story',
+    endpoints: [
+      { method: 'GET', path: '/my-story', description: 'Longitudinal growth data, pattern stats, LLM resume bullets', auth: 'Owner' },
+      { method: 'GET', path: '/my-week/team-member-story', description: 'Manager view of team member\u2019s story', auth: 'Manager+' },
     ],
   },
 ];

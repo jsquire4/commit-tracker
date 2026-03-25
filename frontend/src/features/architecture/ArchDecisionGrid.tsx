@@ -66,6 +66,26 @@ const DECISIONS: Decision[] = [
     rationale:
       'Portfolio companies onboard via CSV import, not a 6-month migration. Seed data proves the migration path. The tool is useful in Week 1, not Month 6.',
   },
+  {
+    title: 'Two-Step Commitment Form',
+    rationale:
+      'Org alignment first (Rally Cry, CHESS category \u2014 the gate), personal alignment second (growth areas \u2014 the incentive). This ordering ensures the organization gets what it needs while giving the IC a reason to keep going.',
+  },
+  {
+    title: 'Growth Areas, Not OKRs',
+    rationale:
+      'No targets, no scores, no pass/fail. Growth areas are directions \u2014 \u201cmentorship,\u201d \u201csystem design,\u201d \u201ccrisis management.\u201d The system reflects patterns back to the IC without grading them. This avoids the OKR trap where goals become performance contracts.',
+  },
+  {
+    title: 'Neutral Directional Language',
+    rationale:
+      'The platform never says \u201cat risk,\u201d \u201cfailing,\u201d or \u201cbehind.\u201d It says \u201cincreasing,\u201d \u201cdecreasing,\u201d \u201cstable.\u201d Colors are teal-to-gray, not green-to-red. The heatmap shows direction, not judgment. This is essential for honest data \u2014 people game systems that punish them.',
+  },
+  {
+    title: 'Persona-Driven Simulation',
+    rationale:
+      'The 26-week Meridian simulation isn\u2019t random data. Each of 34 people has a character arc \u2014 star performers, absent managers, sandbagged talent, system gamers. Growth areas were tagged commitment-by-commitment by AI agents assuming each persona\u2019s perspective across all 26 weeks.',
+  },
 ];
 
 function DecisionCard({ decision, index }: { decision: Decision; index: number }) {

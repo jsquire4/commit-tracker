@@ -53,12 +53,20 @@ function Root() {
           {' '}
           <span className="text-muted">({auth.role.charAt(0) + auth.role.slice(1).toLowerCase()}, {auth.orgName})</span>
         </span>
-        <button
-          onClick={handleSwitchUser}
-          className="text-muted underline hover:text-on-surface-variant transition-colors duration-[var(--duration-fast)]"
-        >
-          Switch user
-        </button>
+        <div className="flex items-center gap-4">
+          <a
+            href="/architecture"
+            className="text-muted underline hover:text-on-surface-variant transition-colors duration-[var(--duration-fast)]"
+          >
+            Architecture Overview
+          </a>
+          <button
+            onClick={handleSwitchUser}
+            className="text-muted underline hover:text-on-surface-variant transition-colors duration-[var(--duration-fast)]"
+          >
+            Switch user
+          </button>
+        </div>
       </div>
       <App basename="/" authContext={auth} />
     </>

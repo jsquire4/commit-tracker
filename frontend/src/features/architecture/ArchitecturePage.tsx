@@ -39,11 +39,15 @@ const DATA_MODEL = `erDiagram
   Org ||--o{ ChessCategory : configures
   AppUser ||--o{ Commitment : creates
   AppUser ||--o{ AppUser : manages
+  AppUser ||--o{ GrowthArea : sets
+  AppUser ||--o{ PersonalReflection : reflects
   Cycle ||--o{ Commitment : contains
+  Cycle ||--o{ PersonalReflection : for_cycle
   RallyCry ||--o{ DefiningObjective : has
   DefiningObjective ||--o{ Outcome : has
   Commitment ||--o{ TaskBullet : includes
   Commitment ||--o{ ReconciliationRecord : reconciled_by
+  Commitment }o--o{ GrowthArea : tagged_with
   Commitment }o--|| RallyCry : links_to
   Commitment }o--|| DefiningObjective : links_to
   Commitment }o--|| Outcome : links_to
@@ -80,6 +84,18 @@ const COMMITMENT_TO_INTELLIGENCE = `sequenceDiagram
   Exec->>App: Ask questions via chatbot
   App->>AI: Query with org context
   AI-->>Exec: Data-backed answers`;
+
+const GROWTH_AREA_FLOW = `graph LR
+  IC["IC sets Growth Areas<br/>(up to 5 labels)"] --> TAG["Tags commitments<br/>to growth areas"]
+  TAG --> RECON["Closes week<br/>(reflection + learning)"]
+  RECON --> STORY["My Story builds:<br/>progress, patterns,<br/>resume bullets"]
+  STORY --> LLM["LLM generates<br/>career highlights"]
+
+  MGR["Manager sees:<br/>team alignment<br/>to personal goals"] --> TAG
+
+  style IC fill:#036A6A,color:#fff
+  style STORY fill:#455F87,color:#fff
+  style LLM fill:#5A7A6B,color:#fff`;
 
 /* ── Section wrapper ──────────────────────────────────────────────── */
 
@@ -172,6 +188,86 @@ export function ArchitecturePage() {
           </div>
         </Section>
 
+        {/* Product Philosophy */}
+        <Section id="product-philosophy">
+          <h2 className="font-serif text-[1.75rem] leading-tight text-on-surface mb-6">
+            Product Philosophy
+          </h2>
+          <div className="space-y-6">
+            <div className="rounded bg-surface-lowest p-8">
+              <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                Not Surveillance &mdash; Drift Detection
+              </h3>
+              <p className="text-body text-on-surface-variant leading-relaxed">
+                Compass doesn&rsquo;t monitor people. It monitors organizational alignment.
+                The difference matters: surveillance asks &ldquo;who is slacking?&rdquo;
+                Drift detection asks &ldquo;are we doing what we said we&rsquo;d do?&rdquo;
+                The platform uses neutral, directional language throughout &mdash;
+                increasing&thinsp;/&thinsp;decreasing&thinsp;/&thinsp;stable, never
+                good&thinsp;/&thinsp;bad&thinsp;/&thinsp;at-risk. Colors are
+                teal-to-gray, not green-to-red. Heatmaps show direction, not judgment. This
+                framing is not cosmetic &mdash; it is the reason people enter honest data.
+                Systems that punish deviation get gamed. Systems that reflect reality build
+                institutional memory.
+              </p>
+            </div>
+
+            <div className="rounded bg-surface-lowest p-8">
+              <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                IC-First Design
+              </h3>
+              <p className="text-body text-on-surface-variant leading-relaxed">
+                The platform only works if individuals enter honest data. That means the IC
+                must have a selfish reason to log &mdash; not just organizational duty. The
+                IC value proposition: every honest week builds a professional narrative.
+                Growth areas, career highlights, pattern recognition, personal alignment
+                trends. The system is building their brag doc, tracking their growth, and
+                surfacing when they&rsquo;re being misaligned by management. An IC who sees
+                that 80% of their work is assigned by others and maps to zero of their
+                growth areas has data they can act on. That&rsquo;s the selfish reason.
+                Management gets honest data as a consequence of designing for the individual
+                first.
+              </p>
+            </div>
+
+            <div className="rounded bg-surface-lowest p-8">
+              <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                Dual Alignment Model
+              </h3>
+              <p className="text-body text-on-surface-variant leading-relaxed">
+                Every commitment can align to two separate systems simultaneously: the
+                organizational strategy (Rally Cries via the RCDO hierarchy) and the
+                individual&rsquo;s personal growth direction. This creates two-dimensional
+                alignment: &ldquo;Am I doing what the org needs?&rdquo; and &ldquo;Is the
+                org&rsquo;s work building me?&rdquo; These are independent signals. High
+                org alignment with zero personal alignment is not a success state &mdash;
+                it&rsquo;s a retention risk that managers can now see coming. A team member
+                who is perfectly aligned to organizational objectives but whose work maps to
+                none of their growth areas will leave when something better appears. The
+                dual model makes that pattern visible before it becomes a resignation.
+              </p>
+            </div>
+
+            <div className="rounded bg-surface-lowest p-8">
+              <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                The Shutdown Ritual
+              </h3>
+              <p className="text-body text-on-surface-variant leading-relaxed">
+                Reconciliation is reframed as &ldquo;Close My Week&rdquo; &mdash; a
+                satisfying end-of-week ritual, not a compliance exercise. The IC reflects on
+                their alignment signal (closer&thinsp;/&thinsp;same&thinsp;/&thinsp;further
+                to their goals), records one learning, and receives an LLM-generated summary
+                of their week: what they accomplished, what they deferred, how their
+                commitments mapped to their growth areas. This is the moment the IC thinks
+                &ldquo;I&rsquo;m glad I logged this.&rdquo; Without that moment, honesty
+                degrades over time. With it, the platform becomes a practice rather than a
+                chore, and the longitudinal data that powers My Story becomes rich enough to
+                be genuinely useful.
+              </p>
+            </div>
+          </div>
+        </Section>
+
         {/* Tech Stack */}
         <Section id="tech-stack">
           <TechStackStrip />
@@ -223,6 +319,70 @@ export function ArchitecturePage() {
             reconciliation, aggregation, and AI-generated executive insight.
           </p>
           <MermaidDiagram definition={COMMITMENT_TO_INTELLIGENCE} />
+        </Section>
+
+        {/* Growth Areas & Personal Narrative */}
+        <Section id="growth-areas">
+          <h2 className="font-serif text-[1.75rem] leading-tight text-on-surface mb-6">
+            Growth Areas &amp; Personal Narrative
+          </h2>
+          <p className="text-body text-on-surface-variant mb-8 max-w-[640px] leading-relaxed">
+            The second alignment dimension: personal growth. Lightweight labels, not OKRs
+            &mdash; directions, not contracts.
+          </p>
+          <MermaidDiagram definition={GROWTH_AREA_FLOW} />
+
+          <div className="mt-10 rounded bg-surface-lowest p-8">
+            <div className="grid grid-cols-2 gap-8 max-[640px]:grid-cols-1">
+              <div>
+                <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                  How Growth Areas Work
+                </h3>
+                <div className="text-body text-on-surface-variant leading-relaxed space-y-3">
+                  <p>
+                    Growth areas are lightweight labels &mdash; &ldquo;system
+                    design,&rdquo; &ldquo;cross-team leadership,&rdquo;
+                    &ldquo;mentorship&rdquo; &mdash; not measurable OKRs with targets
+                    and scores. There is no pass or fail. The system reflects patterns
+                    back to the IC without grading them, deliberately avoiding the OKR
+                    trap where goals become performance contracts that people manage
+                    rather than pursue.
+                  </p>
+                  <p>
+                    Commitments are tagged to growth areas during creation (step 2 of
+                    the two-step form, after org alignment is established). Each IC can
+                    maintain up to 5 active growth areas. The system computes personal
+                    alignment percentage per week and over time, building a longitudinal
+                    picture of how work is actually developing the person.
+                  </p>
+                </div>
+              </div>
+              <div>
+                <h3 className="font-serif text-[1.125rem] text-on-surface mb-3">
+                  My Story
+                </h3>
+                <div className="text-body text-on-surface-variant leading-relaxed space-y-3">
+                  <p>
+                    My Story is the longitudinal view that makes growth area tracking
+                    valuable. It shows a stacked bar chart of alignment over time,
+                    growth area progress across every recorded week, pattern insights
+                    (which areas dominate, which are absent), and LLM-generated
+                    resume bullets built from actual work history rather than
+                    self-reported summaries.
+                  </p>
+                  <p>
+                    Historical data persists even when growth areas are deactivated.
+                    The join table preserves every commitment-to-growth-area link with
+                    the growth area&rsquo;s state at time of tagging &mdash; so
+                    changing goals never rewrites history. This is how Wei Zhang
+                    (&ldquo;The Drifter&rdquo; in the simulation) can change growth
+                    areas every 4 weeks and still produce coherent longitudinal
+                    analytics.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
         </Section>
 
         {/* Architecture Decisions */}
