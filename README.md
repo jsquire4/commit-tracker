@@ -5,74 +5,153 @@ PE turnaround execution observatory that connects strategic intent to ground-lev
 ## Stack
 
 - **Backend:** Java 21, Spring Boot 3.2.5, Spring Data JPA, PostgreSQL 16, Flyway
-- **Frontend:** React 18, TypeScript (strict), Vite, TanStack Query, Zustand, Tailwind CSS, Recharts
-- **LLM:** OpenAI (GPT-4.1-nano default), Anthropic fallback
-- **Infrastructure:** Docker Compose, nginx reverse proxy, Railway (production)
+- **Frontend:** React 18, TypeScript (strict), Vite, TanStack Query, Zustand, Tailwind CSS, Recharts, Module Federation (`@originjs/vite-plugin-federation`) for host-app integration
+- **LLM:** OpenAI (default), Anthropic fallback — configurable model and base URL
+- **Infrastructure:** Docker Compose (PostgreSQL + API + static UI), **nginx inside the frontend image** (SPA + `/api` reverse proxy to the backend — there is no separate nginx Compose service)
+- **Observability:** Spring Boot Actuator (`health`, `info`, `metrics`); JSON logs on the `railway` profile (Logstash encoder)
 - **Testing:** JUnit 5, Testcontainers, Vitest, Testing Library, MSW
+
+## Infrastructure (what runs where)
+
+| Piece | Role |
+|-------|------|
+| **PostgreSQL 16** | Primary datastore; Flyway migrations on backend startup |
+| **Backend** | Spring Boot on port **8080** (`server.port`) |
+| **Frontend image** | **nginx:alpine** serves the Vite build from `/usr/share/nginx/html` and proxies **`/api/*`** to the backend (`BACKEND_URL` in the frontend container — `http://backend:8080` under Compose) |
+
+Compose project name is **`compass`** (see `name:` in the YAML files).
+
+**Ports**
+
+| Service | Local dev (native) | `docker compose` |
+|---------|-------------------|------------------|
+| UI | `http://localhost:3001` (Vite dev server) | `http://localhost:3000` (container **80** → host **3000**) |
+| API | `http://localhost:8080` | `http://localhost:8080` |
+| PostgreSQL | `127.0.0.1:5432` | `127.0.0.1:5432` |
+
+Health check: `GET http://localhost:8080/actuator/health`
 
 ## Installation
 
 ### Prerequisites
 
-- Docker & Docker Compose
-- Java 21 (for local backend development)
-- Node.js 20+ with pnpm (for local frontend development)
+- **Docker** and **Docker Compose** (for full stack or DB-only)
+- **Java 21** + **Gradle wrapper** (for running the backend outside Docker)
+- **Node.js 20+** with **pnpm** (Corepack: `corepack enable` then use `pnpm` — lockfile is `pnpm-lock.yaml`)
 
-### Option A: Full Stack with Docker
+### Option A: Full stack with Docker (demo / production-like)
+
+Builds backend and frontend images, starts PostgreSQL, API, and UI.
 
 ```bash
-docker compose up
+docker compose up --build
 ```
 
-This starts PostgreSQL, the Spring Boot backend, and the React frontend behind nginx. Access the app at `http://localhost:3000`.
+Open **`http://localhost:3000`**. The browser talks to nginx on 3000; API calls go to **`/api/...`**, which nginx forwards to the backend container.
 
-### Option B: Database in Docker, App Locally (Recommended for Development)
+First startup runs Flyway and, with the default **`local`** profile in Compose, seeds the small demo dataset (see [Seed data](#seed-data)).
+
+To stop: `Ctrl+C` or `docker compose down`. To reset the DB volume: `docker compose down -v` (destructive).
+
+### Option B: Database in Docker, apps on the host (recommended for development)
+
+Keeps Postgres in Docker; run Spring Boot and Vite locally for fast reload.
 
 ```bash
-# Start PostgreSQL
+# 1) Start PostgreSQL only
 docker compose -f docker-compose.dev.yml up -d
 
-# Start backend (seeds demo data on first run)
+# 2) Backend — uses application-local.yml (localhost:5432, seed on)
 cd backend
-./gradlew bootRun    # http://localhost:8080
+./gradlew bootRun
+# API: http://localhost:8080
 
-# Start frontend (in a separate terminal)
+# 3) Frontend (separate terminal)
 cd frontend
 pnpm install
-pnpm dev             # http://localhost:3001 (proxies /api to :8080)
+pnpm dev
+# UI: http://localhost:3001 — Vite proxies /api to :8080
 ```
 
-### Environment Variables
+Optional: copy **`.env.example`** to **`.env`** in the repo root and export variables your shell (or IDE) should pass to the JVM — Spring Boot does not auto-load `.env`; use `export`, direnv, or IDE run configuration. Backend picks up standard env vars (see below). For the Vite app, only variables prefixed with **`VITE_`** are exposed to the client.
+
+### Module Federation (host remote) build
+
+The default `pnpm build` produces the standalone app. To emphasize the federated remote entry (for a parent/host app that consumes this module):
+
+```bash
+cd frontend
+pnpm run build:remote
+```
+
+### Environment variables
+
+Values below match **`backend/src/main/resources/application*.yml`**. Prefer env vars in production; local defaults live in **`application-local.yml`** when **`SPRING_PROFILES_ACTIVE=local`**.
+
+**Backend — core**
+
+| Variable | Typical / default | Description |
+|----------|-------------------|-------------|
+| `SPRING_PROFILES_ACTIVE` | `local` (dev), `railway` (hosted) | Loads `application-{profile}.yml` |
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/compass` (local file) | JDBC URL; Compose sets `jdbc:postgresql://db:5432/compass` |
+| `SPRING_DATASOURCE_USERNAME` | `compass` | |
+| `SPRING_DATASOURCE_PASSWORD` | `compasslocal` | |
+| `DATABASE_URL` | — | **Railway:** JDBC URL injected by the platform (see `application-railway.yml`) |
+
+**Backend — product**
+
+| Variable | Typical / default | Description |
+|----------|-------------------|-------------|
+| `COMPASS_SEED_ENABLED` | `true` (local profile), `false` (Railway default) | Run demo seed on startup |
+| `COMPASS_SEED_OBSERVATORY` | `false` | Large seed: 3 orgs, ~150 users, 12 weeks (~30s) |
+| `COMPASS_CORS_ALLOWED_ORIGINS` | Local: `http://localhost:3000,http://localhost:3001` | Comma-separated origins; **must** be set to your real frontend origin in production or CORS will block |
+| `COMPASS_JWT_ISSUER` | — | Production (`railway`): JWT issuer |
+| `COMPASS_JWT_PUBLIC_KEY` | — | Production: PEM for RS256 validation |
+
+**Backend — LLM**
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `SPRING_PROFILES_ACTIVE` | `local` | Spring profile (`local`, `railway`, `test`) |
-| `COMPASS_SEED_ENABLED` | `true` (local) | Seed demo data on startup |
-| `COMPASS_SEED_OBSERVATORY` | `false` | Full observatory seed: 3 orgs, ~150 users, 12 weeks |
-| `OPENAI_API_KEY` | — | Required for AI-generated briefings and narratives |
-| `ANTHROPIC_API_KEY` | — | Fallback LLM provider |
-| `LLM_MODEL` | `gpt-4.1-nano` | LLM model to use |
-| `COMPASS_CORS_ALLOWED_ORIGINS` | `localhost:3000,3001` | Allowed CORS origins |
+| `OPENAI_API_KEY` | — | Primary provider |
+| `ANTHROPIC_API_KEY` | — | Used when OpenAI is not configured or as configured by code paths |
+| `LLM_MODEL` | `gpt-4.1-nano` | Model name |
+| `LLM_BASE_URL` | `https://api.openai.com/v1` | OpenAI-compatible API base |
+
+Template / fallback narratives are used when keys are absent so the app still runs.
+
+**Frontend (Vite)**
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `VITE_API_BASE_URL` | *(empty)* | API base URL for Axios. Empty = relative **`/api`** (correct behind Compose nginx or Vite proxy). Set to an absolute URL only if the API is on another origin without a proxy |
+
+**Frontend container (Docker / production)**
+
+| Variable | Default in image | Description |
+|----------|------------------|-------------|
+| `BACKEND_URL` | `http://backend:8080` | Upstream for **`location /api/`** in nginx. Under Compose, hostname **`backend`** resolves. **On split hosts (e.g. Railway), set this to your backend’s public origin**, e.g. `https://your-api.up.railway.app` |
 
 ### Database
 
-**PostgreSQL 16** runs on `127.0.0.1:5432` with credentials `compass` / `compasslocal`. Flyway migrations run automatically on startup. No manual schema setup required.
+**PostgreSQL 16** — with **`docker-compose.dev.yml`** or full **`docker-compose.yml`**, the server is on **`127.0.0.1:5432`**, database **`compass`**, user **`compass`**, password **`compasslocal`**. Flyway runs automatically when the backend starts; no manual DDL.
 
-### Seed Data
+### Seed data
 
-**Small seed** (default for local dev): 1 org (Meridian Manufacturing), 10 users, 2 Rally Cries, 3 weeks of commitments and reconciliation records.
+**Small seed** (default when `COMPASS_SEED_ENABLED=true` with the local profile): 1 org (Meridian Manufacturing), **10** users, 2 Rally Cries, 4 defining objectives, 5 outcomes, 3 weeks of commitments and reconciliation records.
 
-**Observatory seed** (set `COMPASS_SEED_OBSERVATORY=true`): 3 orgs, ~150 users, 12 weeks of generated data with realistic drift narratives. Takes ~30 seconds to load.
+**Observatory seed** (`COMPASS_SEED_OBSERVATORY=true`): 3 orgs, ~150 users, 12 weeks of generated data. Allow ~30 seconds on boot.
 
-### Running Tests
+### Running tests
 
 ```bash
-# Backend (uses Testcontainers — Docker must be running)
+# Backend — Docker must be running (Testcontainers)
 cd backend && ./gradlew test
 
 # Frontend
 cd frontend && pnpm test
 ```
+
+Optional: `cd frontend && pnpm run typecheck` / `pnpm run lint`
 
 ## Features
 
@@ -111,7 +190,7 @@ AI-powered features throughout the platform:
 - **Portfolio chat** — Conversational interface for portfolio health questions
 - **Narrative feedback** — Users can thumbs-up/down AI outputs to improve quality
 
-Uses OpenAI (GPT-4.1-nano) by default with Anthropic fallback. Hardcoded template narratives serve as fallback when no API key is configured.
+Uses OpenAI by default (`LLM_MODEL` / `LLM_BASE_URL`) with Anthropic available. Hardcoded template narratives serve as fallback when no API key is configured.
 
 ### Supporting Features
 
@@ -133,7 +212,7 @@ JWT-based authentication with role-based visibility:
 | EXECUTIVE | Entire organization |
 | ANALYST | Read-only within scoped boundary |
 
-Dev mode uses `DevTokenValidator` for local testing without real JWT infrastructure.
+The **`local`** Spring profile uses **`DevTokenValidator`** so you can develop without a real IdP; production (`railway`) uses RS256 validation when JWT properties are set.
 
 ## Architecture
 
@@ -191,26 +270,28 @@ backend/               Spring Boot 3.2.5 (Java 21)
 
 ## Deployment
 
-### Railway
+### Railway (or any split API + UI hosting)
 
-Set `SPRING_PROFILES_ACTIVE=railway`. Railway provides `DATABASE_URL` automatically. Configure `COMPASS_CORS_ALLOWED_ORIGINS` with your Railway domain. Connection pool is 10 (vs 5 locally).
+There is **no `railway.toml`** in this repo; configure services in the Railway dashboard (or CLI).
 
-```bash
-git push origin main   # Railway auto-deploys via webhook
-```
+1. **Postgres** — Use Railway’s PostgreSQL plugin. **`DATABASE_URL`** is injected for the backend.
+2. **Backend service** — Build from **`backend/Dockerfile`**. Set:
+   - `SPRING_PROFILES_ACTIVE=railway`
+   - `COMPASS_CORS_ALLOWED_ORIGINS` = your **frontend** public origin (e.g. `https://your-app.up.railway.app`)
+   - `COMPASS_JWT_ISSUER` / `COMPASS_JWT_PUBLIC_KEY` for production auth
+   - `COMPASS_SEED_ENABLED=false` for normal operation (enable briefly if you need a first-time demo seed)
+3. **Frontend service** — Build from **`frontend/Dockerfile`**. Set **`BACKEND_URL`** to the backend’s **public** base URL (scheme + host, no trailing path), e.g. `https://your-api.up.railway.app`, so nginx can proxy `/api` to the API.
 
-### Docker Production Build
+Connection pool size is **10** on Railway vs **5** for local (`application-railway.yml` vs `application-local.yml`).
 
-Backend uses a multi-stage build (Eclipse Temurin 21 Alpine). Frontend builds with Node 20 Alpine and serves via nginx with SPA routing and API reverse proxy.
+### Docker production build (self-hosted)
 
-```bash
-docker compose up --build
-```
+Same as [Option A](#option-a-full-stack-with-docker-demoproduction-like): multi-stage **`backend/Dockerfile`** (Eclipse Temurin 21) and **`frontend/Dockerfile`** (Node build → nginx). Override **`BACKEND_URL`** on the frontend container if the API hostname is not `http://backend:8080`.
 
-## Ports
+## Ports (summary)
 
-| Service | Local Dev | Docker |
-|---------|-----------|--------|
-| Frontend | `localhost:3001` | `localhost:3000` |
+| Service | Local dev | Docker Compose |
+|---------|-----------|----------------|
+| Frontend | `localhost:3001` | `localhost:3000` → container **80** |
 | Backend | `localhost:8080` | `localhost:8080` |
-| PostgreSQL | `localhost:5432` | `localhost:5432` |
+| PostgreSQL | `localhost:5432` | `127.0.0.1:5432` |
