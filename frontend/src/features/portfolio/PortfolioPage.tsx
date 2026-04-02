@@ -17,7 +17,6 @@ import Card from '@/components/Card';
 import { PortfolioNarrativeCard } from './PortfolioNarrativeCard';
 import { PortfolioMetricsStrip } from './PortfolioMetricsStrip';
 import { CompanyCard } from './CompanyCard';
-import { ComparisonTable } from './ComparisonTable';
 // No seed messages — chat starts fresh each session
 
 export function PortfolioPage() {
@@ -106,19 +105,6 @@ export function PortfolioPage() {
           ))}
         </div>
 
-        {/* Comparison table */}
-        <ComparisonTable
-          rows={portfolio.comparison}
-          animationDelay={320}
-        />
-
-        {/* Footer */}
-        <div
-          className="text-center text-[0.75rem] text-muted pt-4 animate-fade-up"
-          style={{ animationDelay: '520ms' }}
-        >
-          Portfolio data aggregated from individual company briefings. Click any company to view its full briefing.
-        </div>
       </div>
 
       {/* Sidebar — AI Chat */}
