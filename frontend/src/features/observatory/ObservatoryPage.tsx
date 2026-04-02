@@ -192,6 +192,9 @@ export function ObservatoryPage() {
       {/* ── Program summary (LLM stub) — org-wide only ── */}
       {!selectedManager && <ProgramSummary weekCount={weekCount} />}
 
+      {/* ── Observatory signals — high-value pattern detection ── */}
+      <ObservatorySignals weekCount={weekCount} />
+
       {/* ── Execution trend chart — scoped to selected manager when set ── */}
       <ExecutionTrendChart
         weekCount={weekCount}
@@ -209,9 +212,6 @@ export function ObservatoryPage() {
 
       {/* ── Execution heatmap ── */}
       <ExecutionHeatmap weekCount={weekCount} />
-
-      {/* ── Observatory signals ── */}
-      <ObservatorySignals weekCount={weekCount} />
 
       {/* ── Week-on-week metrics ── */}
       <WeekOnWeek weekCount={weekCount} />

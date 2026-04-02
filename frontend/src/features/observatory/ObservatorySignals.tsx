@@ -108,6 +108,71 @@ export function deriveWorkDistributionSignal(
   };
 }
 
+export function deriveVelocitySignal(completion: CompletionDataPoint[] | undefined): SignalCard | null {
+  if (!completion || completion.length < 4) return null;
+
+  // Compare first half vs second half of the reporting window
+  const mid = Math.floor(completion.length / 2);
+  const firstHalf = completion.slice(0, mid);
+  const secondHalf = completion.slice(mid);
+
+  const avgFirst = firstHalf.reduce((sum, p) => sum + p.totalCommitments, 0) / firstHalf.length;
+  const avgSecond = secondHalf.reduce((sum, p) => sum + p.totalCommitments, 0) / secondHalf.length;
+
+  // Only trigger if there's a meaningful decline (>8%) or increase (>8%)
+  const changePct = ((avgSecond - avgFirst) / avgFirst) * 100;
+  if (Math.abs(changePct) < 8) return null;
+
+  const declining = changePct < 0;
+  const weekLabel = completion[completion.length - 1]?.cycleLabel ?? 'recent';
+  const first = completion[0]!;
+  const peakWeek = completion.reduce((max, p) => p.totalCommitments > max.totalCommitments ? p : max, first);
+  const troughWeek = completion.reduce((min, p) => p.totalCommitments < min.totalCommitments ? p : min, first);
+
+  return {
+    type: 'Velocity Trend',
+    detectedLabel: `Detected ${weekLabel} · ${declining ? 'Declining' : 'Accelerating'}`,
+    title: declining
+      ? `Throughput declined ${Math.abs(Math.round(changePct))}% over the reporting period`
+      : `Throughput increased ${Math.round(changePct)}% over the reporting period`,
+    body: declining
+      ? `Average weekly commitments dropped from ${Math.round(avgFirst)} to ${Math.round(avgSecond)}. This may reflect capacity constraints, scope reduction, or shifting priorities.`
+      : `Average weekly commitments rose from ${Math.round(avgFirst)} to ${Math.round(avgSecond)}. Teams are taking on more committed work per cycle.`,
+    metrics: [
+      { value: String(Math.round(avgSecond)), label: 'Recent avg' },
+      { value: `${peakWeek.totalCommitments}`, label: 'Peak week' },
+      { value: `${troughWeek.totalCommitments}`, label: 'Trough week' },
+    ],
+  };
+}
+
+export function deriveCoverageGapSignal(alignment: AlignmentDataPoint[] | undefined): SignalCard | null {
+  if (!alignment || alignment.length < 2) return null;
+
+  const recent = alignment.slice(-4);
+  const avgCoverage = recent.reduce((sum, p) => sum + p.rallyCoveragePct, 0) / recent.length;
+  const avgUnaligned = 100 - avgCoverage;
+
+  // Only trigger if more than 5% of work is unaligned with any rally cry
+  if (avgUnaligned < 5) return null;
+
+  const weekLabel = alignment[alignment.length - 1]?.cycleLabel ?? 'recent';
+  const totalAvg = recent.reduce((sum, p) => sum + p.totalCommitments, 0) / recent.length;
+  const unalignedCount = Math.round(totalAvg * avgUnaligned / 100);
+
+  return {
+    type: 'Rally Cry Coverage',
+    detectedLabel: `Detected ${weekLabel} · Ongoing`,
+    title: `${Math.round(avgUnaligned)}% of commitments not linked to a Rally Cry`,
+    body: `Approximately ${unalignedCount} commitments per week fall outside active Rally Cries. This work may be necessary but reduces visibility into strategic execution.`,
+    metrics: [
+      { value: `${avgCoverage.toFixed(0)}%`, label: 'Coverage' },
+      { value: `~${unalignedCount}`, label: 'Unlinked / week' },
+      { value: Math.round(totalAvg).toLocaleString(), label: 'Avg commitments' },
+    ],
+  };
+}
+
 export function deriveDisplacementSignal(displacement: DisplacementSummary | undefined): SignalCard | null {
   if (!displacement || displacement.totalDisplacements === 0) return null;
 
@@ -240,13 +305,17 @@ export function ObservatorySignals({ weekCount }: ObservatorySignalsProps) {
   if (!isLoading) {
     const driftCard = deriveDriftSignal(drift);
     const specificityCard = deriveLowStrategicSignal(alignment, strategicAlignmentTarget);
+    const velocityCard = deriveVelocitySignal(completion);
+    const coverageCard = deriveCoverageGapSignal(alignment);
     const distributionCard = deriveWorkDistributionSignal(completion, darkWorkWarningPct);
     const displacementCard = deriveDisplacementSignal(displacement);
 
     if (driftCard) cards.push(driftCard);
     if (specificityCard) cards.push(specificityCard);
-    if (distributionCard) cards.push(distributionCard);
+    if (velocityCard) cards.push(velocityCard);
+    if (coverageCard) cards.push(coverageCard);
     if (displacementCard) cards.push(displacementCard);
+    if (distributionCard) cards.push(distributionCard);
   }
 
   return (
