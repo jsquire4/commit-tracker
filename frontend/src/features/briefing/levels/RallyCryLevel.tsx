@@ -93,7 +93,7 @@ function RallyCryCardComponent({
           </span>
 
           <div
-            className="overflow-hidden transition-all"
+            className={expanded ? 'overflow-y-auto transition-all' : 'overflow-hidden transition-all'}
             style={{
               maxHeight: expanded ? '300px' : '0',
               opacity: expanded ? 1 : 0,
