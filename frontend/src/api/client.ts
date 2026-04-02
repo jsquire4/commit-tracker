@@ -27,8 +27,15 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response,
   (error: unknown) => {
-    if (axios.isAxiosError(error) && error.response?.status === 401) {
-      window.dispatchEvent(new CustomEvent('compass:auth:expired'));
+    if (axios.isAxiosError(error)) {
+      if (error.response?.status === 401) {
+        window.dispatchEvent(new CustomEvent('compass:auth:expired'));
+      }
+      // Extract ProblemDetail message from response body
+      const detail = error.response?.data?.detail as string | undefined;
+      if (detail) {
+        return Promise.reject(new Error(detail));
+      }
     }
     return Promise.reject(error instanceof Error ? error : new Error(String(error)));
   }

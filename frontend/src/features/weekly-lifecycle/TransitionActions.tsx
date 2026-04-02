@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { Cycle } from '@/types';
+import type { Cycle, UserRole } from '@/types';
 import { useTransitionCycle } from '@/hooks/useCycle';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast, ToastContainer } from '@/hooks/useToast';
 import { startNextCycle } from '@/api/cycles.api';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
 import Button from '@/components/Button';
@@ -21,9 +23,14 @@ interface TransitionConfig {
   disabledReason?: string | undefined;
 }
 
+function isDirectorOrAbove(role: UserRole | null): boolean {
+  return role === 'DIRECTOR' || role === 'VP' || role === 'EXECUTIVE';
+}
+
 function getTransitionConfig(
   cycle: Cycle,
   commitmentCount: number,
+  role: UserRole | null,
 ): TransitionConfig | null {
   switch (cycle.state) {
     case 'DRAFT': {
@@ -38,14 +45,20 @@ function getTransitionConfig(
         ? { ...base, disabledReason: 'Add at least one commitment first' }
         : base;
     }
-    case 'LOCKED':
-      return {
+    case 'LOCKED': {
+      const weekEnded = new Date() > new Date(cycle.endsAt);
+      const canOverride = isDirectorOrAbove(role);
+      const base = {
         label: 'Begin Reconciliation',
         description:
           'This will open the cycle for reconciliation. Team members can start marking commitments as complete or carried forward.',
         confirmLabel: 'Begin',
-        targetState: 'RECONCILING',
+        targetState: 'RECONCILING' as const,
       };
+      return !weekEnded && !canOverride
+        ? { ...base, disabledReason: 'Reconciliation opens after the week ends' }
+        : base;
+    }
     case 'RECONCILING':
       return null;
     case 'RECONCILED':
@@ -58,11 +71,12 @@ function getTransitionConfig(
 export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: TransitionActionsProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [startingNextWeek, setStartingNextWeek] = useState(false);
-  const [startNextWeekError, setStartNextWeekError] = useState<string | null>(null);
   const { mutate: transitionCycle, isPending } = useTransitionCycle();
+  const { role } = useAuth();
+  const { toast, toasts, dismiss } = useToast();
   const queryClient = useQueryClient();
 
-  const config = getTransitionConfig(cycle, commitmentCount);
+  const config = getTransitionConfig(cycle, commitmentCount, role);
 
   if (cycle.state === 'RECONCILED') {
     return (
@@ -72,7 +86,6 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
           loading={startingNextWeek}
           onClick={async () => {
             setStartingNextWeek(true);
-            setStartNextWeekError(null);
             try {
               // Create the next week's DRAFT cycle from this RECONCILED cycle
               const newCycle = await startNextCycle(cycle.id);
@@ -80,7 +93,7 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
               await queryClient.invalidateQueries({ queryKey: ['commitments'] });
               onStartNextWeek?.(newCycle.id);
             } catch {
-              setStartNextWeekError('Failed to start next week. Please try again.');
+              toast.error('Failed to start next week. Please try again.');
             } finally {
               setStartingNextWeek(false);
             }
@@ -93,9 +106,7 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
         >
           Start Next Week
         </Button>
-        {startNextWeekError && (
-          <p role="alert" className="text-sm text-error mt-1">{startNextWeekError}</p>
-        )}
+        <ToastContainer toasts={toasts} onDismiss={dismiss} />
       </div>
     );
   }
@@ -110,7 +121,14 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
     if (!config) return;
     transitionCycle(
       { id: cycle.id, req: { targetState: config.targetState } },
-      { onSuccess: () => { setDialogOpen(false); } },
+      {
+        onSuccess: () => { setDialogOpen(false); },
+        onError: (err) => {
+          setDialogOpen(false);
+          const message = err instanceof Error ? err.message : 'Transition failed';
+          toast.error(message);
+        },
+      },
     );
   }
 
@@ -149,6 +167,8 @@ export function TransitionActions({ cycle, commitmentCount, onStartNextWeek }: T
         confirmLabel={config.confirmLabel}
         loading={isPending}
       />
+
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </>
   );
 }
